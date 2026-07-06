@@ -1,9 +1,10 @@
 from ollama import chat
-from backend.config import OLLAMA_MODEL
 
-def generate_response(prompt: str):
+
+def generate_response(prompt):
+
     response = chat(
-        model=OLLAMA_MODEL,
+        model="qwen2.5-coder",
         messages=[
             {
                 "role": "user",
