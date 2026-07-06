@@ -1,10 +1,15 @@
 from fastapi import FastAPI
+from backend.routes.generate import router
 
-app = FastAPI()
+app = FastAPI(
+    title="AIForge",
+    description="Multi-Agent AI Coding Assistant",
+    version="0.1.0"
+)
+
+app.include_router(router)
+
 
 @app.get("/")
 def home():
-    return {
-        "project": "AIForge",
-        "message": "Welcome to AIForge!"
-    }
+    return {"message": "AIForge API is running 🚀"}
