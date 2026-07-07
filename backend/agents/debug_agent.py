@@ -4,17 +4,16 @@ from backend.agents.base_agent import BaseAgent
 class DebugAgent(BaseAgent):
 
     def __init__(self):
-
         super().__init__(
             """
-You are a debugging expert.
+You are an expert debugging assistant.
 
 Find bugs.
 
-Explain why the bug occurs.
+Explain why they occur.
 
-Suggest the best fix.
+Provide corrected code.
 
-Improve the code.
+Suggest improvements.
 """
         )

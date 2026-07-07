@@ -1,18 +1,14 @@
-from backend.services.llm import generate_response
+from backend.services.ollama_service import OllamaService
 
 
 class BaseAgent:
 
     def __init__(self, system_prompt):
         self.system_prompt = system_prompt
+        self.llm = OllamaService()
 
     def run(self, user_prompt):
-
-        prompt = f"""
-{self.system_prompt}
-
-User:
-{user_prompt}
-"""
-
-        return generate_response(prompt)
+        return self.llm.generate(
+            self.system_prompt,
+            user_prompt
+        )

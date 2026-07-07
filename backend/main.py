@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from backend.routes.generate import router
+from backend.routes.chat import router
 
 app = FastAPI(
     title="AIForge",
@@ -8,7 +8,6 @@ app = FastAPI(
 )
 
 app.include_router(router)
-
 
 @app.get("/")
 def home():
