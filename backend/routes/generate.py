@@ -1,20 +1,21 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from backend.agents.factory import AgentFactory
+from backend.agents.router_agent import RouterAgent
 
 router = APIRouter()
 
 
 class Prompt(BaseModel):
-    agent: str
     prompt: str
 
 
 @router.post("/generate")
 def generate(data: Prompt):
 
-    agent = AgentFactory.get_agent(data.agent)
+    router_agent = RouterAgent()
+
+    agent = router_agent.get_agent(data.prompt)
 
     response = agent.run(data.prompt)
 
