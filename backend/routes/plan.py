@@ -1,7 +1,10 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from backend.agents.factory import AgentFactory
+try:
+    from ..agents.factory import AgentFactory
+except ImportError:
+    from agents.factory import AgentFactory
 
 
 router = APIRouter()

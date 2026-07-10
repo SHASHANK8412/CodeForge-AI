@@ -1,20 +1,30 @@
-from backend.agents.coding_agent import CodingAgent
-from backend.agents.debug_agent import DebugAgent
-from backend.agents.resume_agent import ResumeAgent
-from backend.agents.explanation_agent import ExplanationAgent
-from backend.agents.planner_agent import PlannerAgent
+try:
+    from .coding_agent import CodingAgent
+    from .debug_agent import DebugAgent
+    from .resume_agent import ResumeAgent
+    from .explanation_agent import ExplanationAgent
+    from .planner_agent import PlannerAgent
+except ImportError:
+    from agents.coding_agent import CodingAgent
+    from agents.debug_agent import DebugAgent
+    from agents.resume_agent import ResumeAgent
+    from agents.explanation_agent import ExplanationAgent
+    from agents.planner_agent import PlannerAgent
 
 
 class AgentFactory:
 
     @staticmethod
-    def create_agent(agent_type):
+    def create_agent(agent_type: str):
 
         if agent_type == "coding":
             return CodingAgent()
 
         elif agent_type == "debug":
             return DebugAgent()
+
+        elif agent_type == "resume":
+            return ResumeAgent()
 
         elif agent_type == "explanation":
             return ExplanationAgent()
@@ -23,4 +33,4 @@ class AgentFactory:
             return PlannerAgent()
 
         else:
-            return CodingAgent()
+            raise ValueError(f"Unknown agent type: {agent_type}")

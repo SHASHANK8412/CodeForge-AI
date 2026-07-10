@@ -1,4 +1,7 @@
-from backend.services.ollama_service import OllamaService
+try:
+    from ..services.ollama_service import OllamaService
+except ImportError:
+    from services.ollama_service import OllamaService
 
 
 class BaseAgent:

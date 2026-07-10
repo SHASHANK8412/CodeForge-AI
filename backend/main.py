@@ -1,14 +1,19 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routes.chat import router
-from backend.routes.plan import router as planner_router
+from pydantic import BaseModel
+
+try:
+    from .graph.workflow import graph
+except ImportError:
+    from graph.workflow import graph
 
 app = FastAPI(
-    title="AIForge",
-    description="Multi-Agent AI Coding Assistant",
-    version="0.1.0"
+    title="AIForge API",
+    description="Multi-Agent AI Software Engineer Backend",
+    version="1.0.0"
 )
 
+# Allow frontend (React/Vite) to connect
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -17,10 +22,44 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router)
-app.include_router(planner_router)
+
+class PromptRequest(BaseModel):
+    prompt: str
+
 
 @app.get("/")
 def home():
-    return {"message": "AIForge API is running 🚀"}
+    return {
+        "status": "running",
+        "project": "AIForge",
+        "message": "🚀 AIForge Backend is running successfully!"
+    }
 
+
+@app.get("/health")
+def health():
+    return {
+        "status": "healthy"
+    }
+
+
+@app.post("/generate")
+def generate(request: PromptRequest):
+    try:
+        result = graph.invoke(
+            {
+                "prompt": request.prompt,
+                "response": ""
+            }
+        )
+
+        return {
+            "success": True,
+            "response": result["response"]
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )

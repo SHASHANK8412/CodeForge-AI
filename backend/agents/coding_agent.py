@@ -1,4 +1,7 @@
-from backend.agents.base_agent import BaseAgent
+try:
+    from .base_agent import BaseAgent
+except ImportError:
+    from agents.base_agent import BaseAgent
 
 
 class CodingAgent(BaseAgent):

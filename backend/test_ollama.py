@@ -1,4 +1,4 @@
-from services.ollama_service import OllamaService
+from backend.services.ollama_service import OllamaService
 
 service = OllamaService()
 

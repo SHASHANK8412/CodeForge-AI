@@ -1,4 +1,7 @@
-from backend.agents.factory import AgentFactory
+try:
+    from .factory import AgentFactory
+except ImportError:
+    from agents.factory import AgentFactory
 
 
 class RouterAgent:
