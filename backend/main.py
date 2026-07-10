@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.routes.chat import router
+from backend.routes.plan import router as planner_router
 
 app = FastAPI(
     title="AIForge",
@@ -21,3 +22,5 @@ app.include_router(router)
 @app.get("/")
 def home():
     return {"message": "AIForge API is running 🚀"}
+
+app.include_router(planner_router)
