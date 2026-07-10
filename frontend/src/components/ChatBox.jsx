@@ -1,50 +1,164 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import InputBar from "./InputBar";
 import Message from "./Message";
+import Loading from "./Loading";
 import { sendMessage } from "../services/api";
 
 function ChatBox() {
-    const [messages, setMessages] = useState([]);
+    // Load chat history
+    const [messages, setMessages] = useState(() => {
+        const savedMessages = localStorage.getItem("messages");
+        return savedMessages ? JSON.parse(savedMessages) : [];
+    });
 
+    const [loading, setLoading] = useState(false);
+
+    const bottomRef = useRef(null);
+
+    // Save chat + Auto Scroll
+    useEffect(() => {
+        localStorage.setItem("messages", JSON.stringify(messages));
+
+        bottomRef.current?.scrollIntoView({
+            behavior: "smooth",
+        });
+    }, [messages, loading]);
+
+    // Send Message
     const handleSend = async (text) => {
+        if (!text.trim() || loading) return;
 
-        setMessages((prev) => [
-            ...prev,
-            {
-                sender: "user",
-                text,
-            },
-        ]);
+        const userMessage = {
+            sender: "user",
+            text,
+        };
 
-        const reply = await sendMessage(text);
+        setMessages((prev) => [...prev, userMessage]);
 
-        setMessages((prev) => [
-            ...prev,
-            {
+        setLoading(true);
+
+        try {
+            const reply = await sendMessage(text);
+
+            const aiMessage = {
                 sender: "ai",
                 text: reply,
-            },
-        ]);
+            };
+
+            setMessages((prev) => [...prev, aiMessage]);
+        } catch (error) {
+            console.error(error);
+
+            setMessages((prev) => [
+                ...prev,
+                {
+                    sender: "ai",
+                    text: "❌ Something went wrong. Please try again.",
+                },
+            ]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Clear Chat
+    const clearChat = () => {
+        localStorage.removeItem("messages");
+        setMessages([]);
     };
 
     return (
-        <div
-            style={{
-                width: "900px",
-                margin: "40px auto",
-            }}
-        >
-            <h1>🚀 AIForge</h1>
+        <div className="flex flex-col h-full max-w-5xl mx-auto">
 
-            {messages.map((msg, index) => (
-                <Message
-                    key={index}
-                    sender={msg.sender}
-                    text={msg.text}
+            {/* Header */}
+
+            <div className="flex justify-between items-center border-b border-gray-700 py-4 px-6">
+
+                <div>
+
+                    <h1 className="text-3xl font-bold">
+                        🚀 AIForge
+                    </h1>
+
+                    <p className="text-sm text-gray-400">
+                        Powered by Qwen 2.5
+                    </p>
+
+                </div>
+
+                <button
+                    onClick={clearChat}
+                    disabled={loading}
+                    className="
+                        bg-red-600
+                        hover:bg-red-700
+                        disabled:bg-gray-700
+                        px-4
+                        py-2
+                        rounded-lg
+                        transition
+                    "
+                >
+                    Clear Chat
+                </button>
+
+            </div>
+
+            {/* Messages */}
+
+            <div
+                className="
+                    flex-1
+                    overflow-y-auto
+                    p-6
+                    space-y-4
+                "
+            >
+
+                {messages.length === 0 && (
+
+                    <div className="text-center text-gray-400 mt-20">
+
+                        <h2 className="text-4xl mb-4">
+                            👋 Welcome to AIForge
+                        </h2>
+
+                        <p>
+                            Ask me to write code, debug errors,
+                            explain concepts or build projects.
+                        </p>
+
+                    </div>
+
+                )}
+
+                {messages.map((msg, index) => (
+
+                    <Message
+                        key={index}
+                        sender={msg.sender}
+                        text={msg.text}
+                    />
+
+                ))}
+
+                {loading && <Loading />}
+
+                <div ref={bottomRef}></div>
+
+            </div>
+
+            {/* Input */}
+
+            <div className="border-t border-gray-700 p-4">
+
+                <InputBar
+                    onSend={handleSend}
+                    loading={loading}
                 />
-            ))}
 
-            <InputBar onSend={handleSend} />
+            </div>
+
         </div>
     );
 }
