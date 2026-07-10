@@ -7,16 +7,49 @@ class RouterAgent:
 
         prompt = user_prompt.lower()
 
-        if "bug" in prompt or "error" in prompt or "fix" in prompt:
-            agent = AgentFactory.get_agent("debug")
+        # Planner Agent
+        if any(word in prompt for word in [
+            "build",
+            "create",
+            "develop",
+            "project",
+            "website",
+            "application",
+            "system",
+            "clone",
+            "design"
+        ]):
+            agent = AgentFactory.create_agent("planner")
 
-        elif "resume" in prompt or "linkedin" in prompt:
-            agent = AgentFactory.get_agent("resume")
+        # Debug Agent
+        elif any(word in prompt for word in [
+            "bug",
+            "error",
+            "fix",
+            "issue",
+            "exception"
+        ]):
+            agent = AgentFactory.create_agent("debug")
 
-        elif "explain" in prompt or "what is" in prompt or "how" in prompt:
-            agent = AgentFactory.get_agent("explanation")
+        # Resume Agent
+        elif any(word in prompt for word in [
+            "resume",
+            "linkedin",
+            "cv"
+        ]):
+            agent = AgentFactory.create_agent("resume")
 
+        # Explanation Agent
+        elif any(word in prompt for word in [
+            "explain",
+            "what is",
+            "how",
+            "why"
+        ]):
+            agent = AgentFactory.create_agent("explanation")
+
+        # Default → Coding Agent
         else:
-            agent = AgentFactory.get_agent("coding")
+            agent = AgentFactory.create_agent("coding")
 
         return agent.run(user_prompt)
