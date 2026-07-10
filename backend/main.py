@@ -18,9 +18,9 @@ app.add_middleware(
 )
 
 app.include_router(router)
+app.include_router(planner_router)
 
 @app.get("/")
 def home():
     return {"message": "AIForge API is running 🚀"}
 
-app.include_router(planner_router)

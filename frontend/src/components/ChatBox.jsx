@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import InputBar from "./InputBar";
 import Message from "./Message";
 import Loading from "./Loading";
+
 import { sendMessage } from "../services/api";
+import { generatePlan } from "../services/plannerApi";
 
 function ChatBox() {
     // Load chat history
@@ -12,10 +14,11 @@ function ChatBox() {
     });
 
     const [loading, setLoading] = useState(false);
+    const [plannerMode, setPlannerMode] = useState(false);
 
     const bottomRef = useRef(null);
 
-    // Save chat + Auto Scroll
+    // Save chat history + Auto Scroll
     useEffect(() => {
         localStorage.setItem("messages", JSON.stringify(messages));
 
@@ -28,36 +31,51 @@ function ChatBox() {
     const handleSend = async (text) => {
         if (!text.trim() || loading) return;
 
-        const userMessage = {
-            sender: "user",
-            text,
-        };
-
-        setMessages((prev) => [...prev, userMessage]);
+        // User Message
+        setMessages((prev) => [
+            ...prev,
+            {
+                sender: "user",
+                text,
+            },
+        ]);
 
         setLoading(true);
 
         try {
-            const reply = await sendMessage(text);
 
-            const aiMessage = {
-                sender: "ai",
-                text: reply,
-            };
+            let reply;
 
-            setMessages((prev) => [...prev, aiMessage]);
+            if (plannerMode) {
+                reply = await generatePlan(text);
+            } else {
+                reply = await sendMessage(text);
+            }
+
+            setMessages((prev) => [
+                ...prev,
+                {
+                    sender: "ai",
+                    text: reply,
+                },
+            ]);
+
         } catch (error) {
+
             console.error(error);
 
             setMessages((prev) => [
                 ...prev,
                 {
                     sender: "ai",
-                    text: "❌ Something went wrong. Please try again.",
+                    text: "❌ Something went wrong!",
                 },
             ]);
+
         } finally {
+
             setLoading(false);
+
         }
     };
 
@@ -104,6 +122,34 @@ function ChatBox() {
 
             </div>
 
+            {/* Planner Toggle */}
+
+            <div className="flex gap-3 px-6 py-4 border-b border-gray-700">
+
+                <button
+                    onClick={() => setPlannerMode(false)}
+                    className={`px-4 py-2 rounded-lg transition ${
+                        !plannerMode
+                            ? "bg-green-600 text-white"
+                            : "bg-gray-700 text-gray-300"
+                    }`}
+                >
+                    💬 Chat Mode
+                </button>
+
+                <button
+                    onClick={() => setPlannerMode(true)}
+                    className={`px-4 py-2 rounded-lg transition ${
+                        plannerMode
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-700 text-gray-300"
+                    }`}
+                >
+                    📋 Planner Mode
+                </button>
+
+            </div>
+
             {/* Messages */}
 
             <div
@@ -124,8 +170,11 @@ function ChatBox() {
                         </h2>
 
                         <p>
-                            Ask me to write code, debug errors,
-                            explain concepts or build projects.
+
+                            {plannerMode
+                                ? "Describe your software idea and AIForge will generate a complete project plan."
+                                : "Ask me to write code, debug errors, explain concepts, or build projects."}
+
                         </p>
 
                     </div>
