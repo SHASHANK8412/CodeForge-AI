@@ -14,8 +14,14 @@ class ChatRequest(BaseModel):
 
 @router.post("/chat")
 def chat(request: ChatRequest):
+    print("=" * 50)
+    print("Incoming:", request.message)
 
     response = router_agent.route(request.message)
+
+    print("Returned:", response)
+    print("Type:", type(response))
+    print("=" * 50)
 
     return {
         "response": response
