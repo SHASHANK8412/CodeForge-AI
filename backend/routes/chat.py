@@ -1,10 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-try:
-    from ..agents.router_agent import RouterAgent
-except ImportError:
-    from agents.router_agent import RouterAgent
+from backend.agents.router_agent import RouterAgent
 
 router = APIRouter()
 

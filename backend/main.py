@@ -2,17 +2,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-try:
-    from .graph.workflow import graph
-except ImportError:
-    from graph.workflow import graph
-
-try:
-    from .routes.chat import router as chat_router
-    from .routes.plan import router as plan_router
-except ImportError:
-    from routes.chat import router as chat_router
-    from routes.plan import router as plan_router
+from backend.graph.workflow import graph
+from backend.routes.chat import router as chat_router
+from backend.routes.plan import router as plan_router
 
 app = FastAPI(
     title="AIForge API",

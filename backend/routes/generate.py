@@ -1,10 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-try:
-    from ..graph.workflow import graph
-except ImportError:
-    from graph.workflow import graph
+from backend.graph.workflow import graph
 
 router = APIRouter()
 

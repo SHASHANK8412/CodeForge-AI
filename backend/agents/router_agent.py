@@ -1,7 +1,4 @@
-try:
-    from .factory import AgentFactory
-except ImportError:
-    from agents.factory import AgentFactory
+from backend.agents.factory import AgentFactory
 
 
 class RouterAgent:
@@ -10,7 +7,6 @@ class RouterAgent:
 
         prompt = user_prompt.lower()
 
-        # Debug Agent
         if any(word in prompt for word in [
             "bug",
             "error",
@@ -18,30 +14,29 @@ class RouterAgent:
             "issue",
             "exception"
         ]):
-            agent = AgentFactory.create_agent("debug")
+            return "debug"
 
-        # Resume Agent
         elif any(word in prompt for word in [
             "resume",
             "linkedin",
             "cv"
         ]):
-            agent = AgentFactory.create_agent("resume")
+            return "resume"
 
-        # Explanation Agent
         elif any(word in prompt for word in [
             "explain",
             "what is",
             "how",
             "why"
         ]):
-            agent = AgentFactory.create_agent("explanation")
+            return "explanation"
 
-        # Everything else goes to Coding Agent
-        else:
-            agent = AgentFactory.create_agent("coding")
-
-        return agent.run(user_prompt)
+        return "coding"
 
     def run(self, user_prompt):
-        return self.route(user_prompt)
+
+        agent_type = self.route(user_prompt)
+
+        agent = AgentFactory.create_agent(agent_type)
+
+        return agent.run(user_prompt)
