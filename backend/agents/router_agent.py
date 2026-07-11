@@ -3,39 +3,54 @@ from backend.agents.factory import AgentFactory
 
 class RouterAgent:
 
-    def route(self, user_prompt):
+    def route(self, user_prompt: str):
 
         prompt = user_prompt.lower()
 
-        if any(word in prompt for word in [
+        debug_keywords = [
             "bug",
             "error",
             "fix",
             "issue",
-            "exception"
-        ]):
-            return "debug"
+            "exception",
+            "traceback",
+            "crash",
+            "not working",
+        ]
 
-        elif any(word in prompt for word in [
+        resume_keywords = [
             "resume",
+            "cv",
             "linkedin",
-            "cv"
-        ]):
-            return "resume"
+            "cover letter",
+        ]
 
-        elif any(word in prompt for word in [
+        explanation_keywords = [
             "explain",
             "what is",
             "how",
-            "why"
-        ]):
+            "why",
+            "difference",
+            "compare",
+            "teach",
+        ]
+
+        if any(word in prompt for word in debug_keywords):
+            return "debug"
+
+        if any(word in prompt for word in resume_keywords):
+            return "resume"
+
+        if any(word in prompt for word in explanation_keywords):
             return "explanation"
 
         return "coding"
 
-    def run(self, user_prompt):
+    def run(self, user_prompt: str):
 
         agent_type = self.route(user_prompt)
+
+        print(f"[Router] Selected Agent: {agent_type}")
 
         agent = AgentFactory.create_agent(agent_type)
 

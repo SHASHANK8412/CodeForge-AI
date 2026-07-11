@@ -3,6 +3,7 @@ from backend.agents.debug_agent import DebugAgent
 from backend.agents.resume_agent import ResumeAgent
 from backend.agents.explanation_agent import ExplanationAgent
 from backend.agents.planner_agent import PlannerAgent
+from backend.agents.architect_agent import ArchitectAgent
 
 
 class AgentFactory:
@@ -18,6 +19,9 @@ class AgentFactory:
 
         elif agent_type == "resume":
             return ResumeAgent()
+        
+        elif agent_type == "architect":
+            return ArchitectAgent()
 
         elif agent_type == "explanation":
             return ExplanationAgent()

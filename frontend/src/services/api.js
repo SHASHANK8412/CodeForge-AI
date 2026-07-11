@@ -5,14 +5,10 @@ const API = axios.create({
 });
 
 export const sendMessage = async (message) => {
-    try {
-        const response = await API.post("/chat", {
-            message: message,
-        });
 
-        return response.data.response;
-    } catch (error) {
-        console.error("API Error:", error);
-        return "Something went wrong!";
-    }
+    const response = await API.post("/chat", {
+        message,
+    });
+
+    return response.data;
 };

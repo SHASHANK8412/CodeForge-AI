@@ -50,13 +50,14 @@ def generate(request: PromptRequest):
     try:
         result = graph.invoke(
             {
-                "prompt": request.prompt,
-                "response": ""
+                "prompt": request.prompt
             }
         )
 
         return {
             "success": True,
+            "plan": result["plan"],
+            "architecture": result["architecture"],
             "response": result["response"]
         }
 

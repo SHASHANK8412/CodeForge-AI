@@ -1,11 +1,9 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from backend.agents.router_agent import RouterAgent
+from backend.graph.workflow import graph
 
 router = APIRouter()
-
-router_agent = RouterAgent()
 
 
 class ChatRequest(BaseModel):
@@ -14,15 +12,15 @@ class ChatRequest(BaseModel):
 
 @router.post("/chat")
 def chat(request: ChatRequest):
-    print("=" * 50)
-    print("Incoming:", request.message)
 
-    response = router_agent.route(request.message)
-
-    print("Returned:", response)
-    print("Type:", type(response))
-    print("=" * 50)
+    result = graph.invoke(
+        {
+            "prompt": request.message
+        }
+    )
 
     return {
-        "response": response
-    }
+        "plan": result["plan"],
+        "architecture": result["architecture"],
+        "response": result["response"]
+    }   

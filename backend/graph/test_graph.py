@@ -19,7 +19,12 @@ if __name__ == "__main__":
 
     print("\n")
     print("=" * 50)
-    
+    print("ARCHITECTURE")
+    print("=" * 50)
+    print(result["architecture"])
+
+    print("\n")
+    print("=" * 50)
     print("RESPONSE")
     print("=" * 50)
     print(result["response"])
