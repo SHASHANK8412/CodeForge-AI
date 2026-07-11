@@ -2,9 +2,9 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 try:
-    from ..agents.router_agent import RouterAgent
+    from ..graph.workflow import graph
 except ImportError:
-    from agents.router_agent import RouterAgent
+    from graph.workflow import graph
 
 router = APIRouter()
 
@@ -16,12 +16,13 @@ class Prompt(BaseModel):
 @router.post("/generate")
 def generate(data: Prompt):
 
-    router_agent = RouterAgent()
-
-    agent = router_agent.get_agent(data.prompt)
-
-    response = agent.run(data.prompt)
+    result = graph.invoke(
+        {
+            "prompt": data.prompt
+        }
+    )
 
     return {
-        "response": response
+        "plan": result["plan"],
+        "response": result["response"]
     }

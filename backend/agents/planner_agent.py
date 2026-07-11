@@ -40,3 +40,6 @@ Your response MUST include the following sections:
 Return everything in beautiful Markdown.
             """
         )
+
+    def run(self, prompt: str):
+        return super().run(prompt)

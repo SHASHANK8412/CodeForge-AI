@@ -7,6 +7,13 @@ try:
 except ImportError:
     from graph.workflow import graph
 
+try:
+    from .routes.chat import router as chat_router
+    from .routes.plan import router as plan_router
+except ImportError:
+    from routes.chat import router as chat_router
+    from routes.plan import router as plan_router
+
 app = FastAPI(
     title="AIForge API",
     description="Multi-Agent AI Software Engineer Backend",
@@ -21,6 +28,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(chat_router)
+app.include_router(plan_router)
 
 
 class PromptRequest(BaseModel):
