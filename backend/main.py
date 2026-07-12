@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from backend.graph.workflow import graph
 from backend.routes.chat import router as chat_router
 from backend.routes.plan import router as plan_router
+from backend.routes.memory import router as memory_router
 
 app = FastAPI(
     title="AIForge API",
@@ -23,6 +24,7 @@ app.add_middleware(
 
 app.include_router(chat_router)
 app.include_router(plan_router)
+app.include_router(memory_router)
 
 
 class PromptRequest(BaseModel):

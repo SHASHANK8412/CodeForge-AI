@@ -28,9 +28,11 @@ Use proper code blocks with language identifiers.
 """
         )
 
-    def run(self, user_prompt):
+    def run(self, user_prompt, memory_context: str = ""):
 
         final_prompt = f"""
+{memory_context}
+
 {self.system_prompt}
 
 User Request

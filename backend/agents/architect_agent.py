@@ -38,5 +38,5 @@ Return everything in Markdown.
 """
         )
 
-    def run(self, plan: str):
-        return super().run(plan)
+    def run(self, plan: str, memory_context: str = ""):
+        return super().run(plan, memory_context)
