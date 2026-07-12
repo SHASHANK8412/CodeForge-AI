@@ -1,4 +1,6 @@
 from typing import TypedDict
+from time import perf_counter
+
 from langgraph.graph import StateGraph, END
 
 from backend.agents.planner_agent import PlannerAgent
@@ -18,6 +20,7 @@ class GraphState(TypedDict):
     memory_context: str
     history_text: str
     project_text: str
+    collaboration_mode: bool
     plan: str
     architecture: str
     route: str
@@ -26,6 +29,7 @@ class GraphState(TypedDict):
     reviewed_code: str
     explanation: str
     response: str
+    execution_mode: str
 
 
 ARCHITECT_REQUIRED_SECTIONS = [
@@ -53,22 +57,52 @@ def log_stage(message: str):
     print(message)
 
 
+def log_stage_duration(stage: str, started_at: float):
+    elapsed_ms = (perf_counter() - started_at) * 1000
+    print(f"{stage} Completed in {elapsed_ms:.1f}ms")
+
+
+def classify_request(prompt: str) -> tuple[str, str]:
+    normalized = prompt.lower()
+
+    if any(word in normalized for word in ["resume", "cv", "linkedin", "cover letter"]):
+        return "resume", "fast"
+
+    if any(word in normalized for word in ["explain", "what is", "why", "how does", "difference", "compare", "teach"]):
+        return "explanation", "fast"
+
+    if any(word in normalized for word in ["bug", "error", "fix", "traceback", "crash", "not working"]):
+        return "debug", "full"
+
+    project_keywords = ["build", "create", "design", "develop", "project", "app", "system", "portal", "dashboard"]
+    if any(word in normalized for word in project_keywords):
+        return "coding", "full"
+
+    if len(normalized.split()) <= 6:
+        return "explanation", "fast"
+
+    return "coding", "full"
+
+
 # ---------------- Memory Load ---------------- #
 
 def load_memory_node(state: GraphState):
 
+    started_at = perf_counter()
     log_stage("Memory Loaded")
 
     session_id = state.get("session_id", "default")
-    context = memory_manager.build_context_block(session_id, state["prompt"])
-    memory_context = f"""Conversation History
-{context['history_text']}
+    collaboration_mode = not hasattr(memory_manager, "build_context_bundle")
+    if hasattr(memory_manager, "build_context_bundle"):
+        context, memory_context = memory_manager.build_context_bundle(session_id, state["prompt"])
+    else:
+        context = memory_manager.build_context_block(session_id, state["prompt"])
+        if hasattr(memory_manager, "format_compact_context"):
+            memory_context = memory_manager.format_compact_context(context)
+        else:
+            memory_context = format_memory_context(context)
 
-Project Memory
-{context['project_text']}
-
-Relevant Memory
-{context['relevant_text']}"""
+    log_stage_duration("Memory Loaded", started_at)
 
     return {
         "session_id": session_id,
@@ -76,24 +110,69 @@ Relevant Memory
         "memory_context": memory_context,
         "history_text": context["history_text"],
         "project_text": context["project_text"],
+        "collaboration_mode": collaboration_mode,
+        "execution_mode": state.get("execution_mode", "full"),
     }
+
+
+# ---------------- Request Classification ---------------- #
+
+def classify_node(state: GraphState):
+
+    started_at = perf_counter()
+    log_stage("Request Classification Started")
+
+    route, execution_mode = classify_request(state["prompt"])
+
+    log_stage(f"Request Classified As {route.title()} ({execution_mode})")
+    log_stage_duration("Request Classification", started_at)
+
+    return {
+        "session_id": state.get("session_id", "default"),
+        "prompt": state["prompt"],
+        "memory_context": state.get("memory_context", ""),
+        "history_text": state.get("history_text", ""),
+        "project_text": state.get("project_text", ""),
+        "collaboration_mode": state.get("collaboration_mode", False),
+        "route": route,
+        "execution_mode": execution_mode,
+    }
+
+
+def classify_selector(state: GraphState):
+
+    if state.get("execution_mode") == "fast" and state.get("route") == "resume":
+        return "resume"
+
+    if state.get("execution_mode") == "fast" and state.get("route") == "explanation":
+        return "explanation"
+
+    return "full"
 
 
 # ---------------- Planner ---------------- #
 
 def planner_node(state: GraphState):
 
+    started_at = perf_counter()
     log_stage("Planner Started")
 
-    planner_prompt = memory_manager.build_planner_prompt(state["prompt"], state.get("session_id", "default"))
-    plan = planner.run(planner_prompt, state.get("memory_context", ""))
+    planner_prompt = f"""Current Prompt
+{state['prompt']}
+
+{state.get('memory_context', '')}
+"""
+    plan = invoke_agent(planner, planner_prompt, state.get("memory_context", ""))
 
     log_stage("Planner Completed")
+    log_stage_duration("Planner", started_at)
 
     return {
         "session_id": state.get("session_id", "default"),
         "prompt": state["prompt"],
         "memory_context": state.get("memory_context", ""),
+        "collaboration_mode": state.get("collaboration_mode", False),
+        "execution_mode": state.get("execution_mode", "full"),
         "plan": plan,
     }
 
@@ -102,18 +181,22 @@ def planner_node(state: GraphState):
 
 def architect_node(state: GraphState):
 
+    started_at = perf_counter()
     log_stage("Architect Started")
 
     architecture_input = f"""Planner Output
 {state['plan']}"""
-    architecture = architect.run(architecture_input, state.get("memory_context", ""))
+    architecture = invoke_agent(architect, architecture_input, state.get("memory_context", ""))
 
     log_stage("Architect Completed")
+    log_stage_duration("Architect", started_at)
 
     return {
         "session_id": state.get("session_id", "default"),
         "prompt": state["prompt"],
         "memory_context": state.get("memory_context", ""),
+        "collaboration_mode": state.get("collaboration_mode", False),
+        "execution_mode": state.get("execution_mode", "full"),
         "plan": state["plan"],
         "architecture": architecture,
     }
@@ -157,16 +240,20 @@ Please revise the architecture before implementation begins.
 
 def architecture_validator_node(state: GraphState):
 
+    started_at = perf_counter()
     log_stage("Architecture Validator Started")
 
     architecture = enforce_architecture_sections(state["architecture"])
 
     log_stage("Architecture Validator Completed")
+    log_stage_duration("Architecture Validator", started_at)
 
     return {
         "session_id": state.get("session_id", "default"),
         "prompt": state["prompt"],
         "memory_context": state.get("memory_context", ""),
+        "collaboration_mode": state.get("collaboration_mode", False),
+        "execution_mode": state.get("execution_mode", "full"),
         "plan": state["plan"],
         "architecture": architecture,
     }
@@ -176,19 +263,23 @@ def architecture_validator_node(state: GraphState):
 
 def router_node(state: GraphState):
 
+    started_at = perf_counter()
     log_stage("Router Started")
 
-    route = router.route(state["prompt"], state.get("memory_context", ""))
+    route = invoke_router(router, state["prompt"], state.get("memory_context", ""))
 
     log_stage(f"Router Selected {route.title()}Agent")
+    log_stage_duration("Router", started_at)
 
     return {
         "session_id": state.get("session_id", "default"),
         "prompt": state["prompt"],
         "memory_context": state.get("memory_context", ""),
+        "collaboration_mode": state.get("collaboration_mode", False),
         "plan": state["plan"],
         "architecture": state["architecture"],
         "route": route,
+        "execution_mode": state.get("execution_mode", "full"),
     }
 
 
@@ -233,21 +324,56 @@ Current Task
 {state['prompt']}"""
 
 
+def format_memory_context(context: dict) -> str:
+
+    return f"""Recent History
+{context.get('history_text', '')}
+
+Project Snapshot
+{context.get('project_text', '')}
+
+Relevant Memory
+{context.get('relevant_text', '')}"""
+
+
+def invoke_agent(agent, user_prompt: str, memory_context: str = "", previous_output: str = ""):
+
+    try:
+        return agent.run(user_prompt, memory_context, previous_output)
+    except TypeError:
+        try:
+            return agent.run(user_prompt, memory_context)
+        except TypeError:
+            return agent.run(user_prompt)
+
+
+def invoke_router(router_agent, user_prompt: str, memory_context: str = ""):
+
+    try:
+        return router_agent.route(user_prompt, memory_context)
+    except TypeError:
+        return router_agent.route(user_prompt)
+
+
 # ---------------- Agent Nodes ---------------- #
 
 def coding_node(state: GraphState):
 
+    started_at = perf_counter()
     log_stage("Coding Started")
 
     enhanced_prompt = build_agent_context(state, previous_output=state.get("architecture", ""))
-    response = coding.run(enhanced_prompt, state.get("memory_context", ""), state.get("plan", ""))
+    response = invoke_agent(coding, enhanced_prompt, state.get("memory_context", ""), state.get("plan", ""))
 
     log_stage("Coding Completed")
+    log_stage_duration("Coding", started_at)
 
     return {
         "session_id": state.get("session_id", "default"),
         "prompt": state["prompt"],
         "memory_context": state.get("memory_context", ""),
+        "collaboration_mode": state.get("collaboration_mode", False),
+        "execution_mode": state.get("execution_mode", "full"),
         "plan": state["plan"],
         "architecture": state["architecture"],
         "route": state["route"],
@@ -259,17 +385,21 @@ def coding_node(state: GraphState):
 
 def debug_node(state: GraphState):
 
+    started_at = perf_counter()
     log_stage("Debug Started")
 
     enhanced_prompt = build_agent_context(state, previous_output=state.get("architecture", ""))
-    response = debug.run(enhanced_prompt, state.get("memory_context", ""), state.get("plan", ""))
+    response = invoke_agent(debug, enhanced_prompt, state.get("memory_context", ""), state.get("plan", ""))
 
     log_stage("Debug Completed")
+    log_stage_duration("Debug", started_at)
 
     return {
         "session_id": state.get("session_id", "default"),
         "prompt": state["prompt"],
         "memory_context": state.get("memory_context", ""),
+        "collaboration_mode": state.get("collaboration_mode", False),
+        "execution_mode": state.get("execution_mode", "full"),
         "plan": state["plan"],
         "architecture": state["architecture"],
         "route": state["route"],
@@ -281,20 +411,24 @@ def debug_node(state: GraphState):
 
 def resume_node(state: GraphState):
 
+    started_at = perf_counter()
     log_stage("Resume Started")
 
     enhanced_prompt = build_agent_context(state, previous_output=state.get("architecture", ""))
-    response = resume.run(enhanced_prompt, state.get("memory_context", ""), state.get("plan", ""))
+    response = invoke_agent(resume, enhanced_prompt, state.get("memory_context", ""), state.get("plan", ""))
 
     log_stage("Resume Completed")
+    log_stage_duration("Resume", started_at)
 
     return {
         "session_id": state.get("session_id", "default"),
         "prompt": state["prompt"],
         "memory_context": state.get("memory_context", ""),
-        "plan": state["plan"],
-        "architecture": state["architecture"],
-        "route": state["route"],
+        "collaboration_mode": state.get("collaboration_mode", False),
+        "execution_mode": state.get("execution_mode", "full"),
+        "plan": state.get("plan", ""),
+        "architecture": state.get("architecture", ""),
+        "route": state.get("route", "resume"),
         "agent_name": "resume",
         "generated_code": response,
         "response": response,
@@ -303,21 +437,25 @@ def resume_node(state: GraphState):
 
 def explanation_node(state: GraphState):
 
+    started_at = perf_counter()
     log_stage("Explanation Started")
 
     previous_output = state.get("reviewed_code") or state.get("generated_code") or state.get("architecture", "")
     enhanced_prompt = build_agent_context(state, previous_output=previous_output)
-    response = explanation.run(enhanced_prompt, state.get("memory_context", ""), previous_output)
+    response = invoke_agent(explanation, enhanced_prompt, state.get("memory_context", ""), previous_output)
 
     log_stage("Explanation Completed")
+    log_stage_duration("Explanation", started_at)
 
     return {
         "session_id": state.get("session_id", "default"),
         "prompt": state["prompt"],
         "memory_context": state.get("memory_context", ""),
-        "plan": state["plan"],
-        "architecture": state["architecture"],
-        "route": state["route"],
+        "collaboration_mode": state.get("collaboration_mode", False),
+        "execution_mode": state.get("execution_mode", "full"),
+        "plan": state.get("plan", ""),
+        "architecture": state.get("architecture", ""),
+        "route": state.get("route", "explanation"),
         "agent_name": "explanation",
         "explanation": response,
         "response": response,
@@ -326,18 +464,22 @@ def explanation_node(state: GraphState):
 
 def reviewer_node(state: GraphState):
 
+    started_at = perf_counter()
     log_stage("Reviewer Started")
 
     previous_output = state.get("generated_code", "")
     review_prompt = build_agent_context(state, previous_output=previous_output)
-    response = reviewer.run(review_prompt, state.get("memory_context", ""), previous_output)
+    response = invoke_agent(reviewer, review_prompt, state.get("memory_context", ""), previous_output)
 
     log_stage("Reviewer Completed")
+    log_stage_duration("Reviewer", started_at)
 
     return {
         "session_id": state.get("session_id", "default"),
         "prompt": state["prompt"],
         "memory_context": state.get("memory_context", ""),
+        "collaboration_mode": state.get("collaboration_mode", False),
+        "execution_mode": state.get("execution_mode", "full"),
         "plan": state["plan"],
         "architecture": state["architecture"],
         "route": state["route"],
@@ -350,6 +492,7 @@ def reviewer_node(state: GraphState):
 
 def save_memory_node(state: GraphState):
 
+    started_at = perf_counter()
     log_stage("Save Memory Started")
 
     session_id = state.get("session_id", "default")
@@ -367,11 +510,14 @@ def save_memory_node(state: GraphState):
     )
 
     log_stage("Workflow Finished")
+    log_stage_duration("Save Memory", started_at)
 
     return {
         "session_id": session_id,
         "prompt": state["prompt"],
         "memory_context": state.get("memory_context", ""),
+        "collaboration_mode": state.get("collaboration_mode", False),
+        "execution_mode": state.get("execution_mode", "full"),
         "plan": state.get("plan", ""),
         "architecture": state.get("architecture", ""),
         "route": state.get("route", "coding"),
@@ -399,11 +545,28 @@ def route_selector(state: GraphState):
     return "coding"
 
 
+def post_generation_selector(state: GraphState):
+
+    if not hasattr(memory_manager, "format_compact_context"):
+        return "reviewer"
+
+    return "save_memory"
+
+
+def resume_post_selector(state: GraphState):
+
+    if not hasattr(memory_manager, "format_compact_context"):
+        return "explanation"
+
+    return "save_memory"
+
+
 # ---------------- Graph ---------------- #
 
 builder = StateGraph(GraphState)
 
 builder.add_node("load_memory", load_memory_node)
+builder.add_node("classify", classify_node)
 builder.add_node("planner", planner_node)
 builder.add_node("architect", architect_node)
 builder.add_node("architecture_validator", architecture_validator_node)
@@ -417,7 +580,16 @@ builder.add_node("save_memory", save_memory_node)
 
 builder.set_entry_point("load_memory")
 
-builder.add_edge("load_memory", "planner")
+builder.add_edge("load_memory", "classify")
+builder.add_conditional_edges(
+    "classify",
+    classify_selector,
+    {
+        "full": "planner",
+        "resume": "resume",
+        "explanation": "explanation",
+    },
+)
 builder.add_edge("planner", "architect")
 builder.add_edge("architect", "architecture_validator")
 builder.add_edge("architecture_validator", "router")
@@ -431,9 +603,30 @@ builder.add_conditional_edges(
         "explanation": "explanation",
     }
 )
-builder.add_edge("coding", "reviewer")
-builder.add_edge("debug", "reviewer")
-builder.add_edge("resume", "explanation")
+builder.add_conditional_edges(
+    "coding",
+    post_generation_selector,
+    {
+        "reviewer": "reviewer",
+        "save_memory": "save_memory",
+    }
+)
+builder.add_conditional_edges(
+    "debug",
+    post_generation_selector,
+    {
+        "reviewer": "reviewer",
+        "save_memory": "save_memory",
+    }
+)
+builder.add_conditional_edges(
+    "resume",
+    resume_post_selector,
+    {
+        "explanation": "explanation",
+        "save_memory": "save_memory",
+    }
+)
 builder.add_edge("reviewer", "explanation")
 builder.add_edge("explanation", "save_memory")
 builder.add_edge("save_memory", END)

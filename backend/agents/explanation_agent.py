@@ -13,7 +13,18 @@ Explain concepts in simple language.
 Use examples.
 
 Be beginner friendly.
-"""
+
+        Return responses in Markdown with this structure:
+
+        # Quick Answer
+
+        # Explanation
+
+        # Example
+
+        # Next Step
+""",
+        task_name="explanation",
         )
 
     def run(self, user_prompt: str, memory_context: str = "", previous_output: str = ""):

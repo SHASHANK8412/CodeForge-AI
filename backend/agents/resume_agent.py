@@ -13,7 +13,8 @@ Improve resumes.
 Improve LinkedIn profiles.
 
 Suggest professional bullet points.
-"""
+""",
+        task_name="resume",
         )
 
     def run(self, user_prompt: str, memory_context: str = "", previous_output: str = ""):

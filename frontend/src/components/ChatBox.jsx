@@ -5,12 +5,20 @@ import Loading from "./Loading";
 
 import { sendMessage } from "../services/api";
 import { generatePlan } from "../services/plannerApi";
+import {
+    getActiveSessionId,
+    getSavedMessages,
+    resetChatSession,
+    loadSessionMessages,
+    saveMessages,
+} from "../utils/chatStorage";
 
 function ChatBox() {
+    const initialSessionId = getActiveSessionId();
+    const [sessionId, setSessionId] = useState(initialSessionId);
     // Load chat history
     const [messages, setMessages] = useState(() => {
-        const savedMessages = localStorage.getItem("messages");
-        return savedMessages ? JSON.parse(savedMessages) : [];
+        return getSavedMessages(initialSessionId);
     });
 
     const [loading, setLoading] = useState(false);
@@ -18,14 +26,43 @@ function ChatBox() {
 
     const bottomRef = useRef(null);
 
+    useEffect(() => {
+        const handleNewChat = () => {
+            const nextSessionId = resetChatSession();
+            setSessionId(nextSessionId);
+            setMessages([]);
+            setLoading(false);
+            window.dispatchEvent(new CustomEvent("aiforge:session-changed", { detail: { sessionId: nextSessionId } }));
+        };
+
+        const handleOpenSession = (event) => {
+            const nextSessionId = event.detail?.sessionId;
+
+            if (!nextSessionId) return;
+
+            setSessionId(nextSessionId);
+            setMessages(loadSessionMessages(nextSessionId));
+            setLoading(false);
+            window.dispatchEvent(new CustomEvent("aiforge:session-changed", { detail: { sessionId: nextSessionId } }));
+        };
+
+        window.addEventListener("aiforge:new-chat", handleNewChat);
+        window.addEventListener("aiforge:open-session", handleOpenSession);
+
+        return () => {
+            window.removeEventListener("aiforge:new-chat", handleNewChat);
+            window.removeEventListener("aiforge:open-session", handleOpenSession);
+        };
+    }, []);
+
     // Save chat history + Auto Scroll
     useEffect(() => {
-        localStorage.setItem("messages", JSON.stringify(messages));
+        saveMessages(sessionId, messages);
 
         bottomRef.current?.scrollIntoView({
             behavior: "smooth",
         });
-    }, [messages, loading]);
+    }, [messages, loading, sessionId]);
 
     // Send Message
     const handleSend = async (text) => {
@@ -47,16 +84,16 @@ function ChatBox() {
             let reply;
 
             if (plannerMode) {
-                reply = await generatePlan(text);
+                reply = await generatePlan(text, sessionId);
             } else {
-                reply = await sendMessage(text);
+                reply = await sendMessage(text, sessionId);
             }
 
             setMessages((prev) => [
                 ...prev,
                 {
                     sender: "ai",
-                    text: reply,
+                    text: typeof reply === "string" ? reply : reply?.response ?? String(reply),
                 },
             ]);
 
@@ -81,8 +118,10 @@ function ChatBox() {
 
     // Clear Chat
     const clearChat = () => {
-        localStorage.removeItem("messages");
+        const nextSessionId = resetChatSession();
+        setSessionId(nextSessionId);
         setMessages([]);
+        window.dispatchEvent(new CustomEvent("aiforge:session-changed", { detail: { sessionId: nextSessionId } }));
     };
 
     return (

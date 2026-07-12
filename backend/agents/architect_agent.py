@@ -35,7 +35,8 @@ Always generate:
 # Deployment Strategy
 
 Return everything in Markdown.
-"""
+""",
+        task_name="architect",
         )
 
     def run(self, plan: str, memory_context: str = "", previous_output: str = ""):

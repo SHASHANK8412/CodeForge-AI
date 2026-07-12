@@ -1,7 +1,9 @@
+import { getActiveSessionId } from "../utils/chatStorage";
+
 const API = "http://127.0.0.1:8000";
 
 
-export async function generatePlan(prompt) {
+export async function generatePlan(prompt, sessionId = getActiveSessionId()) {
 
     const response = await fetch(`${API}/plan`, {
 
@@ -13,6 +15,7 @@ export async function generatePlan(prompt) {
 
         body: JSON.stringify({
             message: prompt,
+            session_id: sessionId,
         }),
 
     });

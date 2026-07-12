@@ -1,22 +1,7 @@
-import ollama
+    from backend.services.llm import generate_text
 
 
-class OllamaService:
+    class OllamaService:
 
-    def generate(self, system_prompt, user_prompt):
-
-        response = ollama.chat(
-            model="qwen2.5",
-            messages=[
-                {
-                    "role": "system",
-                    "content": system_prompt
-                },
-                {
-                    "role": "user",
-                    "content": user_prompt
-                }
-            ]
-        )
-
-        return response["message"]["content"]
+        def generate(self, system_prompt, user_prompt):
+            return generate_text(system_prompt, user_prompt, task="general")

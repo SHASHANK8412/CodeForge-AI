@@ -22,26 +22,45 @@ Your responsibilities:
 - Suggest improvements if applicable.
 - Never generate incomplete code intentionally.
 
-Return responses in Markdown.
+Return responses in Markdown using this format:
 
-Use proper code blocks with language identifiers.
-"""
+# Summary
+
+# Implementation
+
+- List the files changed.
+- Explain the key logic briefly.
+
+# Code
+
+- Put complete code in fenced blocks.
+
+# Notes
+
+- Mention any assumptions or follow-up steps.
+
+Keep the answer concise and production-ready.
+""",
+        task_name="coding",
         )
 
     def run(self, user_prompt, memory_context: str = "", previous_output: str = ""):
 
         final_prompt = f"""
+Response Requirements
+- Use Markdown.
+- Prefer concise sections.
+- If code is included, use fenced code blocks.
+
 Memory Context
 {memory_context}
 
 Previous Agent Output
 {previous_output}
 
-{self.system_prompt}
-
 User Request
 
 {user_prompt}
 """
 
-        return generate_code(final_prompt)
+        return generate_code(final_prompt, task=self.task_name, system_prompt=self.system_prompt)

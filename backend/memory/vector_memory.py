@@ -14,24 +14,32 @@ class VectorMemory:
     def __init__(self, storage_root: Path | None = None):
         self.storage_root = storage_root or Path(__file__).resolve().parent / "store" / "vectors"
         self.storage_root.mkdir(parents=True, exist_ok=True)
+        self._cache: dict[str, list[dict[str, Any]]] = {}
 
     def _session_file(self, session_id: str) -> Path:
         safe_session_id = re.sub(r"[^A-Za-z0-9_.-]", "_", session_id or "default")
         return self.storage_root / f"{safe_session_id}.json"
 
     def _read_records(self, session_id: str) -> list[dict[str, Any]]:
+        cached = self._cache.get(session_id)
+        if cached is not None:
+            return [dict(record) for record in cached]
+
         file_path = self._session_file(session_id)
         if not file_path.exists():
             return []
 
         try:
-            return json.loads(file_path.read_text(encoding="utf-8"))
+            records = json.loads(file_path.read_text(encoding="utf-8"))
+            self._cache[session_id] = [dict(record) for record in records]
+            return records
         except json.JSONDecodeError:
             return []
 
     def _write_records(self, session_id: str, records: list[dict[str, Any]]) -> None:
         file_path = self._session_file(session_id)
         file_path.write_text(json.dumps(records, indent=2, ensure_ascii=False), encoding="utf-8")
+        self._cache[session_id] = [dict(record) for record in records]
 
     def add_text(self, session_id: str, text: str, metadata: dict[str, Any] | None = None) -> dict[str, Any]:
         record = {
@@ -81,3 +89,4 @@ class VectorMemory:
         file_path = self._session_file(session_id)
         if file_path.exists():
             file_path.unlink()
+        self._cache.pop(session_id, None)

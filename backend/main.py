@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import asyncio
+from time import perf_counter
 from pydantic import BaseModel
 
 from backend.graph.workflow import graph
@@ -16,8 +18,8 @@ app = FastAPI(
 # Allow frontend (React/Vite) to connect
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -48,13 +50,18 @@ def health():
 
 
 @app.post("/generate")
-def generate(request: PromptRequest):
+async def generate(request: PromptRequest):
+    started_at = perf_counter()
     try:
-        result = graph.invoke(
+        result = await asyncio.to_thread(
+            graph.invoke,
             {
                 "prompt": request.prompt
-            }
+            },
         )
+
+        elapsed_ms = (perf_counter() - started_at) * 1000
+        print(f"/generate completed in {elapsed_ms:.1f}ms")
 
         return {
             "success": True,

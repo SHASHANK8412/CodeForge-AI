@@ -29,12 +29,17 @@ class ProjectMemory:
     def __init__(self, storage_root: Path | None = None):
         self.storage_root = storage_root or Path(__file__).resolve().parent / "store" / "projects"
         self.storage_root.mkdir(parents=True, exist_ok=True)
+        self._cache: dict[str, dict[str, Any]] = {}
 
     def _session_file(self, session_id: str) -> Path:
         safe_session_id = re.sub(r"[^A-Za-z0-9_.-]", "_", session_id or "default")
         return self.storage_root / f"{safe_session_id}.json"
 
     def load_project(self, session_id: str) -> dict[str, Any]:
+        cached = self._cache.get(session_id)
+        if cached is not None:
+            return deepcopy(cached)
+
         file_path = self._session_file(session_id)
         if not file_path.exists():
             return deepcopy(DEFAULT_PROJECT_STATE)
@@ -46,6 +51,7 @@ class ProjectMemory:
 
         project = deepcopy(DEFAULT_PROJECT_STATE)
         project.update(data)
+        self._cache[session_id] = deepcopy(project)
         return project
 
     def save_project(self, session_id: str, project_data: dict[str, Any]) -> dict[str, Any]:
@@ -55,6 +61,7 @@ class ProjectMemory:
 
         file_path = self._session_file(session_id)
         file_path.write_text(json.dumps(project, indent=2, ensure_ascii=False), encoding="utf-8")
+        self._cache[session_id] = deepcopy(project)
         return project
 
     def update_project(self, session_id: str, updates: dict[str, Any]) -> dict[str, Any]:
@@ -71,4 +78,5 @@ class ProjectMemory:
         return self.save_project(session_id, project)
 
     def clear_project(self, session_id: str) -> None:
+        self._cache.pop(session_id, None)
         self.save_project(session_id, deepcopy(DEFAULT_PROJECT_STATE))

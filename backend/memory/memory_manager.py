@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+from concurrent.futures import ThreadPoolExecutor
+
+from backend.config import MAX_HISTORY_MESSAGES
 
 from backend.memory.conversation_memory import ConversationMemory
 from backend.memory.project_memory import ProjectMemory
@@ -25,9 +28,15 @@ class MemoryManager:
         self.vector_memory = VectorMemory()
 
     def load_session(self, session_id: str, prompt: str = "") -> SessionContext:
-        history = self.conversation_memory.get_history(session_id, limit=8)
-        project = self.project_memory.load_project(session_id)
-        relevant_memory = self.vector_memory.search(session_id, prompt, top_k=3) if prompt else []
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            history_future = executor.submit(self.conversation_memory.get_history, session_id, MAX_HISTORY_MESSAGES)
+            project_future = executor.submit(self.project_memory.load_project, session_id)
+            relevant_future = executor.submit(self.vector_memory.search, session_id, prompt, 2) if prompt else None
+
+            history = history_future.result()
+            project = project_future.result()
+            relevant_memory = relevant_future.result() if relevant_future is not None else []
+
         last_message = self.conversation_memory.last_message(session_id)
 
         return SessionContext(
@@ -43,7 +52,7 @@ class MemoryManager:
             return "No previous conversation history."
 
         lines = []
-        for item in history[-8:]:
+        for item in history[-MAX_HISTORY_MESSAGES:]:
             lines.append(
                 f"- User: {item.get('user_prompt', '')}\n"
                 f"  AI: {item.get('ai_response', '')}\n"
@@ -79,6 +88,16 @@ Last Task: {project.get('last_task', 'None')}"""
 
         return "\n".join(lines)
 
+    def format_compact_context(self, context: dict[str, Any]) -> str:
+        return f"""Recent History
+{context['history_text']}
+
+Project Snapshot
+{context['project_text']}
+
+Relevant Memory
+{context['relevant_text']}"""
+
     def build_context_block(self, session_id: str, prompt: str) -> dict[str, Any]:
         session = self.load_session(session_id, prompt=prompt)
         return {
@@ -91,6 +110,10 @@ Last Task: {project.get('last_task', 'None')}"""
             "project_text": self.format_project(session.project),
             "relevant_text": self.format_relevant_memory(session.relevant_memory),
         }
+
+    def build_context_bundle(self, session_id: str, prompt: str) -> tuple[dict[str, Any], str]:
+        context = self.build_context_block(session_id, prompt)
+        return context, self.format_compact_context(context)
 
     def build_planner_prompt(self, prompt: str, session_id: str) -> str:
         context = self.build_context_block(session_id, prompt)
@@ -140,6 +163,10 @@ Planner Output
 Architect Output
 {architecture}
 """
+
+    def build_compact_memory_context(self, session_id: str, prompt: str) -> str:
+        context = self.build_context_block(session_id, prompt)
+        return self.format_compact_context(context)
 
     def save_interaction(
         self,

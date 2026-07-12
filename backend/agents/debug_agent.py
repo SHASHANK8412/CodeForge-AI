@@ -15,7 +15,8 @@ Explain why they occur.
 Provide corrected code.
 
 Suggest improvements.
-"""
+""",
+        task_name="debug",
         )
 
     def run(self, user_prompt: str, memory_context: str = "", previous_output: str = ""):

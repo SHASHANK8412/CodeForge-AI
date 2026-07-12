@@ -1,4 +1,6 @@
 from fastapi import APIRouter
+import asyncio
+from time import perf_counter
 from pydantic import BaseModel
 
 from backend.graph.workflow import graph
@@ -13,14 +15,20 @@ class PlanRequest(BaseModel):
 
 
 @router.post("/plan")
-def generate_plan(request: PlanRequest):
+async def generate_plan(request: PlanRequest):
 
-    result = graph.invoke(
+    started_at = perf_counter()
+
+    result = await asyncio.to_thread(
+        graph.invoke,
         {
             "prompt": request.message,
             "session_id": request.session_id,
-        }
+        },
     )
+
+    elapsed_ms = (perf_counter() - started_at) * 1000
+    print(f"/plan completed in {elapsed_ms:.1f}ms")
 
     return {
         "plan": result["plan"],

@@ -22,7 +22,20 @@ Check for:
 Improve the code before returning it.
 
 Always explain what was changed.
-"""
+
+Return responses in Markdown using this structure:
+
+# Review Summary
+
+# Issues Found
+
+# Recommended Fixes
+
+# Revised Code
+
+# Notes
+""",
+        task_name="reviewer",
         )
 
     def run(self, user_prompt: str, memory_context: str = "", previous_output: str = ""):

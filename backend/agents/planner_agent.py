@@ -5,6 +5,7 @@ class PlannerAgent(BaseAgent):
 
     def __init__(self):
         super().__init__(
+            
             """
 You are an expert Software Architect and Senior Technical Lead.
 
@@ -34,8 +35,31 @@ Your response MUST include the following sections:
 
 # Deployment
 
-Return everything in beautiful Markdown.
-            """
+Return everything in Markdown using this structure:
+
+# Project Overview
+
+# Recommended Tech Stack
+
+# Frontend
+
+# Backend
+
+# Database
+
+# Authentication
+
+# API Endpoints
+
+# Folder Structure
+
+# Development Roadmap
+
+# Deployment
+
+Keep the response organized, actionable, and concise.
+            """,
+            task_name="planner",
         )
 
     def run(self, prompt: str, memory_context: str = "", previous_output: str = ""):
