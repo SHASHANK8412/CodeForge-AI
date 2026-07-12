@@ -7,19 +7,32 @@ class BaseAgent:
         self.system_prompt = system_prompt
         self.llm = OllamaService()
 
-    def build_prompt(self, user_prompt: str, memory_context: str = "") -> str:
+    def build_prompt(
+        self,
+        user_prompt: str,
+        memory_context: str = "",
+        previous_output: str = "",
+    ) -> str:
 
-        if not memory_context:
-            return user_prompt
+        sections = []
 
-        return f"""Memory Context
-{memory_context}
+        if memory_context:
+            sections.append(f"Memory Context\n{memory_context}")
 
-Current Task
-{user_prompt}"""
+        if previous_output:
+            sections.append(f"Previous Agent Output\n{previous_output}")
 
-    def run(self, user_prompt: str, memory_context: str = ""):
-        final_prompt = self.build_prompt(user_prompt, memory_context)
+        sections.append(f"Current Task\n{user_prompt}")
+
+        return "\n\n".join(sections)
+
+    def run(
+        self,
+        user_prompt: str,
+        memory_context: str = "",
+        previous_output: str = "",
+    ):
+        final_prompt = self.build_prompt(user_prompt, memory_context, previous_output)
         return self.llm.generate(
             self.system_prompt,
             final_prompt

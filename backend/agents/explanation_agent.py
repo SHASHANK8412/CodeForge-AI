@@ -15,3 +15,6 @@ Use examples.
 Be beginner friendly.
 """
         )
+
+    def run(self, user_prompt: str, memory_context: str = "", previous_output: str = ""):
+        return super().run(user_prompt, memory_context, previous_output)

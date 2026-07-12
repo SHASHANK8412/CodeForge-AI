@@ -38,5 +38,5 @@ Return everything in beautiful Markdown.
             """
         )
 
-    def run(self, prompt: str, memory_context: str = ""):
-        return super().run(prompt, memory_context)
+    def run(self, prompt: str, memory_context: str = "", previous_output: str = ""):
+        return super().run(prompt, memory_context, previous_output)

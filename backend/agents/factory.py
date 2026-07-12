@@ -4,6 +4,7 @@ from backend.agents.resume_agent import ResumeAgent
 from backend.agents.explanation_agent import ExplanationAgent
 from backend.agents.planner_agent import PlannerAgent
 from backend.agents.architect_agent import ArchitectAgent
+from backend.agents.reviewer_agent import ReviewerAgent
 
 
 class AgentFactory:
@@ -28,6 +29,9 @@ class AgentFactory:
 
         elif agent_type == "planner":
             return PlannerAgent()
+
+        elif agent_type == "reviewer":
+            return ReviewerAgent()
 
         else:
             raise ValueError(f"Unknown agent type: {agent_type}")

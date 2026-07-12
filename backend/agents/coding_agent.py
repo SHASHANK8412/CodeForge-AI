@@ -28,10 +28,14 @@ Use proper code blocks with language identifiers.
 """
         )
 
-    def run(self, user_prompt, memory_context: str = ""):
+    def run(self, user_prompt, memory_context: str = "", previous_output: str = ""):
 
         final_prompt = f"""
+Memory Context
 {memory_context}
+
+Previous Agent Output
+{previous_output}
 
 {self.system_prompt}
 
