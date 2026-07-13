@@ -8,13 +8,28 @@ class RouterAgent:
         prompt = user_prompt.lower()
         memory_hint = memory_context.lower()
 
-        if any(phrase in prompt for phrase in ["continue", "proceed", "next", "resume where we left off"]):
+        # Continue previous conversation
+        if any(
+            phrase in prompt
+            for phrase in [
+                "continue",
+                "proceed",
+                "next",
+                "resume where we left off",
+            ]
+        ):
             if "resume" in memory_hint:
                 return "resume"
+
             if "debug" in memory_hint or "error" in memory_hint:
                 return "debug"
+
             if "explain" in memory_hint or "architecture" in memory_hint:
                 return "explanation"
+
+            if "rag" in memory_hint or "document" in memory_hint:
+                return "rag"
+
             return "coding"
 
         debug_keywords = [
@@ -45,11 +60,34 @@ class RouterAgent:
             "teach",
         ]
 
+        rag_keywords = [
+            "pdf",
+            "document",
+            "documents",
+            "knowledge",
+            "rag",
+            "search document",
+            "search pdf",
+            "find in document",
+            "skills",
+            "programming languages",
+            "technologies",
+            "frameworks",
+            "certifications",
+            "projects",
+            "experience",
+            "education",
+            "database",
+        ]
+
         if any(word in prompt for word in debug_keywords):
             return "debug"
 
         if any(word in prompt for word in resume_keywords):
             return "resume"
+
+        if any(word in prompt for word in rag_keywords):
+            return "rag"
 
         if any(word in prompt for word in explanation_keywords):
             return "explanation"

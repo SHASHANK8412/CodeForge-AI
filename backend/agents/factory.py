@@ -5,6 +5,7 @@ from backend.agents.explanation_agent import ExplanationAgent
 from backend.agents.planner_agent import PlannerAgent
 from backend.agents.architect_agent import ArchitectAgent
 from backend.agents.reviewer_agent import ReviewerAgent
+from backend.agents.rag_agent import RAGAgent
 
 
 class AgentFactory:
@@ -20,7 +21,7 @@ class AgentFactory:
 
         elif agent_type == "resume":
             return ResumeAgent()
-        
+
         elif agent_type == "architect":
             return ArchitectAgent()
 
@@ -32,6 +33,9 @@ class AgentFactory:
 
         elif agent_type == "reviewer":
             return ReviewerAgent()
+
+        elif agent_type == "rag":
+            return RAGAgent()
 
         else:
             raise ValueError(f"Unknown agent type: {agent_type}")
