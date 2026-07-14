@@ -8,7 +8,7 @@ function Planner() {
 
     const [prompt, setPrompt] = useState("");
 
-    const [plan, setPlan] = useState("");
+    const [plan, setPlan] = useState(null);
 
     const [loading, setLoading] = useState(false);
 

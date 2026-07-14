@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from backend.graph.workflow import graph
 from backend.routes.chat import router as chat_router
+from backend.routes.rag import legacy_router as rag_legacy_router
 from backend.routes.rag import router as rag_router
 from backend.routes.plan import router as plan_router
 from backend.routes.memory import router as memory_router
@@ -28,6 +29,7 @@ app.add_middleware(
 def register_routers() -> None:
     app.include_router(chat_router)
     app.include_router(rag_router)
+    app.include_router(rag_legacy_router)
     app.include_router(plan_router)
     app.include_router(memory_router)
 
@@ -37,6 +39,7 @@ register_routers()
 
 class PromptRequest(BaseModel):
     prompt: str
+    session_id: str = "default"
 
 
 @app.get("/")
@@ -62,7 +65,8 @@ async def generate(request: PromptRequest):
         result = await asyncio.to_thread(
             graph.invoke,
             {
-                "prompt": request.prompt
+                "prompt": request.prompt,
+                "session_id": request.session_id,
             },
         )
 
@@ -70,10 +74,10 @@ async def generate(request: PromptRequest):
         print(f"/generate completed in {elapsed_ms:.1f}ms")
 
         return {
-            "success": True,
-            "plan": result["plan"],
-            "architecture": result["architecture"],
-            "response": result["response"]
+            "generated_code": result.get("generated_code", ""),
+            "reviewed_code": result.get("reviewed_code", ""),
+            "testing_report": result.get("testing_report", ""),
+            "explanation": result.get("explanation", ""),
         }
 
     except Exception as e:

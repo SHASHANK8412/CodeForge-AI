@@ -5,7 +5,7 @@ const API = "http://127.0.0.1:8000";
 
 export async function generatePlan(prompt, sessionId = getActiveSessionId()) {
 
-    const response = await fetch(`${API}/plan`, {
+    const response = await fetch(`${API}/generate`, {
 
         method: "POST",
 
@@ -22,5 +22,5 @@ export async function generatePlan(prompt, sessionId = getActiveSessionId()) {
 
     const data = await response.json();
 
-    return data.plan;
+    return data;
 }

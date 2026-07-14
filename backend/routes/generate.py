@@ -8,6 +8,7 @@ router = APIRouter()
 
 class Prompt(BaseModel):
     prompt: str
+    session_id: str = "default"
 
 
 @router.post("/generate")
@@ -15,11 +16,14 @@ def generate(data: Prompt):
 
     result = graph.invoke(
         {
-            "prompt": data.prompt
+            "prompt": data.prompt,
+            "session_id": data.session_id,
         }
     )
 
     return {
-        "plan": result["plan"],
-        "response": result["response"]
+        "generated_code": result.get("generated_code", ""),
+        "reviewed_code": result.get("reviewed_code", ""),
+        "testing_report": result.get("testing_report", ""),
+        "explanation": result.get("explanation", ""),
     }

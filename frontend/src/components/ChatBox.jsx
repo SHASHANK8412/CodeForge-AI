@@ -1,55 +1,121 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import InputBar from "./InputBar";
-import Message from "./Message";
 import Loading from "./Loading";
-
+import Message from "./Message";
+import RagUploadPanel from "./RagUploadPanel";
 import { sendMessage } from "../services/api";
+import { createConversation, getConversationHistory } from "../services/conversationApi";
 import { generatePlan } from "../services/plannerApi";
 import { queryRagDocuments, uploadRagDocuments } from "../services/ragApi";
-import {
-    getActiveSessionId,
-    getSavedMessages,
-    resetChatSession,
-    loadSessionMessages,
-    saveMessages,
-} from "../utils/chatStorage";
+import { getActiveSessionId, setActiveSessionId } from "../utils/chatStorage";
+
+
+function formatStructuredResponse(response) {
+    if (!response || typeof response !== "object") {
+        return String(response || "");
+    }
+
+    return [
+        "### Generated Code",
+        "```text",
+        response.generated_code || "",
+        "```",
+        "",
+        "### Reviewer Feedback",
+        "```text",
+        response.reviewed_code || "",
+        "```",
+        "",
+        "### Testing Report",
+        "```text",
+        response.testing_report || "",
+        "```",
+        "",
+        "### Explanation",
+        "```text",
+        response.explanation || "",
+        "```",
+    ].join("\n");
+}
 
 function ChatBox() {
-    const initialSessionId = getActiveSessionId();
-    const [sessionId, setSessionId] = useState(initialSessionId);
-    // Load chat history
-    const [messages, setMessages] = useState(() => {
-        return getSavedMessages(initialSessionId);
-    });
-
+    const [sessionId, setSessionId] = useState(getActiveSessionId());
+    const [conversationTitle, setConversationTitle] = useState("Untitled Conversation");
+    const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(false);
     const [ragUploading, setRagUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [plannerMode, setPlannerMode] = useState(false);
     const [documentMode, setDocumentMode] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [ragStatus, setRagStatus] = useState("");
+    const [ragError, setRagError] = useState("");
 
     const bottomRef = useRef(null);
     const fileInputRef = useRef(null);
 
+    const toUiMessages = (historyMessages) =>
+        historyMessages.map((message) => ({
+            sender: message.role === "assistant" ? "ai" : "user",
+            text: message.content,
+        }));
+
+    const loadConversation = async (conversationId) => {
+        if (!conversationId) {
+            return;
+        }
+
+        const response = await getConversationHistory(conversationId);
+        setSessionId(conversationId);
+        setActiveSessionId(conversationId);
+        setConversationTitle(response.conversation?.title || "Untitled Conversation");
+        setMessages(toUiMessages(response.messages || []));
+        window.dispatchEvent(new CustomEvent("aiforge:session-changed", { detail: { sessionId: conversationId } }));
+    };
+
     useEffect(() => {
-        const handleNewChat = () => {
-            const nextSessionId = resetChatSession();
-            setSessionId(nextSessionId);
-            setMessages([]);
-            setLoading(false);
-            window.dispatchEvent(new CustomEvent("aiforge:session-changed", { detail: { sessionId: nextSessionId } }));
+        const initialize = async () => {
+            const activeConversationId = getActiveSessionId();
+
+            if (!activeConversationId) {
+                return;
+            }
+
+            try {
+                await loadConversation(activeConversationId);
+            } catch (error) {
+                if (error?.response?.status === 404) {
+                    setActiveSessionId("");
+                    setSessionId("");
+                    setConversationTitle("Untitled Conversation");
+                    setMessages([]);
+                } else {
+                    console.error(error);
+                }
+            }
         };
 
-        const handleOpenSession = (event) => {
+        initialize();
+
+        const handleNewChat = async (event) => {
             const nextSessionId = event.detail?.sessionId;
+            if (!nextSessionId) {
+                setSessionId("");
+                setConversationTitle("Untitled Conversation");
+                setMessages([]);
+                return;
+            }
 
-            if (!nextSessionId) return;
+            await loadConversation(nextSessionId);
+        };
 
-            setSessionId(nextSessionId);
-            setMessages(loadSessionMessages(nextSessionId));
-            setLoading(false);
-            window.dispatchEvent(new CustomEvent("aiforge:session-changed", { detail: { sessionId: nextSessionId } }));
+        const handleOpenSession = async (event) => {
+            const nextSessionId = event.detail?.sessionId;
+            if (!nextSessionId) {
+                return;
+            }
+
+            await loadConversation(nextSessionId);
         };
 
         window.addEventListener("aiforge:new-chat", handleNewChat);
@@ -61,140 +127,145 @@ function ChatBox() {
         };
     }, []);
 
-    // Save chat history + Auto Scroll
     useEffect(() => {
-        saveMessages(sessionId, messages);
-
-        bottomRef.current?.scrollIntoView({
-            behavior: "smooth",
-        });
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, loading, sessionId]);
 
-    // Send Message
     const handleSend = async (text) => {
-        if (!text.trim() || loading) return;
+        if (!text.trim() || loading) {
+            return;
+        }
 
-        // User Message
-        setMessages((prev) => [
-            ...prev,
-            {
-                sender: "user",
-                text,
-            },
-        ]);
-
+        setMessages((current) => [...current, { sender: "user", text }]);
         setLoading(true);
+        setRagError("");
 
         try {
+            let activeConversationId = sessionId;
 
-            let reply;
+            if (!activeConversationId) {
+                const conversation = await createConversation({ firstMessage: text });
+                activeConversationId = conversation.conversation_id;
+                setSessionId(activeConversationId);
+                setConversationTitle(conversation.title || "Untitled Conversation");
+                setActiveSessionId(activeConversationId);
+                window.dispatchEvent(new CustomEvent("aiforge:session-changed", { detail: { sessionId: activeConversationId } }));
+            }
 
             if (documentMode) {
                 setRagStatus("");
+
                 if (selectedFiles.length > 0) {
                     setRagUploading(true);
-                    await uploadRagDocuments(selectedFiles);
+                    setUploadProgress(0);
+
+                    await uploadRagDocuments(selectedFiles, (event) => {
+                        if (event.total) {
+                            setUploadProgress(Math.round((event.loaded * 100) / event.total));
+                        }
+                    });
+
                     setRagStatus(`Indexed ${selectedFiles.length} file(s).`);
                     setSelectedFiles([]);
+
                     if (fileInputRef.current) {
                         fileInputRef.current.value = "";
                     }
                 }
 
                 const ragResult = await queryRagDocuments(text);
-                const sourceText = (ragResult.sources || [])
-                    .map((source, index) => {
-                        const location = [source.source, source.page !== "" && source.page !== null ? `page ${source.page}` : null]
-                            .filter(Boolean)
-                            .join(" • ");
-                        return `- ${index + 1}. ${location || "source"}: ${source.snippet}`;
-                    })
-                    .join("\n");
+                const sourceDetails = ragResult.source_details || [];
+                const sourceList = sourceDetails.length > 0
+                    ? sourceDetails.map((source) => `- ${source.source}${source.page !== "" && source.page !== null ? `, page ${source.page}` : ""}`).join("\n")
+                    : (ragResult.sources || []).map((source) => `- ${source}`).join("\n");
 
-                reply = `${ragResult.answer}\n\n### Sources\n${sourceText || "- No source metadata available"}`;
-            } else if (plannerMode) {
-                reply = await generatePlan(text, sessionId);
-            } else {
-                reply = await sendMessage(text, sessionId);
+                setMessages((current) => [
+                    ...current,
+                    {
+                        sender: "ai",
+                        text: `${ragResult.answer}\n\n### Sources\n${sourceList || "- No source metadata available"}`,
+                    },
+                ]);
+
+                return;
             }
 
-            setMessages((prev) => [
-                ...prev,
-                {
-                    sender: "ai",
-                    text: typeof reply === "string" ? reply : reply?.response ?? String(reply),
-                },
-            ]);
+            if (plannerMode) {
+                const planResponse = await generatePlan(text, activeConversationId);
+                setMessages((current) => [
+                    ...current,
+                    {
+                        sender: "ai",
+                        text: formatStructuredResponse(planResponse),
+                    },
+                ]);
+                return;
+            }
 
+            const response = await sendMessage(text, activeConversationId);
+
+            if (response?.conversation) {
+                setSessionId(response.conversation.conversation_id);
+                setConversationTitle(response.conversation.title || conversationTitle);
+                setActiveSessionId(response.conversation.conversation_id);
+            }
+
+            if (response?.messages?.length) {
+                setMessages(toUiMessages(response.messages));
+            } else {
+                setMessages((current) => [
+                    ...current,
+                    {
+                        sender: "ai",
+                        text: response?.response || "",
+                    },
+                ]);
+            }
         } catch (error) {
-
             console.error(error);
-
-            setMessages((prev) => [
-                ...prev,
+            setRagError(error?.response?.data?.detail || error?.message || "Something went wrong while processing the request.");
+            setMessages((current) => [
+                ...current,
                 {
                     sender: "ai",
-                    text: "❌ Something went wrong!",
+                    text: `❌ ${error?.response?.data?.detail || "Something went wrong!"}`,
                 },
             ]);
-
         } finally {
-
             setRagUploading(false);
+            setUploadProgress(0);
             setLoading(false);
-
         }
     };
 
-    // Clear Chat
-    const clearChat = () => {
-        const nextSessionId = resetChatSession();
-        setSessionId(nextSessionId);
+    const handleNewConversation = async () => {
+        const conversation = await createConversation();
+        setSessionId(conversation.conversation_id);
+        setConversationTitle(conversation.title || "Untitled Conversation");
+        setActiveSessionId(conversation.conversation_id);
         setMessages([]);
-        window.dispatchEvent(new CustomEvent("aiforge:session-changed", { detail: { sessionId: nextSessionId } }));
+        window.dispatchEvent(new CustomEvent("aiforge:new-chat", { detail: { sessionId: conversation.conversation_id } }));
+        window.dispatchEvent(new CustomEvent("aiforge:open-session", { detail: { sessionId: conversation.conversation_id } }));
     };
 
     return (
         <div className="flex flex-col h-full max-w-5xl mx-auto">
-
-            {/* Header */}
-
             <div className="flex justify-between items-center border-b border-gray-700 py-4 px-6">
-
                 <div>
-
-                    <h1 className="text-3xl font-bold">
-                        🚀 AIForge
-                    </h1>
-
-                    <p className="text-sm text-gray-400">
-                        Powered by Qwen 2.5
-                    </p>
-
+                    <h1 className="text-3xl font-bold">🚀 AIForge</h1>
+                    <p className="text-sm text-gray-400">{conversationTitle}</p>
                 </div>
 
                 <button
-                    onClick={clearChat}
+                    onClick={handleNewConversation}
                     disabled={loading}
-                    className="
-                        bg-red-600
-                        hover:bg-red-700
-                        disabled:bg-gray-700
-                        px-4
-                        py-2
-                        rounded-lg
-                        transition
-                    "
+                    className="bg-red-600 hover:bg-red-700 disabled:bg-gray-700 px-4 py-2 rounded-lg transition"
                 >
-                    Clear Chat
+                    New Chat
                 </button>
-
             </div>
 
-            {/* Planner Toggle */}
-
             <div className="flex flex-wrap gap-3 px-6 py-4 border-b border-gray-700">
-
                 <button
                     onClick={() => {
                         setPlannerMode(false);
@@ -234,99 +305,48 @@ function ChatBox() {
                 >
                     📚 Document Mode
                 </button>
-
             </div>
 
-            {documentMode && (
-                <div className="px-6 py-4 border-b border-gray-700 space-y-3 bg-[#262730]">
-                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <label className="text-sm text-gray-300 font-medium">
-                            Upload PDFs, text files, or markdown documents.
-                        </label>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            multiple
-                            accept=".pdf,.txt,.md"
-                            onChange={(event) => setSelectedFiles(Array.from(event.target.files || []))}
-                            className="text-sm text-gray-300"
-                        />
-                    </div>
+            <RagUploadPanel
+                documentMode={documentMode}
+                selectedFiles={selectedFiles}
+                onFileChange={(event) => setSelectedFiles(Array.from(event.target.files || []))}
+                onToggleDocumentMode={() => {
+                    setDocumentMode(false);
+                    setPlannerMode(false);
+                }}
+                uploadProgress={uploadProgress}
+                uploading={ragUploading}
+                status={ragStatus}
+                error={ragError}
+                inputRef={fileInputRef}
+            />
 
-                    {selectedFiles.length > 0 && (
-                        <div className="text-sm text-amber-300">
-                            Selected: {selectedFiles.map((file) => file.name).join(", ")}
-                        </div>
-                    )}
-
-                    {ragStatus && (
-                        <div className="text-sm text-green-300">
-                            {ragStatus}
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Messages */}
-
-            <div
-                className="
-                    flex-1
-                    overflow-y-auto
-                    p-6
-                    space-y-4
-                "
-            >
-
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {messages.length === 0 && (
-
                     <div className="text-center text-gray-400 mt-20">
-
-                        <h2 className="text-4xl mb-4">
-                            👋 Welcome to AIForge
-                        </h2>
-
+                        <h2 className="text-4xl mb-4">👋 Welcome to AIForge</h2>
                         <p>
-
                             {documentMode
                                 ? "Upload documents and ask questions grounded in the indexed content."
                                 : plannerMode
                                 ? "Describe your software idea and AIForge will generate a complete project plan."
                                 : "Ask me to write code, debug errors, explain concepts, or build projects."}
-
                         </p>
-
                     </div>
-
                 )}
 
                 {messages.map((msg, index) => (
-
-                    <Message
-                        key={index}
-                        sender={msg.sender}
-                        text={msg.text}
-                    />
-
+                    <Message key={index} sender={msg.sender} text={msg.text} />
                 ))}
 
                 {loading && <Loading />}
-
-                <div ref={bottomRef}></div>
-
+                <div ref={bottomRef} />
             </div>
-
-            {/* Input */}
 
             <div className="border-t border-gray-700 p-4">
-
-                <InputBar
-                    onSend={handleSend}
-                    loading={loading || ragUploading}
-                />
-
+                <InputBar onSend={handleSend} loading={loading || ragUploading} />
             </div>
-
         </div>
     );
 }
