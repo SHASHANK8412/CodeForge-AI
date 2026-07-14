@@ -1,4 +1,4 @@
-from rag.utils.vector_store import VectorStore
+from backend.rag.utils.vector_store import VectorStore
 
 
 class Retriever:
@@ -14,4 +14,4 @@ class Retriever:
             k=k
         )
 
-        return results  
+        return results

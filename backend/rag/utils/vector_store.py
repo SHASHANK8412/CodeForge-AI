@@ -2,7 +2,7 @@ from pathlib import Path
 
 from langchain_chroma import Chroma
 
-from rag.utils.embeddings import EmbeddingGenerator
+from backend.rag.utils.embeddings import EmbeddingGenerator
 
 
 class VectorStore:
@@ -23,7 +23,16 @@ class VectorStore:
 
     def add_documents(self, chunks):
 
-        self.db.add_documents(chunks)
+        if not chunks:
+            return
+
+        ids = []
+        for index, chunk in enumerate(chunks):
+            source = str(chunk.metadata.get("source", "document"))
+            page = str(chunk.metadata.get("page", index))
+            ids.append(f"{source}:{page}:{index}")
+
+        self.db.add_documents(chunks, ids=ids)
 
         print("=" * 60)
         print(f"Stored {len(chunks)} chunks in ChromaDB")

@@ -1,4 +1,4 @@
-from rag.utils.retriever import Retriever
+from backend.rag.utils.retriever import Retriever
 from backend.services.llm import generate_response
 
 
@@ -7,41 +7,11 @@ class RAGPipeline:
     def __init__(self):
         self.retriever = Retriever()
 
-    def ask(self, question):
+    def build_prompt(self, question, documents):
 
-        # Retrieve more chunks for better context
-        documents = self.retriever.retrieve(
-            query=question,
-            k=5
-        )
+        context = "\n\n".join(doc.page_content for doc in documents)
 
-        print("\n" + "=" * 70)
-        print("Retrieved Documents")
-        print("=" * 70)
-
-        if not documents:
-            print("No documents found!")
-            return "I couldn't find that information."
-
-        for i, doc in enumerate(documents, start=1):
-            print(f"\nDocument {i}")
-            print("-" * 70)
-            print(doc.page_content)
-            print("\nMetadata:")
-            print(doc.metadata)
-
-        # Build context
-        context = "\n\n".join(
-            doc.page_content
-            for doc in documents
-        )
-
-        print("\n" + "=" * 70)
-        print("Context Sent To LLM")
-        print("=" * 70)
-        print(context)
-
-        prompt = f"""
+        return f"""
 You are AIForge's knowledge assistant.
 
 Use ONLY the information present in the context.
@@ -62,16 +32,41 @@ Question:
 Answer:
 """
 
-        print("\n" + "=" * 70)
-        print("Prompt Sent To LLM")
-        print("=" * 70)
-        print(prompt)
+    def format_sources(self, documents):
 
-        response = generate_response(prompt)
+        sources = []
+        for doc in documents:
+            metadata = doc.metadata or {}
+            sources.append(
+                {
+                    "source": metadata.get("source", "unknown"),
+                    "page": metadata.get("page", metadata.get("page_number", "")),
+                    "snippet": doc.page_content[:240],
+                }
+            )
+        return sources
 
-        print("\n" + "=" * 70)
-        print("LLM Response")
-        print("=" * 70)
-        print(response)
+    def query(self, question):
 
-        return response
+        documents = self.retriever.retrieve(
+            query=question,
+            k=5,
+        )
+
+        if not documents:
+            return {
+                "answer": "I couldn't find that information.",
+                "sources": [],
+            }
+
+        prompt = self.build_prompt(question, documents)
+        response = generate_response(prompt, task="explanation")
+
+        return {
+            "answer": response,
+            "sources": self.format_sources(documents),
+        }
+
+    def ask(self, question):
+
+        return self.query(question)["answer"]

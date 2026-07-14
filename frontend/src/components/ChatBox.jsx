@@ -5,6 +5,7 @@ import Loading from "./Loading";
 
 import { sendMessage } from "../services/api";
 import { generatePlan } from "../services/plannerApi";
+import { queryRagDocuments, uploadRagDocuments } from "../services/ragApi";
 import {
     getActiveSessionId,
     getSavedMessages,
@@ -22,9 +23,14 @@ function ChatBox() {
     });
 
     const [loading, setLoading] = useState(false);
+    const [ragUploading, setRagUploading] = useState(false);
     const [plannerMode, setPlannerMode] = useState(false);
+    const [documentMode, setDocumentMode] = useState(false);
+    const [selectedFiles, setSelectedFiles] = useState([]);
+    const [ragStatus, setRagStatus] = useState("");
 
     const bottomRef = useRef(null);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         const handleNewChat = () => {
@@ -83,7 +89,30 @@ function ChatBox() {
 
             let reply;
 
-            if (plannerMode) {
+            if (documentMode) {
+                setRagStatus("");
+                if (selectedFiles.length > 0) {
+                    setRagUploading(true);
+                    await uploadRagDocuments(selectedFiles);
+                    setRagStatus(`Indexed ${selectedFiles.length} file(s).`);
+                    setSelectedFiles([]);
+                    if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                    }
+                }
+
+                const ragResult = await queryRagDocuments(text);
+                const sourceText = (ragResult.sources || [])
+                    .map((source, index) => {
+                        const location = [source.source, source.page !== "" && source.page !== null ? `page ${source.page}` : null]
+                            .filter(Boolean)
+                            .join(" • ");
+                        return `- ${index + 1}. ${location || "source"}: ${source.snippet}`;
+                    })
+                    .join("\n");
+
+                reply = `${ragResult.answer}\n\n### Sources\n${sourceText || "- No source metadata available"}`;
+            } else if (plannerMode) {
                 reply = await generatePlan(text, sessionId);
             } else {
                 reply = await sendMessage(text, sessionId);
@@ -111,6 +140,7 @@ function ChatBox() {
 
         } finally {
 
+            setRagUploading(false);
             setLoading(false);
 
         }
@@ -163,12 +193,15 @@ function ChatBox() {
 
             {/* Planner Toggle */}
 
-            <div className="flex gap-3 px-6 py-4 border-b border-gray-700">
+            <div className="flex flex-wrap gap-3 px-6 py-4 border-b border-gray-700">
 
                 <button
-                    onClick={() => setPlannerMode(false)}
+                    onClick={() => {
+                        setPlannerMode(false);
+                        setDocumentMode(false);
+                    }}
                     className={`px-4 py-2 rounded-lg transition ${
-                        !plannerMode
+                        !plannerMode && !documentMode
                             ? "bg-green-600 text-white"
                             : "bg-gray-700 text-gray-300"
                     }`}
@@ -178,6 +211,7 @@ function ChatBox() {
 
                 <button
                     onClick={() => setPlannerMode(true)}
+                    disabled={documentMode}
                     className={`px-4 py-2 rounded-lg transition ${
                         plannerMode
                             ? "bg-blue-600 text-white"
@@ -187,7 +221,51 @@ function ChatBox() {
                     📋 Planner Mode
                 </button>
 
+                <button
+                    onClick={() => {
+                        setDocumentMode((current) => !current);
+                        setPlannerMode(false);
+                    }}
+                    className={`px-4 py-2 rounded-lg transition ${
+                        documentMode
+                            ? "bg-amber-500 text-black"
+                            : "bg-gray-700 text-gray-300"
+                    }`}
+                >
+                    📚 Document Mode
+                </button>
+
             </div>
+
+            {documentMode && (
+                <div className="px-6 py-4 border-b border-gray-700 space-y-3 bg-[#262730]">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <label className="text-sm text-gray-300 font-medium">
+                            Upload PDFs, text files, or markdown documents.
+                        </label>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            accept=".pdf,.txt,.md"
+                            onChange={(event) => setSelectedFiles(Array.from(event.target.files || []))}
+                            className="text-sm text-gray-300"
+                        />
+                    </div>
+
+                    {selectedFiles.length > 0 && (
+                        <div className="text-sm text-amber-300">
+                            Selected: {selectedFiles.map((file) => file.name).join(", ")}
+                        </div>
+                    )}
+
+                    {ragStatus && (
+                        <div className="text-sm text-green-300">
+                            {ragStatus}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Messages */}
 
@@ -210,7 +288,9 @@ function ChatBox() {
 
                         <p>
 
-                            {plannerMode
+                            {documentMode
+                                ? "Upload documents and ask questions grounded in the indexed content."
+                                : plannerMode
                                 ? "Describe your software idea and AIForge will generate a complete project plan."
                                 : "Ask me to write code, debug errors, explain concepts, or build projects."}
 
@@ -242,7 +322,7 @@ function ChatBox() {
 
                 <InputBar
                     onSend={handleSend}
-                    loading={loading}
+                    loading={loading || ragUploading}
                 />
 
             </div>

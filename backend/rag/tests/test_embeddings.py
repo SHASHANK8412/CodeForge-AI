@@ -1,22 +1,24 @@
-from rag.utils.loader import DocumentLoader
-from rag.utils.splitter import DocumentSplitter
-from rag.utils.embeddings import EmbeddingGenerator
+from types import SimpleNamespace
+
+from backend.rag.utils.embeddings import EmbeddingGenerator
 
 
-loader = DocumentLoader()
-documents = loader.load_documents()
+class DummyEmbeddingModel:
+    def embed_documents(self, texts):
+        return [[float(len(text)) for _ in range(4)] for text in texts]
 
-splitter = DocumentSplitter()
-chunks = splitter.split_documents(documents)
+    def embed_query(self, query):
+        return [float(len(query)) for _ in range(4)]
 
-embedding_generator = EmbeddingGenerator()
 
-embeddings = embedding_generator.embed_documents(chunks)
-print("=" * 60)
-print("Embedding Dimension:", len(embeddings[0]))
-print("=" * 60)
+def test_embedding_generator_returns_embeddings(monkeypatch):
+    generator = EmbeddingGenerator()
+    monkeypatch.setattr(generator, "embedding_model", DummyEmbeddingModel())
 
-print("\nFirst 10 Values:\n")
+    chunks = [SimpleNamespace(page_content="alpha"), SimpleNamespace(page_content="beta")]
 
-for value in embeddings[0][:10]:
-    print(value)
+    embeddings = generator.embed_documents(chunks)
+
+    assert len(embeddings) == 2
+    assert len(embeddings[0]) == 4
+    assert generator.embed_query("hello") == [5.0, 5.0, 5.0, 5.0]

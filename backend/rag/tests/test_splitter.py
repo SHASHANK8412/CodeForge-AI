@@ -1,21 +1,14 @@
-from rag.utils.loader import DocumentLoader
-from rag.utils.splitter import DocumentSplitter
+from langchain_core.documents import Document
+
+from backend.rag.utils.splitter import DocumentSplitter
 
 
-loader = DocumentLoader()
+def test_splitter_creates_chunks_with_metadata():
+    splitter = DocumentSplitter(chunk_size=40, chunk_overlap=0)
+    documents = [Document(page_content="alpha beta gamma delta epsilon zeta", metadata={"source": "sample.txt"})]
 
-documents = loader.load_documents()
+    chunks = splitter.split_documents(documents)
 
-splitter = DocumentSplitter()
-
-chunks = splitter.split_documents(documents)
-
-for i, chunk in enumerate(chunks):
-
-    print(f"\nChunk {i+1}")
-
-    print("-"*50)
-
-    print(chunk.page_content[:300])
-
-    print(chunk.metadata)
+    assert chunks
+    assert chunks[0].metadata["source"] == "sample.txt"
+    assert "alpha" in chunks[0].page_content

@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from backend.graph.workflow import graph
 from backend.routes.chat import router as chat_router
+from backend.routes.rag import router as rag_router
 from backend.routes.plan import router as plan_router
 from backend.routes.memory import router as memory_router
 
@@ -24,9 +25,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(chat_router)
-app.include_router(plan_router)
-app.include_router(memory_router)
+def register_routers() -> None:
+    app.include_router(chat_router)
+    app.include_router(rag_router)
+    app.include_router(plan_router)
+    app.include_router(memory_router)
+
+
+register_routers()
 
 
 class PromptRequest(BaseModel):

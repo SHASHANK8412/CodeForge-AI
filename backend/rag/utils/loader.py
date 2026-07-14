@@ -1,9 +1,7 @@
 from pathlib import Path
+from typing import Iterable
 
-from langchain_community.document_loaders import (
-    PyPDFLoader,
-    TextLoader,
-)
+from langchain_community.document_loaders import PyPDFLoader, TextLoader
 
 
 class DocumentLoader:
@@ -13,20 +11,14 @@ class DocumentLoader:
             Path(__file__).resolve().parent.parent / "documents"
         )
 
-    def load_documents(self):
+    def load_paths(self, file_paths: Iterable[Path | str]):
 
         documents = []
 
-        if not self.documents_path.exists():
-            print("Documents folder not found.")
-            return documents
+        for file_path in file_paths:
+            file = Path(file_path)
 
-        for file in self.documents_path.iterdir():
-
-            print(f"Checking: {file.name}")
-
-            if file.stat().st_size == 0:
-                print(f"Skipping empty file: {file.name}")
+            if not file.exists() or file.stat().st_size == 0:
                 continue
 
             try:
@@ -45,6 +37,14 @@ class DocumentLoader:
                 print(f"Failed to load {file.name}: {e}")
 
         return documents
+
+    def load_documents(self):
+
+        if not self.documents_path.exists():
+            print("Documents folder not found.")
+            return []
+
+        return self.load_paths(self.documents_path.iterdir())
 
 
 if __name__ == "__main__":
