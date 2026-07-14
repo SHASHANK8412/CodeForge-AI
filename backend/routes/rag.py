@@ -12,7 +12,8 @@ from backend.rag.utils.splitter import DocumentSplitter
 from backend.rag.utils.vector_store import VectorStore
 
 
-router = APIRouter(prefix="/rag", tags=["rag"])
+router = APIRouter(tags=["rag"])
+legacy_router = APIRouter(prefix="/rag", tags=["rag"])
 
 
 class RAGQueryRequest(BaseModel):
@@ -23,6 +24,7 @@ class RAGUploadResponse(BaseModel):
 	success: bool
 	files: list[str]
 	chunks_indexed: int
+	message: str
 
 
 rag_pipeline = RAGPipeline()
@@ -35,8 +37,7 @@ def _documents_dir() -> Path:
 	return document_loader.documents_path
 
 
-@router.post("/upload", response_model=RAGUploadResponse)
-async def upload_documents(files: list[UploadFile] = File(...)):
+async def _upload_documents(files: list[UploadFile]):
 	if not files:
 		raise HTTPException(status_code=400, detail="At least one file is required.")
 
@@ -61,14 +62,31 @@ async def upload_documents(files: list[UploadFile] = File(...)):
 		raise HTTPException(status_code=400, detail="No valid document content was uploaded.")
 
 	loaded_documents = document_loader.load_paths(saved_files)
+	if not loaded_documents:
+		raise HTTPException(status_code=400, detail="Uploaded files could not be read as documents.")
+
 	chunks = document_splitter.split_documents(loaded_documents)
+	if not chunks:
+		raise HTTPException(status_code=400, detail="No retrievable chunks were created from the uploaded documents.")
+
 	vector_store.add_documents(chunks)
 
 	return RAGUploadResponse(
 		success=True,
 		files=[path.name for path in saved_files],
 		chunks_indexed=len(chunks),
+		message="Document indexed successfully",
 	)
+
+
+@router.post("/upload", response_model=RAGUploadResponse)
+async def upload_documents(files: list[UploadFile] = File(...)):
+	return await _upload_documents(files)
+
+
+@legacy_router.post("/upload", response_model=RAGUploadResponse)
+async def legacy_upload_documents(files: list[UploadFile] = File(...)):
+	return await _upload_documents(files)
 
 
 @router.post("/query")
@@ -78,5 +96,11 @@ async def query_documents(request: RAGQueryRequest):
 		"success": True,
 		"question": request.question,
 		"answer": result["answer"],
-		"sources": result["sources"],
+		"sources": [source["source"] for source in result["sources"]],
+		"source_details": result["sources"],
 	}
+
+
+@legacy_router.post("/query")
+async def legacy_query_documents(request: RAGQueryRequest):
+	return await query_documents(request)

@@ -12,6 +12,7 @@ from backend.agents.resume_agent import ResumeAgent
 from backend.agents.explanation_agent import ExplanationAgent
 from backend.agents.reviewer_agent import ReviewerAgent
 from backend.memory.memory_manager import memory_manager
+from backend.agents.testing_agent import TestingAgent
 
 
 class GraphState(TypedDict):
@@ -30,6 +31,11 @@ class GraphState(TypedDict):
     explanation: str
     response: str
     execution_mode: str
+    testing_report: str
+    quality_score: str
+    unit_tests: str
+    edge_cases: str
+    complexity: str
 
 
 ARCHITECT_REQUIRED_SECTIONS = [
@@ -51,6 +57,7 @@ debug = DebugAgent()
 resume = ResumeAgent()
 explanation = ExplanationAgent()
 reviewer = ReviewerAgent()
+testing_agent = TestingAgent()
 
 
 def log_stage(message: str):
@@ -62,8 +69,22 @@ def log_stage_duration(stage: str, started_at: float):
     print(f"{stage} Completed in {elapsed_ms:.1f}ms")
 
 
-def classify_request(prompt: str) -> tuple[str, str]:
+def classify_request(prompt: str, memory_context: str = "") -> tuple[str, str]:
     normalized = prompt.lower()
+    memory_hint = (memory_context or "").lower()
+
+    if any(phrase in normalized for phrase in ["continue", "proceed", "next", "resume where we left off"]):
+        if any(word in memory_hint for word in ["resume", "debug", "error", "explain", "architecture", "rag", "document"]):
+            if "resume" in memory_hint:
+                return "resume", "fast"
+            if "debug" in memory_hint or "error" in memory_hint:
+                return "debug", "full"
+            if "explain" in memory_hint or "architecture" in memory_hint:
+                return "explanation", "fast"
+            if "rag" in memory_hint or "document" in memory_hint:
+                return "rag", "fast"
+
+        return "coding", "full"
 
     if any(word in normalized for word in ["resume", "cv", "linkedin", "cover letter"]):
         return "resume", "fast"
@@ -122,7 +143,7 @@ def classify_node(state: GraphState):
     started_at = perf_counter()
     log_stage("Request Classification Started")
 
-    route, execution_mode = classify_request(state["prompt"])
+    route, execution_mode = classify_request(state["prompt"], state.get("memory_context", ""))
 
     log_stage(f"Request Classified As {route.title()} ({execution_mode})")
     log_stage_duration("Request Classification", started_at)
@@ -311,6 +332,9 @@ def build_agent_context(state: GraphState, previous_output: str = "") -> str:
     return f"""Project Context
 {state.get('memory_context', '')}
 
+Conversation History
+{state.get('history_text', '')}
+
 Planner Output
 {state.get('plan', '')}
 
@@ -497,7 +521,19 @@ def save_memory_node(state: GraphState):
 
     session_id = state.get("session_id", "default")
     agent_name = state.get("agent_name", state.get("route", "coding"))
-    final_response = state.get("explanation") or state.get("reviewed_code") or state.get("response", "")
+    final_response = f"""
+=== REVIEWED CODE ===
+
+{state.get("reviewed_code", "")}
+
+=== TESTING REPORT ===
+
+{state.get("testing_report", "")}
+
+=== EXPLANATION ===
+
+{state.get("explanation", "")}
+"""
 
     memory_manager.save_interaction(
         session_id=session_id,
@@ -561,6 +597,39 @@ def resume_post_selector(state: GraphState):
     return "save_memory"
 
 
+# ---------------- Testing ---------------- #
+
+def testing_node(state: GraphState):
+
+    started_at = perf_counter()
+    log_stage("Testing Started")
+
+    code = state.get("reviewed_code") or state.get("generated_code", "")
+
+    report = testing_agent.process(code)
+
+    log_stage("Testing Completed")
+    log_stage_duration("Testing", started_at)
+
+    return {
+        "session_id": state.get("session_id", "default"),
+        "prompt": state["prompt"],
+        "memory_context": state.get("memory_context", ""),
+        "history_text": state.get("history_text", ""),
+        "project_text": state.get("project_text", ""),
+        "collaboration_mode": state.get("collaboration_mode", False),
+        "execution_mode": state.get("execution_mode", "full"),
+        "plan": state.get("plan", ""),
+        "architecture": state.get("architecture", ""),
+        "route": state.get("route", "coding"),
+        "agent_name": "testing",
+        "generated_code": state.get("generated_code", ""),
+        "reviewed_code": state.get("reviewed_code", ""),
+        "testing_report": report,
+        "response": report,
+    }
+
+
 # ---------------- Graph ---------------- #
 
 builder = StateGraph(GraphState)
@@ -575,9 +644,9 @@ builder.add_node("coding", coding_node)
 builder.add_node("debug", debug_node)
 builder.add_node("resume", resume_node)
 builder.add_node("reviewer", reviewer_node)
+builder.add_node("testing", testing_node)
 builder.add_node("explanation", explanation_node)
 builder.add_node("save_memory", save_memory_node)
-
 builder.set_entry_point("load_memory")
 
 builder.add_edge("load_memory", "classify")
@@ -627,7 +696,8 @@ builder.add_conditional_edges(
         "save_memory": "save_memory",
     }
 )
-builder.add_edge("reviewer", "explanation")
+builder.add_edge("reviewer", "testing")
+builder.add_edge("testing", "explanation")
 builder.add_edge("explanation", "save_memory")
 builder.add_edge("save_memory", END)
 

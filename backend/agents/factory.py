@@ -6,6 +6,7 @@ from backend.agents.planner_agent import PlannerAgent
 from backend.agents.architect_agent import ArchitectAgent
 from backend.agents.reviewer_agent import ReviewerAgent
 from backend.agents.rag_agent import RAGAgent
+from backend.agents.testing_agent import TestingAgent
 
 
 class AgentFactory:
@@ -36,6 +37,9 @@ class AgentFactory:
 
         elif agent_type == "rag":
             return RAGAgent()
+        
+        elif agent_type == "testing":
+            return TestingAgent()
 
         else:
-            raise ValueError(f"Unknown agent type: {agent_type}")
+            raise ValueError(f"Unknown agent type: {agent_type}")   

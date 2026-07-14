@@ -24,7 +24,8 @@ def test_rag_query_returns_answer_and_sources(monkeypatch):
     assert response.status_code == 200
     payload = response.json()
     assert payload["answer"] == "RAG answer"
-    assert payload["sources"][0]["source"] == "sample.txt"
+    assert payload["sources"] == ["sample.txt"]
+    assert payload["source_details"][0]["source"] == "sample.txt"
 
 
 def test_rag_upload_indexes_documents(monkeypatch):

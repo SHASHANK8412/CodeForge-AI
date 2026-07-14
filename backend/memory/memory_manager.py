@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 from concurrent.futures import ThreadPoolExecutor
 
-from backend.config import MAX_HISTORY_MESSAGES
+from backend.config import CONVERSATION_HISTORY_TURNS
 
 from backend.memory.conversation_memory import ConversationMemory
 from backend.memory.project_memory import ProjectMemory
@@ -29,7 +29,7 @@ class MemoryManager:
 
     def load_session(self, session_id: str, prompt: str = "") -> SessionContext:
         with ThreadPoolExecutor(max_workers=3) as executor:
-            history_future = executor.submit(self.conversation_memory.get_history, session_id, MAX_HISTORY_MESSAGES)
+            history_future = executor.submit(self.conversation_memory.get_history, session_id, CONVERSATION_HISTORY_TURNS)
             project_future = executor.submit(self.project_memory.load_project, session_id)
             relevant_future = executor.submit(self.vector_memory.search, session_id, prompt, 2) if prompt else None
 
@@ -52,7 +52,7 @@ class MemoryManager:
             return "No previous conversation history."
 
         lines = []
-        for item in history[-MAX_HISTORY_MESSAGES:]:
+        for item in history[-CONVERSATION_HISTORY_TURNS:]:
             lines.append(
                 f"- User: {item.get('user_prompt', '')}\n"
                 f"  AI: {item.get('ai_response', '')}\n"
