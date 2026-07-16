@@ -30,6 +30,9 @@ class RouterAgent:
             if "rag" in memory_hint or "document" in memory_hint:
                 return "rag"
 
+            if "frontend" in memory_hint or "react" in memory_hint:
+                return "frontend"
+
             return "coding"
 
         debug_keywords = [
@@ -80,6 +83,76 @@ class RouterAgent:
             "database",
         ]
 
+        frontend_keywords = [
+            "frontend",
+            "react",
+            "vite",
+            "tailwind",
+            "css",
+            "html",
+            "javascript",
+            "jsx",
+            "tsx",
+            "navbar",
+            "sidebar",
+            "footer",
+            "dashboard",
+            "landing page",
+            "login page",
+            "signup page",
+            "portfolio",
+            "ui",
+            "ux",
+            "component",
+            "page",
+            "responsive",
+            "hero section",
+            "card",
+            "form",
+            "modal",
+            "button",
+        ]
+
+        planner_keywords = [
+            "plan",
+            "roadmap",
+            "project plan",
+            "schedule",
+            "steps",
+            "workflow",
+        ]
+
+        architect_keywords = [
+            "architecture",
+            "system design",
+            "design architecture",
+            "microservices",
+            "database design",
+            "erd",
+            "uml",
+        ]
+
+        reviewer_keywords = [
+            "review",
+            "code review",
+            "optimize",
+            "improve code",
+            "best practices",
+            "refactor",
+        ]
+
+        testing_keywords = [
+            "test",
+            "testing",
+            "pytest",
+            "unit test",
+            "integration test",
+            "test case",
+            "coverage",
+        ]
+
+        # Routing Priority
+
         if any(word in prompt for word in debug_keywords):
             return "debug"
 
@@ -88,6 +161,21 @@ class RouterAgent:
 
         if any(word in prompt for word in rag_keywords):
             return "rag"
+
+        if any(word in prompt for word in planner_keywords):
+            return "planner"
+
+        if any(word in prompt for word in architect_keywords):
+            return "architect"
+
+        if any(word in prompt for word in reviewer_keywords):
+            return "reviewer"
+
+        if any(word in prompt for word in testing_keywords):
+            return "testing"
+
+        if any(word in prompt for word in frontend_keywords):
+            return "frontend"
 
         if any(word in prompt for word in explanation_keywords):
             return "explanation"

@@ -13,7 +13,7 @@ from backend.agents.explanation_agent import ExplanationAgent
 from backend.agents.reviewer_agent import ReviewerAgent
 from backend.memory.memory_manager import memory_manager
 from backend.agents.testing_agent import TestingAgent
-
+from backend.agents.frontend_agent import FrontendAgent
 
 class GraphState(TypedDict):
     session_id: str
@@ -58,6 +58,7 @@ resume = ResumeAgent()
 explanation = ExplanationAgent()
 reviewer = ReviewerAgent()
 testing_agent = TestingAgent()
+frontend = FrontendAgent()
 
 
 def log_stage(message: str):
@@ -406,6 +407,40 @@ def coding_node(state: GraphState):
         "response": response,
     }
 
+def frontend_node(state: GraphState):
+
+    started_at = perf_counter()
+    log_stage("Frontend Started")
+
+    enhanced_prompt = build_agent_context(
+        state,
+        previous_output=state.get("architecture", "")
+    )
+
+    response = invoke_agent(
+        frontend,
+        enhanced_prompt,
+        state.get("memory_context", ""),
+        state.get("plan", "")
+    )
+
+    log_stage("Frontend Completed")
+    log_stage_duration("Frontend", started_at)
+
+    return {
+        "session_id": state.get("session_id", "default"),
+        "prompt": state["prompt"],
+        "memory_context": state.get("memory_context", ""),
+        "collaboration_mode": state.get("collaboration_mode", False),
+        "execution_mode": state.get("execution_mode", "full"),
+        "plan": state["plan"],
+        "architecture": state["architecture"],
+        "route": state["route"],
+        "agent_name": "frontend",
+        "generated_code": response,
+        "response": response,
+    }
+
 
 def debug_node(state: GraphState):
 
@@ -561,13 +596,16 @@ def save_memory_node(state: GraphState):
         "generated_code": state.get("generated_code", ""),
         "reviewed_code": state.get("reviewed_code", ""),
         "explanation": state.get("explanation", ""),
-        "response": final_response,
+        "response": state.get("response", final_response),
     }
 
 
 def route_selector(state: GraphState):
 
     route = state.get("route", "coding")
+
+    if route == "frontend":
+        return "frontend"
 
     if route == "debug":
         return "debug"
@@ -641,6 +679,7 @@ builder.add_node("architect", architect_node)
 builder.add_node("architecture_validator", architecture_validator_node)
 builder.add_node("router", router_node)
 builder.add_node("coding", coding_node)
+builder.add_node("frontend", frontend_node)
 builder.add_node("debug", debug_node)
 builder.add_node("resume", resume_node)
 builder.add_node("reviewer", reviewer_node)
@@ -667,6 +706,7 @@ builder.add_conditional_edges(
     route_selector,
     {
         "coding": "coding",
+        "frontend": "frontend",
         "debug": "debug",
         "resume": "resume",
         "explanation": "explanation",
@@ -674,6 +714,14 @@ builder.add_conditional_edges(
 )
 builder.add_conditional_edges(
     "coding",
+    post_generation_selector,
+    {
+        "reviewer": "reviewer",
+        "save_memory": "save_memory",
+    }
+)
+builder.add_conditional_edges(
+    "frontend",
     post_generation_selector,
     {
         "reviewer": "reviewer",
