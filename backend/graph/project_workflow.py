@@ -102,26 +102,35 @@ async def _run_stage_async(stage_name: str, task_key: str, coro) -> dict:
 # ---------------- Nodes ---------------- #
 
 async def planner_node(state: ProjectState) -> dict:
+    prompt = state.get("prompt") or state.get("user_prompt", "")
     async def work():
-        return {"plan": await planner.run_async(state.get("user_prompt", ""))}
+        return {
+            "plan": await planner.run_async(prompt),
+            "current_step": "planner",
+        }
     return await _run_stage_async("Planner", "planner", work())
 
 
 async def architect_node(state: ProjectState) -> dict:
+    prompt = state.get("prompt") or state.get("user_prompt", "")
     async def work():
         architecture_input = f"""Project Request
-{state.get('user_prompt', '')}
+{prompt}
 
 Project Plan
 {state.get('plan', '')}"""
-        return {"architecture": await architect.run_async(architecture_input)}
+        return {
+            "architecture": await architect.run_async(architecture_input),
+            "current_step": "architect",
+        }
     return await _run_stage_async("Architect", "architect", work())
 
 
 async def frontend_node(state: ProjectState) -> dict:
+    prompt = state.get("prompt") or state.get("user_prompt", "")
     async def work():
         frontend_prompt = f"""Project Request
-{state.get('user_prompt', '')}
+{prompt}
 
 Project Plan
 {state.get('plan', '')}
@@ -136,32 +145,55 @@ For THIS project-scaffolding stage only, respond with ONLY:
 
 Do NOT generate full source code here. Keep it concise (bullet points,
 no more than ~500 words)."""
-        return {"frontend": await frontend_agent.run_async(frontend_prompt)}
+        return {
+            "frontend": await frontend_agent.run_async(frontend_prompt),
+            "current_step": "frontend",
+        }
     return await _run_stage_async("Frontend", "frontend", work())
 
 
 async def backend_node(state: ProjectState) -> dict:
+    state_copy = dict(state)
     async def work():
-        state_copy = dict(state)
         result_state = await backend_agent.run_async(state_copy)
-        return {"backend": result_state.get("backend", "")}
+        return {
+            "backend": result_state.get("backend", ""),
+            "current_step": "backend",
+        }
     return await _run_stage_async("Backend", "backend", work())
 
 
 async def database_node(state: ProjectState) -> dict:
+    state_copy = dict(state)
     async def work():
-        state_copy = dict(state)
         result_state = await database_agent.run_async(state_copy)
-        return {"database": result_state.get("database", "")}
+        return {
+            "database": result_state.get("database", ""),
+            "current_step": "database",
+        }
     return await _run_stage_async("Database", "database", work())
 
 
-async def documentation_node(state: ProjectState) -> dict:
+async def reviewer_node(state: ProjectState) -> dict:
+    prompt = state.get("prompt") or state.get("user_prompt", "")
     async def work():
-        state_copy = dict(state)
-        result_state = await documentation_agent.run_async(state_copy)
-        return {"documentation": result_state.get("documentation", "")}
-    return await _run_stage_async("Documentation", "documentation", work())
+        previous_output = f"""Frontend
+{state.get('frontend', '')}
+
+Backend
+{state.get('backend', '')}
+
+Database
+{state.get('database', '')}"""
+        review = await reviewer_agent.run_async(
+            prompt,
+            previous_output=previous_output,
+        )
+        return {
+            "review": review,
+            "current_step": "reviewer",
+        }
+    return await _run_stage_async("Reviewer", "reviewer", work())
 
 
 async def testing_node(state: ProjectState) -> dict:
@@ -174,33 +206,32 @@ Backend
 
 Database
 {state.get('database', '')}"""
-        return {"tests": await testing_agent.run_async(code_to_test)}
+        return {
+            "tests": await testing_agent.run_async(code_to_test),
+            "current_step": "testing",
+        }
     return await _run_stage_async("Testing", "testing", work())
 
 
-async def reviewer_node(state: ProjectState) -> dict:
+async def documentation_node(state: ProjectState) -> dict:
+    state_copy = dict(state)
     async def work():
-        previous_output = f"""Frontend
-{state.get('frontend', '')}
-
-Backend
-{state.get('backend', '')}
-
-Database
-{state.get('database', '')}"""
-        review = await reviewer_agent.run_async(
-            state.get("user_prompt", ""),
-            previous_output=previous_output,
-        )
-        return {"review": review}
-    return await _run_stage_async("Reviewer", "reviewer", work())
+        result_state = await documentation_agent.run_async(state_copy)
+        return {
+            "documentation": result_state.get("documentation", ""),
+            "current_step": "documentation",
+        }
+    return await _run_stage_async("Documentation", "documentation", work())
 
 
 async def github_node(state: ProjectState) -> dict:
+    state_copy = dict(state)
     async def work():
-        state_copy = dict(state)
         result_state = await github_agent.run_async(state_copy)
-        return {"github": result_state.get("github", "")}
+        return {
+            "github": result_state.get("github", ""),
+            "current_step": "github",
+        }
     return await _run_stage_async("GitHub", "github", work())
 
 
@@ -213,30 +244,20 @@ builder.add_node("architect", architect_node)
 builder.add_node("frontend", frontend_node)
 builder.add_node("backend", backend_node)
 builder.add_node("database", database_node)
-builder.add_node("documentation", documentation_node)
-builder.add_node("testing", testing_node)
 builder.add_node("reviewer", reviewer_node)
-builder.add_node("github", github_node)
+builder.add_node("testing", testing_node)
+builder.add_node("documentation", documentation_node)
 
 builder.set_entry_point("planner")
 
 builder.add_edge("planner", "architect")
-
-# Fan-out: Frontend, Backend and Database all start as soon as Architect
-# finishes, and run concurrently.
 builder.add_edge("architect", "frontend")
-builder.add_edge("architect", "backend")
-builder.add_edge("architect", "database")
-
-# Fan-in: Documentation only starts once ALL THREE have completed.
-builder.add_edge("frontend", "documentation")
-builder.add_edge("backend", "documentation")
-builder.add_edge("database", "documentation")
-
-builder.add_edge("documentation", "testing")
-builder.add_edge("testing", "reviewer")
-builder.add_edge("reviewer", "github")
-builder.add_edge("github", END)
+builder.add_edge("frontend", "backend")
+builder.add_edge("backend", "database")
+builder.add_edge("database", "reviewer")
+builder.add_edge("reviewer", "testing")
+builder.add_edge("testing", "documentation")
+builder.add_edge("documentation", END)
 
 project_graph = builder.compile()
 

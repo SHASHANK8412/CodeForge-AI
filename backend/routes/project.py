@@ -22,13 +22,12 @@ class ProjectRequest(BaseModel):
 PROGRESS_STEPS = {
     "planner": 10,
     "architect": 20,
-    "frontend": 40,
-    "backend": 60,
-    "database": 70,
-    "documentation": 80,
+    "frontend": 35,
+    "backend": 50,
+    "database": 65,
+    "reviewer": 80,
     "testing": 90,
-    "reviewer": 95,
-    "github": 99,
+    "documentation": 99,
     "completed": 100,
 }
 

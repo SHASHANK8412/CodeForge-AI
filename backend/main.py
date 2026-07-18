@@ -14,6 +14,7 @@ from time import perf_counter
 from pydantic import BaseModel
 
 from backend.graph.workflow import graph
+from backend.graph.project_workflow import project_graph
 from backend.routes.chat import router as chat_router
 from backend.routes.rag import legacy_router as rag_legacy_router
 from backend.routes.rag import router as rag_router
@@ -73,22 +74,32 @@ def health():
 async def generate(request: PromptRequest):
     started_at = perf_counter()
     try:
-        result = await asyncio.to_thread(
-            graph.invoke,
+        result = await project_graph.ainvoke(
             {
                 "prompt": request.prompt,
+                "user_prompt": request.prompt,
                 "session_id": request.session_id,
-            },
+            }
         )
 
         elapsed_ms = (perf_counter() - started_at) * 1000
         print(f"/generate completed in {elapsed_ms:.1f}ms")
 
         return {
-            "generated_code": result.get("generated_code", ""),
-            "reviewed_code": result.get("reviewed_code", ""),
-            "testing_report": result.get("testing_report", ""),
-            "explanation": result.get("explanation", ""),
+            "plan": result.get("plan", ""),
+            "architecture": result.get("architecture", ""),
+            "frontend": result.get("frontend", ""),
+            "backend": result.get("backend", ""),
+            "database": result.get("database", ""),
+            "review": result.get("review", ""),
+            "tests": result.get("tests", ""),
+            "documentation": result.get("documentation", ""),
+
+            # Preserve existing functionality
+            "generated_code": result.get("backend", ""),
+            "reviewed_code": result.get("review", ""),
+            "testing_report": result.get("tests", ""),
+            "explanation": result.get("documentation", ""),
         }
 
     except Exception as e:

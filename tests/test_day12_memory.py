@@ -89,6 +89,7 @@ def mock_graph_agents():
     workflow.explanation = CaptureAgent("explanation")
     workflow.reviewer = CaptureAgent("reviewer")
     workflow.testing_agent = CaptureAgent("testing")
+    workflow.memory_manager = memory_manager
     return workflow.coding
 
 

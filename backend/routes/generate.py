@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from backend.graph.workflow import graph
+from backend.graph.project_workflow import project_graph
 
 router = APIRouter()
 
@@ -12,18 +12,29 @@ class Prompt(BaseModel):
 
 
 @router.post("/generate")
-def generate(data: Prompt):
+async def generate(data: Prompt):
 
-    result = graph.invoke(
+    result = await project_graph.ainvoke(
         {
             "prompt": data.prompt,
+            "user_prompt": data.prompt,
             "session_id": data.session_id,
         }
     )
 
     return {
-        "generated_code": result.get("generated_code", ""),
-        "reviewed_code": result.get("reviewed_code", ""),
-        "testing_report": result.get("testing_report", ""),
-        "explanation": result.get("explanation", ""),
+        "plan": result.get("plan", ""),
+        "architecture": result.get("architecture", ""),
+        "frontend": result.get("frontend", ""),
+        "backend": result.get("backend", ""),
+        "database": result.get("database", ""),
+        "review": result.get("review", ""),
+        "tests": result.get("tests", ""),
+        "documentation": result.get("documentation", ""),
+
+        # Preserve existing functionality
+        "generated_code": result.get("backend", ""),
+        "reviewed_code": result.get("review", ""),
+        "testing_report": result.get("tests", ""),
+        "explanation": result.get("documentation", ""),
     }

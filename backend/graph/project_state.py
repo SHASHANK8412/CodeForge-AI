@@ -5,8 +5,7 @@ def _merge_errors(existing: str, new: str) -> str:
     """
     Reducer for the `error` field.
 
-    Frontend, Backend and Database now run concurrently (same superstep).
-    If more than one of them fails at the same time, LangGraph needs a
+    If more than one agent fails at the same time, LangGraph needs a
     reducer to combine both writes into a single value instead of raising
     an "Invalid update" conflict for a plain (non-annotated) field.
     """
@@ -20,17 +19,16 @@ def _merge_errors(existing: str, new: str) -> str:
 class ProjectState(TypedDict, total=False):
     """
     Shared state object passed between every node of the end-to-end
-    "Project Generation" pipeline (Planner -> Architect -> [Frontend,
-    Backend, Database run concurrently] -> Documentation -> Testing ->
-    Reviewer -> GitHub).
+    "Project Generation" pipeline (Planner -> Architect -> Frontend ->
+    Backend -> Database -> Reviewer -> Testing -> Documentation).
 
     Every agent reads whatever fields it needs from this dict and writes
     its own output back into it, so the full history of the pipeline is
-    always available to every later stage (e.g. the Reviewer Agent can
-    see the Backend Agent's code, the GitHub Agent can see everything).
+    always available to every later stage.
     """
 
-    # Original user request, e.g. "Build an E-Commerce Website"
+    # Prompt inputs
+    prompt: str
     user_prompt: str
 
     # Planner Agent output
@@ -60,8 +58,10 @@ class ProjectState(TypedDict, total=False):
     # GitHub Agent output (folder structure, commit message, checklist)
     github: str
 
+    # Populated to keep track of the current active pipeline step
+    current_step: str
+
     # Populated if any stage raises an exception, so the pipeline can
-    # fail gracefully instead of crashing the whole request. Uses a
-    # reducer because Frontend/Backend/Database can fail concurrently.
+    # fail gracefully instead of crashing the whole request.
     error: Annotated[str, _merge_errors]
 
