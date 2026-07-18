@@ -61,15 +61,16 @@ async def test_entire_pipeline():
 
 
 def test_generate_endpoint():
-    # Setup mocks for all agents
-    project_workflow.planner = MockAgent("Planner")
-    project_workflow.architect = MockAgent("Architect")
-    project_workflow.frontend_agent = MockAgent("Frontend")
-    project_workflow.backend_agent = MockAgent("Backend", "backend")
-    project_workflow.database_agent = MockAgent("Database", "database")
-    project_workflow.reviewer_agent = MockAgent("Reviewer")
-    project_workflow.testing_agent = MockAgent("Testing")
-    project_workflow.documentation_agent = MockAgent("Documentation", "documentation")
+    # Setup mocks for parallel_workflow agents since the endpoint now invokes the parallel graph
+    from backend.graph import parallel_workflow
+    parallel_workflow.planner = MockAgent("Planner")
+    parallel_workflow.architect = MockAgent("Architect")
+    parallel_workflow.frontend_agent = MockAgent("Frontend")
+    parallel_workflow.backend_agent = MockAgent("Backend", "backend")
+    parallel_workflow.database_agent = MockAgent("Database", "database")
+    parallel_workflow.reviewer_agent = MockAgent("Reviewer")
+    parallel_workflow.testing_agent = MockAgent("Testing")
+    parallel_workflow.documentation_agent = MockAgent("Documentation", "documentation")
 
     client = TestClient(app)
     response = client.post("/generate", json={"prompt": "Build an AI Resume Analyzer"})

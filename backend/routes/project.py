@@ -7,7 +7,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from backend.graph.project_workflow import project_graph
+from backend.graph.parallel_workflow import parallel_graph as project_graph
 from backend.services.llm import stream_queue_var
 
 router = APIRouter()

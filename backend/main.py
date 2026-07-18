@@ -14,7 +14,7 @@ from time import perf_counter
 from pydantic import BaseModel
 
 from backend.graph.workflow import graph
-from backend.graph.project_workflow import project_graph
+from backend.graph.parallel_workflow import parallel_graph as project_graph
 from backend.routes.chat import router as chat_router
 from backend.routes.rag import legacy_router as rag_legacy_router
 from backend.routes.rag import router as rag_router

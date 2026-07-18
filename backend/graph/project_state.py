@@ -16,6 +16,16 @@ def _merge_errors(existing: str, new: str) -> str:
     return f"{existing}\n{new}"
 
 
+def _merge_current_step(existing: str, new: str) -> str:
+    """
+    Reducer for the `current_step` field.
+
+    If multiple parallel nodes write to `current_step` concurrently,
+    this reducer will gracefully select the latest write.
+    """
+    return new or existing
+
+
 class ProjectState(TypedDict, total=False):
     """
     Shared state object passed between every node of the end-to-end
@@ -59,7 +69,7 @@ class ProjectState(TypedDict, total=False):
     github: str
 
     # Populated to keep track of the current active pipeline step
-    current_step: str
+    current_step: Annotated[str, _merge_current_step]
 
     # Populated if any stage raises an exception, so the pipeline can
     # fail gracefully instead of crashing the whole request.

@@ -4,7 +4,7 @@ import hashlib
 import logging
 import asyncio
 import contextvars
-from collections import OrderedDict
+import time
 from time import perf_counter
 from threading import Lock
 from typing import Iterable
@@ -23,10 +23,10 @@ from backend.config import (
     OLLAMA_CODING_MODEL,
     TASK_NUM_PREDICT,
 )
+from backend.utils.cache import llm_cache
+from backend.utils.retry import async_retry
+from backend.utils.prompt_optimizer import optimize_prompt
 
-
-_response_cache: OrderedDict[str, str] = OrderedDict()
-_cache_lock = Lock()
 _logger = logging.getLogger("aiforge.performance")
 
 # Context variable to hold an asyncio.Queue for streaming text chunks to SSE
@@ -61,19 +61,16 @@ def _cache_key(model: str, system_prompt: str, user_prompt: str) -> str:
 
 
 def _get_cached_response(key: str) -> str | None:
-    with _cache_lock:
-        cached = _response_cache.get(key)
-        if cached is not None:
-            _response_cache.move_to_end(key)
-        return cached
+    cached = llm_cache.get(key)
+    if cached is not None:
+        _logger.info("INFO Cache Hit")
+    else:
+        _logger.info("INFO Cache Miss")
+    return cached
 
 
 def _set_cached_response(key: str, value: str) -> None:
-    with _cache_lock:
-        _response_cache[key] = value
-        _response_cache.move_to_end(key)
-        while len(_response_cache) > MAX_CACHE_ITEMS:
-            _response_cache.popitem(last=False)
+    llm_cache.set(key, value)
 
 
 def select_model(task: str, prompt: str = "") -> str:
@@ -158,28 +155,56 @@ def _chat_completion_with_fallback(
     stream: bool = False,
     options: dict | None = None,
 ):
-    last_error: Exception | None = None
+    retries = 3
+    delay = 0.1
+    backoff = 2.0
 
-    for candidate in _fallback_models(model):
+    for attempt in range(1, retries + 1):
         try:
-            return _chat_completion(candidate, messages, stream=stream, options=options)
-        except Exception as exc:  # noqa: BLE001 - Ollama raises ResponseError for missing models.
-            error_text = str(exc).lower()
+            last_error: Exception | None = None
+            for candidate in _fallback_models(model):
+                try:
+                    return _chat_completion(candidate, messages, stream=stream, options=options)
+                except Exception as exc:  # noqa: BLE001 - Ollama raises ResponseError for missing models.
+                    error_text = str(exc).lower()
+                    status_code = getattr(exc, "status_code", None)
+
+                    if status_code == 404 or "not found" in error_text or "model" in error_text:
+                        _unavailable_models.add(candidate)
+                        last_error = exc
+                        continue
+
+                    raise
+
+            if last_error is not None:
+                raise last_error
+
+            return _chat_completion(model, messages, stream=stream, options=options)
+        except Exception as exc:  # noqa: BLE001
             status_code = getattr(exc, "status_code", None)
+            error_msg = str(exc).lower()
+            is_transient = (
+                status_code in {429, 500, 502, 503, 504}
+                or "timeout" in error_msg
+                or "connection" in error_msg
+                or "rate limit" in error_msg
+                or "too many requests" in error_msg
+            )
+            if not is_transient:
+                _logger.error("Permanent LLM failure detected: %s", exc)
+                raise exc
 
-            if status_code == 404 or "not found" in error_text or "model" in error_text:
-                _unavailable_models.add(candidate)
-                last_error = exc
-                continue
-
-            raise
-
-    if last_error is not None:
-        raise last_error
-
-    return _chat_completion(model, messages, stream=stream, options=options)
+            _logger.warning("INFO Retry Attempt %d - Transient error: %s", attempt, exc)
+            if attempt < retries:
+                import backend.utils.retry as retry_mod
+                retry_mod.retries_used_count += 1
+                time.sleep(delay)
+                delay *= backoff
+            else:
+                raise exc
 
 
+@async_retry(retries=3, initial_delay=0.1, backoff_factor=2.0, timeout=60.0)
 async def _chat_completion_with_fallback_async(
     messages: list[dict[str, str]],
     model: str,
@@ -222,13 +247,13 @@ def generate_text(
     model: str | None = None,
     task: str = "general",
 ) -> str:
-    compact_prompt = _normalize_prompt(prompt)
+    optimized = optimize_prompt(prompt)
+    compact_prompt = _normalize_prompt(optimized)
     selected_model = model or select_model(task, compact_prompt)
     key = _cache_key(selected_model, system_prompt, compact_prompt)
 
     cached = _get_cached_response(key)
     if cached is not None:
-        _logger.info("Agent Cache Hit task=%s model=%s chars=%d", task, selected_model, len(compact_prompt))
         return cached
 
     _logger.info("Agent Start task=%s model=%s", task, selected_model)
@@ -261,13 +286,13 @@ async def generate_text_async(
     model: str | None = None,
     task: str = "general",
 ) -> str:
-    compact_prompt = _normalize_prompt(prompt)
+    optimized = optimize_prompt(prompt)
+    compact_prompt = _normalize_prompt(optimized)
     selected_model = model or select_model(task, compact_prompt)
     key = _cache_key(selected_model, system_prompt, compact_prompt)
 
     cached = _get_cached_response(key)
     if cached is not None:
-        _logger.info("Agent Cache Hit task=%s model=%s chars=%d", task, selected_model, len(compact_prompt))
         # If queue is active, we should still push the cached content to SSE stream immediately
         queue = stream_queue_var.get()
         if queue is not None:
@@ -327,7 +352,8 @@ def generate_response(prompt: str, model: str | None = None, task: str = "genera
 
 
 def stream_response(prompt: str, model: str | None = None, task: str = "general") -> Iterable[str]:
-    compact_prompt = _normalize_prompt(prompt)
+    optimized = optimize_prompt(prompt)
+    compact_prompt = _normalize_prompt(optimized)
     selected_model = model or select_model(task, compact_prompt)
     cached = _get_cached_response(_cache_key(selected_model, "", compact_prompt))
     if cached is not None:
@@ -373,13 +399,13 @@ Generate clean, production-quality code.
 Return only the code unless the user explicitly asks for an explanation.
 """
 
-    compact_prompt = _normalize_prompt(prompt)
+    optimized = optimize_prompt(prompt)
+    compact_prompt = _normalize_prompt(optimized)
     selected_model = model or select_model(task, compact_prompt)
     key = _cache_key(selected_model, effective_system_prompt, compact_prompt)
 
     cached = _get_cached_response(key)
     if cached is not None:
-        _logger.info("Agent Cache Hit task=%s model=%s chars=%d", task, selected_model, len(compact_prompt))
         return cached
 
     _logger.info("Agent Start task=%s model=%s", task, selected_model)
@@ -436,7 +462,8 @@ Generate clean, production-quality code.
 Return only the code unless the user explicitly asks for an explanation.
 """
 
-    compact_prompt = _normalize_prompt(prompt)
+    optimized = optimize_prompt(prompt)
+    compact_prompt = _normalize_prompt(optimized)
     selected_model = model or select_model(task, compact_prompt)
     cache_key = _cache_key(selected_model, effective_system_prompt, compact_prompt)
 
