@@ -40,8 +40,26 @@ class DummyAgent:
     def __init__(self, name):
         self.name = name
 
-    def run(self, prompt):
+    def run(self, prompt, *args, **kwargs):
         return f"{self.name}:{len(prompt)}"
+
+
+class DummyTestingAgent:
+    def process(self, code, *args, **kwargs):
+        return f"testing:{len(code)}"
+
+
+class DummyMemoryManager:
+    def build_context_block(self, session_id, prompt):
+        return {
+            "history_text": "",
+            "project_text": "",
+            "relevant_text": "",
+        }
+    def build_planner_prompt(self, prompt, session_id):
+        return prompt
+    def save_interaction(self, **kwargs):
+        return kwargs
 
 
 def _mock_graph_agents():
@@ -52,6 +70,9 @@ def _mock_graph_agents():
     workflow.debug = DummyAgent("debug")
     workflow.resume = DummyAgent("resume")
     workflow.explanation = DummyAgent("explanation")
+    workflow.reviewer = DummyAgent("reviewer")
+    workflow.testing_agent = DummyTestingAgent()
+    workflow.memory_manager = DummyMemoryManager()
 
 
 def test_validate_architecture_sections_complete():
@@ -83,7 +104,8 @@ def test_graph_routes_to_coding_for_general_prompt():
     result = workflow.graph.invoke({"prompt": "Build a todo app"})
 
     assert result["route"] == "coding"
-    assert result["response"].startswith("coding:")
+    assert result["generated_code"].startswith("coding:")
+    assert result["response"].startswith("explanation:")
 
 
 def test_graph_routes_to_debug_for_error_prompt():
@@ -91,7 +113,8 @@ def test_graph_routes_to_debug_for_error_prompt():
     result = workflow.graph.invoke({"prompt": "Fix this error in API"})
 
     assert result["route"] == "debug"
-    assert result["response"].startswith("debug:")
+    assert result["generated_code"].startswith("debug:")
+    assert result["response"].startswith("explanation:")
 
 
 def test_graph_routes_to_resume_for_resume_prompt():
@@ -99,7 +122,8 @@ def test_graph_routes_to_resume_for_resume_prompt():
     result = workflow.graph.invoke({"prompt": "Improve my resume for backend roles"})
 
     assert result["route"] == "resume"
-    assert result["response"].startswith("resume:")
+    assert result["generated_code"].startswith("resume:")
+    assert result["response"].startswith("explanation:")
 
 
 def test_graph_routes_to_explanation_for_learning_prompt():

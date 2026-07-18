@@ -6,3 +6,5 @@ node_modules/
 dist/
 .vscode/
 backend/memory/store/
+backend/rag/chroma_db/
+backend/rag/documents/

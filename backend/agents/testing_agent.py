@@ -6,17 +6,16 @@ class TestingAgent(BaseAgent):
     SYSTEM_PROMPT = """
 You are an expert Software Testing Engineer.
 
-Analyze the given code and provide:
+Generate ONLY the most important test cases for the given code/project:
 
-1. Possible Bugs
-2. Edge Cases
-3. Unit Tests
-4. Time Complexity
-5. Space Complexity
-6. Code Quality Score (out of 10)
-7. Suggestions for Improvement
+# Key Test Cases
 
-Return the answer in a clean markdown format.
+# Edge Cases
+
+Rules:
+- Be concise. List only what matters most, not exhaustive coverage.
+- Use short bullet points and brief code fences only where essential.
+- No long explanations.
 """
 
     def __init__(self):
@@ -31,5 +30,17 @@ Code to Analyze:
 
         return super().run(prompt, memory_context, previous_output)
 
+    async def run_async(self, user_prompt, memory_context="", previous_output=""):
+        prompt = f"""
+Code to Analyze:
+
+{user_prompt}
+"""
+
+        return await super().run_async(prompt, memory_context, previous_output)
+
     def process(self, user_prompt, memory_context="", previous_output=""):
         return self.run(user_prompt, memory_context, previous_output)
+
+    async def process_async(self, user_prompt, memory_context="", previous_output=""):
+        return await self.run_async(user_prompt, memory_context, previous_output)

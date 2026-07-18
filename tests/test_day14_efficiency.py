@@ -75,6 +75,9 @@ class CaptureAgent:
         )
         return f"{self.name.upper()}::{len(user_prompt)}"
 
+    def process(self, user_prompt, memory_context="", previous_output=""):
+        return self.run(user_prompt, memory_context, previous_output)
+
 
 
 def configure_dummies():
@@ -86,6 +89,7 @@ def configure_dummies():
     workflow.resume = CaptureAgent("resume")
     workflow.explanation = CaptureAgent("explanation")
     workflow.reviewer = CaptureAgent("reviewer")
+    workflow.testing_agent = CaptureAgent("testing")
     workflow.memory_manager = DummyMemoryManager()
     return workflow
 
@@ -113,6 +117,7 @@ def test_fast_explanation_path_skips_planner_and_reviewer():
 
 def test_resume_path_skips_planner_and_reviewer():
     wf = configure_dummies()
+    wf.memory_manager.format_compact_context = lambda context: ""
     result = wf.graph.invoke({"prompt": "Generate Resume", "session_id": "fast-2"})
 
     assert result["route"] == "resume"

@@ -58,6 +58,9 @@ class CaptureAgent:
         self.last_memory_context = memory_context
         return f"{self.name.upper()}::{user_prompt[:30]}"
 
+    def process(self, user_prompt, memory_context=""):
+        return self.run(user_prompt, memory_context)
+
 
 
 def configure_temp_memory(tmp_path: Path):
@@ -84,6 +87,8 @@ def mock_graph_agents():
     workflow.debug = CaptureAgent("debug")
     workflow.resume = CaptureAgent("resume")
     workflow.explanation = CaptureAgent("explanation")
+    workflow.reviewer = CaptureAgent("reviewer")
+    workflow.testing_agent = CaptureAgent("testing")
     return workflow.coding
 
 
@@ -140,7 +145,8 @@ def test_graph_carries_memory_forward_between_prompts(tmp_path):
     assert second["route"] == "coding"
     assert "Create login page" in coding_agent.last_prompt
     assert "Conversation History" in coding_agent.last_prompt
-    assert second["response"].startswith("CODING::")
+    assert second["generated_code"].startswith("CODING::")
+    assert second["response"].startswith("EXPLANATION::")
 
 
 def test_router_uses_memory_context_for_continuation_hint():

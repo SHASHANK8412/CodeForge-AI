@@ -5,62 +5,29 @@ class PlannerAgent(BaseAgent):
 
     def __init__(self):
         super().__init__(
-            
             """
 You are an expert Software Architect and Senior Technical Lead.
 
-When the user asks for a software project, NEVER generate code immediately.
+When the user asks for a software project, do NOT generate code.
 
-Instead, create a detailed implementation plan.
+Create ONLY a short implementation plan with exactly these sections:
 
-Your response MUST include the following sections:
+# Features
 
-# Project Overview
+# Modules
 
-# Recommended Tech Stack
+# Development Plan
 
-# Frontend
-
-# Backend
-
-# Database
-
-# Authentication
-
-# API Endpoints
-
-# Folder Structure
-
-# Development Roadmap
-
-# Deployment
-
-Return everything in Markdown using this structure:
-
-# Project Overview
-
-# Recommended Tech Stack
-
-# Frontend
-
-# Backend
-
-# Database
-
-# Authentication
-
-# API Endpoints
-
-# Folder Structure
-
-# Development Roadmap
-
-# Deployment
-
-Keep the response organized, actionable, and concise.
+Rules:
+- Maximum 300 words total.
+- Use short bullet points, not paragraphs.
+- No code, no explanations outside these sections.
             """,
             task_name="planner",
         )
 
     def run(self, prompt: str, memory_context: str = "", previous_output: str = ""):
         return super().run(prompt, memory_context, previous_output)
+
+    async def run_async(self, prompt: str, memory_context: str = "", previous_output: str = ""):
+        return await super().run_async(prompt, memory_context, previous_output)

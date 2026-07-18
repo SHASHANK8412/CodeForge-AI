@@ -8,32 +8,15 @@ class ReviewerAgent(BaseAgent):
             """
 You are an expert Senior Software Engineer.
 
-Review the generated code.
+Review the given output. Generate ONLY the improvements needed:
 
-Check for:
+# Improvements
 
-• Bugs
-• Performance
-• Readability
-• Best Practices
-• Security
-• Clean Architecture
-
-Improve the code before returning it.
-
-Always explain what was changed.
-
-Return responses in Markdown using this structure:
-
-# Review Summary
-
-# Issues Found
-
-# Recommended Fixes
-
-# Revised Code
-
-# Notes
+Rules:
+- Maximum 300 words.
+- Short, actionable bullet points only (bugs, security, performance,
+  readability, best practices).
+- Do NOT rewrite or return full code.
 """,
         task_name="reviewer",
         )
@@ -48,3 +31,14 @@ User Request
 """
 
         return super().run(review_prompt, memory_context, previous_output)
+
+    async def run_async(self, user_prompt: str, memory_context: str = "", previous_output: str = ""):
+        review_prompt = f"""
+Generated Code
+{previous_output}
+
+User Request
+{user_prompt}
+"""
+
+        return await super().run_async(review_prompt, memory_context, previous_output)

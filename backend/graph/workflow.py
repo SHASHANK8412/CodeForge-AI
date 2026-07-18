@@ -556,19 +556,27 @@ def save_memory_node(state: GraphState):
 
     session_id = state.get("session_id", "default")
     agent_name = state.get("agent_name", state.get("route", "coding"))
-    final_response = f"""
+    
+    reviewed_code = state.get("reviewed_code", "")
+    testing_report = state.get("testing_report", "")
+    explanation = state.get("explanation", "")
+    
+    if reviewed_code or testing_report or explanation:
+        final_response = f"""
 === REVIEWED CODE ===
 
-{state.get("reviewed_code", "")}
+{reviewed_code}
 
 === TESTING REPORT ===
 
-{state.get("testing_report", "")}
+{testing_report}
 
 === EXPLANATION ===
 
-{state.get("explanation", "")}
+{explanation}
 """
+    else:
+        final_response = state.get("response") or state.get("generated_code") or ""
 
     memory_manager.save_interaction(
         session_id=session_id,
@@ -594,8 +602,8 @@ def save_memory_node(state: GraphState):
         "route": state.get("route", "coding"),
         "agent_name": agent_name,
         "generated_code": state.get("generated_code", ""),
-        "reviewed_code": state.get("reviewed_code", ""),
-        "explanation": state.get("explanation", ""),
+        "reviewed_code": reviewed_code,
+        "explanation": explanation,
         "response": state.get("response", final_response),
     }
 
@@ -624,7 +632,10 @@ def post_generation_selector(state: GraphState):
     if not hasattr(memory_manager, "format_compact_context"):
         return "reviewer"
 
-    return "save_memory"
+    if state.get("execution_mode") == "fast":
+        return "save_memory"
+
+    return "reviewer"
 
 
 def resume_post_selector(state: GraphState):
@@ -632,7 +643,10 @@ def resume_post_selector(state: GraphState):
     if not hasattr(memory_manager, "format_compact_context"):
         return "explanation"
 
-    return "save_memory"
+    if state.get("execution_mode") == "fast":
+        return "save_memory"
+
+    return "explanation"
 
 
 # ---------------- Testing ---------------- #

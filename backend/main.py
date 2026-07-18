@@ -1,3 +1,12 @@
+import sys
+from pathlib import Path
+
+# Ensure repository root is in sys.path so absolute imports of the 'backend' package work
+# when running uvicorn directly from inside the backend directory.
+_repo_root = Path(__file__).resolve().parent.parent
+if str(_repo_root) not in sys.path:
+    sys.path.insert(0, str(_repo_root))
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
@@ -10,6 +19,7 @@ from backend.routes.rag import legacy_router as rag_legacy_router
 from backend.routes.rag import router as rag_router
 from backend.routes.plan import router as plan_router
 from backend.routes.memory import router as memory_router
+from backend.routes.project import router as project_router
 
 app = FastAPI(
     title="AIForge API",
@@ -32,6 +42,7 @@ def register_routers() -> None:
     app.include_router(rag_legacy_router)
     app.include_router(plan_router)
     app.include_router(memory_router)
+    app.include_router(project_router)
 
 
 register_routers()

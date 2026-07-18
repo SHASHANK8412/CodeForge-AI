@@ -58,6 +58,9 @@ class CaptureAgent:
         )
         return f"{self.name.upper()}::{len(user_prompt)}"
 
+    def process(self, user_prompt, memory_context="", previous_output=""):
+        return self.run(user_prompt, memory_context, previous_output)
+
 
 class DummyMemoryManager:
     def build_context_block(self, session_id, prompt):
@@ -98,6 +101,7 @@ def test_graph_coding_path_runs_reviewer_then_explanation():
     workflow.resume = CaptureAgent("resume")
     workflow.explanation = CaptureAgent("explanation")
     workflow.reviewer = CaptureAgent("reviewer")
+    workflow.testing_agent = CaptureAgent("testing")
     workflow.memory_manager = DummyMemoryManager()
 
     result = workflow.graph.invoke({"prompt": "Create Login API", "session_id": "s1"})
@@ -118,6 +122,7 @@ def test_graph_explanation_path_skips_reviewer():
     workflow.resume = CaptureAgent("resume")
     workflow.explanation = CaptureAgent("explanation")
     workflow.reviewer = CaptureAgent("reviewer")
+    workflow.testing_agent = CaptureAgent("testing")
     workflow.memory_manager = DummyMemoryManager()
 
     result = workflow.graph.invoke({"prompt": "Explain previous code", "session_id": "s2"})
@@ -137,6 +142,7 @@ def test_graph_debug_path_runs_reviewer_then_explanation():
     workflow.resume = CaptureAgent("resume")
     workflow.explanation = CaptureAgent("explanation")
     workflow.reviewer = CaptureAgent("reviewer")
+    workflow.testing_agent = CaptureAgent("testing")
     workflow.memory_manager = DummyMemoryManager()
 
     result = workflow.graph.invoke({"prompt": "Fix previous bug", "session_id": "s3"})
@@ -156,6 +162,7 @@ def test_graph_resume_path_routes_to_explanation_only():
     workflow.resume = CaptureAgent("resume")
     workflow.explanation = CaptureAgent("explanation")
     workflow.reviewer = CaptureAgent("reviewer")
+    workflow.testing_agent = CaptureAgent("testing")
     workflow.memory_manager = DummyMemoryManager()
 
     result = workflow.graph.invoke({"prompt": "Generate Resume", "session_id": "s4"})
