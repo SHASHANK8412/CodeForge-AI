@@ -9,7 +9,7 @@ from time import perf_counter
 from threading import Lock
 from typing import Iterable
 
-from ollama import chat, AsyncClient  # type: ignore[attr-defined]
+from ollama import Client, AsyncClient  # type: ignore[attr-defined]
 
 from backend.config import (
     DEFAULT_NUM_PREDICT,
@@ -26,6 +26,9 @@ from backend.config import (
 from backend.utils.cache import llm_cache
 from backend.utils.retry import async_retry
 from backend.utils.prompt_optimizer import optimize_prompt
+
+_ollama_client = Client(timeout=300.0)
+_ollama_async_client = AsyncClient(timeout=300.0)
 
 _logger = logging.getLogger("aiforge.performance")
 
@@ -120,7 +123,7 @@ def _generation_options(task: str) -> dict:
 
 
 def _chat_completion(model: str, messages: list[dict[str, str]], stream: bool = False, options: dict | None = None):
-    return chat(
+    return _ollama_client.chat(
         model=model,
         messages=messages,
         stream=stream,
@@ -129,8 +132,7 @@ def _chat_completion(model: str, messages: list[dict[str, str]], stream: bool = 
 
 
 async def _chat_completion_async(model: str, messages: list[dict[str, str]], stream: bool = False, options: dict | None = None):
-    client = AsyncClient()
-    return await client.chat(
+    return await _ollama_async_client.chat(
         model=model,
         messages=messages,
         stream=stream,
