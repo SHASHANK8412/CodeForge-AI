@@ -54,6 +54,7 @@ def async_retry(
                     is_transient = (
                         status_code in {429, 500, 502, 503, 504}
                         or "timeout" in error_msg
+                        or "timed out" in error_msg
                         or "connection" in error_msg
                         or "rate limit" in error_msg
                         or "too many requests" in error_msg
