@@ -8,3 +8,4 @@ dist/
 backend/memory/store/
 backend/rag/chroma_db/
 backend/rag/documents/
+generated_projects/
