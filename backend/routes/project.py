@@ -64,7 +64,8 @@ async def generate_project(request: ProjectRequest):
     # Assemble generated code blocks into file structures
     safe_name = "".join([c if c.isalnum() or c in " -_" else "_" for c in request.prompt]).strip()
     try:
-        project_generator.generate_project_structure(request.prompt, result)
+        if "project_path" not in result:
+            project_generator.generate_project_structure(request.prompt, result)
     except Exception as exc:
         logger.error(f"Failed to assemble project files: {exc}")
 
@@ -146,7 +147,8 @@ async def generate_project_stream(request: ProjectRequest):
         # Assemble project files to folder layout and ZIP
         safe_name = "".join([c if c.isalnum() or c in " -_" else "_" for c in request.prompt]).strip()
         try:
-            project_generator.generate_project_structure(request.prompt, final_state)
+            if "project_path" not in final_state:
+                project_generator.generate_project_structure(request.prompt, final_state)
         except Exception as exc:
             logger.error(f"Failed to assemble project in stream: {exc}")
 

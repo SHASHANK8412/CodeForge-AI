@@ -1,5 +1,6 @@
 import logging
 from time import perf_counter
+from pathlib import Path
 
 from langgraph.graph import StateGraph, END
 
@@ -12,6 +13,8 @@ from backend.agents.database_agent import DatabaseAgent
 from backend.agents.documentation import DocumentationAgent
 from backend.agents.testing_agent import TestingAgent
 from backend.agents.reviewer_agent import ReviewerAgent
+from backend.generators.project_generator import ProjectGenerator
+from backend.review.self_heal import SelfHealOrchestrator
 from backend.utils.timer import Timer
 from backend.graph.profiler import workflow_profiler
 from backend.utils.cache import get_cache_stats
@@ -28,6 +31,9 @@ database_agent = DatabaseAgent()
 documentation_agent = DocumentationAgent()
 testing_agent = TestingAgent()
 reviewer_agent = ReviewerAgent()
+
+project_generator = ProjectGenerator()
+self_heal_orchestrator = SelfHealOrchestrator()
 
 # Globals to track overall execution duration
 workflow_start_time = 0.0
@@ -198,7 +204,81 @@ Database
     workflow_profiler.record_agent_time("reviewer", timer.elapsed)
     _logger.info("INFO Reviewer Finished")
 
-    # Workflow ends at Reviewer node. Compute total time and print report.
+    return {
+        "review": review,
+        "current_step": "reviewer",
+    }
+
+
+async def assemble_node(state: ProjectState) -> dict:
+    _logger.info("INFO Project Generation Started")
+    prompt = state.get("prompt") or state.get("user_prompt", "")
+    project_dir, report = project_generator.generate_project_structure(prompt, state)
+    _logger.info("INFO Project Assembled on Disk")
+    return {
+        "project_path": str(project_dir),
+        "current_step": "assemble",
+    }
+
+
+async def self_heal_node(state: ProjectState) -> dict:
+    _logger.info("INFO Self-Healing and Quality Checks Started")
+    project_path_str = state.get("project_path")
+    prompt = state.get("prompt") or state.get("user_prompt", "")
+    
+    if not project_path_str:
+        _logger.warning("Project path missing from state during self-healing")
+        return {"current_step": "self_heal"}
+
+    project_path = Path(project_path_str)
+    
+    findings, test_results, scores, report_content = await self_heal_orchestrator.execute_self_heal_pipeline(
+        project_name=prompt,
+        project_path=project_path
+    )
+    
+    # Read final modified files back into state fields to prevent overwrite
+    state_updates = {
+        "review_findings": findings,
+        "test_results": test_results,
+        "quality_score": scores,
+        "quality_report": report_content,
+        "current_step": "self_heal",
+    }
+
+    backend_file = project_path / "backend/main.py"
+    if backend_file.exists():
+        with open(backend_file, "r", encoding="utf-8") as f:
+            state_updates["backend"] = f.read()
+
+    frontend_file = project_path / "frontend/src/App.jsx"
+    if frontend_file.exists():
+        with open(frontend_file, "r", encoding="utf-8") as f:
+            state_updates["frontend"] = f.read()
+
+    database_file = project_path / "database/schema.sql"
+    if database_file.exists():
+        with open(database_file, "r", encoding="utf-8") as f:
+            state_updates["database"] = f.read()
+
+    return state_updates
+
+
+async def export_node(state: ProjectState) -> dict:
+    _logger.info("INFO Finalizing Project Archive...")
+    project_path_str = state.get("project_path")
+    prompt = state.get("prompt") or state.get("user_prompt", "")
+    
+    if project_path_str:
+        # Re-zip to pack the final modified files
+        from backend.generators.project_generator import GENERATED_PROJECTS_DIR
+        safe_name = "".join([c if c.isalnum() or c in " -_" else "_" for c in prompt]).strip()
+        zip_output_path = GENERATED_PROJECTS_DIR / f"{safe_name}.zip"
+        project_generator.zip_service.zip_project(Path(project_path_str), zip_output_path)
+        _logger.info("INFO ZIP package rebuilt successfully")
+
+    # Log Execution report to output
+    global workflow_start_time
     total_workflow_time = perf_counter() - workflow_start_time
     workflow_profiler.set_total_time(total_workflow_time)
 
@@ -213,7 +293,6 @@ Database
     avg_time = workflow_profiler.get_average_agent_time()
     slowest_name, slowest_time = workflow_profiler.get_slowest_agent()
 
-    # Log Execution report to output
     print("\n" + workflow_profiler.format_report() + "\n")
 
     report = f"""==============================
@@ -227,6 +306,7 @@ Database PASS
 Testing PASS
 Documentation PASS
 Reviewer PASS
+Self-Healing PASS
 
 Execution Time: {total_workflow_time:.1f} s
 Average Agent Time: {avg_time:.1f} s
@@ -241,8 +321,7 @@ Retries Used: {retries}
     _logger.info("INFO Workflow Completed")
 
     return {
-        "review": review,
-        "current_step": "reviewer",
+        "current_step": "export",
     }
 
 
@@ -258,6 +337,9 @@ builder.add_node("database", database_node)
 builder.add_node("testing", testing_node)
 builder.add_node("documentation", documentation_node)
 builder.add_node("reviewer", reviewer_node)
+builder.add_node("assemble", assemble_node)
+builder.add_node("self_heal", self_heal_node)
+builder.add_node("export", export_node)
 
 builder.set_entry_point("planner")
 
@@ -275,6 +357,9 @@ builder.add_edge("database", "testing")
 
 builder.add_edge("testing", "documentation")
 builder.add_edge("documentation", "reviewer")
-builder.add_edge("reviewer", END)
+builder.add_edge("reviewer", "assemble")
+builder.add_edge("assemble", "self_heal")
+builder.add_edge("self_heal", "export")
+builder.add_edge("export", END)
 
 parallel_graph = builder.compile()

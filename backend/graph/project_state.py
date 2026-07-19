@@ -75,3 +75,11 @@ class ProjectState(TypedDict, total=False):
     # fail gracefully instead of crashing the whole request.
     error: Annotated[str, _merge_errors]
 
+    # Day 23 Self-Healing & Quality evaluation fields
+    project_path: str
+    review_findings: list[dict]
+    test_results: dict
+    quality_score: dict
+    quality_report: str
+    self_heal_attempts: int
+

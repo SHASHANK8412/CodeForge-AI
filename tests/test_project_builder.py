@@ -1,6 +1,7 @@
 import shutil
 import pytest
 from pathlib import Path
+from unittest.mock import AsyncMock
 from fastapi.testclient import TestClient
 
 from backend.main import app
@@ -95,6 +96,14 @@ def test_api_generation_and_download():
     parallel_workflow.testing_agent = MockAgent("Testing")
     parallel_workflow.documentation_agent = MockAgent("Documentation", "documentation")
 
+    orig_healer = parallel_workflow.self_heal_orchestrator
+
+    # Mock self-healing to return immediately
+    parallel_workflow.self_heal_orchestrator = AsyncMock()
+    parallel_workflow.self_heal_orchestrator.execute_self_heal_pipeline.return_value = (
+        [], {"passed": 2, "failed": 0}, {"overall": 9.5}, "Mock report content"
+    )
+
     project_name = "HMS-System"
     safe_name = "HMS-System"
     project_dir = GENERATED_PROJECTS_DIR / safe_name
@@ -106,29 +115,33 @@ def test_api_generation_and_download():
     if zip_path.exists():
         zip_path.unlink()
 
-    client = TestClient(app)
+    try:
+        client = TestClient(app)
 
-    # Generate Project API
-    response = client.post("/generate-project", json={"prompt": project_name})
-    assert response.status_code == 200
-    data = response.json()
+        # Generate Project API
+        response = client.post("/generate-project", json={"prompt": project_name})
+        assert response.status_code == 200
+        data = response.json()
 
-    assert data["success"] is True
-    assert data["project_name"] == project_name
-    assert "location" in data
+        assert data["success"] is True
+        assert data["project_name"] == project_name
+        assert "location" in data
 
-    # Verify files created on disk
-    assert project_dir.exists()
-    assert zip_path.exists()
+        # Verify files created on disk
+        assert project_dir.exists()
+        assert zip_path.exists()
 
-    # Download Project ZIP API
-    download_response = client.get(f"/download-project/{project_name}")
-    assert download_response.status_code == 200
-    assert download_response.headers["content-type"] == "application/zip"
-
-    # Clean up
-    shutil.rmtree(project_dir)
-    zip_path.unlink()
+        # Download Project ZIP API
+        download_response = client.get(f"/download-project/{project_name}")
+        assert download_response.status_code == 200
+        assert download_response.headers["content-type"] == "application/zip"
+    finally:
+        parallel_workflow.self_heal_orchestrator = orig_healer
+        # Clean up
+        if project_dir.exists():
+            shutil.rmtree(project_dir)
+        if zip_path.exists():
+            zip_path.unlink()
 
 
 import json

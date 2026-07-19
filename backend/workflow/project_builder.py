@@ -2,7 +2,7 @@ import json
 import re
 import shutil
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -155,7 +155,7 @@ services:
     metadata = {
         "project_name": project_name,
         "framework": "React + FastAPI",
-        "created_at": datetime.utcnow().isoformat() + "Z",
+        "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "agents_used": [
             "Planner",
             "Architect",
