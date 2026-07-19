@@ -204,7 +204,7 @@ def _chat_completion_with_fallback(
                 raise exc
 
 
-@async_retry(retries=3, initial_delay=0.1, backoff_factor=2.0, timeout=60.0)
+@async_retry(retries=3, initial_delay=0.1, backoff_factor=2.0, timeout=300.0)
 async def _chat_completion_with_fallback_async(
     messages: list[dict[str, str]],
     model: str,
