@@ -82,4 +82,5 @@ class ProjectState(TypedDict, total=False):
     quality_score: dict
     quality_report: str
     self_heal_attempts: int
+    validation_report: dict
 

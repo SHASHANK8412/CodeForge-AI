@@ -15,6 +15,7 @@ from backend.agents.testing_agent import TestingAgent
 from backend.agents.reviewer_agent import ReviewerAgent
 from backend.generators.project_generator import ProjectGenerator
 from backend.review.self_heal import SelfHealOrchestrator
+from backend.validation.validator import ValidationOrchestrator
 from backend.utils.timer import Timer
 from backend.graph.profiler import workflow_profiler
 from backend.utils.cache import get_cache_stats
@@ -34,6 +35,7 @@ reviewer_agent = ReviewerAgent()
 
 project_generator = ProjectGenerator()
 self_heal_orchestrator = SelfHealOrchestrator()
+validation_orchestrator = ValidationOrchestrator()
 
 # Globals to track overall execution duration
 workflow_start_time = 0.0
@@ -221,29 +223,28 @@ async def assemble_node(state: ProjectState) -> dict:
     }
 
 
-async def self_heal_node(state: ProjectState) -> dict:
-    _logger.info("INFO Self-Healing and Quality Checks Started")
+async def validation_node(state: ProjectState) -> dict:
+    _logger.info("INFO QA Validation Engine Started")
     project_path_str = state.get("project_path")
     prompt = state.get("prompt") or state.get("user_prompt", "")
     
     if not project_path_str:
-        _logger.warning("Project path missing from state during self-healing")
-        return {"current_step": "self_heal"}
+        _logger.warning("Project path missing from state during validation")
+        return {"current_step": "validation"}
 
     project_path = Path(project_path_str)
     
-    findings, test_results, scores, report_content = await self_heal_orchestrator.execute_self_heal_pipeline(
+    report, ready = await validation_orchestrator.execute_validation_pipeline(
         project_name=prompt,
-        project_path=project_path
+        project_path=project_path,
+        heal_orchestrator=self_heal_orchestrator
     )
     
     # Read final modified files back into state fields to prevent overwrite
     state_updates = {
-        "review_findings": findings,
-        "test_results": test_results,
-        "quality_score": scores,
-        "quality_report": report_content,
-        "current_step": "self_heal",
+        "validation_report": report.model_dump() if report else {},
+        "quality_score": report.quality.model_dump() if report else {},
+        "current_step": "validation",
     }
 
     backend_file = project_path / "backend/main.py"
@@ -338,7 +339,7 @@ builder.add_node("testing", testing_node)
 builder.add_node("documentation", documentation_node)
 builder.add_node("reviewer", reviewer_node)
 builder.add_node("assemble", assemble_node)
-builder.add_node("self_heal", self_heal_node)
+builder.add_node("validation", validation_node)
 builder.add_node("export", export_node)
 
 builder.set_entry_point("planner")
@@ -358,8 +359,8 @@ builder.add_edge("database", "testing")
 builder.add_edge("testing", "documentation")
 builder.add_edge("documentation", "reviewer")
 builder.add_edge("reviewer", "assemble")
-builder.add_edge("assemble", "self_heal")
-builder.add_edge("self_heal", "export")
+builder.add_edge("assemble", "validation")
+builder.add_edge("validation", "export")
 builder.add_edge("export", END)
 
 parallel_graph = builder.compile()

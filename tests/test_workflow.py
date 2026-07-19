@@ -72,6 +72,19 @@ def test_generate_endpoint():
     parallel_workflow.testing_agent = MockAgent("Testing")
     parallel_workflow.documentation_agent = MockAgent("Documentation", "documentation")
 
+    from backend.validation.models import ValidationReport, QualityScore
+    from unittest.mock import AsyncMock
+    parallel_workflow.validation_orchestrator.execute_validation_pipeline = AsyncMock(return_value=(
+        ValidationReport(
+            timestamp="2026-07-19T13:00:00Z",
+            project_name="Build an AI Resume Analyzer",
+            results=[],
+            quality=QualityScore(overall_score=95.0, grade="A", ready_for_export=True),
+            summary={}
+        ),
+        True
+    ))
+
     client = TestClient(app)
     response = client.post("/generate", json={"prompt": "Build an AI Resume Analyzer"})
     assert response.status_code == 200
