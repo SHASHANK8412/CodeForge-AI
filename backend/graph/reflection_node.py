@@ -59,6 +59,10 @@ async def reflection_node(state: ProjectState) -> dict:
     
     validation_str = json_dumps_safe(validation_report)
 
+    _logger.info("Analyzing project...")
+    _logger.info("Detecting duplicate code...")
+    _logger.info("Detecting missing tests...")
+
     # 1. Run LLM reflection
     try:
         reflection_data = await reflection_agent.reflect_on_project(
@@ -86,6 +90,7 @@ async def reflection_node(state: ProjectState) -> dict:
 
     # 3. Add to reflection history
     score = reflection_data.get("reflection_score", 85)
+    _logger.info(f"Reflection score: {score}")
     recs = reflection_data.get("recommendations", [])
     duration = time.perf_counter() - start_time
     

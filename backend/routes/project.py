@@ -278,6 +278,7 @@ async def run_reflection_manually(request: ReflectionRunRequest):
         execution_time=duration
     )
     
+    reflection_data["status"] = "completed"
     return reflection_data
 
 

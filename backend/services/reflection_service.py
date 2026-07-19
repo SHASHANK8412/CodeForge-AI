@@ -36,9 +36,12 @@ class ReflectionService:
 
     # --- File IO ---
     def load_lessons(self) -> List[Dict[str, Any]]:
+        _logger.info("Loading lessons...")
         try:
             with open(self.lessons_path, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+                _logger.info(f"Found {len(data)} lessons")
+                return data
         except Exception as exc:
             _logger.error(f"Failed to load lessons.json: {exc}")
             return []
@@ -67,12 +70,21 @@ class ReflectionService:
         except Exception as exc:
             _logger.error(f"Failed to save reflection history: {exc}")
 
-    # --- Lesson Merging & Similarity Search ---
     def compute_similarity(self, str_a: str, str_b: str) -> float:
         """
-        Calculates string match ratio using SequenceMatcher for robust zero-dependency comparison.
+        Calculates string match ratio using SequenceMatcher combined with word overlap coefficient.
         """
-        return SequenceMatcher(None, str_a.lower(), str_b.lower()).ratio()
+        words_a = set(w for w in re.findall(r"\b\w+\b", str_a.lower()) if len(w) >= 3)
+        words_b = set(w for w in re.findall(r"\b\w+\b", str_b.lower()) if len(w) >= 3)
+        
+        if not words_a or not words_b:
+            return 0.0
+            
+        intersection = words_a.intersection(words_b)
+        overlap_ratio = len(intersection) / min(len(words_a), len(words_b))
+        seq_ratio = SequenceMatcher(None, str_a.lower(), str_b.lower()).ratio()
+        
+        return max(seq_ratio, overlap_ratio)
 
     def add_lessons(self, new_lessons: List[Dict[str, str]], threshold: float = 0.70) -> None:
         """
@@ -166,7 +178,7 @@ class ReflectionService:
                 matching_directives.append(item.get("lesson"))
                 
         if matching_directives:
-            _logger.info("Prompt optimized using matched memory lessons")
+            _logger.info("Prompt optimized")
             directives_str = "\n".join(f"- {d}" for d in matching_directives[:5]) # limit to top 5 matches
             optimized = f"""{original_prompt}
 
