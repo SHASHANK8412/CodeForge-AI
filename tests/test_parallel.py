@@ -31,13 +31,38 @@ async def test_parallel_workflow_execution():
     orig_generator = parallel_workflow.project_generator
     orig_healer = parallel_workflow.self_heal_orchestrator
 
-    # Mock new generators and healing services
+    # Mock new generators, healing, validation, and reflection services
     parallel_workflow.project_generator = MagicMock()
     parallel_workflow.project_generator.generate_project_structure.return_value = (Path("/tmp"), None)
     parallel_workflow.project_generator.zip_service = MagicMock()
 
     parallel_workflow.self_heal_orchestrator = AsyncMock()
     parallel_workflow.self_heal_orchestrator.execute_self_heal_pipeline.return_value = ([], {}, {}, "Mock Report")
+
+    from backend.validation.models import ValidationReport, QualityScore
+    parallel_workflow.validation_orchestrator.execute_validation_pipeline = AsyncMock(return_value=(
+        ValidationReport(
+            timestamp="2026-07-19T13:00:00Z",
+            project_name="Build an AI Resume Analyzer",
+            results=[],
+            quality=QualityScore(overall_score=95.0, grade="A", ready_for_export=True),
+            summary={}
+        ),
+        True
+    ))
+
+    from backend.graph.reflection_node import reflection_agent
+    reflection_agent.reflect_on_project = AsyncMock(return_value={
+        "strengths": ["Clean structure"],
+        "weaknesses": ["None"],
+        "recommendations": [],
+        "lessons": [],
+        "reflection_score": 95
+    })
+
+    # Save original validation/reflection states to restore them if needed
+    orig_val = parallel_workflow.validation_orchestrator.execute_validation_pipeline
+    orig_ref = reflection_agent.reflect_on_project
 
     try:
         result = await parallel_workflow.parallel_graph.ainvoke(
@@ -49,6 +74,8 @@ async def test_parallel_workflow_execution():
     finally:
         parallel_workflow.project_generator = orig_generator
         parallel_workflow.self_heal_orchestrator = orig_healer
+        parallel_workflow.validation_orchestrator.execute_validation_pipeline = orig_val
+        reflection_agent.reflect_on_project = orig_ref
 
     assert result["plan"] == "Planner output"
     assert result["architecture"] == "Architect output"

@@ -194,3 +194,90 @@ def download_project(project_name: str):
     )
 
 
+# --- Reflection Engine Endpoints ---
+
+from backend.services.reflection_service import ReflectionService
+from backend.agents.reflection_agent import ReflectionAgent
+
+reflection_service = ReflectionService()
+reflection_agent = ReflectionAgent()
+
+class ReflectionRunRequest(BaseModel):
+    project_name: str
+    project_path: str
+    reviewer_feedback: str = ""
+    test_output: str = ""
+    validation_report: dict = {}
+
+@router.get("/reflection")
+def get_latest_reflection():
+    history = reflection_service.load_history()
+    if not history:
+        raise HTTPException(status_code=404, detail="No reflection records found.")
+    return history[-1]
+
+@router.get("/lessons")
+def get_lessons():
+    return reflection_service.load_lessons()
+
+@router.get("/metrics")
+def get_metrics():
+    return reflection_service.get_dashboard_metrics()
+
+@router.post("/reflection/run")
+async def run_reflection_manually(request: ReflectionRunRequest):
+    p_path = Path(request.project_path)
+    if not p_path.exists():
+        raise HTTPException(status_code=400, detail="Specified project path does not exist.")
+        
+    code_snippets = []
+    backend_file = p_path / "backend/main.py"
+    if backend_file.exists():
+        try:
+            with open(backend_file, "r", encoding="utf-8") as f:
+                code_snippets.append(f.read())
+        except Exception:
+            pass
+    frontend_file = p_path / "frontend/src/App.jsx"
+    if frontend_file.exists():
+        try:
+            with open(frontend_file, "r", encoding="utf-8") as f:
+                code_snippets.append(f.read())
+        except Exception:
+            pass
+    code_str = "\n\n".join(code_snippets)
+
+    import time
+    start_time = time.perf_counter()
+    
+    try:
+        reflection_data = await reflection_agent.reflect_on_project(
+            project_name=request.project_name,
+            code_snippets=code_str,
+            reviewer_feedback=request.reviewer_feedback,
+            test_output=request.test_output,
+            validation_report=json.dumps(request.validation_report)
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"LLM reflection execution failed: {str(exc)}")
+
+    lessons = reflection_data.get("lessons") or []
+    if lessons:
+        reflection_service.add_lessons(lessons)
+        
+    score = reflection_data.get("reflection_score", 85)
+    recs = reflection_data.get("recommendations", [])
+    duration = time.perf_counter() - start_time
+    
+    reflection_service.add_history_record(
+        project_name=request.project_name,
+        reflection_score=score,
+        bugs_found=0,
+        tests_passed=0,
+        recommendations=recs,
+        execution_time=duration
+    )
+    
+    return reflection_data
+
+

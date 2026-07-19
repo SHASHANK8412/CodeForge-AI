@@ -1,0 +1,14 @@
+[
+  {
+    "problem": "Missing recommended root directories: 'backend', 'frontend', and 'database'",
+    "lesson": "Always include standard project structure elements to ensure consistency and ease of maintenance.",
+    "count": 1,
+    "last_seen": "2026-07-19"
+  },
+  {
+    "problem": "No 'docker-compose.yml' file present",
+    "lesson": "Use Docker for containerization to simplify deployment and environment management.",
+    "count": 1,
+    "last_seen": "2026-07-19"
+  }
+]

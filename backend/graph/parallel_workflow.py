@@ -16,6 +16,7 @@ from backend.agents.reviewer_agent import ReviewerAgent
 from backend.generators.project_generator import ProjectGenerator
 from backend.review.self_heal import SelfHealOrchestrator
 from backend.validation.validator import ValidationOrchestrator
+from backend.graph.reflection_node import reflection_node
 from backend.utils.timer import Timer
 from backend.graph.profiler import workflow_profiler
 from backend.utils.cache import get_cache_stats
@@ -49,15 +50,21 @@ async def planner_node(state: ProjectState) -> dict:
     workflow_profiler.clear()
     workflow_start_time = perf_counter()
 
-    _logger.info("INFO Planner Started")
     prompt = state.get("prompt") or state.get("user_prompt", "")
+    
+    # Load lessons and optimize prompt automatically before Planner executes
+    from backend.services.reflection_service import ReflectionService
+    ref_service = ReflectionService()
+    optimized_prompt = ref_service.optimize_prompt(prompt)
+    
     with Timer() as timer:
-        plan = await planner.run_async(prompt)
+        plan = await planner.run_async(optimized_prompt)
     
     workflow_profiler.record_agent_time("planner", timer.elapsed)
     _logger.info("INFO Planner Finished")
 
     return {
+        "prompt": optimized_prompt,
         "plan": plan,
         "current_step": "planner",
     }
@@ -340,6 +347,7 @@ builder.add_node("documentation", documentation_node)
 builder.add_node("reviewer", reviewer_node)
 builder.add_node("assemble", assemble_node)
 builder.add_node("validation", validation_node)
+builder.add_node("reflection", reflection_node)
 builder.add_node("export", export_node)
 
 builder.set_entry_point("planner")
@@ -360,7 +368,8 @@ builder.add_edge("testing", "documentation")
 builder.add_edge("documentation", "reviewer")
 builder.add_edge("reviewer", "assemble")
 builder.add_edge("assemble", "validation")
-builder.add_edge("validation", "export")
+builder.add_edge("validation", "reflection")
+builder.add_edge("reflection", "export")
 builder.add_edge("export", END)
 
 parallel_graph = builder.compile()

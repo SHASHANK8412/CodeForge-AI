@@ -98,6 +98,31 @@ def test_api_generation_and_download():
 
     orig_healer = parallel_workflow.self_heal_orchestrator
 
+    from backend.validation.models import ValidationReport, QualityScore
+    parallel_workflow.validation_orchestrator.execute_validation_pipeline = AsyncMock(return_value=(
+        ValidationReport(
+            timestamp="2026-07-19T13:00:00Z",
+            project_name="HMS-System",
+            results=[],
+            quality=QualityScore(overall_score=95.0, grade="A", ready_for_export=True),
+            summary={}
+        ),
+        True
+    ))
+
+    from backend.graph.reflection_node import reflection_agent
+    reflection_agent.reflect_on_project = AsyncMock(return_value={
+        "strengths": ["Clean structure"],
+        "weaknesses": ["None"],
+        "recommendations": [],
+        "lessons": [],
+        "reflection_score": 95
+    })
+
+    # Save original validation and reflection methods
+    orig_val = parallel_workflow.validation_orchestrator.execute_validation_pipeline
+    orig_ref = reflection_agent.reflect_on_project
+
     # Mock self-healing to return immediately
     parallel_workflow.self_heal_orchestrator = AsyncMock()
     parallel_workflow.self_heal_orchestrator.execute_self_heal_pipeline.return_value = (
@@ -137,6 +162,8 @@ def test_api_generation_and_download():
         assert download_response.headers["content-type"] == "application/zip"
     finally:
         parallel_workflow.self_heal_orchestrator = orig_healer
+        parallel_workflow.validation_orchestrator.execute_validation_pipeline = orig_val
+        reflection_agent.reflect_on_project = orig_ref
         # Clean up
         if project_dir.exists():
             shutil.rmtree(project_dir)
