@@ -161,6 +161,24 @@ function ProjectGenerator() {
                 </div>
             )}
 
+            {project?.success && (
+                <div className="mt-6 flex flex-col md:flex-row gap-4 items-center justify-between bg-[#343541] border border-green-600/30 p-6 rounded-xl shadow-lg">
+                    <div>
+                        <h3 className="text-lg font-bold text-green-400">🎉 Project Assembly Complete!</h3>
+                        <p className="text-gray-400 text-sm mt-1">
+                            Download your project folders structured with configs and ready for local development.
+                        </p>
+                    </div>
+                    <a
+                        href={`http://127.0.0.1:8000/download-project/${encodeURIComponent(project.project_name || prompt)}`}
+                        download
+                        className="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-xl font-bold transition-all text-center flex items-center gap-2 w-full md:w-auto justify-center"
+                    >
+                        📥 Download Project ZIP
+                    </a>
+                </div>
+            )}
+
             {project && Object.keys(project).length > 0 && (
                 <div className="mt-8 bg-[#444654] rounded-xl overflow-hidden">
                     <div className="flex flex-wrap gap-1 p-2 bg-[#343541] border-b border-gray-700">
