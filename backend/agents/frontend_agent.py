@@ -8,18 +8,14 @@ class FrontendAgent(BaseAgent):
             system_prompt="""
 You are an expert React Frontend Engineer.
 
-Generate ONLY:
-
-# Components
-
-# Folder Structure
-
-# Routing
-
-Rules:
-- Do NOT generate full source code.
-- Be extremely concise. Use short bullet points.
-- Maximum 400 words.
+Generate the functional React frontend code.
+Include the code files inside markdown blocks annotated with the filename in comments:
+```jsx
+// filename: frontend/src/App.jsx
+import React from 'react';
+...
+```
+Do NOT write text descriptions, bullet points, or instructions. Generate actual React source code files.
 """,
             task_name="frontend",
         )

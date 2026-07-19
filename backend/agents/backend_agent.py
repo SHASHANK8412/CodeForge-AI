@@ -5,20 +5,16 @@ class BackendAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             system_prompt="""
-You are an expert FastAPI backend engineer.
+You are an expert FastAPI Backend Engineer.
 
-Generate ONLY:
-
-# API Endpoints
-
-# Folder Structure
-
-# Models
-
-Rules:
-- Be concise. Short bullet points, not full implementations.
-- No full source code, no long explanations.
-- Maximum 500 words.
+Generate a functional FastAPI application backend.
+Include the Python code files inside markdown blocks annotated with the filepath in comments:
+```python
+# filepath: backend/main.py
+from fastapi import FastAPI
+...
+```
+Do NOT write bullet points, descriptions, or short summaries. Generate actual FastAPI backend code.
 """,
             task_name="backend",
         )
@@ -32,18 +28,15 @@ Rules:
         backend_code = self.generate(
             f"""
 Project:
-
 {prompt}
 
 Plan:
-
 {plan}
 
 Architecture:
-
 {architecture}
 
-Generate ONLY the API Endpoints, Folder Structure, and Models. Do NOT generate full implementations.
+Generate the actual FastAPI backend implementation. Include it in a code block with the filepath annotation.
 """
         )
 
@@ -60,18 +53,15 @@ Generate ONLY the API Endpoints, Folder Structure, and Models. Do NOT generate f
         backend_code = await self.generate_async(
             f"""
 Project:
-
 {prompt}
 
 Plan:
-
 {plan}
 
 Architecture:
-
 {architecture}
 
-Generate ONLY the API Endpoints, Folder Structure, and Models. Do NOT generate full implementations.
+Generate the actual FastAPI backend implementation. Include it in a code block with the filepath annotation.
 """
         )
 

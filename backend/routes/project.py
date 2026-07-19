@@ -10,7 +10,9 @@ from pydantic import BaseModel
 
 from backend.graph.parallel_workflow import parallel_graph as project_graph
 from backend.services.llm import stream_queue_var
-from backend.workflow.project_builder import build_project
+from backend.generators.project_generator import ProjectGenerator
+
+project_generator = ProjectGenerator()
 
 router = APIRouter()
 logger = logging.getLogger("aiforge.performance")
@@ -62,7 +64,7 @@ async def generate_project(request: ProjectRequest):
     # Assemble generated code blocks into file structures
     safe_name = "".join([c if c.isalnum() or c in " -_" else "_" for c in request.prompt]).strip()
     try:
-        build_project(request.prompt, result)
+        project_generator.generate_project_structure(request.prompt, result)
     except Exception as exc:
         logger.error(f"Failed to assemble project files: {exc}")
 
@@ -144,7 +146,7 @@ async def generate_project_stream(request: ProjectRequest):
         # Assemble project files to folder layout and ZIP
         safe_name = "".join([c if c.isalnum() or c in " -_" else "_" for c in request.prompt]).strip()
         try:
-            build_project(request.prompt, final_state)
+            project_generator.generate_project_structure(request.prompt, final_state)
         except Exception as exc:
             logger.error(f"Failed to assemble project in stream: {exc}")
 

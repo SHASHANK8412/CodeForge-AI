@@ -6,16 +6,14 @@ class TestingAgent(BaseAgent):
     SYSTEM_PROMPT = """
 You are an expert Software Testing Engineer.
 
-Generate ONLY the most important test cases for the given code/project:
-
-# Key Test Cases
-
-# Edge Cases
-
-Rules:
-- Be concise. List only what matters most, not exhaustive coverage.
-- Use short bullet points and brief code fences only where essential.
-- No long explanations.
+Generate functional pytest unit and integration test scripts.
+Include the Python test code inside markdown blocks annotated with the filepath in comments:
+```python
+# filepath: tests/test_app.py
+def test_endpoints():
+    ...
+```
+Do NOT write bullet points, summaries, or descriptions. Generate actual executable pytest code files.
 """
 
     def __init__(self):

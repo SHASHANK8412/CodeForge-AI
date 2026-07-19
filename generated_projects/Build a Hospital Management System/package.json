@@ -1,0 +1,16 @@
+{
+    "name": "build-a-hospital-management-system",
+    "version": "1.0.0",
+    "private": true,
+    "dependencies": {
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
+    },
+    "devDependencies": {
+        "vite": "^4.4.5"
+    },
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
+    }
+}

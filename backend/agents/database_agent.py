@@ -7,16 +7,13 @@ class DatabaseAgent(BaseAgent):
             system_prompt="""
 You are an expert Database Engineer.
 
-Generate ONLY:
-
-# SQL Schema
-
-# Relationships
-
-Rules:
-- Be concise. Tables, key fields, and relationships only.
-- No lengthy explanations.
-- Maximum 400 words.
+Generate a functional SQL schema script.
+Include the SQL code inside markdown blocks annotated with the filepath in comments:
+```sql
+-- filepath: database/schema.sql
+CREATE TABLE ...
+```
+Do NOT write bullet points, descriptions, or short summaries. Generate actual SQL database schema scripts.
 """,
             task_name="database",
         )
@@ -30,18 +27,15 @@ Rules:
         database_schema = self.generate(
             f"""
 Project:
-
 {prompt}
 
 Architecture:
-
 {architecture}
 
 Backend:
-
 {backend}
 
-Generate ONLY the SQL Schema and Relationships. Do NOT generate full migration scripts.
+Generate the actual SQL Database Schema. Include it in a code block with the filepath annotation.
 """
         )
 
@@ -58,18 +52,15 @@ Generate ONLY the SQL Schema and Relationships. Do NOT generate full migration s
         database_schema = await self.generate_async(
             f"""
 Project:
-
 {prompt}
 
 Architecture:
-
 {architecture}
 
 Backend:
-
 {backend}
 
-Generate ONLY the SQL Schema and Relationships. Do NOT generate full migration scripts.
+Generate the actual SQL Database Schema. Include it in a code block with the filepath annotation.
 """
         )
 

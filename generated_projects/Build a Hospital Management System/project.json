@@ -1,0 +1,14 @@
+{
+    "project_name": "Build a Hospital Management System",
+    "framework": "React + FastAPI",
+    "created_at": "2026-07-19T02:33:13.318654Z",
+    "agents_used": [
+        "Planner",
+        "Architect",
+        "Frontend",
+        "Backend",
+        "Database",
+        "Reviewer",
+        "Documentation"
+    ]
+}

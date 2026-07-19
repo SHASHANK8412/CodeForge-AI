@@ -88,13 +88,14 @@ Project Plan
 System Architecture
 {state.get('architecture', '')}
 
-For THIS project-scaffolding stage only, respond with ONLY:
-- Components
-- Folder Structure
-- Routing
-
-Do NOT generate full source code here. Keep it concise (bullet points,
-no more than ~500 words)."""
+Generate functional React components and routing code for the application.
+Include the React code inside code blocks annotated with the filename:
+```jsx
+// filename: frontend/src/App.jsx
+import React from 'react';
+...
+```
+Do NOT write summaries, folder lists, or bullet points. Generate the actual code files."""
 
     with Timer() as timer:
         frontend = await frontend_agent.run_async(frontend_prompt)
