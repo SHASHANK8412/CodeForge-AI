@@ -79,12 +79,12 @@ def test_docker_generator():
     doc_gen = DockerGenerator()
 
     backend_docker = doc_gen.generate_backend_dockerfile()
-    assert "FROM python:3.11-slim" in backend_docker
+    assert "FROM python:3.13-slim" in backend_docker
     assert "WORKDIR /app" in backend_docker
     assert "CMD" in backend_docker
 
     frontend_docker = doc_gen.generate_frontend_dockerfile()
-    assert "FROM node:18-slim AS builder" in frontend_docker
+    assert "FROM node:20-slim AS builder" in frontend_docker
     assert "FROM nginx:alpine" in frontend_docker
 
 
@@ -194,3 +194,73 @@ def test_project_generator_orchestration():
     # Clean up
     shutil.rmtree(project_dir)
     zip_path.unlink()
+
+
+def test_gitignore_generator():
+    from backend.generators.gitignore_generator import GitIgnoreGenerator
+    gi_gen = GitIgnoreGenerator()
+    content = gi_gen.generate_gitignore()
+    
+    assert "node_modules/" in content
+    assert ".venv/" in content
+    assert "__pycache__/" in content
+    assert ".DS_Store" in content
+
+
+def test_license_generator_types():
+    from backend.generators.license_generator import LicenseGenerator
+    l_gen = LicenseGenerator()
+    
+    mit = l_gen.generate_license("MIT", "AIForge Developer")
+    assert "MIT License" in mit
+    assert "AIForge Developer" in mit
+
+    apache = l_gen.generate_license("Apache 2.0", "AIForge Org")
+    assert "Apache License" in apache
+    assert "AIForge Org" in apache
+
+    gpl = l_gen.generate_license("GPL", "Copyleft Owner")
+    assert "GNU GENERAL PUBLIC LICENSE" in gpl
+    assert "Copyleft Owner" in gpl
+
+
+def test_zip_exclusions(tmp_path):
+    from backend.services.zip_service import ZipService
+    import zipfile
+    
+    zip_srv = ZipService()
+    
+    # Setup mock dir structure
+    source_dir = tmp_path / "src_project"
+    source_dir.mkdir()
+    
+    # Valid files
+    (source_dir / "main.py").write_text("print('hello')")
+    (source_dir / "index.js").write_text("console.log('test')")
+    
+    # Excluded items
+    pycache_dir = source_dir / "__pycache__"
+    pycache_dir.mkdir()
+    (pycache_dir / "main.cpython-39.pyc").write_text("bytecode")
+    
+    (source_dir / ".DS_Store").write_text("os data")
+    
+    output_zip = tmp_path / "output_archive.zip"
+    
+    zip_srv.zip_project(source_dir, output_zip)
+    
+    assert output_zip.exists()
+    
+    # Verify contents of generated ZIP
+    with zipfile.ZipFile(output_zip, "r") as zf:
+        namelist = zf.namelist()
+        
+        # Verify valid files included
+        assert "main.py" in namelist
+        assert "index.js" in namelist
+        
+        # Verify excluded files not included
+        assert ".DS_Store" not in namelist
+        assert "__pycache__/main.cpython-39.pyc" not in namelist
+        assert any("__pycache__" in name for name in namelist) is False
+

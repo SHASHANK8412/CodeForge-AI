@@ -1,4 +1,5 @@
 import logging
+from backend.config import DEFAULT_PYTHON_VERSION, DEFAULT_NODE_VERSION
 
 _logger = logging.getLogger("aiforge.performance")
 
@@ -12,7 +13,7 @@ class DockerGenerator:
     def __init__(self) -> None:
         pass
 
-    def generate_backend_dockerfile(self, python_version: str = "3.11-slim") -> str:
+    def generate_backend_dockerfile(self, python_version: str = DEFAULT_PYTHON_VERSION) -> str:
         """
         Creates a production-ready Python Dockerfile for the FastAPI backend.
         """
@@ -46,7 +47,7 @@ CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
         _logger.info("Backend Dockerfile generated")
         return dockerfile
 
-    def generate_frontend_dockerfile(self, node_version: str = "18-slim") -> str:
+    def generate_frontend_dockerfile(self, node_version: str = DEFAULT_NODE_VERSION) -> str:
         """
         Creates a multi-stage build Node.js and Nginx Dockerfile for the React frontend.
         """

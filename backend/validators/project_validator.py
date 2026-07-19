@@ -81,6 +81,12 @@ class ProjectValidator:
                     if key not in pkg_data:
                         errors.append(f"package.json missing key: '{key}'")
                 
+                # Check duplicate dependency overlap
+                if "dependencies" in pkg_data and "devDependencies" in pkg_data:
+                    overlap = set(pkg_data["dependencies"].keys()) & set(pkg_data["devDependencies"].keys())
+                    for pkg in overlap:
+                        warnings.append(f"package.json has duplicate dependency '{pkg}' in both dependencies and devDependencies")
+
                 # Gather deps
                 if "dependencies" in pkg_data:
                     npm_packages = set(pkg_data["dependencies"].keys())
@@ -97,11 +103,16 @@ class ProjectValidator:
                     req_content = f.read()
                 files_checked.append("requirements.txt")
                 
-                for line in req_content.splitlines():
+                seen_reqs = {}
+                for line_no, line in enumerate(req_content.splitlines(), 1):
                     line_clean = line.strip()
                     if line_clean and not line_clean.startswith("#"):
                         # E.g. fastapi>=0.100.0 -> fastapi
                         name = line_clean.split(">")[0].split("<")[0].split("=")[0].strip().lower()
+                        if name in seen_reqs:
+                            warnings.append(f"requirements.txt contains duplicate dependency: '{name}' (line {line_no} duplicates line {seen_reqs[name]})")
+                        else:
+                            seen_reqs[name] = line_no
                         pip_packages.add(name)
             except Exception as exc:
                 errors.append(f"Failed to read requirements.txt: {exc}")

@@ -10,15 +10,18 @@ from backend.generators.docker_generator import DockerGenerator
 from backend.generators.compose_generator import ComposeGenerator
 from backend.generators.env_generator import EnvGenerator
 from backend.generators.readme_generator import ReadmeGenerator
+from backend.generators.gitignore_generator import GitIgnoreGenerator
+from backend.generators.license_generator import LicenseGenerator
 from backend.validators.project_validator import ProjectValidator, ValidationReport
 from backend.services.zip_service import ZipService
 from backend.workflow.project_builder import extract_code_files
 from backend.workflow.file_writer import write_project_file
+from backend.config import GENERATED_PROJECTS_DIR_NAME, DEFAULT_LICENSE_TYPE
 
 _logger = logging.getLogger("aiforge.performance")
 
 # Base directory where all projects are exported
-GENERATED_PROJECTS_DIR = Path(__file__).resolve().parent.parent.parent / "generated_projects"
+GENERATED_PROJECTS_DIR = Path(__file__).resolve().parent.parent.parent / GENERATED_PROJECTS_DIR_NAME
 
 
 class ProjectGenerator:
@@ -36,6 +39,8 @@ class ProjectGenerator:
         self.compose_generator = ComposeGenerator()
         self.env_generator = EnvGenerator()
         self.readme_generator = ReadmeGenerator()
+        self.gitignore_generator = GitIgnoreGenerator()
+        self.license_generator = LicenseGenerator()
         self.project_validator = ProjectValidator()
         self.zip_service = ZipService()
 
@@ -99,41 +104,10 @@ class ProjectGenerator:
         write_project_file(project_dir / ".env.example", env_example)
 
         # 7. Core project files (.gitignore, LICENSE, plan.md, architecture.md, review.md)
-        gitignore_content = """# Python items
-__pycache__/
-*.py[cod]
-*$py.class
-.venv/
-venv/
-ENV/
-.env
-
-# Node items
-node_modules/
-dist/
-dist-ssr/
-*.local
-
-# OS items
-.DS_Store
-Thumbs.db
-"""
+        gitignore_content = self.gitignore_generator.generate_gitignore()
         write_project_file(project_dir / ".gitignore", gitignore_content)
 
-        license_content = f"""MIT License
-
-Copyright (c) {Path().stat().st_mtime} AIForge Project Generator
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-"""
+        license_content = self.license_generator.generate_license(DEFAULT_LICENSE_TYPE)
         write_project_file(project_dir / "LICENSE", license_content)
 
         if state.get("plan"):
