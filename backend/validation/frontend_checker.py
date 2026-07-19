@@ -77,6 +77,21 @@ class FrontendChecker:
             except Exception:
                 pass
 
+        # 3.5 JSX tag balance checking
+        for file_path in js_files:
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                
+                open_tags = len(re.findall(r"<[a-zA-Z0-9_\-]+[^>]*>", content))
+                close_tags = len(re.findall(r"</[a-zA-Z0-9_\-]+>", content))
+                self_closing = len(re.findall(r"<[a-zA-Z0-9_\-]+[^>]*/>", content))
+                
+                if open_tags != (close_tags + self_closing) and abs(open_tags - (close_tags + self_closing)) > 5:
+                    errors.append(f"Possible malformed JSX structure in {file_path.name}")
+            except Exception:
+                pass
+
         # 4. Circular Import check (simple 2-file circular import check)
         import_maps = {}
         for file_path in js_files:

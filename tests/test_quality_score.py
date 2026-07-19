@@ -1,33 +1,19 @@
 import pytest
-from backend.review.quality_score import QualityScoreCalculator
+from backend.validation.models import ValidationResult
+from backend.validation.quality_score import QualityScoreCalculator
 
 
-def test_quality_score_subscores():
+def test_quality_score_weighted_output():
     calculator = QualityScoreCalculator()
 
-    # Pass mock findings designed to trigger these specific scores
-    findings = [
-        {"severity": "info", "issue": "naming inconsistency"}, # Deducts slightly from maintainability
-        {"severity": "warning", "issue": "circular import dependency"}, # Deducts slightly from architecture
-        {"severity": "info", "issue": "missing module docstring"}, # Deducts slightly from documentation
+    results = [
+        ValidationResult(validator="Syntax Checker", status="PASS", score=98.0, errors=[], warnings=[], execution_time=0.1),
+        ValidationResult(validator="Security Checker", status="PASS", score=95.0, errors=[], warnings=[], execution_time=0.1),
+        ValidationResult(validator="Performance Checker", status="PASS", score=92.0, errors=[], warnings=[], execution_time=0.1)
     ]
 
-    test_results = {
-        "passed": 10,
-        "failed": 0,
-        "errors": 0
-    }
-
-    scores = calculator.calculate_scores(findings, test_results)
-
-    # Validate overall and subscores calculation structure
-    assert "overall" in scores
-    assert "architecture" in scores
-    assert "security" in scores
-    assert "performance" in scores
-    assert "maintainability" in scores
-    assert "testing" in scores
-
-    assert scores["testing"] == 10.0
-    assert scores["overall"] >= 8.0
-    assert scores["security"] == 10.0 # No security issues
+    quality = calculator.compute_score(results)
+    
+    assert quality.overall_score >= 90.0
+    assert quality.grade in {"A+", "A", "B+"}
+    assert quality.ready_for_export is True

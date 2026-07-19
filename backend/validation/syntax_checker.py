@@ -103,9 +103,10 @@ class SyntaxChecker:
         # Calculate score dynamically
         score = 100.0
         if files_failed > 0:
-            score -= (files_failed / max(1, files_checked)) * 50
-        score -= len(errors) * 10
-        score -= len(warnings) * 2
+            score = 0.0
+        else:
+            score -= len(errors) * 10
+            score -= len(warnings) * 2
         score = max(0.0, min(100.0, score))
         
         status = "PASS" if score >= 90.0 else "FAIL"
