@@ -22,12 +22,14 @@ from backend.routes.plan import router as plan_router
 from backend.routes.memory import router as memory_router
 from backend.routes.project import router as project_router
 from backend.dashboard.monitoring_dashboard import router as monitoring_router
-
+from backend.dashboard.learning_dashboard import router as learning_router
 app = FastAPI(
     title="AIForge API",
     description="Multi-Agent AI Software Engineer Backend",
     version="1.0.0"
 )
+
+from fastapi.middleware.gzip import GZipMiddleware
 
 # Allow frontend (React/Vite) to connect
 app.add_middleware(
@@ -37,6 +39,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 def register_routers() -> None:
     app.include_router(chat_router)
@@ -46,6 +49,7 @@ def register_routers() -> None:
     app.include_router(memory_router)
     app.include_router(project_router)
     app.include_router(monitoring_router)
+    app.include_router(learning_router)
 
 
 register_routers()
