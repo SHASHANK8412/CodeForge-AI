@@ -12,3 +12,17 @@ Master guidelines compiled from successful project builds.
 
 ## 3. Testing Strategy
 * Run automated verification scans with pytest prior to compiling builds.
+
+## Project Insight: Blog
+* **Framework Stack**: React, FastAPI
+* **Folder Layout**: Always separate routes., Keep frontend modular.
+* **Security Protocols**: Use JWT middleware.
+* **API Schema**: Always use DTOs.
+* **Score**: 92%
+
+## Project Insight: Blog
+* **Framework Stack**: React, FastAPI
+* **Folder Layout**: Always separate routes., Keep frontend modular.
+* **Security Protocols**: Use JWT middleware.
+* **API Schema**: Always use DTOs.
+* **Score**: 92%

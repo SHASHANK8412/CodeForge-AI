@@ -1,0 +1,24 @@
+{
+  "frequent_stacks": [
+    {
+      "stack": "FastAPI + React",
+      "average_score": 93.0,
+      "deployment_success_rate": 100.0,
+      "average_build_time_seconds": 40.0
+    },
+    {
+      "stack": "FastAPI + PostgreSQL + React",
+      "average_score": 95.5,
+      "deployment_success_rate": 100.0,
+      "average_build_time_seconds": 40.5
+    }
+  ],
+  "repeated_mistakes": {
+    "Missing JWT validation": 1
+  },
+  "common_technologies": [
+    "FastAPI",
+    "React",
+    "PostgreSQL"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "project": "E-Commerce Website",
+  "technologies": [
+    "React",
+    "FastAPI",
+    "PostgreSQL"
+  ],
+  "best_practices": {
+    "folder_structure": [
+      "src/components/",
+      "backend/routes/"
+    ],
+    "api_design": [
+      "FastAPI async views"
+    ],
+    "security_practices": [
+      "JWT Authentication"
+    ]
+  },
+  "deployment_notes": "Docker deploy OK",
+  "final_score": 95
+}

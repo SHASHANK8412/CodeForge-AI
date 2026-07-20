@@ -12,9 +12,6 @@ _logger = logging.getLogger("aiforge.sre")
 global_monitor = OpsMonitor()
 global_scheduler = OpsScheduler(global_monitor)
 
-# Automatically start background loop scheduler
-global_scheduler.start()
-
 router = APIRouter(prefix="/dashboard/monitoring", tags=["monitoring"])
 
 @router.get("/status")

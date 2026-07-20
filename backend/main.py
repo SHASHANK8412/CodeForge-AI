@@ -55,6 +55,13 @@ def register_routers() -> None:
 register_routers()
 
 
+@app.on_event("startup")
+async def startup_event():
+    # Start SRE scheduler within active loop context
+    from backend.dashboard.monitoring_dashboard import global_scheduler
+    global_scheduler.start()
+
+
 class PromptRequest(BaseModel):
     prompt: str
     session_id: str = "default"

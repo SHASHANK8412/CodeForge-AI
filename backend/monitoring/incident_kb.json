@@ -38,5 +38,101 @@
     "success": false,
     "duration_seconds": 2.801405906677246,
     "confidence": 0.96
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "PostgreSQL unavailable",
+    "strategy": "Restart Backend Process",
+    "success": false,
+    "duration_seconds": 0.8012709617614746,
+    "confidence": 0.96
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "PostgreSQL unavailable",
+    "strategy": "Restart Database",
+    "success": false,
+    "duration_seconds": 1.8025598526000977,
+    "confidence": 0.96
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "PostgreSQL unavailable",
+    "strategy": "Restart Database",
+    "success": false,
+    "duration_seconds": 2.8033299446105957,
+    "confidence": 0.96
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "PostgreSQL unavailable",
+    "strategy": "Restart Backend Process",
+    "success": false,
+    "duration_seconds": 0.8003945350646973,
+    "confidence": 0.96
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "PostgreSQL unavailable",
+    "strategy": "Restart Database",
+    "success": false,
+    "duration_seconds": 1.8011703491210938,
+    "confidence": 0.96
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "PostgreSQL unavailable",
+    "strategy": "Restart Database",
+    "success": false,
+    "duration_seconds": 2.802037239074707,
+    "confidence": 0.96
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "PostgreSQL unavailable",
+    "strategy": "Restart Backend Process",
+    "success": false,
+    "duration_seconds": 0.8004117012023926,
+    "confidence": 0.96
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "PostgreSQL unavailable",
+    "strategy": "Restart Database",
+    "success": false,
+    "duration_seconds": 1.8008663654327393,
+    "confidence": 0.96
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "PostgreSQL unavailable",
+    "strategy": "Restart Database",
+    "success": false,
+    "duration_seconds": 2.8011884689331055,
+    "confidence": 0.96
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "FastAPI Backend API is down due to an unhandled exception or service failure.",
+    "strategy": "Restart Backend Process",
+    "success": false,
+    "duration_seconds": 0.800464391708374,
+    "confidence": 0.98
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "FastAPI Backend API is down due to an unhandled exception or service failure.",
+    "strategy": "Restart FastAPI Service",
+    "success": false,
+    "duration_seconds": 1.6013872623443604,
+    "confidence": 0.98
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "FastAPI Backend API is down due to an unhandled exception or service failure.",
+    "strategy": "Restart FastAPI Service",
+    "success": false,
+    "duration_seconds": 2.4019527435302734,
+    "confidence": 0.98
   }
 ]

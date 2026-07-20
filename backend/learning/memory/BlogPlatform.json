@@ -1,0 +1,8 @@
+{
+  "project": "Blog Platform",
+  "technologies": [
+    "React",
+    "FastAPI"
+  ],
+  "final_score": 92
+}

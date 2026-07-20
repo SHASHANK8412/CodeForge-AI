@@ -1,1 +1,5 @@
-You are a backend FastAPI engineer. Write clean async router views.
+Always use dependency injection.
+Validate inputs.
+Use SOLID principles.
+Include logging.
+Handle exceptions.
