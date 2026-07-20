@@ -1,41 +1,46 @@
 import { useState } from "react";
-
-import Home from "./pages/Home";
+import Sidebar from "./components/Sidebar";
+import ChatBox from "./components/ChatBox";
 import ProjectGenerator from "./pages/ProjectGenerator";
+import ReflectionDashboard from "./components/ReflectionDashboard";
+import MetricsDashboard from "./components/MetricsDashboard";
+import MainLayout from "./layouts/MainLayout";
 
 function App() {
-
     const [view, setView] = useState("chat");
+    const [activeProjectName, setActiveProjectName] = useState("");
+    const [selectedFile, setSelectedFile] = useState(null); // { project, path, content }
+
+    const handleFileSelect = (projectName, filePath, content) => {
+        setSelectedFile({
+            project: projectName,
+            path: filePath,
+            content: content
+        });
+        setView("project");
+    };
 
     return (
-        <div className="min-h-screen bg-[#343541]">
-
-            <div className="flex gap-2 p-3 bg-[#202123] border-b border-gray-700">
-                <button
-                    onClick={() => setView("chat")}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                        view === "chat"
-                            ? "bg-green-600 text-white"
-                            : "text-gray-300 hover:bg-[#2a2b32]"
-                    }`}
-                >
-                    💬 Chat
-                </button>
-                <button
-                    onClick={() => setView("project")}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                        view === "project"
-                            ? "bg-green-600 text-white"
-                            : "text-gray-300 hover:bg-[#2a2b32]"
-                    }`}
-                >
-                    🏗️ Project Generator
-                </button>
+        <MainLayout>
+            {/* Unified Sidebar managing the active view */}
+            <Sidebar currentView={view} setView={setView} />
+            
+            {/* Active Workspace Panel */}
+            <div className="flex-1 flex flex-col min-w-0 bg-[#0B0F19]">
+                {view === "chat" && <ChatBox />}
+                {view === "project" && (
+                    <ProjectGenerator 
+                        activeProjectName={activeProjectName}
+                        setActiveProjectName={setActiveProjectName}
+                        selectedFile={selectedFile}
+                        setSelectedFile={setSelectedFile}
+                        onFileSelect={handleFileSelect}
+                    />
+                )}
+                {view === "reflection" && <ReflectionDashboard />}
+                {view === "metrics" && <MetricsDashboard />}
             </div>
-
-            {view === "chat" ? <Home /> : <ProjectGenerator />}
-
-        </div>
+        </MainLayout>
     );
 }
 

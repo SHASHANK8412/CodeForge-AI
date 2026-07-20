@@ -1,6 +1,6 @@
 function MainLayout({ children }) {
     return (
-        <div className="flex h-screen bg-[#343541] text-white">
+        <div className="flex h-screen bg-[#0B0F19] text-white font-sans overflow-hidden antialiased">
             {children}
         </div>
     );

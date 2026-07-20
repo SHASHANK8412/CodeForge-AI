@@ -89,19 +89,25 @@ class ProjectGenerator:
         req_txt = self.requirements_generator.generate_requirements(deps.backend)
         write_project_file(project_dir / "requirements.txt", req_txt)
 
-        # 5. Generate Docker assets
-        backend_df = self.docker_generator.generate_backend_dockerfile()
-        write_project_file(project_dir / "backend/Dockerfile", backend_df)
+        # 5. Generate Docker assets and deployment configurations
+        if state.get("deployment_files"):
+            for rel_path, content in state["deployment_files"].items():
+                write_project_file(project_dir / rel_path, content)
+            if state.get("deployment_guide"):
+                write_project_file(project_dir / "docs/DEPLOYMENT.md", state["deployment_guide"])
+        else:
+            backend_df = self.docker_generator.generate_backend_dockerfile()
+            write_project_file(project_dir / "backend/Dockerfile", backend_df)
 
-        frontend_df = self.docker_generator.generate_frontend_dockerfile()
-        write_project_file(project_dir / "frontend/Dockerfile", frontend_df)
+            frontend_df = self.docker_generator.generate_frontend_dockerfile()
+            write_project_file(project_dir / "frontend/Dockerfile", frontend_df)
 
-        compose_yml = self.compose_generator.generate_compose(deps.database)
-        write_project_file(project_dir / "docker-compose.yml", compose_yml)
+            compose_yml = self.compose_generator.generate_compose(deps.database)
+            write_project_file(project_dir / "docker-compose.yml", compose_yml)
 
-        # 6. Generate configuration settings
-        env_example = self.env_generator.generate_env_example(deps.database)
-        write_project_file(project_dir / ".env.example", env_example)
+            # 6. Generate configuration settings
+            env_example = self.env_generator.generate_env_example(deps.database)
+            write_project_file(project_dir / ".env.example", env_example)
 
         # 7. Core project files (.gitignore, LICENSE, plan.md, architecture.md, review.md)
         gitignore_content = self.gitignore_generator.generate_gitignore()

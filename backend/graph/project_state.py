@@ -85,3 +85,9 @@ class ProjectState(TypedDict, total=False):
     validation_report: dict
     reflection_report: dict
 
+    # Day 26 DevOps & Deployment fields
+    deployment_files: dict[str, str]
+    deployment_report: dict
+    deployment_platform: str
+    deployment_guide: str
+

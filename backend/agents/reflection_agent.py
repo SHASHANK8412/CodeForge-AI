@@ -35,6 +35,7 @@ Rules:
 1. Return ONLY the raw JSON block. No markdown wrapper, no explanations outside the JSON.
 2. The reflection_score must be an integer between 0 and 100.
 3. Keep lessons concise and reusable.
+4. Maximum 800 words total.
             """,
             task_name="reflection"
         )

@@ -111,3 +111,73 @@ export async function generateProjectStream(prompt, onProgress) {
     return finalResult;
 }
 
+/**
+ * Fetches all generated projects.
+ */
+export async function fetchProjects() {
+    const response = await fetch(`${API}/projects`);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch projects: ${response.status}`);
+    }
+    return response.json();
+}
+
+/**
+ * Fetches files list recursively for a project.
+ */
+export async function fetchProjectFiles(projectName) {
+    const response = await fetch(`${API}/project/${encodeURIComponent(projectName)}/files`);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch project files: ${response.status}`);
+    }
+    return response.json();
+}
+
+/**
+ * Fetches code content for a specific file inside a project.
+ */
+export async function fetchProjectFileContent(projectName, relativePath) {
+    const response = await fetch(
+        `${API}/project/${encodeURIComponent(projectName)}/file?path=${encodeURIComponent(relativePath)}`
+    );
+    if (!response.ok) {
+        throw new Error(`Failed to fetch file content: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.content || "";
+}
+
+/**
+ * Fetches the latest reflection.
+ */
+export async function fetchReflection() {
+    const response = await fetch(`${API}/reflection`);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch reflection: ${response.status}`);
+    }
+    return response.json();
+}
+
+/**
+ * Fetches all lessons.
+ */
+export async function fetchLessons() {
+    const response = await fetch(`${API}/lessons`);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch lessons: ${response.status}`);
+    }
+    return response.json();
+}
+
+/**
+ * Fetches dashboard trend metrics.
+ */
+export async function fetchMetrics() {
+    const response = await fetch(`${API}/metrics`);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch metrics: ${response.status}`);
+    }
+    return response.json();
+}
+
+

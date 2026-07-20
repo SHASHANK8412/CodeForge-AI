@@ -14,7 +14,7 @@ export async function generatePlan(prompt, sessionId = getActiveSessionId()) {
         },
 
         body: JSON.stringify({
-            message: prompt,
+            prompt: prompt,
             session_id: sessionId,
         }),
 

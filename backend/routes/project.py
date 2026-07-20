@@ -282,3 +282,83 @@ async def run_reflection_manually(request: ReflectionRunRequest):
     return reflection_data
 
 
+@router.get("/projects")
+def list_generated_projects():
+    """
+    Lists all generated projects.
+    """
+    from backend.generators.project_generator import GENERATED_PROJECTS_DIR
+    if not GENERATED_PROJECTS_DIR.exists():
+        return []
+    
+    projects = []
+    for item in GENERATED_PROJECTS_DIR.iterdir():
+        if item.is_dir():
+            projects.append(item.name)
+    return projects
+
+
+@router.get("/project/{project_name}/files")
+def list_project_files(project_name: str):
+    """
+    Recursively lists all files in a generated project in a tree structure.
+    """
+    from backend.generators.project_generator import GENERATED_PROJECTS_DIR
+    project_dir = GENERATED_PROJECTS_DIR / project_name
+    
+    # Secure against directory traversal
+    resolved_proj_dir = project_dir.resolve()
+    resolved_base_dir = GENERATED_PROJECTS_DIR.resolve()
+    if not str(resolved_proj_dir).startswith(str(resolved_base_dir)):
+        raise HTTPException(status_code=400, detail="Invalid project directory path.")
+        
+    if not project_dir.exists() or not project_dir.is_dir():
+        raise HTTPException(status_code=404, detail="Project directory not found.")
+        
+    def build_tree(path: Path) -> list:
+        items = []
+        for child in sorted(path.iterdir(), key=lambda x: (not x.is_dir(), x.name)):
+            # Ignore __pycache__ and system files
+            if child.name in ["__pycache__", ".DS_Store", "Thumbs.db", ".git", ".pytest_cache", "node_modules"] or child.suffix == ".zip":
+                continue
+            relative = child.relative_to(project_dir).as_posix()
+            item = {
+                "name": child.name,
+                "path": relative,
+                "is_dir": child.is_dir(),
+            }
+            if child.is_dir():
+                item["children"] = build_tree(child)
+            items.append(item)
+        return items
+        
+    return build_tree(project_dir)
+
+
+@router.get("/project/{project_name}/file")
+def get_project_file_content(project_name: str, path: str):
+    """
+    Reads the content of a specific file in a generated project.
+    """
+    from backend.generators.project_generator import GENERATED_PROJECTS_DIR
+    project_dir = GENERATED_PROJECTS_DIR / project_name
+    file_path = project_dir / path
+    
+    # Secure against directory traversal
+    resolved_file_path = file_path.resolve()
+    resolved_base_dir = GENERATED_PROJECTS_DIR.resolve()
+    if not str(resolved_file_path).startswith(str(resolved_base_dir)):
+        raise HTTPException(status_code=400, detail="Invalid file path.")
+        
+    if not file_path.exists() or not file_path.is_file():
+        raise HTTPException(status_code=404, detail="File not found.")
+        
+    try:
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            content = f.read()
+        return {"content": content}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to read file: {str(exc)}")
+
+
+

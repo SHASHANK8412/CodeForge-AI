@@ -13,6 +13,7 @@ from backend.agents.database_agent import DatabaseAgent
 from backend.agents.documentation import DocumentationAgent
 from backend.agents.testing_agent import TestingAgent
 from backend.agents.reviewer_agent import ReviewerAgent
+from backend.agents.deployment_agent import DeploymentAgent
 from backend.generators.project_generator import ProjectGenerator
 from backend.review.self_heal import SelfHealOrchestrator
 from backend.validation.validator import ValidationOrchestrator
@@ -21,6 +22,13 @@ from backend.utils.timer import Timer
 from backend.graph.profiler import workflow_profiler
 from backend.utils.cache import get_cache_stats
 from backend.utils.retry import get_retry_stats
+from backend.utils.summarizer import (
+    summarize_plan,
+    summarize_architecture,
+    extract_ui_info,
+    extract_backend_info,
+    extract_file_list,
+)
 
 _logger = logging.getLogger("aiforge.performance")
 
@@ -33,6 +41,7 @@ database_agent = DatabaseAgent()
 documentation_agent = DocumentationAgent()
 testing_agent = TestingAgent()
 reviewer_agent = ReviewerAgent()
+deployment_agent = DeploymentAgent()
 
 project_generator = ProjectGenerator()
 self_heal_orchestrator = SelfHealOrchestrator()
@@ -73,11 +82,13 @@ async def planner_node(state: ProjectState) -> dict:
 async def architect_node(state: ProjectState) -> dict:
     _logger.info("INFO Architect Started")
     prompt = state.get("prompt") or state.get("user_prompt", "")
+    plan = state.get("plan", "")
+    summarized_plan = summarize_plan(plan)
     architecture_input = f"""Project Request
 {prompt}
 
-Project Plan
-{state.get('plan', '')}"""
+Project Plan Summary
+{summarized_plan}"""
 
     with Timer() as timer:
         architecture = await architect.run_async(architecture_input)
@@ -94,14 +105,13 @@ Project Plan
 async def frontend_node(state: ProjectState) -> dict:
     _logger.info("INFO Frontend Started")
     prompt = state.get("prompt") or state.get("user_prompt", "")
+    
+    plan_ui = extract_ui_info(state.get('plan', ''), state.get('architecture', ''))
     frontend_prompt = f"""Project Request
 {prompt}
 
-Project Plan
-{state.get('plan', '')}
-
-System Architecture
-{state.get('architecture', '')}
+UI Relevant Scope
+{plan_ui}
 
 Generate functional React components and routing code for the application.
 Include the React code inside code blocks annotated with the filename:
@@ -177,6 +187,25 @@ Database
     }
 
 
+async def deployment_node(state: ProjectState) -> dict:
+    _logger.info("INFO Deployment Started")
+    state_copy = dict(state)
+    with Timer() as timer:
+        result_state = await deployment_agent.run_async(state_copy)
+
+    workflow_profiler.record_agent_time("deployment", timer.elapsed)
+    _logger.info("INFO Deployment Finished")
+
+    return {
+        "deployment_files": result_state.get("deployment_files", {}),
+        "deployment_report": result_state.get("deployment_report", {}),
+        "deployment_platform": result_state.get("deployment_platform", "Unknown"),
+        "deployment_guide": result_state.get("deployment_guide", ""),
+        "documentation": result_state.get("documentation", ""),
+        "current_step": "deployment",
+    }
+
+
 async def documentation_node(state: ProjectState) -> dict:
     _logger.info("INFO Documentation Started")
     state_copy = dict(state)
@@ -195,14 +224,27 @@ async def documentation_node(state: ProjectState) -> dict:
 async def reviewer_node(state: ProjectState) -> dict:
     _logger.info("INFO Reviewer Started")
     prompt = state.get("prompt") or state.get("user_prompt", "")
-    previous_output = f"""Frontend
-{state.get('frontend', '')}
+    
+    file_list = extract_file_list(
+        state.get('frontend', ''),
+        state.get('backend', ''),
+        state.get('database', '')
+    )
+    arch_summary = summarize_architecture(state.get('architecture', ''))
+    test_results = state.get('test_results') or state.get('tests') or "No test execution output."
+    changed_files = "No post-generation file edits detected."
+    
+    previous_output = f"""Generated File List:
+{file_list}
 
-Backend
-{state.get('backend', '')}
+Architecture Summary:
+{arch_summary}
 
-Database
-{state.get('database', '')}"""
+Test Results:
+{test_results}
+
+Changed Files:
+{changed_files}"""
 
     with Timer() as timer:
         review = await reviewer_agent.run_async(
@@ -343,6 +385,7 @@ builder.add_node("frontend", frontend_node)
 builder.add_node("backend", backend_node)
 builder.add_node("database", database_node)
 builder.add_node("testing", testing_node)
+builder.add_node("deployment", deployment_node)
 builder.add_node("documentation", documentation_node)
 builder.add_node("reviewer", reviewer_node)
 builder.add_node("assemble", assemble_node)
@@ -364,7 +407,8 @@ builder.add_edge("frontend", "testing")
 builder.add_edge("backend", "testing")
 builder.add_edge("database", "testing")
 
-builder.add_edge("testing", "documentation")
+builder.add_edge("testing", "deployment")
+builder.add_edge("deployment", "documentation")
 builder.add_edge("documentation", "reviewer")
 builder.add_edge("reviewer", "assemble")
 builder.add_edge("assemble", "validation")

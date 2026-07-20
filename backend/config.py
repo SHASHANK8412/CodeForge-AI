@@ -1,6 +1,6 @@
-OLLAMA_SMALL_MODEL = "qwen2.5:latest"
-OLLAMA_MEDIUM_MODEL = "qwen2.5:latest"
-OLLAMA_LARGE_MODEL = "qwen2.5:latest"
+OLLAMA_SMALL_MODEL = "qwen2.5-coder:latest"
+OLLAMA_MEDIUM_MODEL = "qwen2.5-coder:latest"
+OLLAMA_LARGE_MODEL = "qwen2.5-coder:latest"
 OLLAMA_CODING_MODEL = "qwen2.5-coder:latest"
 
 DEFAULT_OLLAMA_MODEL = OLLAMA_SMALL_MODEL
@@ -22,9 +22,23 @@ OLLAMA_BASE_OPTIONS = {
     "num_ctx": 8192,
 }
 
+# Per-task context window sizes (num_ctx). Prevents VRAM bloat and speeds up prefill.
+TASK_NUM_CTX = {
+    "planner": 2048,
+    "architect": 4096,
+    "frontend": 8192,
+    "backend": 8192,
+    "database": 4096,
+    "reviewer": 8192,
+    "testing": 4096,
+    "documentation": 4096,
+    "reflection": 4096,
+    "github": 4096,
+}
+
 # Per-task output length caps (num_predict). Increased to prevent truncation/incomplete responses.
 TASK_NUM_PREDICT = {
-    "planner": 1500,
+    "planner": 2500,
     "architect": 2048,
     "frontend": 2048,
     "backend": 2048,

@@ -22,13 +22,14 @@ from backend.config import (
     OLLAMA_SMALL_MODEL,
     OLLAMA_CODING_MODEL,
     TASK_NUM_PREDICT,
+    TASK_NUM_CTX,
 )
 from backend.utils.cache import llm_cache
 from backend.utils.retry import async_retry
 from backend.utils.prompt_optimizer import optimize_prompt
 
-_ollama_client = Client(timeout=300.0)
-_ollama_async_client = AsyncClient(timeout=300.0)
+_ollama_client = Client(timeout=480.0)
+_ollama_async_client = AsyncClient(timeout=480.0)
 
 _logger = logging.getLogger("aiforge.performance")
 
@@ -49,6 +50,43 @@ if not _logger.handlers and not logging.getLogger().handlers:
 _logger.setLevel(logging.INFO)
 
 _unavailable_models: set[str] = set()
+
+
+def _memory_usage() -> str:
+    try:
+        import psutil
+        import os
+        process = psutil.Process(os.getpid())
+        mem = process.memory_info().rss / (1024 * 1024)
+        return f"{mem:.1f} MB"
+    except Exception:
+        return "N/A"
+
+
+def _log_agent_performance(
+    task: str,
+    model: str,
+    prompt_chars: int,
+    output_chars: int,
+    execution_time_ms: float,
+    llm_time_ms: float,
+    cache_status: str,
+) -> None:
+    input_tokens = round(prompt_chars / 4.0)
+    output_tokens = round(output_chars / 4.0)
+    mem_used = _memory_usage()
+    _logger.info(
+        "[PERFORMANCE] Agent: %s | Model: %s | Cache: %s | Prompt Chars: %d | Input Tokens: ~%d | Output Tokens: ~%d | LLM Time: %.1fms | Execution Time: %.1fms | Memory Used: %s",
+        task,
+        model,
+        cache_status,
+        prompt_chars,
+        input_tokens,
+        output_tokens,
+        llm_time_ms,
+        execution_time_ms,
+        mem_used
+    )
 
 
 def _normalize_prompt(prompt: str) -> str:
@@ -117,7 +155,7 @@ def _generation_options(task: str) -> dict:
         "temperature": 0.1 if is_coding_task else 0.2,
         "top_p": 0.9,
         "num_predict": TASK_NUM_PREDICT.get(task_lower, DEFAULT_NUM_PREDICT),
-        "num_ctx": 8192
+        "num_ctx": TASK_NUM_CTX.get(task_lower, 8192)
     }
     return options
 
@@ -128,6 +166,7 @@ def _chat_completion(model: str, messages: list[dict[str, str]], stream: bool = 
         messages=messages,
         stream=stream,
         options=options or OLLAMA_BASE_OPTIONS,
+        keep_alive="10m"
     )
 
 
@@ -137,6 +176,7 @@ async def _chat_completion_async(model: str, messages: list[dict[str, str]], str
         messages=messages,
         stream=stream,
         options=options or OLLAMA_BASE_OPTIONS,
+        keep_alive="10m"
     )
 
 
@@ -207,7 +247,7 @@ def _chat_completion_with_fallback(
                 raise exc
 
 
-@async_retry(retries=3, initial_delay=0.1, backoff_factor=2.0, timeout=300.0)
+@async_retry(retries=3, initial_delay=0.1, backoff_factor=2.0, timeout=None)
 async def _chat_completion_with_fallback_async(
     messages: list[dict[str, str]],
     model: str,
@@ -216,9 +256,15 @@ async def _chat_completion_with_fallback_async(
 ):
     last_error: Exception | None = None
 
+    num_predict = (options or {}).get("num_predict", 2048)
+    timeout = 480.0 if num_predict >= 2500 else 180.0
+
     for candidate in _fallback_models(model):
         try:
-            return await _chat_completion_async(candidate, messages, stream=stream, options=options)
+            return await asyncio.wait_for(
+                _chat_completion_async(candidate, messages, stream=stream, options=options),
+                timeout=timeout
+            )
         except Exception as exc:  # noqa: BLE001 - Ollama raises ResponseError for missing models.
             error_text = str(exc).lower()
             status_code = getattr(exc, "status_code", None)
@@ -233,7 +279,10 @@ async def _chat_completion_with_fallback_async(
     if last_error is not None:
         raise last_error
 
-    return await _chat_completion_async(model, messages, stream=stream, options=options)
+    return await asyncio.wait_for(
+        _chat_completion_async(model, messages, stream=stream, options=options),
+        timeout=timeout
+    )
 
 
 def _generate_message_payload(system_prompt: str, user_prompt: str) -> list[dict[str, str]]:
@@ -255,12 +304,22 @@ def generate_text(
     selected_model = model or select_model(task, compact_prompt)
     key = _cache_key(selected_model, system_prompt, compact_prompt)
 
+    started_at = perf_counter()
     cached = _get_cached_response(key)
     if cached is not None:
+        elapsed_ms = (perf_counter() - started_at) * 1000
+        _log_agent_performance(
+            task=task,
+            model=selected_model,
+            prompt_chars=len(compact_prompt),
+            output_chars=len(cached),
+            execution_time_ms=elapsed_ms,
+            llm_time_ms=0.0,
+            cache_status="HIT",
+        )
         return cached
 
     _logger.info("Agent Start task=%s model=%s", task, selected_model)
-    started_at = perf_counter()
     llm_started_at = perf_counter()
     response = _chat_completion_with_fallback(
         messages=_generate_message_payload(system_prompt, compact_prompt),
@@ -272,13 +331,14 @@ def generate_text(
     content = response["message"]["content"]
     _set_cached_response(key, content)
     elapsed_ms = (perf_counter() - started_at) * 1000
-    _logger.info(
-        "Agent End task=%s model=%s chars=%d Execution Time=%.1fms LLM Time=%.1fms",
-        task,
-        selected_model,
-        len(compact_prompt),
-        elapsed_ms,
-        llm_elapsed_ms,
+    _log_agent_performance(
+        task=task,
+        model=selected_model,
+        prompt_chars=len(compact_prompt),
+        output_chars=len(content),
+        execution_time_ms=elapsed_ms,
+        llm_time_ms=llm_elapsed_ms,
+        cache_status="MISS",
     )
     return content
 
@@ -294,17 +354,25 @@ async def generate_text_async(
     selected_model = model or select_model(task, compact_prompt)
     key = _cache_key(selected_model, system_prompt, compact_prompt)
 
+    started_at = perf_counter()
     cached = _get_cached_response(key)
     if cached is not None:
-        # If queue is active, we should still push the cached content to SSE stream immediately
+        elapsed_ms = (perf_counter() - started_at) * 1000
+        _log_agent_performance(
+            task=task,
+            model=selected_model,
+            prompt_chars=len(compact_prompt),
+            output_chars=len(cached),
+            execution_time_ms=elapsed_ms,
+            llm_time_ms=0.0,
+            cache_status="HIT",
+        )
         queue = stream_queue_var.get()
         if queue is not None:
             await queue.put(("chunk", task, cached))
         return cached
 
-    started_at = perf_counter()
     llm_started_at = perf_counter()
-
     queue = stream_queue_var.get()
     if queue is not None:
         _logger.info("Agent Start (stream_async) task=%s model=%s", task, selected_model)
@@ -339,13 +407,14 @@ async def generate_text_async(
     llm_elapsed_ms = (perf_counter() - llm_started_at) * 1000
     _set_cached_response(key, content)
     elapsed_ms = (perf_counter() - started_at) * 1000
-    _logger.info(
-        "Agent End task=%s model=%s chars=%d Execution Time=%.1fms LLM Time=%.1fms",
-        task,
-        selected_model,
-        len(compact_prompt),
-        elapsed_ms,
-        llm_elapsed_ms,
+    _log_agent_performance(
+        task=task,
+        model=selected_model,
+        prompt_chars=len(compact_prompt),
+        output_chars=len(content),
+        execution_time_ms=elapsed_ms,
+        llm_time_ms=llm_elapsed_ms,
+        cache_status="MISS",
     )
     return content
 
@@ -401,38 +470,7 @@ Generate clean, production-quality code.
 
 Return only the code unless the user explicitly asks for an explanation.
 """
-
-    optimized = optimize_prompt(prompt)
-    compact_prompt = _normalize_prompt(optimized)
-    selected_model = model or select_model(task, compact_prompt)
-    key = _cache_key(selected_model, effective_system_prompt, compact_prompt)
-
-    cached = _get_cached_response(key)
-    if cached is not None:
-        return cached
-
-    _logger.info("Agent Start task=%s model=%s", task, selected_model)
-    started_at = perf_counter()
-    llm_started_at = perf_counter()
-    response = _chat_completion_with_fallback(
-        messages=_generate_message_payload(effective_system_prompt, compact_prompt),
-        model=selected_model,
-        options=_generation_options(task),
-    )
-    llm_elapsed_ms = (perf_counter() - llm_started_at) * 1000
-
-    content = response["message"]["content"]
-    _set_cached_response(key, content)
-    elapsed_ms = (perf_counter() - started_at) * 1000
-    _logger.info(
-        "Agent End task=%s model=%s chars=%d Execution Time=%.1fms LLM Time=%.1fms",
-        task,
-        selected_model,
-        len(compact_prompt),
-        elapsed_ms,
-        llm_elapsed_ms,
-    )
-    return content
+    return generate_text(effective_system_prompt, prompt, model=model, task=task)
 
 
 async def generate_code_async(

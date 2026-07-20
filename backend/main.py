@@ -21,6 +21,7 @@ from backend.routes.rag import router as rag_router
 from backend.routes.plan import router as plan_router
 from backend.routes.memory import router as memory_router
 from backend.routes.project import router as project_router
+from backend.dashboard.monitoring_dashboard import router as monitoring_router
 
 app = FastAPI(
     title="AIForge API",
@@ -44,6 +45,7 @@ def register_routers() -> None:
     app.include_router(plan_router)
     app.include_router(memory_router)
     app.include_router(project_router)
+    app.include_router(monitoring_router)
 
 
 register_routers()

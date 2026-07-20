@@ -22,7 +22,7 @@ architecture with exactly these sections:
 # API Design
 
 Rules:
-- Maximum 500 words total.
+- Maximum 1500 words total.
 - Use short bullet points, not paragraphs.
 - No code, no explanations outside these sections.
 """,

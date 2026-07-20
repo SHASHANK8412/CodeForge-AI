@@ -14,6 +14,7 @@ from backend.agents.reviewer_agent import ReviewerAgent
 from backend.memory.memory_manager import memory_manager
 from backend.agents.testing_agent import TestingAgent
 from backend.agents.frontend_agent import FrontendAgent
+from backend.agents.deployment_agent import DeploymentAgent
 
 class GraphState(TypedDict):
     session_id: str
@@ -59,6 +60,7 @@ explanation = ExplanationAgent()
 reviewer = ReviewerAgent()
 testing_agent = TestingAgent()
 frontend = FrontendAgent()
+deployment = DeploymentAgent()
 
 
 def log_stage(message: str):
@@ -201,13 +203,19 @@ def planner_node(state: GraphState):
 
 # ---------------- Architect ---------------- #
 
+def _summarize_plan_fallback(plan: str) -> str:
+    from backend.graph.parallel_workflow import summarize_plan
+    return summarize_plan(plan)
+
+
 def architect_node(state: GraphState):
 
     started_at = perf_counter()
     log_stage("Architect Started")
 
-    architecture_input = f"""Planner Output
-{state['plan']}"""
+    summarized_plan = _summarize_plan_fallback(state['plan'])
+    architecture_input = f"""Planner Output Summary
+{summarized_plan}"""
     architecture = invoke_agent(architect, architecture_input, state.get("memory_context", ""))
 
     log_stage("Architect Completed")
@@ -387,8 +395,13 @@ def coding_node(state: GraphState):
     started_at = perf_counter()
     log_stage("Coding Started")
 
-    enhanced_prompt = build_agent_context(state, previous_output=state.get("architecture", ""))
-    response = invoke_agent(coding, enhanced_prompt, state.get("memory_context", ""), state.get("plan", ""))
+    from backend.utils.summarizer import extract_backend_info
+    plan = state.get("plan", "")
+    arch = state.get("architecture", "")
+    backend_info = extract_backend_info(plan, arch)
+
+    enhanced_prompt = build_agent_context(state, previous_output=backend_info)
+    response = invoke_agent(coding, enhanced_prompt, state.get("memory_context", ""), backend_info)
 
     log_stage("Coding Completed")
     log_stage_duration("Coding", started_at)
@@ -412,16 +425,21 @@ def frontend_node(state: GraphState):
     started_at = perf_counter()
     log_stage("Frontend Started")
 
+    from backend.utils.summarizer import extract_ui_info
+    plan = state.get("plan", "")
+    arch = state.get("architecture", "")
+    plan_ui = extract_ui_info(plan, arch)
+
     enhanced_prompt = build_agent_context(
         state,
-        previous_output=state.get("architecture", "")
+        previous_output=plan_ui
     )
 
     response = invoke_agent(
         frontend,
         enhanced_prompt,
         state.get("memory_context", ""),
-        state.get("plan", "")
+        plan_ui
     )
 
     log_stage("Frontend Completed")
@@ -526,9 +544,25 @@ def reviewer_node(state: GraphState):
     started_at = perf_counter()
     log_stage("Reviewer Started")
 
-    previous_output = state.get("generated_code", "")
-    review_prompt = build_agent_context(state, previous_output=previous_output)
-    response = invoke_agent(reviewer, review_prompt, state.get("memory_context", ""), previous_output)
+    from backend.utils.summarizer import extract_file_list, summarize_architecture
+    gen_code = state.get("generated_code", "")
+    file_list = extract_file_list(gen_code, "", "")
+    arch_summary = summarize_architecture(state.get("architecture", ""))
+
+    structured_summary = f"""Generated File List:
+{file_list}
+
+Architecture Summary:
+{arch_summary}
+
+Test Results:
+{state.get('testing_report', 'No test execution output.')}
+
+Changed Files:
+No post-generation file edits detected."""
+
+    review_prompt = build_agent_context(state, previous_output=structured_summary)
+    response = invoke_agent(reviewer, review_prompt, state.get("memory_context", ""), structured_summary)
 
     log_stage("Reviewer Completed")
     log_stage_duration("Reviewer", started_at)
@@ -682,6 +716,39 @@ def testing_node(state: GraphState):
     }
 
 
+def deployment_node(state: GraphState):
+
+    started_at = perf_counter()
+    log_stage("Deployment Started")
+
+    result_state = deployment.run(dict(state))
+
+    log_stage("Deployment Completed")
+    log_stage_duration("Deployment", started_at)
+
+    return {
+        "session_id": state.get("session_id", "default"),
+        "prompt": state["prompt"],
+        "memory_context": state.get("memory_context", ""),
+        "history_text": state.get("history_text", ""),
+        "project_text": state.get("project_text", ""),
+        "collaboration_mode": state.get("collaboration_mode", False),
+        "execution_mode": state.get("execution_mode", "full"),
+        "plan": state.get("plan", ""),
+        "architecture": state.get("architecture", ""),
+        "route": state.get("route", "coding"),
+        "agent_name": "deployment",
+        "generated_code": state.get("generated_code", ""),
+        "reviewed_code": state.get("reviewed_code", ""),
+        "testing_report": state.get("testing_report", ""),
+        "deployment_files": result_state.get("deployment_files", {}),
+        "deployment_report": result_state.get("deployment_report", {}),
+        "deployment_platform": result_state.get("deployment_platform", "Unknown"),
+        "deployment_guide": result_state.get("deployment_guide", ""),
+        "response": result_state.get("deployment_guide", ""),
+    }
+
+
 # ---------------- Graph ---------------- #
 
 builder = StateGraph(GraphState)
@@ -698,6 +765,7 @@ builder.add_node("debug", debug_node)
 builder.add_node("resume", resume_node)
 builder.add_node("reviewer", reviewer_node)
 builder.add_node("testing", testing_node)
+builder.add_node("deployment", deployment_node)
 builder.add_node("explanation", explanation_node)
 builder.add_node("save_memory", save_memory_node)
 builder.set_entry_point("load_memory")
@@ -759,7 +827,8 @@ builder.add_conditional_edges(
     }
 )
 builder.add_edge("reviewer", "testing")
-builder.add_edge("testing", "explanation")
+builder.add_edge("testing", "deployment")
+builder.add_edge("deployment", "explanation")
 builder.add_edge("explanation", "save_memory")
 builder.add_edge("save_memory", END)
 

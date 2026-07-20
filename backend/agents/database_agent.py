@@ -19,51 +19,47 @@ Do NOT write bullet points, descriptions, or short summaries. Generate actual SQ
         )
 
     def run(self, state):
-
+        from backend.utils.summarizer import extract_backend_info
         architecture = state.get("architecture", "")
-        backend = state.get("backend", "")
         prompt = state.get("user_prompt", "")
+        plan = state.get("plan", "")
+
+        db_info = extract_backend_info(plan, architecture)
 
         database_schema = self.generate(
             f"""
 Project:
 {prompt}
 
-Architecture:
-{architecture}
-
-Backend:
-{backend}
+Database and Table Architecture Scope:
+{db_info}
 
 Generate the actual SQL Database Schema. Include it in a code block with the filepath annotation.
 """
         )
 
         state["database"] = database_schema
-
         return state
 
     async def run_async(self, state):
-
+        from backend.utils.summarizer import extract_backend_info
         architecture = state.get("architecture", "")
-        backend = state.get("backend", "")
         prompt = state.get("user_prompt", "")
+        plan = state.get("plan", "")
+
+        db_info = extract_backend_info(plan, architecture)
 
         database_schema = await self.generate_async(
             f"""
 Project:
 {prompt}
 
-Architecture:
-{architecture}
-
-Backend:
-{backend}
+Database and Table Architecture Scope:
+{db_info}
 
 Generate the actual SQL Database Schema. Include it in a code block with the filepath annotation.
 """
         )
 
         state["database"] = database_schema
-
         return state

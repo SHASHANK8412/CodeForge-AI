@@ -20,51 +20,47 @@ Do NOT write bullet points, descriptions, or short summaries. Generate actual Fa
         )
 
     def run(self, state):
-
+        from backend.utils.summarizer import extract_backend_info
         architecture = state.get("architecture", "")
         plan = state.get("plan", "")
         prompt = state.get("user_prompt", "")
+
+        backend_info = extract_backend_info(plan, architecture)
 
         backend_code = self.generate(
             f"""
 Project:
 {prompt}
 
-Plan:
-{plan}
-
-Architecture:
-{architecture}
+Backend Scope Details:
+{backend_info}
 
 Generate the actual FastAPI backend implementation. Include it in a code block with the filepath annotation.
 """
         )
 
         state["backend"] = backend_code
-
         return state
 
     async def run_async(self, state):
-
+        from backend.utils.summarizer import extract_backend_info
         architecture = state.get("architecture", "")
         plan = state.get("plan", "")
         prompt = state.get("user_prompt", "")
+
+        backend_info = extract_backend_info(plan, architecture)
 
         backend_code = await self.generate_async(
             f"""
 Project:
 {prompt}
 
-Plan:
-{plan}
-
-Architecture:
-{architecture}
+Backend Scope Details:
+{backend_info}
 
 Generate the actual FastAPI backend implementation. Include it in a code block with the filepath annotation.
 """
         )
 
         state["backend"] = backend_code
-
         return state

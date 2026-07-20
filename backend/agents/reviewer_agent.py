@@ -13,7 +13,7 @@ Review the given output. Generate ONLY the improvements needed:
 # Improvements
 
 Rules:
-- Maximum 300 words.
+- Maximum 1000 words.
 - Short, actionable bullet points only (bugs, security, performance,
   readability, best practices).
 - Do NOT rewrite or return full code.
