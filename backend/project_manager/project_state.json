@@ -1,0 +1,19 @@
+{
+  "project_name": "AIForge Managed Project",
+  "status": "Planning",
+  "completion_percentage": 33.3,
+  "tasks": {
+    "database": {
+      "status": "Completed",
+      "details": ""
+    },
+    "backend": {
+      "status": "Pending",
+      "details": ""
+    },
+    "frontend": {
+      "status": "Blocked",
+      "details": "Tailwind package resolution lag"
+    }
+  }
+}
