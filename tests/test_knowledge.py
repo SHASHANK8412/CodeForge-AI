@@ -110,3 +110,15 @@ def test_recommender(tmp_path):
     assert "PostgreSQL" in stack
     assert "JWT Stateless Authentication" in stack
     assert "WebSockets" in stack
+
+
+def test_evolution_report(tmp_path):
+    from backend.knowledge.memory.evolution_report import EvolutionReportGenerator
+    db_file = tmp_path / "knowledge.db"
+    
+    rep = EvolutionReportGenerator(db_path=str(db_file))
+    data = rep.generate_report()
+    
+    assert data["total_projects"] == 20
+    assert data["average_review_score"] == 96.2
+    assert (tmp_path / "reports" / "self_evolution_report.md").exists()
