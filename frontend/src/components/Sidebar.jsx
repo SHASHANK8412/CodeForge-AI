@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaCommentAlt, FaHammer, FaBrain, FaChartBar, FaPlus, FaSearch, FaTrash, FaPen, FaFolderOpen, FaServer } from "react-icons/fa";
+import { FaCommentAlt, FaHammer, FaBrain, FaChartBar, FaPlus, FaSearch, FaTrash, FaPen, FaFolderOpen, FaServer, FaHome, FaPlug } from "react-icons/fa";
 import {
     createConversation,
     deleteConversation,
@@ -131,8 +131,11 @@ function Sidebar({ currentView, setView }) {
 
     // Menu tabs for view toggling
     const tabs = [
+        { key: "dashboard", label: "Home Dashboard", icon: <FaHome size={14} /> },
         { key: "chat", label: "Chat Workspace", icon: <FaCommentAlt size={14} /> },
         { key: "project", label: "Project Builder", icon: <FaHammer size={14} /> },
+        { key: "plugins", label: "Plugins Engine", icon: <FaPlug size={14} /> },
+        { key: "learning", label: "Learning Hub", icon: <FaBrain size={14} /> },
         { key: "reflection", label: "Reflection Hub", icon: <FaBrain size={14} /> },
         { key: "metrics", label: "Metrics Board", icon: <FaChartBar size={14} /> },
     ];
