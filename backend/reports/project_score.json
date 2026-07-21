@@ -1,0 +1,16 @@
+{
+  "Architecture": 75,
+  "Frontend": 50,
+  "Backend": 95,
+  "Database": 70,
+  "Security": 93,
+  "Performance": 92,
+  "Testing": 40,
+  "Documentation": 60,
+  "DevOps": 50,
+  "Maintainability": 92,
+  "Scalability": 94,
+  "Readability": 91,
+  "DeveloperExperience": 95,
+  "Overall": 77
+}

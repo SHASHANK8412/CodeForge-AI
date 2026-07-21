@@ -42,6 +42,15 @@ class Benchmarker:
             with open(self.result_file_path, "w", encoding="utf-8") as f:
                 json.dump(results, f, indent=2)
             _logger.info("Successfully updated benchmark_results.json statistics.")
+            
+            # Copy to backend/reports/
+            try:
+                workspace_reports_dir = Path(__file__).resolve().parent.parent / "reports"
+                workspace_reports_dir.mkdir(parents=True, exist_ok=True)
+                with open(workspace_reports_dir / "benchmark_results.json", "w", encoding="utf-8") as f:
+                    json.dump(results, f, indent=2)
+            except Exception as e:
+                pass
         except Exception as e:
             _logger.error(f"Failed to save SRE benchmarks: {str(e)}")
 

@@ -77,5 +77,14 @@ class ProjectScorer:
             with open(self.score_file_path, "w", encoding="utf-8") as f:
                 json.dump(scores, f, indent=2)
             _logger.info(f"Successfully saved project scores: {self.score_file_path.name}")
+            
+            # Copy to backend/reports/
+            try:
+                workspace_reports_dir = Path(__file__).resolve().parent.parent / "reports"
+                workspace_reports_dir.mkdir(parents=True, exist_ok=True)
+                with open(workspace_reports_dir / "project_score.json", "w", encoding="utf-8") as f:
+                    json.dump(scores, f, indent=2)
+            except Exception as e:
+                pass
         except Exception as e:
             _logger.error(f"Failed to write project_score.json: {str(e)}")

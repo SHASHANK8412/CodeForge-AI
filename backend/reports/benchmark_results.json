@@ -1,0 +1,13 @@
+{
+  "timestamp": 1784602895.384778,
+  "metrics": {
+    "api_latency_ms": 82.5,
+    "db_latency_ms": 1.2,
+    "cpu_usage_pct": 24.1,
+    "memory_used_mb": 57.9,
+    "cold_start_seconds": 0.45,
+    "agent_response_time_seconds": 45.2,
+    "bundle_size_kb": 720.0,
+    "execution_time_seconds": 1.15
+  }
+}
