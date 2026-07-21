@@ -9,7 +9,6 @@ if str(_repo_root) not in sys.path:
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-import asyncio
 from time import perf_counter
 from pydantic import BaseModel
 
@@ -23,6 +22,7 @@ from backend.routes.memory import router as memory_router
 from backend.routes.project import router as project_router
 from backend.dashboard.monitoring_dashboard import router as monitoring_router
 from backend.dashboard.learning_dashboard import router as learning_router
+from backend.dashboard.evolution_dashboard import router as evolution_router
 app = FastAPI(
     title="AIForge API",
     description="Multi-Agent AI Software Engineer Backend",
@@ -50,6 +50,7 @@ def register_routers() -> None:
     app.include_router(project_router)
     app.include_router(monitoring_router)
     app.include_router(learning_router)
+    app.include_router(evolution_router)
 
 
 register_routers()
