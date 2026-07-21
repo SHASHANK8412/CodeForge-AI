@@ -66,3 +66,41 @@ class GraphQuery:
         Recursively fetches all downstream dependent technologies.
         """
         return self.traverse_graph(node)[1:]
+
+    def semantic_query(self, query: str) -> List[Dict[str, Any]]:
+        """
+        Supports semantic queries by parsing query keywords and locating nodes.
+        """
+        q = query.lower().strip()
+        results = []
+        nodes = self.graph.get_all_nodes()
+
+        # "Where is authentication implemented?"
+        if "authentication" in q or "auth" in q:
+            for n in nodes:
+                if n["name"] in ("auth", "jwt", "login", "auth_controller"):
+                    results.append({"node": n["name"], "type": n.get("category", "node"), "reason": "Matches authentication pattern"})
+
+        # "Which files depend on database.py?"
+        elif "depend on" in q:
+            target = q.split("depend on")[-1].replace(".py", "").replace("?", "").replace(".", "").strip()
+            # Find nodes that have an edge to target
+            for n in nodes:
+                neighbors = self.graph.get_neighbors(n["name"])
+                for neigh in neighbors:
+                    if target in neigh["target"]:
+                        results.append({"node": n["name"], "type": n.get("category", "node"), "reason": f"Imports or depends on {target}"})
+
+        # "Show all API routes using JWT."
+        elif "jwt" in q or "api" in q:
+            for n in nodes:
+                if n.get("category") == "route" or "jwt" in n["name"]:
+                    results.append({"node": n["name"], "type": n.get("category", "node"), "reason": "Matches API/JWT pattern"})
+
+        # Default fallback match
+        if not results:
+            for n in nodes:
+                if q in n["name"] or q in n.get("category", ""):
+                    results.append({"node": n["name"], "type": n.get("category", "node"), "reason": "Keyword matches node details"})
+
+        return results

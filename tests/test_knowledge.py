@@ -122,3 +122,24 @@ def test_evolution_report(tmp_path):
     assert data["total_projects"] == 20
     assert data["average_review_score"] == 96.2
     assert (tmp_path / "reports" / "self_evolution_report.md").exists()
+
+
+def test_semantic_query(tmp_path):
+    from backend.knowledge.graph.graph_query import GraphQuery
+    db_file = tmp_path / "knowledge.db"
+    manager = KnowledgeManager(db_path=str(db_file))
+    
+    # Insert mock nodes
+    manager.graph.add_node("jwt", "library")
+    manager.graph.add_node("auth_controller", "component")
+    manager.graph.add_node("main.py", "file")
+    manager.graph.add_edge("main.py", "jwt", "depends")
+
+    query_engine = GraphQuery(manager.graph)
+    results = query_engine.semantic_query("Where is authentication implemented?")
+    assert len(results) > 0
+    assert any(r["node"] in ("jwt", "auth_controller") for r in results)
+
+    results_dep = query_engine.semantic_query("Which files depend on jwt.py?")
+    assert len(results_dep) > 0
+    assert results_dep[0]["node"] == "main.py"
