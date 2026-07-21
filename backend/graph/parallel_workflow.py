@@ -102,6 +102,42 @@ Project Plan Summary
     }
 
 
+async def debate_node(state: ProjectState) -> dict:
+    _logger.info("INFO Debate Started")
+    prompt = state.get("prompt") or state.get("user_prompt", "")
+    
+    # Toggle debate optionally via config parameters
+    enable_debate = state.get("enable_debate", False)
+    if not enable_debate:
+        _logger.info("Debate is disabled. Skipping debate node.")
+        return {"current_step": "debate"}
+
+    from backend.debate.orchestrator import DebateOrchestrator
+    from backend.graph.debate_graph import DebateGraphVisualizer
+
+    orchestrator = DebateOrchestrator()
+    with Timer() as timer:
+        debate_result = await orchestrator.run_debate(prompt)
+    
+    # Save debate visual graph
+    votes = {agent: info.get("choice", "REST") for agent, info in debate_result["rounds_history"][-1].items()}
+    visualizer = DebateGraphVisualizer()
+    visualizer.generate_and_save_graph(
+        participants=debate_result["participants"],
+        votes=votes,
+        consensus=debate_result["winning_solution"]
+    )
+    
+    workflow_profiler.record_agent_time("debate", timer.elapsed)
+    _logger.info("INFO Debate Finished")
+    
+    revised_architecture = state.get("architecture", "") + f"\n\n### Consensus Decision:\n{debate_result['reasoning']}"
+    return {
+        "architecture": revised_architecture,
+        "current_step": "debate"
+    }
+
+
 async def frontend_node(state: ProjectState) -> dict:
     _logger.info("INFO Frontend Started")
     prompt = state.get("prompt") or state.get("user_prompt", "")
@@ -375,12 +411,11 @@ Retries Used: {retries}
     }
 
 
-# ---------------- Graph ---------------- #
-
 builder = StateGraph(ProjectState)
 
 builder.add_node("planner", planner_node)
 builder.add_node("architect", architect_node)
+builder.add_node("debate", debate_node)
 builder.add_node("frontend", frontend_node)
 builder.add_node("backend", backend_node)
 builder.add_node("database", database_node)
@@ -396,11 +431,12 @@ builder.add_node("export", export_node)
 builder.set_entry_point("planner")
 
 builder.add_edge("planner", "architect")
+builder.add_edge("architect", "debate")
 
-# Parallel Execution fan-out
-builder.add_edge("architect", "frontend")
-builder.add_edge("architect", "backend")
-builder.add_edge("architect", "database")
+# Parallel Execution fan-out from SRE Debate
+builder.add_edge("debate", "frontend")
+builder.add_edge("debate", "backend")
+builder.add_edge("debate", "database")
 
 # Parallel Execution fan-in
 builder.add_edge("frontend", "testing")
