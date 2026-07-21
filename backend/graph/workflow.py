@@ -102,6 +102,11 @@ def classify_request(prompt: str, memory_context: str = "") -> tuple[str, str]:
     if any(word in normalized for word in project_keywords):
         return "coding", "full"
 
+    simple_code_hints = ["function", "script", "snippet", "algorithm", "method", "regex", "one-liner", "utility", "helper", "class"]
+    project_scale_hints = ["api", "database", "docker", "microservice", "full stack", "fullstack", "endpoint", "schema", "react", "frontend", "backend", "deployment"]
+    if any(hint in normalized for hint in simple_code_hints) and not any(hint in normalized for hint in project_scale_hints):
+        return "coding", "fast"
+
     if len(normalized.split()) <= 6:
         return "explanation", "fast"
 
