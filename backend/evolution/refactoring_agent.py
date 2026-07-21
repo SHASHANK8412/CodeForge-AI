@@ -60,6 +60,12 @@ class RefactoringAgent:
                 new_lines.append(line)
 
             if modified:
+                # Create a backup file for rollback capability
+                backup_path = path.with_suffix(path.suffix + ".bak")
+                with open(backup_path, "w", encoding="utf-8") as f_bak:
+                    f_bak.write(content)
+                _logger.info(f"[BACKUP] Created backup checkpoint '{backup_path.name}'.")
+
                 with open(path, "w", encoding="utf-8") as f:
                     f.write("\n".join(new_lines) + "\n")
                 return True
@@ -67,4 +73,23 @@ class RefactoringAgent:
         except Exception as e:
             _logger.error(f"Failed to refactor imports in {path.name}: {str(e)}")
 
+        return False
+
+    def rollback_file(self, file_path: str) -> bool:
+        """
+        Restores a file from its backup .bak file if it exists.
+        """
+        path = Path(file_path)
+        backup_path = path.with_suffix(path.suffix + ".bak")
+        if backup_path.exists():
+            try:
+                with open(backup_path, "r", encoding="utf-8") as f_bak:
+                    content = f_bak.read()
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(content)
+                backup_path.unlink()  # Clean up backup file
+                _logger.info(f"[ROLLBACK] Restored backup file content for '{path.name}'.")
+                return True
+            except Exception as e:
+                _logger.error(f"Failed to rollback file '{path.name}': {str(e)}")
         return False

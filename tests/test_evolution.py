@@ -55,6 +55,20 @@ def test_refactoring_agent(tmp_path):
     assert "import sys" in lines
     assert "import os" not in lines
 
+    # Verify backup exists
+    backup_file = mock_file.with_suffix(mock_file.suffix + ".bak")
+    assert backup_file.exists()
+
+    # Trigger rollback
+    rolled_back = agent.rollback_file(str(mock_file))
+    assert rolled_back is True
+    assert not backup_file.exists()
+
+    # Verify original content restored
+    with open(mock_file, "r", encoding="utf-8") as f:
+        restored_lines = f.read().splitlines()
+    assert "import os" in restored_lines
+
 def test_benchmarker(tmp_path):
     result_file = tmp_path / "benchmark_results.json"
     bench = Benchmarker(result_file_path=str(result_file))
