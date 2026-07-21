@@ -1,0 +1,76 @@
+{
+  "nodes": [
+    {
+      "id": "planner",
+      "label": "Planner"
+    },
+    {
+      "id": "architect",
+      "label": "Architect"
+    },
+    {
+      "id": "debate_engine",
+      "label": "Debate Engine"
+    },
+    {
+      "id": "consensus",
+      "label": "Consensus"
+    },
+    {
+      "id": "frontend",
+      "label": "Frontend"
+    },
+    {
+      "id": "backend",
+      "label": "Backend"
+    },
+    {
+      "id": "database",
+      "label": "Database"
+    }
+  ],
+  "edges": [
+    {
+      "source": "planner",
+      "target": "architect"
+    },
+    {
+      "source": "architect",
+      "target": "debate_engine"
+    },
+    {
+      "source": "debate_engine",
+      "target": "frontend"
+    },
+    {
+      "source": "frontend",
+      "target": "consensus"
+    },
+    {
+      "source": "debate_engine",
+      "target": "backend"
+    },
+    {
+      "source": "backend",
+      "target": "consensus"
+    },
+    {
+      "source": "debate_engine",
+      "target": "database"
+    },
+    {
+      "source": "database",
+      "target": "consensus"
+    }
+  ],
+  "votes": {
+    "frontend": "Tailwind",
+    "backend": "REST",
+    "database": "PostgreSQL"
+  },
+  "consensus_choice": "REST + PostgreSQL",
+  "arguments": {
+    "REST": "High standard API throughput",
+    "JWT": "Secure token stateless verification"
+  }
+}
