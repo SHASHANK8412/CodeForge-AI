@@ -51,6 +51,9 @@ def register_routers() -> None:
     app.include_router(monitoring_router)
     app.include_router(learning_router)
     app.include_router(evolution_router)
+    
+    from backend.api.plugins import router as plugins_router
+    app.include_router(plugins_router)
 
 
 register_routers()
