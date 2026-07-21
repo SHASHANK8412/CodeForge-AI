@@ -51,9 +51,11 @@ def register_routers() -> None:
     app.include_router(monitoring_router)
     app.include_router(learning_router)
     app.include_router(evolution_router)
-    
     from backend.api.plugins import router as plugins_router
     app.include_router(plugins_router)
+
+    from backend.api.project import router as project_manager_router
+    app.include_router(project_manager_router)
 
 
 register_routers()

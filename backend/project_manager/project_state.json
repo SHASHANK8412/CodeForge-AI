@@ -5,7 +5,7 @@
   "tasks": {
     "database": {
       "status": "Completed",
-      "details": ""
+      "details": "Provisioned sqlite tables"
     },
     "backend": {
       "status": "Pending",
