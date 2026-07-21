@@ -1,0 +1,50 @@
+{
+  "database_tables": [
+    {
+      "table": "users",
+      "file": "database_checker.py"
+    },
+    {
+      "table": "{table}",
+      "file": "database_checker.py"
+    },
+    {
+      "table": "users",
+      "file": "test_database_checker.py"
+    },
+    {
+      "table": "users",
+      "file": "test_database_checker.py"
+    },
+    {
+      "table": "users",
+      "file": "test_project_intelligence.py"
+    },
+    {
+      "table": "posts",
+      "file": "test_project_intelligence.py"
+    },
+    {
+      "table": "UsersTable",
+      "file": "test_validation.py"
+    }
+  ],
+  "database_relationships": [
+    {
+      "source_table": "users",
+      "target_table": "users",
+      "relation": "Many-to-One"
+    },
+    {
+      "source_table": "posts",
+      "target_table": "users",
+      "relation": "Many-to-One"
+    }
+  ],
+  "frameworks_detected": [
+    "FastAPI",
+    "React",
+    "Docker"
+  ],
+  "architectural_style": "MVC / SPA / Microservices ready"
+}

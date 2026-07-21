@@ -1,0 +1,54 @@
+{
+  "backend_endpoints": [
+    {
+      "file": "main.py",
+      "route": "/"
+    },
+    {
+      "file": "main.py",
+      "route": "/health"
+    },
+    {
+      "file": "main.py",
+      "route": "/generate"
+    },
+    {
+      "file": "api_checker.py",
+      "route": "/"
+    },
+    {
+      "file": "test_api_checker.py",
+      "route": "/users"
+    },
+    {
+      "file": "test_project_intelligence.py",
+      "route": "/api/users"
+    },
+    {
+      "file": "test_validation.py",
+      "route": "/users"
+    },
+    {
+      "file": "test_validation.py",
+      "route": "/users"
+    }
+  ],
+  "frontend_calls": [
+    {
+      "file": "PluginsDashboard.jsx",
+      "endpoint_called": "http://127.0.0.1:8000/plugins"
+    }
+  ],
+  "resolved_mappings": [
+    {
+      "frontend_file": "PluginsDashboard.jsx",
+      "backend_file": "main.py",
+      "route_matched": "/"
+    },
+    {
+      "frontend_file": "PluginsDashboard.jsx",
+      "backend_file": "api_checker.py",
+      "route_matched": "/"
+    }
+  ]
+}

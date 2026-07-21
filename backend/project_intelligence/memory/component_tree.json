@@ -1,0 +1,148 @@
+{
+  "root_components": [
+    "App"
+  ],
+  "component_hierarchy": {
+    "App": [
+      "MetricsDashboard",
+      "LearningDashboard",
+      "ProjectGenerator",
+      "PluginsDashboard",
+      "MainLayout",
+      "Dashboard",
+      "ChatBox",
+      "ReflectionDashboard",
+      "Sidebar"
+    ],
+    "ChatBox": [
+      "FaSun",
+      "FaCog",
+      "Message",
+      "FaRobot",
+      "FaFileAlt",
+      "RagUploadPanel",
+      "Loading",
+      "InputBar",
+      "FaPlus",
+      "FaCommentAlt",
+      "FaBrain",
+      "FaMoon"
+    ],
+    "ChatHeader": [],
+    "CodeBlock": [
+      "FaCopy",
+      "FaCheck"
+    ],
+    "CopyButton": [],
+    "DownloadButton": [],
+    "EmptyState": [],
+    "ErrorMessage": [],
+    "FileExplorer": [
+      "FaFolderOpen",
+      "FaFile",
+      "FaFolder",
+      "FaSync",
+      "FaFileCode",
+      "FaDownload"
+    ],
+    "InputBar": [
+      "FaPaperPlane",
+      "FaBook"
+    ],
+    "Loading": [],
+    "Message": [
+      "FaCheckDouble",
+      "FaThumbsUp",
+      "FaCopy",
+      "FaRedo",
+      "CodeWrapper",
+      "ReactMarkdown",
+      "FaCheck",
+      "FaThumbsDown",
+      "SyntaxHighlighter"
+    ],
+    "MetricsDashboard": [
+      "FaCheckCircle",
+      "FaBrain",
+      "FaBoxes",
+      "FaStar"
+    ],
+    "Navbar": [],
+    "PlannerCard": [
+      "ReactMarkdown"
+    ],
+    "RagUploadPanel": [],
+    "ReflectionDashboard": [
+      "FaCheckCircle",
+      "FaExclamationTriangle",
+      "FaGraduationCap",
+      "FaLightbulb"
+    ],
+    "Sidebar": [
+      "FaSearch",
+      "FaPen",
+      "FaServer",
+      "FaHammer",
+      "FaHome",
+      "FaTrash",
+      "FaPlug",
+      "FaChartBar",
+      "FaPlus",
+      "FaCommentAlt",
+      "FaBrain"
+    ],
+    "SuggestedPrompts": [],
+    "Toast": [],
+    "TypingIndicator": [],
+    "MainLayout": [],
+    "Dashboard": [
+      "FaHammer",
+      "FaBug",
+      "FaPlay",
+      "FaSyncAlt",
+      "FaPlug",
+      "FaBrain"
+    ],
+    "Home": [
+      "ChatBox",
+      "MainLayout",
+      "Sidebar",
+      "Navbar"
+    ],
+    "LearningDashboard": [
+      "FaCube",
+      "FaBrain",
+      "FaChartLine"
+    ],
+    "Planner": [
+      "PlannerCard"
+    ],
+    "PluginsDashboard": [
+      "FaDatabase",
+      "FaBolt",
+      "FaCheckCircle",
+      "FaGithub",
+      "FaCloud",
+      "FaPlug",
+      "FaCircle",
+      "FaDocker",
+      "FaExclamationCircle",
+      "FaSlack"
+    ],
+    "ProjectGenerator": [
+      "FaTasks",
+      "FaFolderOpen",
+      "FaChevronLeft",
+      "FaCheckCircle",
+      "FaPlay",
+      "FaCopy",
+      "FileExplorer",
+      "FaChevronRight",
+      "FaDownload",
+      "ReactMarkdown",
+      "FaCheck",
+      "FaSpinner",
+      "SyntaxHighlighter"
+    ]
+  }
+}

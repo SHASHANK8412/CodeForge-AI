@@ -1,0 +1,6098 @@
+{
+  "nodes": [
+    {
+      "id": "exportPlan.js"
+    },
+    {
+      "id": "backend/config.py"
+    },
+    {
+      "id": "backend/main.py"
+    },
+    {
+      "id": "backend/sitecustomize.py"
+    },
+    {
+      "id": "backend/test_graph.py"
+    },
+    {
+      "id": "backend/test_ollama.py"
+    },
+    {
+      "id": "backend/__init__.py"
+    },
+    {
+      "id": "backend/agents/architect_agent.py"
+    },
+    {
+      "id": "backend/agents/backend_agent.py"
+    },
+    {
+      "id": "backend/agents/base_agent.py"
+    },
+    {
+      "id": "backend/agents/coding_agent.py"
+    },
+    {
+      "id": "backend/agents/database_agent.py"
+    },
+    {
+      "id": "backend/agents/debug_agent.py"
+    },
+    {
+      "id": "backend/agents/deployment_agent.py"
+    },
+    {
+      "id": "backend/agents/documentation.py"
+    },
+    {
+      "id": "backend/agents/explanation_agent.py"
+    },
+    {
+      "id": "backend/agents/factory.py"
+    },
+    {
+      "id": "backend/agents/frontend_agent.py"
+    },
+    {
+      "id": "backend/agents/github_agent.py"
+    },
+    {
+      "id": "backend/agents/planner_agent.py"
+    },
+    {
+      "id": "backend/agents/rag_agent.py"
+    },
+    {
+      "id": "backend/agents/reflection_agent.py"
+    },
+    {
+      "id": "backend/agents/resume_agent.py"
+    },
+    {
+      "id": "backend/agents/reviewer_agent.py"
+    },
+    {
+      "id": "backend/agents/router_agent.py"
+    },
+    {
+      "id": "backend/agents/testing_agent.py"
+    },
+    {
+      "id": "backend/agents/__init__.py"
+    },
+    {
+      "id": "backend/api/plugins.py"
+    },
+    {
+      "id": "backend/dashboard/evolution_dashboard.py"
+    },
+    {
+      "id": "backend/dashboard/learning_dashboard.py"
+    },
+    {
+      "id": "backend/dashboard/monitoring_dashboard.py"
+    },
+    {
+      "id": "backend/debate/consensus.py"
+    },
+    {
+      "id": "backend/debate/critique.py"
+    },
+    {
+      "id": "backend/debate/logger.py"
+    },
+    {
+      "id": "backend/debate/memory.py"
+    },
+    {
+      "id": "backend/debate/moderator.py"
+    },
+    {
+      "id": "backend/debate/orchestrator.py"
+    },
+    {
+      "id": "backend/debate/voting.py"
+    },
+    {
+      "id": "backend/evolution/benchmarker.py"
+    },
+    {
+      "id": "backend/evolution/evolution_pipeline.py"
+    },
+    {
+      "id": "backend/evolution/project_scorer.py"
+    },
+    {
+      "id": "backend/evolution/refactoring_agent.py"
+    },
+    {
+      "id": "backend/evolution/security_inspector.py"
+    },
+    {
+      "id": "backend/generators/compose_generator.py"
+    },
+    {
+      "id": "backend/generators/dependency_generator.py"
+    },
+    {
+      "id": "backend/generators/docker_generator.py"
+    },
+    {
+      "id": "backend/generators/env_generator.py"
+    },
+    {
+      "id": "backend/generators/gitignore_generator.py"
+    },
+    {
+      "id": "backend/generators/license_generator.py"
+    },
+    {
+      "id": "backend/generators/package_generator.py"
+    },
+    {
+      "id": "backend/generators/project_generator.py"
+    },
+    {
+      "id": "backend/generators/readme_generator.py"
+    },
+    {
+      "id": "backend/generators/requirements_generator.py"
+    },
+    {
+      "id": "backend/graph/debate_graph.py"
+    },
+    {
+      "id": "backend/graph/parallel_workflow.py"
+    },
+    {
+      "id": "backend/graph/profiler.py"
+    },
+    {
+      "id": "backend/graph/project_state.py"
+    },
+    {
+      "id": "backend/graph/project_workflow.py"
+    },
+    {
+      "id": "backend/graph/reflection_node.py"
+    },
+    {
+      "id": "backend/graph/test_graph.py"
+    },
+    {
+      "id": "backend/graph/workflow.py"
+    },
+    {
+      "id": "backend/graph/__init__.py"
+    },
+    {
+      "id": "backend/knowledge/knowledge_manager.py"
+    },
+    {
+      "id": "backend/knowledge/embeddings/similarity.py"
+    },
+    {
+      "id": "backend/knowledge/extractor/api_extractor.py"
+    },
+    {
+      "id": "backend/knowledge/extractor/pattern_extractor.py"
+    },
+    {
+      "id": "backend/knowledge/extractor/project_extractor.py"
+    },
+    {
+      "id": "backend/knowledge/graph/graph_builder.py"
+    },
+    {
+      "id": "backend/knowledge/graph/graph_query.py"
+    },
+    {
+      "id": "backend/knowledge/graph/graph_visualizer.py"
+    },
+    {
+      "id": "backend/knowledge/graph/knowledge_graph.py"
+    },
+    {
+      "id": "backend/knowledge/memory/evolution_report.py"
+    },
+    {
+      "id": "backend/knowledge/memory/project_memory.py"
+    },
+    {
+      "id": "backend/knowledge/recommendation/recommender.py"
+    },
+    {
+      "id": "backend/learning/architecture_evolver.py"
+    },
+    {
+      "id": "backend/learning/best_practices.py"
+    },
+    {
+      "id": "backend/learning/confidence_scorer.py"
+    },
+    {
+      "id": "backend/learning/experience_db.py"
+    },
+    {
+      "id": "backend/learning/learning_memory.py"
+    },
+    {
+      "id": "backend/learning/learning_pipeline.py"
+    },
+    {
+      "id": "backend/learning/pattern_recognizer.py"
+    },
+    {
+      "id": "backend/learning/performance_tracker.py"
+    },
+    {
+      "id": "backend/learning/prompt_optimizer.py"
+    },
+    {
+      "id": "backend/learning/reflection_engine.py"
+    },
+    {
+      "id": "backend/memory/conversation_manager.py"
+    },
+    {
+      "id": "backend/memory/conversation_memory.py"
+    },
+    {
+      "id": "backend/memory/crud.py"
+    },
+    {
+      "id": "backend/memory/database.py"
+    },
+    {
+      "id": "backend/memory/memory_manager.py"
+    },
+    {
+      "id": "backend/memory/models.py"
+    },
+    {
+      "id": "backend/memory/project_memory.py"
+    },
+    {
+      "id": "backend/memory/vector_memory.py"
+    },
+    {
+      "id": "backend/memory/__init__.py"
+    },
+    {
+      "id": "backend/monitoring/alert_manager.py"
+    },
+    {
+      "id": "backend/monitoring/analytics.py"
+    },
+    {
+      "id": "backend/monitoring/autoscaler.py"
+    },
+    {
+      "id": "backend/monitoring/config.py"
+    },
+    {
+      "id": "backend/monitoring/health_checker.py"
+    },
+    {
+      "id": "backend/monitoring/incident_detector.py"
+    },
+    {
+      "id": "backend/monitoring/knowledge_base.py"
+    },
+    {
+      "id": "backend/monitoring/metrics_collector.py"
+    },
+    {
+      "id": "backend/monitoring/monitor.py"
+    },
+    {
+      "id": "backend/monitoring/predictor.py"
+    },
+    {
+      "id": "backend/monitoring/recovery_engine.py"
+    },
+    {
+      "id": "backend/monitoring/root_cause.py"
+    },
+    {
+      "id": "backend/monitoring/scheduler.py"
+    },
+    {
+      "id": "backend/monitoring/validator.py"
+    },
+    {
+      "id": "backend/plugins/dependency.py"
+    },
+    {
+      "id": "backend/plugins/events.py"
+    },
+    {
+      "id": "backend/plugins/installer.py"
+    },
+    {
+      "id": "backend/plugins/interfaces.py"
+    },
+    {
+      "id": "backend/plugins/loader.py"
+    },
+    {
+      "id": "backend/plugins/manager.py"
+    },
+    {
+      "id": "backend/plugins/monitor.py"
+    },
+    {
+      "id": "backend/plugins/permissions.py"
+    },
+    {
+      "id": "backend/plugins/registry.py"
+    },
+    {
+      "id": "backend/plugins/sandbox.py"
+    },
+    {
+      "id": "backend/project_intelligence/api_mapper.py"
+    },
+    {
+      "id": "backend/project_intelligence/component_mapper.py"
+    },
+    {
+      "id": "backend/project_intelligence/dependency_scanner.py"
+    },
+    {
+      "id": "backend/project_intelligence/file_summarizer.py"
+    },
+    {
+      "id": "backend/project_intelligence/impact_analyzer.py"
+    },
+    {
+      "id": "backend/project_intelligence/intelligence_manager.py"
+    },
+    {
+      "id": "backend/project_intelligence/schema_inferer.py"
+    },
+    {
+      "id": "backend/project_intelligence/smell_detector.py"
+    },
+    {
+      "id": "backend/project_manager/bug_backlog.py"
+    },
+    {
+      "id": "backend/project_manager/decision_store.py"
+    },
+    {
+      "id": "backend/project_manager/dependency_graph.py"
+    },
+    {
+      "id": "backend/project_manager/milestone_generator.py"
+    },
+    {
+      "id": "backend/project_manager/progress_tracker.py"
+    },
+    {
+      "id": "backend/project_manager/resume_engine.py"
+    },
+    {
+      "id": "backend/project_manager/sprint_planner.py"
+    },
+    {
+      "id": "backend/project_manager/standup_generator.py"
+    },
+    {
+      "id": "backend/project_manager/state_engine.py"
+    },
+    {
+      "id": "backend/project_manager/task_scheduler.py"
+    },
+    {
+      "id": "backend/rag/loader.py"
+    },
+    {
+      "id": "backend/rag/rag_pipeline.py"
+    },
+    {
+      "id": "backend/rag/retriever.py"
+    },
+    {
+      "id": "backend/rag/vector_store.py"
+    },
+    {
+      "id": "backend/rag/tests/test_embeddings.py"
+    },
+    {
+      "id": "backend/rag/tests/test_frontend.py"
+    },
+    {
+      "id": "backend/rag/tests/test_rag_agent.py"
+    },
+    {
+      "id": "backend/rag/tests/test_rag_pipeline.py"
+    },
+    {
+      "id": "backend/rag/tests/test_retriever.py"
+    },
+    {
+      "id": "backend/rag/tests/test_splitter.py"
+    },
+    {
+      "id": "backend/rag/tests/test_testing_agent.py"
+    },
+    {
+      "id": "backend/rag/tests/test_vector_store.py"
+    },
+    {
+      "id": "backend/rag/utils/embeddings.py"
+    },
+    {
+      "id": "backend/rag/utils/loader.py"
+    },
+    {
+      "id": "backend/rag/utils/retriever.py"
+    },
+    {
+      "id": "backend/rag/utils/splitter.py"
+    },
+    {
+      "id": "backend/rag/utils/vector_store.py"
+    },
+    {
+      "id": "backend/rag/utils/__init__.py"
+    },
+    {
+      "id": "backend/review/architecture_checker.py"
+    },
+    {
+      "id": "backend/review/debug.py"
+    },
+    {
+      "id": "backend/review/patch_applier.py"
+    },
+    {
+      "id": "backend/review/patch_generator.py"
+    },
+    {
+      "id": "backend/review/performance_checker.py"
+    },
+    {
+      "id": "backend/review/quality_score.py"
+    },
+    {
+      "id": "backend/review/report_generator.py"
+    },
+    {
+      "id": "backend/review/reviewer.py"
+    },
+    {
+      "id": "backend/review/security_checker.py"
+    },
+    {
+      "id": "backend/review/self_heal.py"
+    },
+    {
+      "id": "backend/review/test_parser.py"
+    },
+    {
+      "id": "backend/routes/chat.py"
+    },
+    {
+      "id": "backend/routes/generate.py"
+    },
+    {
+      "id": "backend/routes/memory.py"
+    },
+    {
+      "id": "backend/routes/plan.py"
+    },
+    {
+      "id": "backend/routes/project.py"
+    },
+    {
+      "id": "backend/routes/rag.py"
+    },
+    {
+      "id": "backend/routes/stream.py"
+    },
+    {
+      "id": "backend/routes/__init__.py"
+    },
+    {
+      "id": "backend/schemas/chat.py"
+    },
+    {
+      "id": "backend/schemas/__init__.py"
+    },
+    {
+      "id": "backend/services/llm.py"
+    },
+    {
+      "id": "backend/services/ollama_service.py"
+    },
+    {
+      "id": "backend/services/reflection_service.py"
+    },
+    {
+      "id": "backend/services/stream_service.py"
+    },
+    {
+      "id": "backend/services/zip_service.py"
+    },
+    {
+      "id": "backend/services/__init__.py"
+    },
+    {
+      "id": "backend/services/deployment/bundle_exporter.py"
+    },
+    {
+      "id": "backend/services/deployment/compose_generator.py"
+    },
+    {
+      "id": "backend/services/deployment/deployment_report.py"
+    },
+    {
+      "id": "backend/services/deployment/docker_generator.py"
+    },
+    {
+      "id": "backend/services/deployment/env_detector.py"
+    },
+    {
+      "id": "backend/services/deployment/fly_generator.py"
+    },
+    {
+      "id": "backend/services/deployment/github_actions.py"
+    },
+    {
+      "id": "backend/services/deployment/huggingface_generator.py"
+    },
+    {
+      "id": "backend/services/deployment/netlify_generator.py"
+    },
+    {
+      "id": "backend/services/deployment/railway_generator.py"
+    },
+    {
+      "id": "backend/services/deployment/render_generator.py"
+    },
+    {
+      "id": "backend/services/deployment/validator.py"
+    },
+    {
+      "id": "backend/services/deployment/vercel_generator.py"
+    },
+    {
+      "id": "backend/utils/cache.py"
+    },
+    {
+      "id": "backend/utils/prompt_optimizer.py"
+    },
+    {
+      "id": "backend/utils/retry.py"
+    },
+    {
+      "id": "backend/utils/summarizer.py"
+    },
+    {
+      "id": "backend/utils/timer.py"
+    },
+    {
+      "id": "backend/validation/api_checker.py"
+    },
+    {
+      "id": "backend/validation/architecture_checker.py"
+    },
+    {
+      "id": "backend/validation/database_checker.py"
+    },
+    {
+      "id": "backend/validation/dependency_checker.py"
+    },
+    {
+      "id": "backend/validation/documentation_checker.py"
+    },
+    {
+      "id": "backend/validation/frontend_checker.py"
+    },
+    {
+      "id": "backend/validation/models.py"
+    },
+    {
+      "id": "backend/validation/performance_checker.py"
+    },
+    {
+      "id": "backend/validation/quality_score.py"
+    },
+    {
+      "id": "backend/validation/security_checker.py"
+    },
+    {
+      "id": "backend/validation/syntax_checker.py"
+    },
+    {
+      "id": "backend/validation/utils.py"
+    },
+    {
+      "id": "backend/validation/validator.py"
+    },
+    {
+      "id": "backend/validators/project_validator.py"
+    },
+    {
+      "id": "backend/workflow/file_writer.py"
+    },
+    {
+      "id": "backend/workflow/project_builder.py"
+    },
+    {
+      "id": "frontend/vite.config.js"
+    },
+    {
+      "id": "frontend/src/App.jsx"
+    },
+    {
+      "id": "frontend/src/main.jsx"
+    },
+    {
+      "id": "frontend/src/components/ChatBox.jsx"
+    },
+    {
+      "id": "frontend/src/components/ChatHeader.jsx"
+    },
+    {
+      "id": "frontend/src/components/CodeBlock.jsx"
+    },
+    {
+      "id": "frontend/src/components/CopyButton.jsx"
+    },
+    {
+      "id": "frontend/src/components/DownloadButton.jsx"
+    },
+    {
+      "id": "frontend/src/components/EmptyState.jsx"
+    },
+    {
+      "id": "frontend/src/components/ErrorMessage.jsx"
+    },
+    {
+      "id": "frontend/src/components/FileExplorer.jsx"
+    },
+    {
+      "id": "frontend/src/components/InputBar.jsx"
+    },
+    {
+      "id": "frontend/src/components/Loading.jsx"
+    },
+    {
+      "id": "frontend/src/components/Message.jsx"
+    },
+    {
+      "id": "frontend/src/components/MetricsDashboard.jsx"
+    },
+    {
+      "id": "frontend/src/components/Navbar.jsx"
+    },
+    {
+      "id": "frontend/src/components/PlannerCard.jsx"
+    },
+    {
+      "id": "frontend/src/components/RagUploadPanel.jsx"
+    },
+    {
+      "id": "frontend/src/components/ReflectionDashboard.jsx"
+    },
+    {
+      "id": "frontend/src/components/Sidebar.jsx"
+    },
+    {
+      "id": "frontend/src/components/SuggestedPrompts.jsx"
+    },
+    {
+      "id": "frontend/src/components/Toast.jsx"
+    },
+    {
+      "id": "frontend/src/components/TypingIndicator.jsx"
+    },
+    {
+      "id": "frontend/src/layouts/MainLayout.jsx"
+    },
+    {
+      "id": "frontend/src/pages/Dashboard.jsx"
+    },
+    {
+      "id": "frontend/src/pages/Home.jsx"
+    },
+    {
+      "id": "frontend/src/pages/LearningDashboard.jsx"
+    },
+    {
+      "id": "frontend/src/pages/Planner.jsx"
+    },
+    {
+      "id": "frontend/src/pages/PluginsDashboard.jsx"
+    },
+    {
+      "id": "frontend/src/pages/ProjectGenerator.jsx"
+    },
+    {
+      "id": "frontend/src/services/api.js"
+    },
+    {
+      "id": "frontend/src/services/conversationApi.js"
+    },
+    {
+      "id": "frontend/src/services/plannerApi.js"
+    },
+    {
+      "id": "frontend/src/services/projectApi.js"
+    },
+    {
+      "id": "frontend/src/services/ragApi.js"
+    },
+    {
+      "id": "frontend/src/services/stream.js"
+    },
+    {
+      "id": "frontend/src/utils/chatStorage.js"
+    },
+    {
+      "id": "frontend/src/utils/plannerStorage.js"
+    },
+    {
+      "id": "tests/generate_optimization_reports.py"
+    },
+    {
+      "id": "tests/test_api_checker.py"
+    },
+    {
+      "id": "tests/test_cache.py"
+    },
+    {
+      "id": "tests/test_consensus.py"
+    },
+    {
+      "id": "tests/test_database_checker.py"
+    },
+    {
+      "id": "tests/test_day11_workflow.py"
+    },
+    {
+      "id": "tests/test_day12_memory.py"
+    },
+    {
+      "id": "tests/test_day13_collaboration.py"
+    },
+    {
+      "id": "tests/test_day14_efficiency.py"
+    },
+    {
+      "id": "tests/test_day22_generators.py"
+    },
+    {
+      "id": "tests/test_day23_self_heal.py"
+    },
+    {
+      "id": "tests/test_debate.py"
+    },
+    {
+      "id": "tests/test_debug.py"
+    },
+    {
+      "id": "tests/test_dependency.py"
+    },
+    {
+      "id": "tests/test_dependency_checker.py"
+    },
+    {
+      "id": "tests/test_deployment.py"
+    },
+    {
+      "id": "tests/test_evolution.py"
+    },
+    {
+      "id": "tests/test_frontend_checker.py"
+    },
+    {
+      "id": "tests/test_installation.py"
+    },
+    {
+      "id": "tests/test_knowledge.py"
+    },
+    {
+      "id": "tests/test_learning.py"
+    },
+    {
+      "id": "tests/test_lifecycle.py"
+    },
+    {
+      "id": "tests/test_monitor.py"
+    },
+    {
+      "id": "tests/test_monitoring.py"
+    },
+    {
+      "id": "tests/test_parallel.py"
+    },
+    {
+      "id": "tests/test_patch_applier.py"
+    },
+    {
+      "id": "tests/test_patch_generator.py"
+    },
+    {
+      "id": "tests/test_performance.py"
+    },
+    {
+      "id": "tests/test_performance_checker.py"
+    },
+    {
+      "id": "tests/test_permissions.py"
+    },
+    {
+      "id": "tests/test_plugin_loader.py"
+    },
+    {
+      "id": "tests/test_plugin_registry.py"
+    },
+    {
+      "id": "tests/test_project_builder.py"
+    },
+    {
+      "id": "tests/test_project_intelligence.py"
+    },
+    {
+      "id": "tests/test_project_manager.py"
+    },
+    {
+      "id": "tests/test_quality_score.py"
+    },
+    {
+      "id": "tests/test_rag_routes.py"
+    },
+    {
+      "id": "tests/test_reflection.py"
+    },
+    {
+      "id": "tests/test_retry.py"
+    },
+    {
+      "id": "tests/test_reviewer.py"
+    },
+    {
+      "id": "tests/test_security_checker.py"
+    },
+    {
+      "id": "tests/test_self_heal.py"
+    },
+    {
+      "id": "tests/test_syntax_checker.py"
+    },
+    {
+      "id": "tests/test_test_parser.py"
+    },
+    {
+      "id": "tests/test_validation.py"
+    },
+    {
+      "id": "tests/test_validator.py"
+    },
+    {
+      "id": "tests/test_versioning.py"
+    },
+    {
+      "id": "tests/test_workflow.py"
+    },
+    {
+      "id": "tests/verify_debate_scenarios.py"
+    },
+    {
+      "id": "tests/verify_evolution_scenarios.py"
+    },
+    {
+      "id": "tests/verify_knowledge_scenarios.py"
+    },
+    {
+      "id": "tests/verify_learning_scenarios.py"
+    },
+    {
+      "id": "tests/verify_plugins_scenarios.py"
+    },
+    {
+      "id": "tests/verify_project_intelligence.py"
+    },
+    {
+      "id": "tests/verify_project_manager.py"
+    },
+    {
+      "id": "tests/verify_sre_scenarios.py"
+    }
+  ],
+  "links": [
+    {
+      "source": "backend/main.py",
+      "target": "sys"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "fastapi.middleware.cors"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "pydantic"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "backend.graph.workflow"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "backend.graph.parallel_workflow"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "backend.routes.chat"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "backend.routes.rag"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "backend.routes.rag"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "backend.routes.plan"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "backend.routes.memory"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "backend.routes.project"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "backend.dashboard.monitoring_dashboard"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "backend.dashboard.learning_dashboard"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "backend.dashboard.evolution_dashboard"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "fastapi.middleware.gzip"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "backend.api.plugins"
+    },
+    {
+      "source": "backend/main.py",
+      "target": "backend.dashboard.monitoring_dashboard"
+    },
+    {
+      "source": "backend/sitecustomize.py",
+      "target": "__future__"
+    },
+    {
+      "source": "backend/sitecustomize.py",
+      "target": "sys"
+    },
+    {
+      "source": "backend/sitecustomize.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/test_graph.py",
+      "target": "backend.graph.workflow"
+    },
+    {
+      "source": "backend/test_ollama.py",
+      "target": "backend.services.ollama_service"
+    },
+    {
+      "source": "backend/agents/architect_agent.py",
+      "target": "backend.agents.base_agent"
+    },
+    {
+      "source": "backend/agents/backend_agent.py",
+      "target": "backend.agents.base_agent"
+    },
+    {
+      "source": "backend/agents/backend_agent.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "backend/agents/backend_agent.py",
+      "target": "backend.utils.summarizer"
+    },
+    {
+      "source": "backend/agents/backend_agent.py",
+      "target": "backend.utils.summarizer"
+    },
+    {
+      "source": "backend/agents/base_agent.py",
+      "target": "backend.services.llm"
+    },
+    {
+      "source": "backend/agents/coding_agent.py",
+      "target": "backend.agents.base_agent"
+    },
+    {
+      "source": "backend/agents/coding_agent.py",
+      "target": "backend.services.llm"
+    },
+    {
+      "source": "backend/agents/database_agent.py",
+      "target": "backend.agents.base_agent"
+    },
+    {
+      "source": "backend/agents/database_agent.py",
+      "target": "backend.utils.summarizer"
+    },
+    {
+      "source": "backend/agents/database_agent.py",
+      "target": "backend.utils.summarizer"
+    },
+    {
+      "source": "backend/agents/debug_agent.py",
+      "target": "backend.agents.base_agent"
+    },
+    {
+      "source": "backend/agents/deployment_agent.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/agents/deployment_agent.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/agents/deployment_agent.py",
+      "target": "backend.agents.base_agent"
+    },
+    {
+      "source": "backend/agents/deployment_agent.py",
+      "target": "backend.services.deployment.docker_generator"
+    },
+    {
+      "source": "backend/agents/deployment_agent.py",
+      "target": "backend.services.deployment.compose_generator"
+    },
+    {
+      "source": "backend/agents/deployment_agent.py",
+      "target": "backend.services.deployment.render_generator"
+    },
+    {
+      "source": "backend/agents/deployment_agent.py",
+      "target": "backend.services.deployment.railway_generator"
+    },
+    {
+      "source": "backend/agents/deployment_agent.py",
+      "target": "backend.services.deployment.vercel_generator"
+    },
+    {
+      "source": "backend/agents/deployment_agent.py",
+      "target": "backend.services.deployment.netlify_generator"
+    },
+    {
+      "source": "backend/agents/deployment_agent.py",
+      "target": "backend.services.deployment.fly_generator"
+    },
+    {
+      "source": "backend/agents/deployment_agent.py",
+      "target": "backend.services.deployment.huggingface_generator"
+    },
+    {
+      "source": "backend/agents/deployment_agent.py",
+      "target": "backend.services.deployment.github_actions"
+    },
+    {
+      "source": "backend/agents/deployment_agent.py",
+      "target": "backend.services.deployment.env_detector"
+    },
+    {
+      "source": "backend/agents/deployment_agent.py",
+      "target": "backend.services.deployment.validator"
+    },
+    {
+      "source": "backend/agents/deployment_agent.py",
+      "target": "backend.services.deployment.bundle_exporter"
+    },
+    {
+      "source": "backend/agents/documentation.py",
+      "target": "backend.agents.base_agent"
+    },
+    {
+      "source": "backend/agents/explanation_agent.py",
+      "target": "backend.agents.base_agent"
+    },
+    {
+      "source": "backend/agents/factory.py",
+      "target": "backend.agents.coding_agent"
+    },
+    {
+      "source": "backend/agents/factory.py",
+      "target": "backend.agents.debug_agent"
+    },
+    {
+      "source": "backend/agents/factory.py",
+      "target": "backend.agents.resume_agent"
+    },
+    {
+      "source": "backend/agents/factory.py",
+      "target": "backend.agents.explanation_agent"
+    },
+    {
+      "source": "backend/agents/factory.py",
+      "target": "backend.agents.planner_agent"
+    },
+    {
+      "source": "backend/agents/factory.py",
+      "target": "backend.agents.architect_agent"
+    },
+    {
+      "source": "backend/agents/factory.py",
+      "target": "backend.agents.reviewer_agent"
+    },
+    {
+      "source": "backend/agents/factory.py",
+      "target": "backend.agents.rag_agent"
+    },
+    {
+      "source": "backend/agents/factory.py",
+      "target": "backend.agents.testing_agent"
+    },
+    {
+      "source": "backend/agents/factory.py",
+      "target": "backend.agents.frontend_agent"
+    },
+    {
+      "source": "backend/agents/frontend_agent.py",
+      "target": "backend.agents.base_agent"
+    },
+    {
+      "source": "backend/agents/frontend_agent.py",
+      "target": "React from"
+    },
+    {
+      "source": "backend/agents/github_agent.py",
+      "target": "backend.agents.base_agent"
+    },
+    {
+      "source": "backend/agents/planner_agent.py",
+      "target": "backend.agents.base_agent"
+    },
+    {
+      "source": "backend/agents/rag_agent.py",
+      "target": "backend.rag.rag_pipeline"
+    },
+    {
+      "source": "backend/agents/reflection_agent.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/agents/reflection_agent.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/agents/reflection_agent.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/agents/reflection_agent.py",
+      "target": "backend.agents.base_agent"
+    },
+    {
+      "source": "backend/agents/resume_agent.py",
+      "target": "backend.agents.base_agent"
+    },
+    {
+      "source": "backend/agents/reviewer_agent.py",
+      "target": "backend.agents.base_agent"
+    },
+    {
+      "source": "backend/agents/router_agent.py",
+      "target": "backend.agents.factory"
+    },
+    {
+      "source": "backend/agents/testing_agent.py",
+      "target": "backend.agents.base_agent"
+    },
+    {
+      "source": "backend/api/plugins.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/api/plugins.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "backend/api/plugins.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/api/plugins.py",
+      "target": "backend.plugins.manager"
+    },
+    {
+      "source": "backend/dashboard/evolution_dashboard.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/dashboard/evolution_dashboard.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "backend/dashboard/evolution_dashboard.py",
+      "target": "backend.evolution.evolution_pipeline"
+    },
+    {
+      "source": "backend/dashboard/evolution_dashboard.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/dashboard/evolution_dashboard.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/dashboard/learning_dashboard.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/dashboard/learning_dashboard.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/dashboard/learning_dashboard.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "backend/dashboard/learning_dashboard.py",
+      "target": "backend.learning.learning_pipeline"
+    },
+    {
+      "source": "backend/dashboard/monitoring_dashboard.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/dashboard/monitoring_dashboard.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/dashboard/monitoring_dashboard.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "backend/dashboard/monitoring_dashboard.py",
+      "target": "fastapi.responses"
+    },
+    {
+      "source": "backend/dashboard/monitoring_dashboard.py",
+      "target": "backend.monitoring.monitor"
+    },
+    {
+      "source": "backend/dashboard/monitoring_dashboard.py",
+      "target": "backend.monitoring.scheduler"
+    },
+    {
+      "source": "backend/dashboard/monitoring_dashboard.py",
+      "target": "backend.monitoring.config"
+    },
+    {
+      "source": "backend/debate/consensus.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/debate/consensus.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/debate/critique.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/debate/critique.py",
+      "target": "backend.services.llm"
+    },
+    {
+      "source": "backend/debate/logger.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/debate/logger.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/debate/logger.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/debate/memory.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/debate/memory.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/debate/memory.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/debate/memory.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/debate/moderator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/debate/moderator.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/debate/orchestrator.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "backend/debate/orchestrator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/debate/orchestrator.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/debate/orchestrator.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/debate/orchestrator.py",
+      "target": "backend.debate.logger"
+    },
+    {
+      "source": "backend/debate/orchestrator.py",
+      "target": "backend.debate.memory"
+    },
+    {
+      "source": "backend/debate/orchestrator.py",
+      "target": "backend.debate.voting"
+    },
+    {
+      "source": "backend/debate/orchestrator.py",
+      "target": "backend.debate.critique"
+    },
+    {
+      "source": "backend/debate/orchestrator.py",
+      "target": "backend.debate.moderator"
+    },
+    {
+      "source": "backend/debate/orchestrator.py",
+      "target": "backend.debate.consensus"
+    },
+    {
+      "source": "backend/debate/orchestrator.py",
+      "target": "backend.services.llm"
+    },
+    {
+      "source": "backend/debate/orchestrator.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/debate/voting.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/debate/voting.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/evolution/benchmarker.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/evolution/benchmarker.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/evolution/benchmarker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/evolution/benchmarker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/evolution/benchmarker.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/evolution/evolution_pipeline.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/evolution/evolution_pipeline.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/evolution/evolution_pipeline.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/evolution/evolution_pipeline.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/evolution/evolution_pipeline.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/evolution/evolution_pipeline.py",
+      "target": "backend.evolution.project_scorer"
+    },
+    {
+      "source": "backend/evolution/evolution_pipeline.py",
+      "target": "backend.evolution.security_inspector"
+    },
+    {
+      "source": "backend/evolution/evolution_pipeline.py",
+      "target": "backend.evolution.refactoring_agent"
+    },
+    {
+      "source": "backend/evolution/evolution_pipeline.py",
+      "target": "backend.evolution.benchmarker"
+    },
+    {
+      "source": "backend/evolution/project_scorer.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/evolution/project_scorer.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/evolution/project_scorer.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/evolution/project_scorer.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/evolution/refactoring_agent.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/evolution/refactoring_agent.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/evolution/refactoring_agent.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/evolution/refactoring_agent.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/evolution/security_inspector.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/evolution/security_inspector.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/evolution/security_inspector.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/evolution/security_inspector.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/generators/compose_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/generators/dependency_generator.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/generators/dependency_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/generators/dependency_generator.py",
+      "target": "dataclasses"
+    },
+    {
+      "source": "backend/generators/docker_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/generators/docker_generator.py",
+      "target": "backend.config"
+    },
+    {
+      "source": "backend/generators/env_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/generators/gitignore_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/generators/license_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/generators/license_generator.py",
+      "target": "datetime"
+    },
+    {
+      "source": "backend/generators/package_generator.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/generators/package_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/generators/package_generator.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "backend.generators.dependency_generator"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "backend.generators.package_generator"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "backend.generators.requirements_generator"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "backend.generators.docker_generator"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "backend.generators.compose_generator"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "backend.generators.env_generator"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "backend.generators.readme_generator"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "backend.generators.gitignore_generator"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "backend.generators.license_generator"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "backend.validators.project_validator"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "backend.services.zip_service"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "backend.workflow.project_builder"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "backend.workflow.file_writer"
+    },
+    {
+      "source": "backend/generators/project_generator.py",
+      "target": "backend.config"
+    },
+    {
+      "source": "backend/generators/readme_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/generators/requirements_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/graph/debate_graph.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/graph/debate_graph.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/graph/debate_graph.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/graph/debate_graph.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "langgraph.graph"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.graph.project_state"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.agents.planner_agent"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.agents.architect_agent"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.agents.frontend_agent"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.agents.backend_agent"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.agents.database_agent"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.agents.documentation"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.agents.testing_agent"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.agents.reviewer_agent"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.agents.deployment_agent"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.generators.project_generator"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.review.self_heal"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.validation.validator"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.graph.reflection_node"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.utils.timer"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.graph.profiler"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.utils.cache"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.utils.retry"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.utils.summarizer"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.services.reflection_service"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.debate.orchestrator"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.graph.debate_graph"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "React from"
+    },
+    {
+      "source": "backend/graph/parallel_workflow.py",
+      "target": "backend.generators.project_generator"
+    },
+    {
+      "source": "backend/graph/profiler.py",
+      "target": "threading"
+    },
+    {
+      "source": "backend/graph/project_state.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/graph/project_workflow.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "backend/graph/project_workflow.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/graph/project_workflow.py",
+      "target": "langgraph.graph"
+    },
+    {
+      "source": "backend/graph/project_workflow.py",
+      "target": "backend.graph.project_state"
+    },
+    {
+      "source": "backend/graph/project_workflow.py",
+      "target": "backend.agents.planner_agent"
+    },
+    {
+      "source": "backend/graph/project_workflow.py",
+      "target": "backend.agents.architect_agent"
+    },
+    {
+      "source": "backend/graph/project_workflow.py",
+      "target": "backend.agents.frontend_agent"
+    },
+    {
+      "source": "backend/graph/project_workflow.py",
+      "target": "backend.agents.backend_agent"
+    },
+    {
+      "source": "backend/graph/project_workflow.py",
+      "target": "backend.agents.database_agent"
+    },
+    {
+      "source": "backend/graph/project_workflow.py",
+      "target": "backend.agents.documentation"
+    },
+    {
+      "source": "backend/graph/project_workflow.py",
+      "target": "backend.agents.testing_agent"
+    },
+    {
+      "source": "backend/graph/project_workflow.py",
+      "target": "backend.agents.reviewer_agent"
+    },
+    {
+      "source": "backend/graph/project_workflow.py",
+      "target": "backend.agents.github_agent"
+    },
+    {
+      "source": "backend/graph/project_workflow.py",
+      "target": "backend.services.llm"
+    },
+    {
+      "source": "backend/graph/reflection_node.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/graph/reflection_node.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/graph/reflection_node.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/graph/reflection_node.py",
+      "target": "backend.graph.project_state"
+    },
+    {
+      "source": "backend/graph/reflection_node.py",
+      "target": "backend.agents.reflection_agent"
+    },
+    {
+      "source": "backend/graph/reflection_node.py",
+      "target": "backend.services.reflection_service"
+    },
+    {
+      "source": "backend/graph/reflection_node.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/graph/test_graph.py",
+      "target": "backend.graph.workflow"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "langgraph.graph"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.agents.planner_agent"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.agents.architect_agent"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.agents.router_agent"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.agents.coding_agent"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.agents.debug_agent"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.agents.resume_agent"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.agents.explanation_agent"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.agents.reviewer_agent"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.memory.memory_manager"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.agents.testing_agent"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.agents.frontend_agent"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.agents.deployment_agent"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.graph.parallel_workflow"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.utils.summarizer"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.utils.summarizer"
+    },
+    {
+      "source": "backend/graph/workflow.py",
+      "target": "backend.utils.summarizer"
+    },
+    {
+      "source": "backend/knowledge/knowledge_manager.py",
+      "target": "sqlite3"
+    },
+    {
+      "source": "backend/knowledge/knowledge_manager.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/knowledge/knowledge_manager.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/knowledge/knowledge_manager.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/knowledge/knowledge_manager.py",
+      "target": "backend.knowledge.memory.project_memory"
+    },
+    {
+      "source": "backend/knowledge/knowledge_manager.py",
+      "target": "backend.knowledge.graph.knowledge_graph"
+    },
+    {
+      "source": "backend/knowledge/knowledge_manager.py",
+      "target": "backend.knowledge.graph.graph_builder"
+    },
+    {
+      "source": "backend/knowledge/knowledge_manager.py",
+      "target": "backend.knowledge.graph.graph_query"
+    },
+    {
+      "source": "backend/knowledge/knowledge_manager.py",
+      "target": "backend.knowledge.graph.graph_visualizer"
+    },
+    {
+      "source": "backend/knowledge/knowledge_manager.py",
+      "target": "backend.knowledge.extractor.project_extractor"
+    },
+    {
+      "source": "backend/knowledge/knowledge_manager.py",
+      "target": "backend.knowledge.extractor.api_extractor"
+    },
+    {
+      "source": "backend/knowledge/knowledge_manager.py",
+      "target": "backend.knowledge.extractor.pattern_extractor"
+    },
+    {
+      "source": "backend/knowledge/knowledge_manager.py",
+      "target": "backend.knowledge.embeddings.similarity"
+    },
+    {
+      "source": "backend/knowledge/knowledge_manager.py",
+      "target": "backend.knowledge.recommendation.recommender"
+    },
+    {
+      "source": "backend/knowledge/knowledge_manager.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/knowledge/embeddings/similarity.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/knowledge/embeddings/similarity.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/knowledge/extractor/api_extractor.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/knowledge/extractor/api_extractor.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/knowledge/extractor/api_extractor.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/knowledge/extractor/api_extractor.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/knowledge/extractor/pattern_extractor.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/knowledge/extractor/pattern_extractor.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/knowledge/extractor/pattern_extractor.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/knowledge/extractor/pattern_extractor.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/knowledge/extractor/project_extractor.py",
+      "target": "os"
+    },
+    {
+      "source": "backend/knowledge/extractor/project_extractor.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/knowledge/extractor/project_extractor.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/knowledge/extractor/project_extractor.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/knowledge/extractor/project_extractor.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/knowledge/graph/graph_builder.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/knowledge/graph/graph_builder.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/knowledge/graph/graph_builder.py",
+      "target": "backend.knowledge.graph.knowledge_graph"
+    },
+    {
+      "source": "backend/knowledge/graph/graph_query.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/knowledge/graph/graph_query.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/knowledge/graph/graph_query.py",
+      "target": "collections"
+    },
+    {
+      "source": "backend/knowledge/graph/graph_query.py",
+      "target": "backend.knowledge.graph.knowledge_graph"
+    },
+    {
+      "source": "backend/knowledge/graph/graph_visualizer.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/knowledge/graph/graph_visualizer.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/knowledge/graph/graph_visualizer.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/knowledge/graph/graph_visualizer.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/knowledge/graph/graph_visualizer.py",
+      "target": "backend.knowledge.graph.knowledge_graph"
+    },
+    {
+      "source": "backend/knowledge/graph/knowledge_graph.py",
+      "target": "sqlite3"
+    },
+    {
+      "source": "backend/knowledge/graph/knowledge_graph.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/knowledge/graph/knowledge_graph.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/knowledge/graph/knowledge_graph.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/knowledge/memory/evolution_report.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/knowledge/memory/evolution_report.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/knowledge/memory/evolution_report.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/knowledge/memory/evolution_report.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/knowledge/memory/project_memory.py",
+      "target": "sqlite3"
+    },
+    {
+      "source": "backend/knowledge/memory/project_memory.py",
+      "target": "hashlib"
+    },
+    {
+      "source": "backend/knowledge/memory/project_memory.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/knowledge/memory/project_memory.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/knowledge/memory/project_memory.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/knowledge/memory/project_memory.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/knowledge/recommendation/recommender.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/knowledge/recommendation/recommender.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/learning/architecture_evolver.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/learning/architecture_evolver.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/learning/architecture_evolver.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/learning/architecture_evolver.py",
+      "target": "backend.learning.learning_memory"
+    },
+    {
+      "source": "backend/learning/best_practices.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/learning/best_practices.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/learning/best_practices.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/learning/confidence_scorer.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/learning/confidence_scorer.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/learning/experience_db.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/learning/experience_db.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/learning/experience_db.py",
+      "target": "backend.learning.learning_memory"
+    },
+    {
+      "source": "backend/learning/learning_memory.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/learning/learning_memory.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/learning/learning_memory.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/learning/learning_memory.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/learning/learning_pipeline.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/learning/learning_pipeline.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/learning/learning_pipeline.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/learning/learning_pipeline.py",
+      "target": "backend.learning.learning_memory"
+    },
+    {
+      "source": "backend/learning/learning_pipeline.py",
+      "target": "backend.learning.experience_db"
+    },
+    {
+      "source": "backend/learning/learning_pipeline.py",
+      "target": "backend.learning.pattern_recognizer"
+    },
+    {
+      "source": "backend/learning/learning_pipeline.py",
+      "target": "backend.learning.prompt_optimizer"
+    },
+    {
+      "source": "backend/learning/learning_pipeline.py",
+      "target": "backend.learning.best_practices"
+    },
+    {
+      "source": "backend/learning/learning_pipeline.py",
+      "target": "backend.learning.performance_tracker"
+    },
+    {
+      "source": "backend/learning/learning_pipeline.py",
+      "target": "backend.learning.architecture_evolver"
+    },
+    {
+      "source": "backend/learning/learning_pipeline.py",
+      "target": "backend.learning.confidence_scorer"
+    },
+    {
+      "source": "backend/learning/learning_pipeline.py",
+      "target": "backend.learning.reflection_engine"
+    },
+    {
+      "source": "backend/learning/pattern_recognizer.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/learning/pattern_recognizer.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/learning/pattern_recognizer.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/learning/pattern_recognizer.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/learning/pattern_recognizer.py",
+      "target": "backend.learning.learning_memory"
+    },
+    {
+      "source": "backend/learning/performance_tracker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/learning/performance_tracker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/learning/performance_tracker.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/learning/prompt_optimizer.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/learning/prompt_optimizer.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/learning/prompt_optimizer.py",
+      "target": "backend.services.llm"
+    },
+    {
+      "source": "backend/learning/reflection_engine.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/learning/reflection_engine.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/learning/reflection_engine.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/learning/reflection_engine.py",
+      "target": "backend.services.llm"
+    },
+    {
+      "source": "backend/memory/conversation_manager.py",
+      "target": "__future__"
+    },
+    {
+      "source": "backend/memory/conversation_manager.py",
+      "target": "dataclasses"
+    },
+    {
+      "source": "backend/memory/conversation_manager.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/memory/conversation_manager.py",
+      "target": "backend.memory.crud"
+    },
+    {
+      "source": "backend/memory/conversation_manager.py",
+      "target": "backend.memory.models"
+    },
+    {
+      "source": "backend/memory/conversation_memory.py",
+      "target": "__future__"
+    },
+    {
+      "source": "backend/memory/conversation_memory.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/memory/conversation_memory.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/memory/conversation_memory.py",
+      "target": "backend.memory.conversation_manager"
+    },
+    {
+      "source": "backend/memory/conversation_memory.py",
+      "target": "backend.memory.crud"
+    },
+    {
+      "source": "backend/memory/conversation_memory.py",
+      "target": "backend.memory.database"
+    },
+    {
+      "source": "backend/memory/crud.py",
+      "target": "__future__"
+    },
+    {
+      "source": "backend/memory/crud.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/memory/crud.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/memory/crud.py",
+      "target": "datetime"
+    },
+    {
+      "source": "backend/memory/crud.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/memory/crud.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/memory/crud.py",
+      "target": "uuid"
+    },
+    {
+      "source": "backend/memory/crud.py",
+      "target": "backend.memory.database"
+    },
+    {
+      "source": "backend/memory/crud.py",
+      "target": "backend.memory.models"
+    },
+    {
+      "source": "backend/memory/database.py",
+      "target": "__future__"
+    },
+    {
+      "source": "backend/memory/database.py",
+      "target": "sqlite3"
+    },
+    {
+      "source": "backend/memory/database.py",
+      "target": "contextlib"
+    },
+    {
+      "source": "backend/memory/database.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/memory/database.py",
+      "target": "threading"
+    },
+    {
+      "source": "backend/memory/memory_manager.py",
+      "target": "__future__"
+    },
+    {
+      "source": "backend/memory/memory_manager.py",
+      "target": "dataclasses"
+    },
+    {
+      "source": "backend/memory/memory_manager.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/memory/memory_manager.py",
+      "target": "concurrent.futures"
+    },
+    {
+      "source": "backend/memory/memory_manager.py",
+      "target": "backend.config"
+    },
+    {
+      "source": "backend/memory/memory_manager.py",
+      "target": "backend.memory.conversation_memory"
+    },
+    {
+      "source": "backend/memory/memory_manager.py",
+      "target": "backend.memory.project_memory"
+    },
+    {
+      "source": "backend/memory/memory_manager.py",
+      "target": "backend.memory.vector_memory"
+    },
+    {
+      "source": "backend/memory/models.py",
+      "target": "__future__"
+    },
+    {
+      "source": "backend/memory/models.py",
+      "target": "dataclasses"
+    },
+    {
+      "source": "backend/memory/models.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/memory/project_memory.py",
+      "target": "__future__"
+    },
+    {
+      "source": "backend/memory/project_memory.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/memory/project_memory.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/memory/project_memory.py",
+      "target": "copy"
+    },
+    {
+      "source": "backend/memory/project_memory.py",
+      "target": "datetime"
+    },
+    {
+      "source": "backend/memory/project_memory.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/memory/project_memory.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/memory/vector_memory.py",
+      "target": "__future__"
+    },
+    {
+      "source": "backend/memory/vector_memory.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/memory/vector_memory.py",
+      "target": "math"
+    },
+    {
+      "source": "backend/memory/vector_memory.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/memory/vector_memory.py",
+      "target": "collections"
+    },
+    {
+      "source": "backend/memory/vector_memory.py",
+      "target": "datetime"
+    },
+    {
+      "source": "backend/memory/vector_memory.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/memory/vector_memory.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/monitoring/alert_manager.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/monitoring/alert_manager.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/monitoring/alert_manager.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/monitoring/analytics.py",
+      "target": "csv"
+    },
+    {
+      "source": "backend/monitoring/analytics.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/monitoring/analytics.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/monitoring/analytics.py",
+      "target": "io"
+    },
+    {
+      "source": "backend/monitoring/analytics.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/monitoring/autoscaler.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/monitoring/autoscaler.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/monitoring/config.py",
+      "target": "pydantic"
+    },
+    {
+      "source": "backend/monitoring/config.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/monitoring/health_checker.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/monitoring/health_checker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/monitoring/health_checker.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "backend/monitoring/health_checker.py",
+      "target": "httpx"
+    },
+    {
+      "source": "backend/monitoring/health_checker.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/monitoring/incident_detector.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/monitoring/incident_detector.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/monitoring/incident_detector.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/monitoring/incident_detector.py",
+      "target": "pydantic"
+    },
+    {
+      "source": "backend/monitoring/knowledge_base.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/monitoring/knowledge_base.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/monitoring/knowledge_base.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/monitoring/knowledge_base.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/monitoring/metrics_collector.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/monitoring/metrics_collector.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/monitoring/metrics_collector.py",
+      "target": "psutil"
+    },
+    {
+      "source": "backend/monitoring/metrics_collector.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/monitoring/metrics_collector.py",
+      "target": "collections"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "backend.monitoring.config"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "backend.monitoring.metrics_collector"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "backend.monitoring.health_checker"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "backend.monitoring.incident_detector"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "backend.monitoring.root_cause"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "backend.monitoring.recovery_engine"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "backend.monitoring.validator"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "backend.monitoring.autoscaler"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "backend.monitoring.predictor"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "backend.monitoring.alert_manager"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "backend.monitoring.knowledge_base"
+    },
+    {
+      "source": "backend/monitoring/monitor.py",
+      "target": "backend.monitoring.analytics"
+    },
+    {
+      "source": "backend/monitoring/predictor.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/monitoring/predictor.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/monitoring/predictor.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/monitoring/recovery_engine.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/monitoring/recovery_engine.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/monitoring/recovery_engine.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/monitoring/recovery_engine.py",
+      "target": "backend.monitoring.knowledge_base"
+    },
+    {
+      "source": "backend/monitoring/root_cause.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/monitoring/root_cause.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/monitoring/root_cause.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/monitoring/root_cause.py",
+      "target": "backend.services.llm"
+    },
+    {
+      "source": "backend/monitoring/scheduler.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "backend/monitoring/scheduler.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/monitoring/scheduler.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/monitoring/scheduler.py",
+      "target": "backend.monitoring.config"
+    },
+    {
+      "source": "backend/monitoring/scheduler.py",
+      "target": "backend.monitoring.monitor"
+    },
+    {
+      "source": "backend/monitoring/validator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/monitoring/validator.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "backend/monitoring/validator.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/monitoring/validator.py",
+      "target": "backend.monitoring.health_checker"
+    },
+    {
+      "source": "backend/plugins/dependency.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/plugins/dependency.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/plugins/dependency.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/plugins/events.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/plugins/events.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/plugins/installer.py",
+      "target": "shutil"
+    },
+    {
+      "source": "backend/plugins/installer.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/plugins/installer.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/plugins/installer.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/plugins/interfaces.py",
+      "target": "abc"
+    },
+    {
+      "source": "backend/plugins/interfaces.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/plugins/loader.py",
+      "target": "importlib.util"
+    },
+    {
+      "source": "backend/plugins/loader.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/plugins/loader.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/plugins/loader.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/plugins/loader.py",
+      "target": "backend.plugins.interfaces"
+    },
+    {
+      "source": "backend/plugins/manager.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/plugins/manager.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/plugins/manager.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/plugins/manager.py",
+      "target": "backend.plugins.registry"
+    },
+    {
+      "source": "backend/plugins/manager.py",
+      "target": "backend.plugins.loader"
+    },
+    {
+      "source": "backend/plugins/manager.py",
+      "target": "backend.plugins.installer"
+    },
+    {
+      "source": "backend/plugins/manager.py",
+      "target": "backend.plugins.monitor"
+    },
+    {
+      "source": "backend/plugins/manager.py",
+      "target": "backend.plugins.events"
+    },
+    {
+      "source": "backend/plugins/manager.py",
+      "target": "backend.plugins.sandbox"
+    },
+    {
+      "source": "backend/plugins/manager.py",
+      "target": "backend.plugins.interfaces"
+    },
+    {
+      "source": "backend/plugins/monitor.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/plugins/monitor.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/plugins/monitor.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/plugins/permissions.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/plugins/permissions.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/plugins/registry.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/plugins/registry.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/plugins/sandbox.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/plugins/sandbox.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/plugins/sandbox.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/plugins/sandbox.py",
+      "target": "backend.plugins.permissions"
+    },
+    {
+      "source": "backend/project_intelligence/api_mapper.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/project_intelligence/api_mapper.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_intelligence/api_mapper.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/project_intelligence/api_mapper.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_intelligence/api_mapper.py",
+      "target": "os"
+    },
+    {
+      "source": "backend/project_intelligence/component_mapper.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/project_intelligence/component_mapper.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_intelligence/component_mapper.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/project_intelligence/component_mapper.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_intelligence/component_mapper.py",
+      "target": "os"
+    },
+    {
+      "source": "backend/project_intelligence/dependency_scanner.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/project_intelligence/dependency_scanner.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_intelligence/dependency_scanner.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/project_intelligence/dependency_scanner.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_intelligence/dependency_scanner.py",
+      "target": "os"
+    },
+    {
+      "source": "backend/project_intelligence/file_summarizer.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/project_intelligence/file_summarizer.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_intelligence/file_summarizer.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/project_intelligence/file_summarizer.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_intelligence/impact_analyzer.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_intelligence/impact_analyzer.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_intelligence/intelligence_manager.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/project_intelligence/intelligence_manager.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_intelligence/intelligence_manager.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/project_intelligence/intelligence_manager.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_intelligence/intelligence_manager.py",
+      "target": ".dependency_scanner"
+    },
+    {
+      "source": "backend/project_intelligence/intelligence_manager.py",
+      "target": ".file_summarizer"
+    },
+    {
+      "source": "backend/project_intelligence/intelligence_manager.py",
+      "target": ".api_mapper"
+    },
+    {
+      "source": "backend/project_intelligence/intelligence_manager.py",
+      "target": ".schema_inferer"
+    },
+    {
+      "source": "backend/project_intelligence/intelligence_manager.py",
+      "target": ".component_mapper"
+    },
+    {
+      "source": "backend/project_intelligence/intelligence_manager.py",
+      "target": ".impact_analyzer"
+    },
+    {
+      "source": "backend/project_intelligence/intelligence_manager.py",
+      "target": ".smell_detector"
+    },
+    {
+      "source": "backend/project_intelligence/schema_inferer.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/project_intelligence/schema_inferer.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_intelligence/schema_inferer.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/project_intelligence/schema_inferer.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_intelligence/schema_inferer.py",
+      "target": "os"
+    },
+    {
+      "source": "backend/project_intelligence/smell_detector.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/project_intelligence/smell_detector.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_intelligence/smell_detector.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/project_intelligence/smell_detector.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_intelligence/smell_detector.py",
+      "target": "os"
+    },
+    {
+      "source": "backend/project_manager/bug_backlog.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_manager/bug_backlog.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_manager/decision_store.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_manager/decision_store.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_manager/dependency_graph.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_manager/dependency_graph.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_manager/milestone_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_manager/milestone_generator.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_manager/progress_tracker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_manager/progress_tracker.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_manager/resume_engine.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_manager/resume_engine.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_manager/sprint_planner.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_manager/sprint_planner.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_manager/standup_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_manager/standup_generator.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_manager/state_engine.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/project_manager/state_engine.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_manager/state_engine.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/project_manager/state_engine.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/project_manager/task_scheduler.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/project_manager/task_scheduler.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/rag/loader.py",
+      "target": "backend.rag.utils.loader"
+    },
+    {
+      "source": "backend/rag/rag_pipeline.py",
+      "target": "backend.rag.utils.retriever"
+    },
+    {
+      "source": "backend/rag/rag_pipeline.py",
+      "target": "backend.services.llm"
+    },
+    {
+      "source": "backend/rag/retriever.py",
+      "target": "backend.rag.utils.retriever"
+    },
+    {
+      "source": "backend/rag/vector_store.py",
+      "target": "backend.rag.utils.vector_store"
+    },
+    {
+      "source": "backend/rag/tests/test_embeddings.py",
+      "target": "types"
+    },
+    {
+      "source": "backend/rag/tests/test_embeddings.py",
+      "target": "backend.rag.utils.embeddings"
+    },
+    {
+      "source": "backend/rag/tests/test_frontend.py",
+      "target": "backend.graph.workflow"
+    },
+    {
+      "source": "backend/rag/tests/test_rag_agent.py",
+      "target": "backend.agents.rag_agent"
+    },
+    {
+      "source": "backend/rag/tests/test_rag_pipeline.py",
+      "target": "rag.rag_pipeline"
+    },
+    {
+      "source": "backend/rag/tests/test_retriever.py",
+      "target": "rag.utils.retriever"
+    },
+    {
+      "source": "backend/rag/tests/test_splitter.py",
+      "target": "langchain_core.documents"
+    },
+    {
+      "source": "backend/rag/tests/test_splitter.py",
+      "target": "backend.rag.utils.splitter"
+    },
+    {
+      "source": "backend/rag/tests/test_testing_agent.py",
+      "target": "backend.agents"
+    },
+    {
+      "source": "backend/rag/tests/test_vector_store.py",
+      "target": "types"
+    },
+    {
+      "source": "backend/rag/tests/test_vector_store.py",
+      "target": "backend.rag.utils.vector_store"
+    },
+    {
+      "source": "backend/rag/utils/embeddings.py",
+      "target": "langchain_ollama"
+    },
+    {
+      "source": "backend/rag/utils/loader.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/rag/utils/loader.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/rag/utils/loader.py",
+      "target": "langchain_community.document_loaders"
+    },
+    {
+      "source": "backend/rag/utils/retriever.py",
+      "target": "backend.rag.utils.vector_store"
+    },
+    {
+      "source": "backend/rag/utils/splitter.py",
+      "target": "langchain_text_splitters"
+    },
+    {
+      "source": "backend/rag/utils/vector_store.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/rag/utils/vector_store.py",
+      "target": "langchain_chroma"
+    },
+    {
+      "source": "backend/rag/utils/vector_store.py",
+      "target": "backend.rag.utils.embeddings"
+    },
+    {
+      "source": "backend/review/architecture_checker.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/review/architecture_checker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/review/architecture_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/review/debug.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/review/debug.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/review/debug.py",
+      "target": "backend.services.llm"
+    },
+    {
+      "source": "backend/review/patch_applier.py",
+      "target": "os"
+    },
+    {
+      "source": "backend/review/patch_applier.py",
+      "target": "ast"
+    },
+    {
+      "source": "backend/review/patch_applier.py",
+      "target": "shutil"
+    },
+    {
+      "source": "backend/review/patch_applier.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/review/patch_applier.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/review/patch_generator.py",
+      "target": "ast"
+    },
+    {
+      "source": "backend/review/patch_generator.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/review/patch_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/review/patch_generator.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/review/patch_generator.py",
+      "target": "backend.services.llm"
+    },
+    {
+      "source": "backend/review/performance_checker.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/review/performance_checker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/review/performance_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/review/quality_score.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/review/report_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/review/report_generator.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/review/report_generator.py",
+      "target": "datetime"
+    },
+    {
+      "source": "backend/review/reviewer.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/review/reviewer.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/review/reviewer.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/review/reviewer.py",
+      "target": "backend.services.llm"
+    },
+    {
+      "source": "backend/review/reviewer.py",
+      "target": "backend.config"
+    },
+    {
+      "source": "backend/review/security_checker.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/review/security_checker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/review/security_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "os"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "sys"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "subprocess"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "backend.review.test_parser"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "backend.review.debug"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "backend.review.patch_generator"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "backend.review.patch_applier"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "backend.review.architecture_checker"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "backend.review.security_checker"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "backend.review.performance_checker"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "backend.review.quality_score"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "backend.review.report_generator"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "backend.config"
+    },
+    {
+      "source": "backend/review/self_heal.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "backend/review/test_parser.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/review/test_parser.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/routes/chat.py",
+      "target": "__future__"
+    },
+    {
+      "source": "backend/routes/chat.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "backend/routes/chat.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/routes/chat.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/routes/chat.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "backend/routes/chat.py",
+      "target": "fastapi.responses"
+    },
+    {
+      "source": "backend/routes/chat.py",
+      "target": "backend.graph.workflow"
+    },
+    {
+      "source": "backend/routes/chat.py",
+      "target": "backend.memory.conversation_manager"
+    },
+    {
+      "source": "backend/routes/chat.py",
+      "target": "backend.memory.crud"
+    },
+    {
+      "source": "backend/routes/chat.py",
+      "target": "backend.schemas.chat"
+    },
+    {
+      "source": "backend/routes/generate.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "backend/routes/generate.py",
+      "target": "pydantic"
+    },
+    {
+      "source": "backend/routes/generate.py",
+      "target": "backend.graph.parallel_workflow"
+    },
+    {
+      "source": "backend/routes/memory.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "backend/routes/memory.py",
+      "target": "backend.memory.memory_manager"
+    },
+    {
+      "source": "backend/routes/plan.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "backend/routes/plan.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "backend/routes/plan.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/routes/plan.py",
+      "target": "pydantic"
+    },
+    {
+      "source": "backend/routes/plan.py",
+      "target": "backend.graph.workflow"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "fastapi.responses"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "pydantic"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "backend.graph.parallel_workflow"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "backend.services.llm"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "backend.generators.project_generator"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "backend.services.reflection_service"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "backend.agents.reflection_agent"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "backend.generators.project_generator"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "backend.generators.project_generator"
+    },
+    {
+      "source": "backend/routes/project.py",
+      "target": "backend.generators.project_generator"
+    },
+    {
+      "source": "backend/routes/rag.py",
+      "target": "__future__"
+    },
+    {
+      "source": "backend/routes/rag.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/routes/rag.py",
+      "target": "uuid"
+    },
+    {
+      "source": "backend/routes/rag.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "backend/routes/rag.py",
+      "target": "pydantic"
+    },
+    {
+      "source": "backend/routes/rag.py",
+      "target": "backend.rag.rag_pipeline"
+    },
+    {
+      "source": "backend/routes/rag.py",
+      "target": "backend.rag.utils.loader"
+    },
+    {
+      "source": "backend/routes/rag.py",
+      "target": "backend.rag.utils.splitter"
+    },
+    {
+      "source": "backend/routes/rag.py",
+      "target": "backend.rag.utils.vector_store"
+    },
+    {
+      "source": "backend/schemas/chat.py",
+      "target": "__future__"
+    },
+    {
+      "source": "backend/schemas/chat.py",
+      "target": "pydantic"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "__future__"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "hashlib"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "contextvars"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "threading"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "ollama"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "backend.config"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "backend.utils.cache"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "backend.utils.retry"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "backend.utils.prompt_optimizer"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "psutil"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "os"
+    },
+    {
+      "source": "backend/services/llm.py",
+      "target": "backend.utils.retry as retry_mod"
+    },
+    {
+      "source": "backend/services/ollama_service.py",
+      "target": "backend.services.llm"
+    },
+    {
+      "source": "backend/services/reflection_service.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/services/reflection_service.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/services/reflection_service.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/services/reflection_service.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/services/reflection_service.py",
+      "target": "datetime"
+    },
+    {
+      "source": "backend/services/reflection_service.py",
+      "target": "difflib"
+    },
+    {
+      "source": "backend/services/reflection_service.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/services/zip_service.py",
+      "target": "zipfile"
+    },
+    {
+      "source": "backend/services/zip_service.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/services/zip_service.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/services/deployment/bundle_exporter.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/services/deployment/bundle_exporter.py",
+      "target": "zipfile"
+    },
+    {
+      "source": "backend/services/deployment/bundle_exporter.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/services/deployment/bundle_exporter.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/services/deployment/compose_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/services/deployment/compose_generator.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/services/deployment/deployment_report.py",
+      "target": "dataclasses"
+    },
+    {
+      "source": "backend/services/deployment/deployment_report.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/services/deployment/docker_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/services/deployment/docker_generator.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/services/deployment/env_detector.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/services/deployment/env_detector.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/services/deployment/env_detector.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/services/deployment/fly_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/services/deployment/github_actions.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/services/deployment/github_actions.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/services/deployment/huggingface_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/services/deployment/netlify_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/services/deployment/railway_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/services/deployment/render_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/services/deployment/render_generator.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/services/deployment/validator.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/services/deployment/validator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/services/deployment/validator.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/services/deployment/validator.py",
+      "target": "backend.services.deployment.deployment_report"
+    },
+    {
+      "source": "backend/services/deployment/vercel_generator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/utils/cache.py",
+      "target": "collections"
+    },
+    {
+      "source": "backend/utils/cache.py",
+      "target": "threading"
+    },
+    {
+      "source": "backend/utils/cache.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/utils/cache.py",
+      "target": "backend.config"
+    },
+    {
+      "source": "backend/utils/prompt_optimizer.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/utils/retry.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "backend/utils/retry.py",
+      "target": "functools"
+    },
+    {
+      "source": "backend/utils/retry.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/utils/retry.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/utils/timer.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/utils/timer.py",
+      "target": "types"
+    },
+    {
+      "source": "backend/utils/timer.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/validation/api_checker.py",
+      "target": "ast"
+    },
+    {
+      "source": "backend/validation/api_checker.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/validation/api_checker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/validation/api_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/validation/api_checker.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "backend/validation/api_checker.py",
+      "target": "backend.validation.utils"
+    },
+    {
+      "source": "backend/validation/architecture_checker.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/validation/architecture_checker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/validation/architecture_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/validation/architecture_checker.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "backend/validation/architecture_checker.py",
+      "target": "backend.validation.utils"
+    },
+    {
+      "source": "backend/validation/database_checker.py",
+      "target": "ast"
+    },
+    {
+      "source": "backend/validation/database_checker.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/validation/database_checker.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/validation/database_checker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/validation/database_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/validation/database_checker.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "backend/validation/database_checker.py",
+      "target": "backend.validation.utils"
+    },
+    {
+      "source": "backend/validation/dependency_checker.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/validation/dependency_checker.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/validation/dependency_checker.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/validation/dependency_checker.py",
+      "target": "sys"
+    },
+    {
+      "source": "backend/validation/dependency_checker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/validation/dependency_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/validation/dependency_checker.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "backend/validation/dependency_checker.py",
+      "target": "backend.validation.utils"
+    },
+    {
+      "source": "backend/validation/documentation_checker.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/validation/documentation_checker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/validation/documentation_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/validation/documentation_checker.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "backend/validation/documentation_checker.py",
+      "target": "backend.validation.utils"
+    },
+    {
+      "source": "backend/validation/frontend_checker.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/validation/frontend_checker.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/validation/frontend_checker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/validation/frontend_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/validation/frontend_checker.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "backend/validation/frontend_checker.py",
+      "target": "backend.validation.utils"
+    },
+    {
+      "source": "backend/validation/models.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/validation/models.py",
+      "target": "pydantic"
+    },
+    {
+      "source": "backend/validation/performance_checker.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/validation/performance_checker.py",
+      "target": "os"
+    },
+    {
+      "source": "backend/validation/performance_checker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/validation/performance_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/validation/performance_checker.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/validation/performance_checker.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "backend/validation/performance_checker.py",
+      "target": "backend.validation.utils"
+    },
+    {
+      "source": "backend/validation/quality_score.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/validation/quality_score.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/validation/quality_score.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "backend/validation/security_checker.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/validation/security_checker.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/validation/security_checker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/validation/security_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/validation/security_checker.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "backend/validation/security_checker.py",
+      "target": "backend.validation.utils"
+    },
+    {
+      "source": "backend/validation/syntax_checker.py",
+      "target": "ast"
+    },
+    {
+      "source": "backend/validation/syntax_checker.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/validation/syntax_checker.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/validation/syntax_checker.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/validation/syntax_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/validation/syntax_checker.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "backend/validation/syntax_checker.py",
+      "target": "backend.validation.utils"
+    },
+    {
+      "source": "backend/validation/utils.py",
+      "target": "os"
+    },
+    {
+      "source": "backend/validation/utils.py",
+      "target": "sys"
+    },
+    {
+      "source": "backend/validation/utils.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/validation/utils.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/validation/utils.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/validation/utils.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/validation/utils.py",
+      "target": "subprocess"
+    },
+    {
+      "source": "backend/validation/utils.py",
+      "target": "resource"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "time"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "datetime"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "backend.validation.syntax_checker"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "backend.validation.dependency_checker"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "backend.validation.api_checker"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "backend.validation.frontend_checker"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "backend.validation.database_checker"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "backend.validation.security_checker"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "backend.validation.performance_checker"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "backend.validation.architecture_checker"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "backend.validation.documentation_checker"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "backend.validation.quality_score"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "backend/validation/validator.py",
+      "target": "sys"
+    },
+    {
+      "source": "backend/validators/project_validator.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/validators/project_validator.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/validators/project_validator.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/validators/project_validator.py",
+      "target": "dataclasses"
+    },
+    {
+      "source": "backend/validators/project_validator.py",
+      "target": "yaml"
+    },
+    {
+      "source": "backend/validators/project_validator.py",
+      "target": "backend.generators.dependency_generator"
+    },
+    {
+      "source": "backend/workflow/file_writer.py",
+      "target": "os"
+    },
+    {
+      "source": "backend/workflow/file_writer.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/workflow/file_writer.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/workflow/project_builder.py",
+      "target": "json"
+    },
+    {
+      "source": "backend/workflow/project_builder.py",
+      "target": "re"
+    },
+    {
+      "source": "backend/workflow/project_builder.py",
+      "target": "shutil"
+    },
+    {
+      "source": "backend/workflow/project_builder.py",
+      "target": "logging"
+    },
+    {
+      "source": "backend/workflow/project_builder.py",
+      "target": "datetime"
+    },
+    {
+      "source": "backend/workflow/project_builder.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "backend/workflow/project_builder.py",
+      "target": "typing"
+    },
+    {
+      "source": "backend/workflow/project_builder.py",
+      "target": "backend.workflow.file_writer"
+    },
+    {
+      "source": "frontend/vite.config.js",
+      "target": "vite"
+    },
+    {
+      "source": "frontend/vite.config.js",
+      "target": "@vitejs/plugin-react"
+    },
+    {
+      "source": "frontend/vite.config.js",
+      "target": "@tailwindcss/vite"
+    },
+    {
+      "source": "frontend/src/App.jsx",
+      "target": "react"
+    },
+    {
+      "source": "frontend/src/App.jsx",
+      "target": "./components/Sidebar"
+    },
+    {
+      "source": "frontend/src/App.jsx",
+      "target": "./components/ChatBox"
+    },
+    {
+      "source": "frontend/src/App.jsx",
+      "target": "./pages/ProjectGenerator"
+    },
+    {
+      "source": "frontend/src/App.jsx",
+      "target": "./components/ReflectionDashboard"
+    },
+    {
+      "source": "frontend/src/App.jsx",
+      "target": "./components/MetricsDashboard"
+    },
+    {
+      "source": "frontend/src/App.jsx",
+      "target": "./layouts/MainLayout"
+    },
+    {
+      "source": "frontend/src/App.jsx",
+      "target": "./pages/Dashboard"
+    },
+    {
+      "source": "frontend/src/App.jsx",
+      "target": "./pages/PluginsDashboard"
+    },
+    {
+      "source": "frontend/src/App.jsx",
+      "target": "./pages/LearningDashboard"
+    },
+    {
+      "source": "frontend/src/main.jsx",
+      "target": "react"
+    },
+    {
+      "source": "frontend/src/main.jsx",
+      "target": "react-dom/client"
+    },
+    {
+      "source": "frontend/src/main.jsx",
+      "target": "./App.jsx"
+    },
+    {
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "react"
+    },
+    {
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "react-icons/fa"
+    },
+    {
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "./InputBar"
+    },
+    {
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "./Loading"
+    },
+    {
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "./Message"
+    },
+    {
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "./RagUploadPanel"
+    },
+    {
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "../services/api"
+    },
+    {
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "../services/conversationApi"
+    },
+    {
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "../services/plannerApi"
+    },
+    {
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "../services/ragApi"
+    },
+    {
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "../utils/chatStorage"
+    },
+    {
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "../services/projectApi"
+    },
+    {
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "react-hot-toast"
+    },
+    {
+      "source": "frontend/src/components/CodeBlock.jsx",
+      "target": "react"
+    },
+    {
+      "source": "frontend/src/components/CodeBlock.jsx",
+      "target": "react-icons/fa"
+    },
+    {
+      "source": "frontend/src/components/FileExplorer.jsx",
+      "target": "react"
+    },
+    {
+      "source": "frontend/src/components/FileExplorer.jsx",
+      "target": "react-icons/fa"
+    },
+    {
+      "source": "frontend/src/components/FileExplorer.jsx",
+      "target": "../services/projectApi"
+    },
+    {
+      "source": "frontend/src/components/InputBar.jsx",
+      "target": "react"
+    },
+    {
+      "source": "frontend/src/components/InputBar.jsx",
+      "target": "react-icons/fa"
+    },
+    {
+      "source": "frontend/src/components/Message.jsx",
+      "target": "react"
+    },
+    {
+      "source": "frontend/src/components/Message.jsx",
+      "target": "react-markdown"
+    },
+    {
+      "source": "frontend/src/components/Message.jsx",
+      "target": "remark-gfm"
+    },
+    {
+      "source": "frontend/src/components/Message.jsx",
+      "target": "react-syntax-highlighter"
+    },
+    {
+      "source": "frontend/src/components/Message.jsx",
+      "target": "react-syntax-highlighter/dist/esm/styles/prism"
+    },
+    {
+      "source": "frontend/src/components/Message.jsx",
+      "target": "react-icons/fa"
+    },
+    {
+      "source": "frontend/src/components/MetricsDashboard.jsx",
+      "target": "react"
+    },
+    {
+      "source": "frontend/src/components/MetricsDashboard.jsx",
+      "target": "react-icons/fa"
+    },
+    {
+      "source": "frontend/src/components/MetricsDashboard.jsx",
+      "target": "../services/projectApi"
+    },
+    {
+      "source": "frontend/src/components/PlannerCard.jsx",
+      "target": "react-markdown"
+    },
+    {
+      "source": "frontend/src/components/PlannerCard.jsx",
+      "target": "remark-gfm"
+    },
+    {
+      "source": "frontend/src/components/ReflectionDashboard.jsx",
+      "target": "react"
+    },
+    {
+      "source": "frontend/src/components/ReflectionDashboard.jsx",
+      "target": "react-icons/fa"
+    },
+    {
+      "source": "frontend/src/components/ReflectionDashboard.jsx",
+      "target": "../services/projectApi"
+    },
+    {
+      "source": "frontend/src/components/Sidebar.jsx",
+      "target": "react"
+    },
+    {
+      "source": "frontend/src/components/Sidebar.jsx",
+      "target": "react-icons/fa"
+    },
+    {
+      "source": "frontend/src/components/Sidebar.jsx",
+      "target": "../utils/chatStorage"
+    },
+    {
+      "source": "frontend/src/pages/Dashboard.jsx",
+      "target": "react"
+    },
+    {
+      "source": "frontend/src/pages/Dashboard.jsx",
+      "target": "react-icons/fa"
+    },
+    {
+      "source": "frontend/src/pages/Home.jsx",
+      "target": "../components/Sidebar"
+    },
+    {
+      "source": "frontend/src/pages/Home.jsx",
+      "target": "../components/Navbar"
+    },
+    {
+      "source": "frontend/src/pages/Home.jsx",
+      "target": "../components/ChatBox"
+    },
+    {
+      "source": "frontend/src/pages/Home.jsx",
+      "target": "../layouts/MainLayout"
+    },
+    {
+      "source": "frontend/src/pages/LearningDashboard.jsx",
+      "target": "react"
+    },
+    {
+      "source": "frontend/src/pages/LearningDashboard.jsx",
+      "target": "react-icons/fa"
+    },
+    {
+      "source": "frontend/src/pages/Planner.jsx",
+      "target": "react"
+    },
+    {
+      "source": "frontend/src/pages/Planner.jsx",
+      "target": "../components/PlannerCard"
+    },
+    {
+      "source": "frontend/src/pages/Planner.jsx",
+      "target": "../services/plannerApi"
+    },
+    {
+      "source": "frontend/src/pages/PluginsDashboard.jsx",
+      "target": "react"
+    },
+    {
+      "source": "frontend/src/pages/PluginsDashboard.jsx",
+      "target": "react-icons/fa"
+    },
+    {
+      "source": "frontend/src/pages/ProjectGenerator.jsx",
+      "target": "react"
+    },
+    {
+      "source": "frontend/src/pages/ProjectGenerator.jsx",
+      "target": "react-markdown"
+    },
+    {
+      "source": "frontend/src/pages/ProjectGenerator.jsx",
+      "target": "remark-gfm"
+    },
+    {
+      "source": "frontend/src/pages/ProjectGenerator.jsx",
+      "target": "react-syntax-highlighter"
+    },
+    {
+      "source": "frontend/src/pages/ProjectGenerator.jsx",
+      "target": "react-syntax-highlighter/dist/esm/styles/prism"
+    },
+    {
+      "source": "frontend/src/pages/ProjectGenerator.jsx",
+      "target": "../services/projectApi"
+    },
+    {
+      "source": "frontend/src/pages/ProjectGenerator.jsx",
+      "target": "../components/FileExplorer"
+    },
+    {
+      "source": "frontend/src/services/api.js",
+      "target": "axios"
+    },
+    {
+      "source": "frontend/src/services/api.js",
+      "target": "../utils/chatStorage"
+    },
+    {
+      "source": "frontend/src/services/api.js",
+      "target": "./conversationApi"
+    },
+    {
+      "source": "frontend/src/services/conversationApi.js",
+      "target": "axios"
+    },
+    {
+      "source": "frontend/src/services/plannerApi.js",
+      "target": "../utils/chatStorage"
+    },
+    {
+      "source": "frontend/src/services/ragApi.js",
+      "target": "axios"
+    },
+    {
+      "source": "tests/generate_optimization_reports.py",
+      "target": "os"
+    },
+    {
+      "source": "tests/generate_optimization_reports.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/generate_optimization_reports.py",
+      "target": "time"
+    },
+    {
+      "source": "tests/generate_optimization_reports.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_api_checker.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_api_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_api_checker.py",
+      "target": "backend.validation.api_checker"
+    },
+    {
+      "source": "tests/test_cache.py",
+      "target": "threading"
+    },
+    {
+      "source": "tests/test_cache.py",
+      "target": "backend.utils.cache"
+    },
+    {
+      "source": "tests/test_consensus.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_consensus.py",
+      "target": "backend.debate.consensus"
+    },
+    {
+      "source": "tests/test_consensus.py",
+      "target": "backend.debate.voting"
+    },
+    {
+      "source": "tests/test_database_checker.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_database_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_database_checker.py",
+      "target": "backend.validation.database_checker"
+    },
+    {
+      "source": "tests/test_day11_workflow.py",
+      "target": "backend.graph"
+    },
+    {
+      "source": "tests/test_day12_memory.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_day12_memory.py",
+      "target": "backend.graph"
+    },
+    {
+      "source": "tests/test_day12_memory.py",
+      "target": "backend.memory.memory_manager"
+    },
+    {
+      "source": "tests/test_day13_collaboration.py",
+      "target": "backend.graph"
+    },
+    {
+      "source": "tests/test_day14_efficiency.py",
+      "target": "backend.graph"
+    },
+    {
+      "source": "tests/test_day14_efficiency.py",
+      "target": "backend.services.llm"
+    },
+    {
+      "source": "tests/test_day14_efficiency.py",
+      "target": "backend.config"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "shutil"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "backend.generators.dependency_generator"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "backend.generators.package_generator"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "backend.generators.requirements_generator"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "backend.generators.docker_generator"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "backend.generators.compose_generator"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "backend.generators.env_generator"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "backend.generators.readme_generator"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "backend.validators.project_validator"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "backend.generators.project_generator"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "backend.generators.gitignore_generator"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "backend.generators.license_generator"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "backend.services.zip_service"
+    },
+    {
+      "source": "tests/test_day22_generators.py",
+      "target": "zipfile"
+    },
+    {
+      "source": "tests/test_day23_self_heal.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/test_day23_self_heal.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_day23_self_heal.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_day23_self_heal.py",
+      "target": "unittest.mock"
+    },
+    {
+      "source": "tests/test_day23_self_heal.py",
+      "target": "backend.review.architecture_checker"
+    },
+    {
+      "source": "tests/test_day23_self_heal.py",
+      "target": "backend.review.security_checker"
+    },
+    {
+      "source": "tests/test_day23_self_heal.py",
+      "target": "backend.review.performance_checker"
+    },
+    {
+      "source": "tests/test_day23_self_heal.py",
+      "target": "backend.review.test_parser"
+    },
+    {
+      "source": "tests/test_day23_self_heal.py",
+      "target": "backend.review.reviewer"
+    },
+    {
+      "source": "tests/test_day23_self_heal.py",
+      "target": "backend.review.debug"
+    },
+    {
+      "source": "tests/test_day23_self_heal.py",
+      "target": "backend.review.patch_generator"
+    },
+    {
+      "source": "tests/test_day23_self_heal.py",
+      "target": "backend.review.patch_applier"
+    },
+    {
+      "source": "tests/test_day23_self_heal.py",
+      "target": "backend.review.quality_score"
+    },
+    {
+      "source": "tests/test_day23_self_heal.py",
+      "target": "backend.review.report_generator"
+    },
+    {
+      "source": "tests/test_day23_self_heal.py",
+      "target": "backend.review.self_heal"
+    },
+    {
+      "source": "tests/test_debate.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_debate.py",
+      "target": "tempfile"
+    },
+    {
+      "source": "tests/test_debate.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "tests/test_debate.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_debate.py",
+      "target": "unittest.mock"
+    },
+    {
+      "source": "tests/test_debate.py",
+      "target": "backend.debate.orchestrator"
+    },
+    {
+      "source": "tests/test_debate.py",
+      "target": "backend.debate.memory"
+    },
+    {
+      "source": "tests/test_debate.py",
+      "target": "backend.debate.critique"
+    },
+    {
+      "source": "tests/test_debate.py",
+      "target": "backend.debate.moderator"
+    },
+    {
+      "source": "tests/test_debate.py",
+      "target": "backend.graph.debate_graph"
+    },
+    {
+      "source": "tests/test_debug.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/test_debug.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_debug.py",
+      "target": "unittest.mock"
+    },
+    {
+      "source": "tests/test_debug.py",
+      "target": "backend.review.debug"
+    },
+    {
+      "source": "tests/test_dependency.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_dependency.py",
+      "target": "backend.plugins.dependency"
+    },
+    {
+      "source": "tests/test_dependency_checker.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_dependency_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_dependency_checker.py",
+      "target": "backend.validation.dependency_checker"
+    },
+    {
+      "source": "tests/test_dependency_checker.py",
+      "target": "requests"
+    },
+    {
+      "source": "tests/test_deployment.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_deployment.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_deployment.py",
+      "target": "backend.services.deployment.docker_generator"
+    },
+    {
+      "source": "tests/test_deployment.py",
+      "target": "backend.services.deployment.compose_generator"
+    },
+    {
+      "source": "tests/test_deployment.py",
+      "target": "backend.services.deployment.env_detector"
+    },
+    {
+      "source": "tests/test_deployment.py",
+      "target": "backend.services.deployment.validator"
+    },
+    {
+      "source": "tests/test_deployment.py",
+      "target": "backend.services.deployment.github_actions"
+    },
+    {
+      "source": "tests/test_deployment.py",
+      "target": "backend.services.deployment.bundle_exporter"
+    },
+    {
+      "source": "tests/test_deployment.py",
+      "target": "backend.agents.deployment_agent"
+    },
+    {
+      "source": "tests/test_evolution.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_evolution.py",
+      "target": "tempfile"
+    },
+    {
+      "source": "tests/test_evolution.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/test_evolution.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_evolution.py",
+      "target": "backend.evolution.project_scorer"
+    },
+    {
+      "source": "tests/test_evolution.py",
+      "target": "backend.evolution.security_inspector"
+    },
+    {
+      "source": "tests/test_evolution.py",
+      "target": "backend.evolution.refactoring_agent"
+    },
+    {
+      "source": "tests/test_evolution.py",
+      "target": "backend.evolution.benchmarker"
+    },
+    {
+      "source": "tests/test_evolution.py",
+      "target": "backend.evolution.evolution_pipeline"
+    },
+    {
+      "source": "tests/test_frontend_checker.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_frontend_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_frontend_checker.py",
+      "target": "backend.validation.frontend_checker"
+    },
+    {
+      "source": "tests/test_installation.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_installation.py",
+      "target": "backend.plugins.installer"
+    },
+    {
+      "source": "tests/test_knowledge.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_knowledge.py",
+      "target": "tempfile"
+    },
+    {
+      "source": "tests/test_knowledge.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/test_knowledge.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_knowledge.py",
+      "target": "backend.knowledge.knowledge_manager"
+    },
+    {
+      "source": "tests/test_knowledge.py",
+      "target": "backend.knowledge.memory.evolution_report"
+    },
+    {
+      "source": "tests/test_learning.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_learning.py",
+      "target": "tempfile"
+    },
+    {
+      "source": "tests/test_learning.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "tests/test_learning.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_learning.py",
+      "target": "unittest.mock"
+    },
+    {
+      "source": "tests/test_learning.py",
+      "target": "backend.learning.learning_memory"
+    },
+    {
+      "source": "tests/test_learning.py",
+      "target": "backend.learning.experience_db"
+    },
+    {
+      "source": "tests/test_learning.py",
+      "target": "backend.learning.pattern_recognizer"
+    },
+    {
+      "source": "tests/test_learning.py",
+      "target": "backend.learning.prompt_optimizer"
+    },
+    {
+      "source": "tests/test_learning.py",
+      "target": "backend.learning.best_practices"
+    },
+    {
+      "source": "tests/test_learning.py",
+      "target": "backend.learning.performance_tracker"
+    },
+    {
+      "source": "tests/test_learning.py",
+      "target": "backend.learning.architecture_evolver"
+    },
+    {
+      "source": "tests/test_learning.py",
+      "target": "backend.learning.confidence_scorer"
+    },
+    {
+      "source": "tests/test_learning.py",
+      "target": "backend.learning.reflection_engine"
+    },
+    {
+      "source": "tests/test_learning.py",
+      "target": "backend.learning.learning_pipeline"
+    },
+    {
+      "source": "tests/test_lifecycle.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_lifecycle.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_lifecycle.py",
+      "target": "backend.plugins.manager"
+    },
+    {
+      "source": "tests/test_monitor.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_monitor.py",
+      "target": "time"
+    },
+    {
+      "source": "tests/test_monitor.py",
+      "target": "backend.plugins.monitor"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "unittest.mock"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "backend.monitoring.metrics_collector"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "backend.monitoring.health_checker"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "backend.monitoring.incident_detector"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "backend.monitoring.root_cause"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "backend.monitoring.recovery_engine"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "backend.monitoring.validator"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "backend.monitoring.autoscaler"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "backend.monitoring.predictor"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "backend.monitoring.alert_manager"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "backend.monitoring.knowledge_base"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "backend.monitoring.analytics"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "backend.monitoring.monitor"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "backend.monitoring.scheduler"
+    },
+    {
+      "source": "tests/test_monitoring.py",
+      "target": "unittest.mock"
+    },
+    {
+      "source": "tests/test_parallel.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_parallel.py",
+      "target": "unittest.mock"
+    },
+    {
+      "source": "tests/test_parallel.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_parallel.py",
+      "target": "backend.graph"
+    },
+    {
+      "source": "tests/test_parallel.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "tests/test_parallel.py",
+      "target": "backend.graph.reflection_node"
+    },
+    {
+      "source": "tests/test_patch_applier.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_patch_applier.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_patch_applier.py",
+      "target": "backend.review.patch_applier"
+    },
+    {
+      "source": "tests/test_patch_generator.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/test_patch_generator.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_patch_generator.py",
+      "target": "unittest.mock"
+    },
+    {
+      "source": "tests/test_patch_generator.py",
+      "target": "backend.review.patch_generator"
+    },
+    {
+      "source": "tests/test_performance.py",
+      "target": "time"
+    },
+    {
+      "source": "tests/test_performance.py",
+      "target": "backend.utils.timer"
+    },
+    {
+      "source": "tests/test_performance.py",
+      "target": "backend.graph.profiler"
+    },
+    {
+      "source": "tests/test_performance_checker.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_performance_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_performance_checker.py",
+      "target": "backend.validation.performance_checker"
+    },
+    {
+      "source": "tests/test_permissions.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_permissions.py",
+      "target": "backend.plugins.permissions"
+    },
+    {
+      "source": "tests/test_plugin_loader.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_plugin_loader.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_plugin_loader.py",
+      "target": "backend.plugins.loader"
+    },
+    {
+      "source": "tests/test_plugin_registry.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_plugin_registry.py",
+      "target": "backend.plugins.registry"
+    },
+    {
+      "source": "tests/test_project_builder.py",
+      "target": "shutil"
+    },
+    {
+      "source": "tests/test_project_builder.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_project_builder.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_project_builder.py",
+      "target": "unittest.mock"
+    },
+    {
+      "source": "tests/test_project_builder.py",
+      "target": "fastapi.testclient"
+    },
+    {
+      "source": "tests/test_project_builder.py",
+      "target": "backend.main"
+    },
+    {
+      "source": "tests/test_project_builder.py",
+      "target": "backend.workflow.project_builder"
+    },
+    {
+      "source": "tests/test_project_builder.py",
+      "target": "backend.graph"
+    },
+    {
+      "source": "tests/test_project_builder.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "tests/test_project_builder.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "tests/test_project_builder.py",
+      "target": "backend.graph.reflection_node"
+    },
+    {
+      "source": "tests/test_project_builder.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/test_project_intelligence.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_project_intelligence.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/test_project_intelligence.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_project_intelligence.py",
+      "target": "backend.project_intelligence.intelligence_manager"
+    },
+    {
+      "source": "tests/test_project_intelligence.py",
+      "target": "os"
+    },
+    {
+      "source": "tests/test_project_intelligence.py",
+      "target": "sqlalchemy"
+    },
+    {
+      "source": "tests/test_project_intelligence.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "tests/test_project_intelligence.py",
+      "target": "React from"
+    },
+    {
+      "source": "tests/test_project_intelligence.py",
+      "target": "Sidebar from"
+    },
+    {
+      "source": "tests/test_project_manager.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_project_manager.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_project_manager.py",
+      "target": "backend.project_manager.state_engine"
+    },
+    {
+      "source": "tests/test_project_manager.py",
+      "target": "backend.project_manager.sprint_planner"
+    },
+    {
+      "source": "tests/test_project_manager.py",
+      "target": "backend.project_manager.dependency_graph"
+    },
+    {
+      "source": "tests/test_project_manager.py",
+      "target": "backend.project_manager.task_scheduler"
+    },
+    {
+      "source": "tests/test_project_manager.py",
+      "target": "backend.project_manager.progress_tracker"
+    },
+    {
+      "source": "tests/test_project_manager.py",
+      "target": "backend.project_manager.resume_engine"
+    },
+    {
+      "source": "tests/test_project_manager.py",
+      "target": "backend.project_manager.bug_backlog"
+    },
+    {
+      "source": "tests/test_project_manager.py",
+      "target": "backend.project_manager.milestone_generator"
+    },
+    {
+      "source": "tests/test_project_manager.py",
+      "target": "backend.project_manager.decision_store"
+    },
+    {
+      "source": "tests/test_project_manager.py",
+      "target": "backend.project_manager.standup_generator"
+    },
+    {
+      "source": "tests/test_quality_score.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_quality_score.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "tests/test_quality_score.py",
+      "target": "backend.validation.quality_score"
+    },
+    {
+      "source": "tests/test_rag_routes.py",
+      "target": "io"
+    },
+    {
+      "source": "tests/test_rag_routes.py",
+      "target": "fastapi.testclient"
+    },
+    {
+      "source": "tests/test_rag_routes.py",
+      "target": "backend.main"
+    },
+    {
+      "source": "tests/test_rag_routes.py",
+      "target": "backend.routes"
+    },
+    {
+      "source": "tests/test_reflection.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/test_reflection.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_reflection.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_reflection.py",
+      "target": "unittest.mock"
+    },
+    {
+      "source": "tests/test_reflection.py",
+      "target": "backend.agents.reflection_agent"
+    },
+    {
+      "source": "tests/test_reflection.py",
+      "target": "backend.services.reflection_service"
+    },
+    {
+      "source": "tests/test_retry.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "tests/test_retry.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_retry.py",
+      "target": "backend.utils.retry"
+    },
+    {
+      "source": "tests/test_reviewer.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/test_reviewer.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_reviewer.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_reviewer.py",
+      "target": "unittest.mock"
+    },
+    {
+      "source": "tests/test_reviewer.py",
+      "target": "backend.review.reviewer"
+    },
+    {
+      "source": "tests/test_security_checker.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_security_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_security_checker.py",
+      "target": "backend.validation.security_checker"
+    },
+    {
+      "source": "tests/test_self_heal.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/test_self_heal.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_self_heal.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_self_heal.py",
+      "target": "unittest.mock"
+    },
+    {
+      "source": "tests/test_self_heal.py",
+      "target": "backend.review.self_heal"
+    },
+    {
+      "source": "tests/test_syntax_checker.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_syntax_checker.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_syntax_checker.py",
+      "target": "backend.validation.syntax_checker"
+    },
+    {
+      "source": "tests/test_test_parser.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_test_parser.py",
+      "target": "backend.review.test_parser"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "unittest.mock"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "backend.validation.syntax_checker"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "backend.validation.dependency_checker"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "backend.validation.api_checker"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "backend.validation.frontend_checker"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "backend.validation.database_checker"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "backend.validation.security_checker"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "backend.validation.performance_checker"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "backend.validation.quality_score"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "backend.validation.validator"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "os"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "sqlalchemy"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "fastapi"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "React from"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "Card from"
+    },
+    {
+      "source": "tests/test_validation.py",
+      "target": "sqlalchemy"
+    },
+    {
+      "source": "tests/test_validator.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_validator.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/test_validator.py",
+      "target": "unittest.mock"
+    },
+    {
+      "source": "tests/test_validator.py",
+      "target": "backend.validation.validator"
+    },
+    {
+      "source": "tests/test_validator.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "tests/test_versioning.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_versioning.py",
+      "target": "backend.plugins.dependency"
+    },
+    {
+      "source": "tests/test_workflow.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "tests/test_workflow.py",
+      "target": "pytest"
+    },
+    {
+      "source": "tests/test_workflow.py",
+      "target": "fastapi.testclient"
+    },
+    {
+      "source": "tests/test_workflow.py",
+      "target": "backend.graph"
+    },
+    {
+      "source": "tests/test_workflow.py",
+      "target": "backend.main"
+    },
+    {
+      "source": "tests/test_workflow.py",
+      "target": "backend.graph"
+    },
+    {
+      "source": "tests/test_workflow.py",
+      "target": "backend.validation.models"
+    },
+    {
+      "source": "tests/test_workflow.py",
+      "target": "unittest.mock"
+    },
+    {
+      "source": "tests/verify_debate_scenarios.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "tests/verify_debate_scenarios.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/verify_debate_scenarios.py",
+      "target": "sys"
+    },
+    {
+      "source": "tests/verify_debate_scenarios.py",
+      "target": "time"
+    },
+    {
+      "source": "tests/verify_debate_scenarios.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/verify_debate_scenarios.py",
+      "target": "backend.debate.orchestrator"
+    },
+    {
+      "source": "tests/verify_debate_scenarios.py",
+      "target": "backend.debate.memory"
+    },
+    {
+      "source": "tests/verify_debate_scenarios.py",
+      "target": "backend.debate.voting"
+    },
+    {
+      "source": "tests/verify_debate_scenarios.py",
+      "target": "backend.debate.critique"
+    },
+    {
+      "source": "tests/verify_debate_scenarios.py",
+      "target": "backend.debate.moderator"
+    },
+    {
+      "source": "tests/verify_debate_scenarios.py",
+      "target": "backend.debate.consensus"
+    },
+    {
+      "source": "tests/verify_debate_scenarios.py",
+      "target": "backend.graph.debate_graph"
+    },
+    {
+      "source": "tests/verify_evolution_scenarios.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "tests/verify_evolution_scenarios.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/verify_evolution_scenarios.py",
+      "target": "sys"
+    },
+    {
+      "source": "tests/verify_evolution_scenarios.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/verify_evolution_scenarios.py",
+      "target": "backend.evolution.evolution_pipeline"
+    },
+    {
+      "source": "tests/verify_evolution_scenarios.py",
+      "target": "backend.evolution.project_scorer"
+    },
+    {
+      "source": "tests/verify_evolution_scenarios.py",
+      "target": "backend.evolution.security_inspector"
+    },
+    {
+      "source": "tests/verify_evolution_scenarios.py",
+      "target": "backend.evolution.refactoring_agent"
+    },
+    {
+      "source": "tests/verify_evolution_scenarios.py",
+      "target": "backend.evolution.benchmarker"
+    },
+    {
+      "source": "tests/verify_knowledge_scenarios.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "tests/verify_knowledge_scenarios.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/verify_knowledge_scenarios.py",
+      "target": "sys"
+    },
+    {
+      "source": "tests/verify_knowledge_scenarios.py",
+      "target": "time"
+    },
+    {
+      "source": "tests/verify_knowledge_scenarios.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/verify_knowledge_scenarios.py",
+      "target": "backend.knowledge.knowledge_manager"
+    },
+    {
+      "source": "tests/verify_knowledge_scenarios.py",
+      "target": "backend.knowledge.graph.knowledge_graph"
+    },
+    {
+      "source": "tests/verify_knowledge_scenarios.py",
+      "target": "backend.knowledge.graph.graph_builder"
+    },
+    {
+      "source": "tests/verify_learning_scenarios.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "tests/verify_learning_scenarios.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/verify_learning_scenarios.py",
+      "target": "sys"
+    },
+    {
+      "source": "tests/verify_learning_scenarios.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/verify_learning_scenarios.py",
+      "target": "backend.knowledge.knowledge_manager"
+    },
+    {
+      "source": "tests/verify_learning_scenarios.py",
+      "target": "backend.knowledge.memory.evolution_report"
+    },
+    {
+      "source": "tests/verify_plugins_scenarios.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "tests/verify_plugins_scenarios.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/verify_plugins_scenarios.py",
+      "target": "sys"
+    },
+    {
+      "source": "tests/verify_plugins_scenarios.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/verify_plugins_scenarios.py",
+      "target": "backend.plugins.manager"
+    },
+    {
+      "source": "tests/verify_plugins_scenarios.py",
+      "target": "backend.plugins.dependency"
+    },
+    {
+      "source": "tests/verify_project_intelligence.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "tests/verify_project_intelligence.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/verify_project_intelligence.py",
+      "target": "sys"
+    },
+    {
+      "source": "tests/verify_project_intelligence.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/verify_project_intelligence.py",
+      "target": "backend.project_intelligence.intelligence_manager"
+    },
+    {
+      "source": "tests/verify_project_manager.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "tests/verify_project_manager.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/verify_project_manager.py",
+      "target": "sys"
+    },
+    {
+      "source": "tests/verify_project_manager.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/verify_project_manager.py",
+      "target": "backend.project_manager.state_engine"
+    },
+    {
+      "source": "tests/verify_project_manager.py",
+      "target": "backend.project_manager.sprint_planner"
+    },
+    {
+      "source": "tests/verify_project_manager.py",
+      "target": "backend.project_manager.dependency_graph"
+    },
+    {
+      "source": "tests/verify_project_manager.py",
+      "target": "backend.project_manager.task_scheduler"
+    },
+    {
+      "source": "tests/verify_project_manager.py",
+      "target": "backend.project_manager.progress_tracker"
+    },
+    {
+      "source": "tests/verify_project_manager.py",
+      "target": "backend.project_manager.resume_engine"
+    },
+    {
+      "source": "tests/verify_project_manager.py",
+      "target": "backend.project_manager.bug_backlog"
+    },
+    {
+      "source": "tests/verify_project_manager.py",
+      "target": "backend.project_manager.milestone_generator"
+    },
+    {
+      "source": "tests/verify_project_manager.py",
+      "target": "backend.project_manager.decision_store"
+    },
+    {
+      "source": "tests/verify_project_manager.py",
+      "target": "backend.project_manager.standup_generator"
+    },
+    {
+      "source": "tests/verify_sre_scenarios.py",
+      "target": "asyncio"
+    },
+    {
+      "source": "tests/verify_sre_scenarios.py",
+      "target": "json"
+    },
+    {
+      "source": "tests/verify_sre_scenarios.py",
+      "target": "time"
+    },
+    {
+      "source": "tests/verify_sre_scenarios.py",
+      "target": "sys"
+    },
+    {
+      "source": "tests/verify_sre_scenarios.py",
+      "target": "pathlib"
+    },
+    {
+      "source": "tests/verify_sre_scenarios.py",
+      "target": "backend.monitoring.monitor"
+    },
+    {
+      "source": "tests/verify_sre_scenarios.py",
+      "target": "backend.monitoring.health_checker"
+    },
+    {
+      "source": "tests/verify_sre_scenarios.py",
+      "target": "backend.monitoring.metrics_collector"
+    },
+    {
+      "source": "tests/verify_sre_scenarios.py",
+      "target": "backend.monitoring.incident_detector"
+    },
+    {
+      "source": "tests/verify_sre_scenarios.py",
+      "target": "backend.monitoring.config"
+    },
+    {
+      "source": "tests/verify_sre_scenarios.py",
+      "target": "backend.monitoring.root_cause"
+    }
+  ]
+}

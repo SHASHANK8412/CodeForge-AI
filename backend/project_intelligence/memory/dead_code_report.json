@@ -1,0 +1,3860 @@
+{
+  "large_files_detected": [
+    {
+      "file": "workflow.py",
+      "line_count": 835
+    },
+    {
+      "file": "llm.py",
+      "line_count": 539
+    }
+  ],
+  "god_classes_detected": [
+    {
+      "file": "workflow.py",
+      "method_count": 31
+    }
+  ],
+  "unused_imports_detected": [
+    {
+      "file": "main.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "main.py",
+      "symbol": "cors"
+    },
+    {
+      "file": "main.py",
+      "symbol": "time"
+    },
+    {
+      "file": "main.py",
+      "symbol": "pydantic"
+    },
+    {
+      "file": "main.py",
+      "symbol": "parallel_workflow"
+    },
+    {
+      "file": "main.py",
+      "symbol": "parallel_graph"
+    },
+    {
+      "file": "main.py",
+      "symbol": "learning_dashboard"
+    },
+    {
+      "file": "main.py",
+      "symbol": "evolution_dashboard"
+    },
+    {
+      "file": "main.py",
+      "symbol": "gzip"
+    },
+    {
+      "file": "sitecustomize.py",
+      "symbol": "__future__"
+    },
+    {
+      "file": "sitecustomize.py",
+      "symbol": "annotations"
+    },
+    {
+      "file": "sitecustomize.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_graph.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_graph.py",
+      "symbol": "workflow"
+    },
+    {
+      "file": "test_ollama.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_ollama.py",
+      "symbol": "services"
+    },
+    {
+      "file": "test_ollama.py",
+      "symbol": "ollama_service"
+    },
+    {
+      "file": "architect_agent.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "architect_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "architect_agent.py",
+      "symbol": "base_agent"
+    },
+    {
+      "file": "backend_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "backend_agent.py",
+      "symbol": "base_agent"
+    },
+    {
+      "file": "base_agent.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "base_agent.py",
+      "symbol": "services"
+    },
+    {
+      "file": "base_agent.py",
+      "symbol": "llm"
+    },
+    {
+      "file": "coding_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "coding_agent.py",
+      "symbol": "base_agent"
+    },
+    {
+      "file": "coding_agent.py",
+      "symbol": "services"
+    },
+    {
+      "file": "coding_agent.py",
+      "symbol": "llm"
+    },
+    {
+      "file": "database_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "database_agent.py",
+      "symbol": "base_agent"
+    },
+    {
+      "file": "debug_agent.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "debug_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "debug_agent.py",
+      "symbol": "base_agent"
+    },
+    {
+      "file": "deployment_agent.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "deployment_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "deployment_agent.py",
+      "symbol": "base_agent"
+    },
+    {
+      "file": "deployment_agent.py",
+      "symbol": "docker_generator"
+    },
+    {
+      "file": "deployment_agent.py",
+      "symbol": "compose_generator"
+    },
+    {
+      "file": "deployment_agent.py",
+      "symbol": "render_generator"
+    },
+    {
+      "file": "deployment_agent.py",
+      "symbol": "railway_generator"
+    },
+    {
+      "file": "deployment_agent.py",
+      "symbol": "vercel_generator"
+    },
+    {
+      "file": "deployment_agent.py",
+      "symbol": "netlify_generator"
+    },
+    {
+      "file": "deployment_agent.py",
+      "symbol": "fly_generator"
+    },
+    {
+      "file": "deployment_agent.py",
+      "symbol": "huggingface_generator"
+    },
+    {
+      "file": "deployment_agent.py",
+      "symbol": "github_actions"
+    },
+    {
+      "file": "deployment_agent.py",
+      "symbol": "bundle_exporter"
+    },
+    {
+      "file": "documentation.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "documentation.py",
+      "symbol": "base_agent"
+    },
+    {
+      "file": "explanation_agent.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "explanation_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "explanation_agent.py",
+      "symbol": "base_agent"
+    },
+    {
+      "file": "factory.py",
+      "symbol": "coding_agent"
+    },
+    {
+      "file": "factory.py",
+      "symbol": "debug_agent"
+    },
+    {
+      "file": "factory.py",
+      "symbol": "resume_agent"
+    },
+    {
+      "file": "factory.py",
+      "symbol": "explanation_agent"
+    },
+    {
+      "file": "factory.py",
+      "symbol": "planner_agent"
+    },
+    {
+      "file": "factory.py",
+      "symbol": "architect_agent"
+    },
+    {
+      "file": "factory.py",
+      "symbol": "reviewer_agent"
+    },
+    {
+      "file": "factory.py",
+      "symbol": "rag_agent"
+    },
+    {
+      "file": "factory.py",
+      "symbol": "testing_agent"
+    },
+    {
+      "file": "factory.py",
+      "symbol": "frontend_agent"
+    },
+    {
+      "file": "frontend_agent.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "frontend_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "frontend_agent.py",
+      "symbol": "base_agent"
+    },
+    {
+      "file": "github_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "github_agent.py",
+      "symbol": "base_agent"
+    },
+    {
+      "file": "planner_agent.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "planner_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "planner_agent.py",
+      "symbol": "base_agent"
+    },
+    {
+      "file": "rag_agent.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "rag_agent.py",
+      "symbol": "rag_pipeline"
+    },
+    {
+      "file": "reflection_agent.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "reflection_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "reflection_agent.py",
+      "symbol": "base_agent"
+    },
+    {
+      "file": "resume_agent.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "resume_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "resume_agent.py",
+      "symbol": "base_agent"
+    },
+    {
+      "file": "reviewer_agent.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "reviewer_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "reviewer_agent.py",
+      "symbol": "base_agent"
+    },
+    {
+      "file": "router_agent.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "router_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "router_agent.py",
+      "symbol": "factory"
+    },
+    {
+      "file": "testing_agent.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "testing_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "testing_agent.py",
+      "symbol": "base_agent"
+    },
+    {
+      "file": "plugins.py",
+      "symbol": "logging"
+    },
+    {
+      "file": "plugins.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "plugins.py",
+      "symbol": "List"
+    },
+    {
+      "file": "plugins.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "evolution_dashboard.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "learning_dashboard.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "learning_dashboard.py",
+      "symbol": "Dict"
+    },
+    {
+      "file": "learning_dashboard.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "learning_dashboard.py",
+      "symbol": "List"
+    },
+    {
+      "file": "learning_dashboard.py",
+      "symbol": "HTTPException"
+    },
+    {
+      "file": "learning_dashboard.py",
+      "symbol": "learning_pipeline"
+    },
+    {
+      "file": "monitoring_dashboard.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "monitoring_dashboard.py",
+      "symbol": "Dict"
+    },
+    {
+      "file": "monitoring_dashboard.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "monitoring_dashboard.py",
+      "symbol": "List"
+    },
+    {
+      "file": "monitoring_dashboard.py",
+      "symbol": "responses"
+    },
+    {
+      "file": "monitoring_dashboard.py",
+      "symbol": "config"
+    },
+    {
+      "file": "monitoring_dashboard.py",
+      "symbol": "sre_settings"
+    },
+    {
+      "file": "consensus.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "critique.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "critique.py",
+      "symbol": "services"
+    },
+    {
+      "file": "critique.py",
+      "symbol": "llm"
+    },
+    {
+      "file": "logger.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "logger.py",
+      "symbol": "Dict"
+    },
+    {
+      "file": "memory.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "memory.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "memory.py",
+      "symbol": "List"
+    },
+    {
+      "file": "moderator.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "orchestrator.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "orchestrator.py",
+      "symbol": "services"
+    },
+    {
+      "file": "orchestrator.py",
+      "symbol": "llm"
+    },
+    {
+      "file": "voting.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "voting.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "benchmarker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "benchmarker.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "evolution_pipeline.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "evolution_pipeline.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "evolution_pipeline.py",
+      "symbol": "project_scorer"
+    },
+    {
+      "file": "project_scorer.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "project_scorer.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "project_scorer.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "refactoring_agent.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "refactoring_agent.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "refactoring_agent.py",
+      "symbol": "Dict"
+    },
+    {
+      "file": "refactoring_agent.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "refactoring_agent.py",
+      "symbol": "List"
+    },
+    {
+      "file": "refactoring_agent.py",
+      "symbol": "Only"
+    },
+    {
+      "file": "refactoring_agent.py",
+      "symbol": "itself"
+    },
+    {
+      "file": "security_inspector.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "security_inspector.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "dependency_generator.py",
+      "symbol": "dataclasses"
+    },
+    {
+      "file": "dependency_generator.py",
+      "symbol": "mapping"
+    },
+    {
+      "file": "dependency_generator.py",
+      "symbol": "JavaScript"
+    },
+    {
+      "file": "dependency_generator.py",
+      "symbol": "submodule"
+    },
+    {
+      "file": "docker_generator.py",
+      "symbol": "config"
+    },
+    {
+      "file": "package_generator.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "project_generator.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "project_generator.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "project_generator.py",
+      "symbol": "validators"
+    },
+    {
+      "file": "project_generator.py",
+      "symbol": "services"
+    },
+    {
+      "file": "project_generator.py",
+      "symbol": "project_builder"
+    },
+    {
+      "file": "project_generator.py",
+      "symbol": "file_writer"
+    },
+    {
+      "file": "requirements_generator.py",
+      "symbol": "Map"
+    },
+    {
+      "file": "debate_graph.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "debate_graph.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "parallel_workflow.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "parallel_workflow.py",
+      "symbol": "langgraph"
+    },
+    {
+      "file": "parallel_workflow.py",
+      "symbol": "project_state"
+    },
+    {
+      "file": "parallel_workflow.py",
+      "symbol": "planner_agent"
+    },
+    {
+      "file": "parallel_workflow.py",
+      "symbol": "architect_agent"
+    },
+    {
+      "file": "parallel_workflow.py",
+      "symbol": "validator"
+    },
+    {
+      "file": "parallel_workflow.py",
+      "symbol": "summarizer"
+    },
+    {
+      "file": "parallel_workflow.py",
+      "symbol": "services"
+    },
+    {
+      "file": "parallel_workflow.py",
+      "symbol": "reflection_service"
+    },
+    {
+      "file": "parallel_workflow.py",
+      "symbol": "debate_graph"
+    },
+    {
+      "file": "profiler.py",
+      "symbol": "threading"
+    },
+    {
+      "file": "project_state.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "project_workflow.py",
+      "symbol": "asyncio"
+    },
+    {
+      "file": "project_workflow.py",
+      "symbol": "time"
+    },
+    {
+      "file": "project_workflow.py",
+      "symbol": "langgraph"
+    },
+    {
+      "file": "project_workflow.py",
+      "symbol": "project_state"
+    },
+    {
+      "file": "project_workflow.py",
+      "symbol": "planner_agent"
+    },
+    {
+      "file": "project_workflow.py",
+      "symbol": "architect_agent"
+    },
+    {
+      "file": "project_workflow.py",
+      "symbol": "services"
+    },
+    {
+      "file": "project_workflow.py",
+      "symbol": "llm"
+    },
+    {
+      "file": "reflection_node.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "reflection_node.py",
+      "symbol": "graph"
+    },
+    {
+      "file": "reflection_node.py",
+      "symbol": "project_state"
+    },
+    {
+      "file": "reflection_node.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "reflection_node.py",
+      "symbol": "services"
+    },
+    {
+      "file": "test_graph.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_graph.py",
+      "symbol": "workflow"
+    },
+    {
+      "file": "workflow.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "workflow.py",
+      "symbol": "time"
+    },
+    {
+      "file": "workflow.py",
+      "symbol": "langgraph"
+    },
+    {
+      "file": "workflow.py",
+      "symbol": "planner_agent"
+    },
+    {
+      "file": "workflow.py",
+      "symbol": "architect_agent"
+    },
+    {
+      "file": "workflow.py",
+      "symbol": "coding_agent"
+    },
+    {
+      "file": "workflow.py",
+      "symbol": "debug_agent"
+    },
+    {
+      "file": "workflow.py",
+      "symbol": "resume_agent"
+    },
+    {
+      "file": "workflow.py",
+      "symbol": "explanation_agent"
+    },
+    {
+      "file": "workflow.py",
+      "symbol": "reviewer_agent"
+    },
+    {
+      "file": "workflow.py",
+      "symbol": "frontend_agent"
+    },
+    {
+      "file": "workflow.py",
+      "symbol": "deployment_agent"
+    },
+    {
+      "file": "workflow.py",
+      "symbol": "parallel_workflow"
+    },
+    {
+      "file": "knowledge_manager.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "knowledge_manager.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "knowledge_manager.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "knowledge_manager.py",
+      "symbol": "List"
+    },
+    {
+      "file": "knowledge_manager.py",
+      "symbol": "project_memory"
+    },
+    {
+      "file": "knowledge_manager.py",
+      "symbol": "knowledge_graph"
+    },
+    {
+      "file": "knowledge_manager.py",
+      "symbol": "embeddings"
+    },
+    {
+      "file": "similarity.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "api_extractor.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "api_extractor.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "api_extractor.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "pattern_extractor.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "pattern_extractor.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "project_extractor.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "project_extractor.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "project_extractor.py",
+      "symbol": "List"
+    },
+    {
+      "file": "graph_builder.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "graph_builder.py",
+      "symbol": "List"
+    },
+    {
+      "file": "graph_builder.py",
+      "symbol": "Dict"
+    },
+    {
+      "file": "graph_builder.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "graph_builder.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "graph_builder.py",
+      "symbol": "knowledge_graph"
+    },
+    {
+      "file": "graph_query.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "graph_query.py",
+      "symbol": "Dict"
+    },
+    {
+      "file": "graph_query.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "graph_query.py",
+      "symbol": "collections"
+    },
+    {
+      "file": "graph_query.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "graph_query.py",
+      "symbol": "knowledge_graph"
+    },
+    {
+      "file": "graph_visualizer.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "graph_visualizer.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "graph_visualizer.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "knowledge_graph.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "knowledge_graph.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "knowledge_graph.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "knowledge_graph.py",
+      "symbol": "Set"
+    },
+    {
+      "file": "evolution_report.py",
+      "symbol": "json"
+    },
+    {
+      "file": "evolution_report.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "evolution_report.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "evolution_report.py",
+      "symbol": "List"
+    },
+    {
+      "file": "project_memory.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "project_memory.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "recommender.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "recommender.py",
+      "symbol": "List"
+    },
+    {
+      "file": "architecture_evolver.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "architecture_evolver.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "architecture_evolver.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "architecture_evolver.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "architecture_evolver.py",
+      "symbol": "learning_memory"
+    },
+    {
+      "file": "best_practices.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "best_practices.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "best_practices.py",
+      "symbol": "List"
+    },
+    {
+      "file": "confidence_scorer.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "confidence_scorer.py",
+      "symbol": "Dict"
+    },
+    {
+      "file": "confidence_scorer.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "experience_db.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "experience_db.py",
+      "symbol": "learning_memory"
+    },
+    {
+      "file": "learning_memory.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "learning_memory.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "learning_pipeline.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "learning_pipeline.py",
+      "symbol": "learning_memory"
+    },
+    {
+      "file": "pattern_recognizer.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "pattern_recognizer.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "pattern_recognizer.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "pattern_recognizer.py",
+      "symbol": "learning_memory"
+    },
+    {
+      "file": "performance_tracker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "performance_tracker.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "prompt_optimizer.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "prompt_optimizer.py",
+      "symbol": "services"
+    },
+    {
+      "file": "prompt_optimizer.py",
+      "symbol": "llm"
+    },
+    {
+      "file": "reflection_engine.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "reflection_engine.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "reflection_engine.py",
+      "symbol": "Dict"
+    },
+    {
+      "file": "reflection_engine.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "reflection_engine.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "reflection_engine.py",
+      "symbol": "services"
+    },
+    {
+      "file": "reflection_engine.py",
+      "symbol": "llm"
+    },
+    {
+      "file": "reflection_engine.py",
+      "symbol": "Optimize"
+    },
+    {
+      "file": "reflection_engine.py",
+      "symbol": "chains"
+    },
+    {
+      "file": "reflection_engine.py",
+      "symbol": "enable"
+    },
+    {
+      "file": "reflection_engine.py",
+      "symbol": "background"
+    },
+    {
+      "file": "reflection_engine.py",
+      "symbol": "validation"
+    },
+    {
+      "file": "reflection_engine.py",
+      "symbol": "sweeps"
+    },
+    {
+      "file": "conversation_manager.py",
+      "symbol": "__future__"
+    },
+    {
+      "file": "conversation_manager.py",
+      "symbol": "annotations"
+    },
+    {
+      "file": "conversation_manager.py",
+      "symbol": "dataclasses"
+    },
+    {
+      "file": "conversation_manager.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "conversation_manager.py",
+      "symbol": "crud"
+    },
+    {
+      "file": "conversation_manager.py",
+      "symbol": "models"
+    },
+    {
+      "file": "conversation_memory.py",
+      "symbol": "__future__"
+    },
+    {
+      "file": "conversation_memory.py",
+      "symbol": "annotations"
+    },
+    {
+      "file": "conversation_memory.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "conversation_memory.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "conversation_memory.py",
+      "symbol": "conversation_manager"
+    },
+    {
+      "file": "conversation_memory.py",
+      "symbol": "crud"
+    },
+    {
+      "file": "crud.py",
+      "symbol": "__future__"
+    },
+    {
+      "file": "crud.py",
+      "symbol": "annotations"
+    },
+    {
+      "file": "crud.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "crud.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "crud.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "crud.py",
+      "symbol": "models"
+    },
+    {
+      "file": "database.py",
+      "symbol": "__future__"
+    },
+    {
+      "file": "database.py",
+      "symbol": "annotations"
+    },
+    {
+      "file": "database.py",
+      "symbol": "contextlib"
+    },
+    {
+      "file": "database.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "database.py",
+      "symbol": "threading"
+    },
+    {
+      "file": "memory_manager.py",
+      "symbol": "__future__"
+    },
+    {
+      "file": "memory_manager.py",
+      "symbol": "annotations"
+    },
+    {
+      "file": "memory_manager.py",
+      "symbol": "dataclasses"
+    },
+    {
+      "file": "memory_manager.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "memory_manager.py",
+      "symbol": "concurrent"
+    },
+    {
+      "file": "memory_manager.py",
+      "symbol": "futures"
+    },
+    {
+      "file": "memory_manager.py",
+      "symbol": "config"
+    },
+    {
+      "file": "models.py",
+      "symbol": "__future__"
+    },
+    {
+      "file": "models.py",
+      "symbol": "annotations"
+    },
+    {
+      "file": "models.py",
+      "symbol": "dataclasses"
+    },
+    {
+      "file": "models.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "project_memory.py",
+      "symbol": "__future__"
+    },
+    {
+      "file": "project_memory.py",
+      "symbol": "annotations"
+    },
+    {
+      "file": "project_memory.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "project_memory.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "vector_memory.py",
+      "symbol": "__future__"
+    },
+    {
+      "file": "vector_memory.py",
+      "symbol": "annotations"
+    },
+    {
+      "file": "vector_memory.py",
+      "symbol": "collections"
+    },
+    {
+      "file": "vector_memory.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "vector_memory.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "alert_manager.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "analytics.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "autoscaler.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "config.py",
+      "symbol": "pydantic"
+    },
+    {
+      "file": "config.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "health_checker.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "incident_detector.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "incident_detector.py",
+      "symbol": "pydantic"
+    },
+    {
+      "file": "knowledge_base.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "knowledge_base.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "metrics_collector.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "metrics_collector.py",
+      "symbol": "collections"
+    },
+    {
+      "file": "monitor.py",
+      "symbol": "asyncio"
+    },
+    {
+      "file": "monitor.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "monitor.py",
+      "symbol": "config"
+    },
+    {
+      "file": "predictor.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "recovery_engine.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "recovery_engine.py",
+      "symbol": "monitoring"
+    },
+    {
+      "file": "root_cause.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "root_cause.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "root_cause.py",
+      "symbol": "services"
+    },
+    {
+      "file": "root_cause.py",
+      "symbol": "llm"
+    },
+    {
+      "file": "scheduler.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "validator.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "validator.py",
+      "symbol": "Dict"
+    },
+    {
+      "file": "validator.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "validator.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "validator.py",
+      "symbol": "monitoring"
+    },
+    {
+      "file": "dependency.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "dependency.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "events.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "installer.py",
+      "symbol": "shutil"
+    },
+    {
+      "file": "installer.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "installer.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "installer.py",
+      "symbol": "Dict"
+    },
+    {
+      "file": "installer.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "interfaces.py",
+      "symbol": "abc"
+    },
+    {
+      "file": "interfaces.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "loader.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "loader.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "loader.py",
+      "symbol": "Dict"
+    },
+    {
+      "file": "loader.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "loader.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "loader.py",
+      "symbol": "interfaces"
+    },
+    {
+      "file": "manager.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "manager.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "manager.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "manager.py",
+      "symbol": "List"
+    },
+    {
+      "file": "manager.py",
+      "symbol": "events"
+    },
+    {
+      "file": "manager.py",
+      "symbol": "SandboxException"
+    },
+    {
+      "file": "manager.py",
+      "symbol": "interfaces"
+    },
+    {
+      "file": "monitor.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "permissions.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "registry.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "registry.py",
+      "symbol": "List"
+    },
+    {
+      "file": "sandbox.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "sandbox.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "api_mapper.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "api_mapper.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "api_mapper.py",
+      "symbol": "List"
+    },
+    {
+      "file": "component_mapper.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "component_mapper.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "dependency_scanner.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "dependency_scanner.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "dependency_scanner.py",
+      "symbol": "Set"
+    },
+    {
+      "file": "dependency_scanner.py",
+      "symbol": "Statically"
+    },
+    {
+      "file": "dependency_scanner.py",
+      "symbol": "analyzes"
+    },
+    {
+      "file": "dependency_scanner.py",
+      "symbol": "headers"
+    },
+    {
+      "file": "dependency_scanner.py",
+      "symbol": "construct"
+    },
+    {
+      "file": "dependency_scanner.py",
+      "symbol": "dependency"
+    },
+    {
+      "file": "dependency_scanner.py",
+      "symbol": "trees"
+    },
+    {
+      "file": "dependency_scanner.py",
+      "symbol": "Scans"
+    },
+    {
+      "file": "dependency_scanner.py",
+      "symbol": "directory"
+    },
+    {
+      "file": "dependency_scanner.py",
+      "symbol": "recursively"
+    },
+    {
+      "file": "dependency_scanner.py",
+      "symbol": "and"
+    },
+    {
+      "file": "dependency_scanner.py",
+      "symbol": "maps"
+    },
+    {
+      "file": "dependency_scanner.py",
+      "symbol": "links"
+    },
+    {
+      "file": "file_summarizer.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "file_summarizer.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "impact_analyzer.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "intelligence_manager.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "intelligence_manager.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "intelligence_manager.py",
+      "symbol": "List"
+    },
+    {
+      "file": "intelligence_manager.py",
+      "symbol": "dependency_scanner"
+    },
+    {
+      "file": "schema_inferer.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "schema_inferer.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "schema_inferer.py",
+      "symbol": "List"
+    },
+    {
+      "file": "smell_detector.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "smell_detector.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "smell_detector.py",
+      "symbol": "List"
+    },
+    {
+      "file": "smell_detector.py",
+      "symbol": "Scan"
+    },
+    {
+      "file": "bug_backlog.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "decision_store.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "dependency_graph.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "dependency_graph.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "milestone_generator.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "progress_tracker.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "resume_engine.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "sprint_planner.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "standup_generator.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "state_engine.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "state_engine.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "state_engine.py",
+      "symbol": "List"
+    },
+    {
+      "file": "task_scheduler.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "loader.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "loader.py",
+      "symbol": "rag"
+    },
+    {
+      "file": "loader.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "loader.py",
+      "symbol": "loader"
+    },
+    {
+      "file": "loader.py",
+      "symbol": "DocumentLoader"
+    },
+    {
+      "file": "rag_pipeline.py",
+      "symbol": "rag"
+    },
+    {
+      "file": "rag_pipeline.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "rag_pipeline.py",
+      "symbol": "services"
+    },
+    {
+      "file": "rag_pipeline.py",
+      "symbol": "llm"
+    },
+    {
+      "file": "retriever.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "retriever.py",
+      "symbol": "rag"
+    },
+    {
+      "file": "retriever.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "retriever.py",
+      "symbol": "retriever"
+    },
+    {
+      "file": "retriever.py",
+      "symbol": "Retriever"
+    },
+    {
+      "file": "vector_store.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "vector_store.py",
+      "symbol": "rag"
+    },
+    {
+      "file": "vector_store.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "vector_store.py",
+      "symbol": "vector_store"
+    },
+    {
+      "file": "vector_store.py",
+      "symbol": "VectorStore"
+    },
+    {
+      "file": "test_embeddings.py",
+      "symbol": "types"
+    },
+    {
+      "file": "test_embeddings.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_embeddings.py",
+      "symbol": "rag"
+    },
+    {
+      "file": "test_embeddings.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "test_frontend.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_frontend.py",
+      "symbol": "workflow"
+    },
+    {
+      "file": "test_rag_agent.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_rag_agent.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "test_rag_pipeline.py",
+      "symbol": "rag_pipeline"
+    },
+    {
+      "file": "test_retriever.py",
+      "symbol": "rag"
+    },
+    {
+      "file": "test_retriever.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "test_splitter.py",
+      "symbol": "langchain_core"
+    },
+    {
+      "file": "test_splitter.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_splitter.py",
+      "symbol": "rag"
+    },
+    {
+      "file": "test_splitter.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "test_vector_store.py",
+      "symbol": "types"
+    },
+    {
+      "file": "test_vector_store.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_vector_store.py",
+      "symbol": "rag"
+    },
+    {
+      "file": "test_vector_store.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "embeddings.py",
+      "symbol": "langchain_ollama"
+    },
+    {
+      "file": "loader.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "loader.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "loader.py",
+      "symbol": "langchain_community"
+    },
+    {
+      "file": "loader.py",
+      "symbol": "document_loaders"
+    },
+    {
+      "file": "retriever.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "retriever.py",
+      "symbol": "rag"
+    },
+    {
+      "file": "retriever.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "splitter.py",
+      "symbol": "langchain_text_splitters"
+    },
+    {
+      "file": "vector_store.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "vector_store.py",
+      "symbol": "langchain_chroma"
+    },
+    {
+      "file": "vector_store.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "vector_store.py",
+      "symbol": "rag"
+    },
+    {
+      "file": "vector_store.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "vector_store.py",
+      "symbol": "embeddings"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "simple"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "referenced"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "elsewhere"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "Match"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "If"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "count"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "only"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "appears"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "Remove"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "statements"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "failed"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "xyz"
+    },
+    {
+      "file": "debug.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "debug.py",
+      "symbol": "services"
+    },
+    {
+      "file": "debug.py",
+      "symbol": "llm"
+    },
+    {
+      "file": "patch_applier.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "patch_generator.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "patch_generator.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "patch_generator.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "patch_generator.py",
+      "symbol": "services"
+    },
+    {
+      "file": "patch_generator.py",
+      "symbol": "llm"
+    },
+    {
+      "file": "performance_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "report_generator.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "reviewer.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "reviewer.py",
+      "symbol": "services"
+    },
+    {
+      "file": "reviewer.py",
+      "symbol": "llm"
+    },
+    {
+      "file": "reviewer.py",
+      "symbol": "config"
+    },
+    {
+      "file": "reviewer.py",
+      "symbol": "REVIEW_MODEL"
+    },
+    {
+      "file": "security_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "self_heal.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "chat.py",
+      "symbol": "__future__"
+    },
+    {
+      "file": "chat.py",
+      "symbol": "annotations"
+    },
+    {
+      "file": "chat.py",
+      "symbol": "responses"
+    },
+    {
+      "file": "chat.py",
+      "symbol": "workflow"
+    },
+    {
+      "file": "chat.py",
+      "symbol": "crud"
+    },
+    {
+      "file": "chat.py",
+      "symbol": "schemas"
+    },
+    {
+      "file": "generate.py",
+      "symbol": "pydantic"
+    },
+    {
+      "file": "generate.py",
+      "symbol": "parallel_workflow"
+    },
+    {
+      "file": "generate.py",
+      "symbol": "parallel_graph"
+    },
+    {
+      "file": "memory.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "plan.py",
+      "symbol": "time"
+    },
+    {
+      "file": "plan.py",
+      "symbol": "pydantic"
+    },
+    {
+      "file": "plan.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "plan.py",
+      "symbol": "workflow"
+    },
+    {
+      "file": "project.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "project.py",
+      "symbol": "responses"
+    },
+    {
+      "file": "project.py",
+      "symbol": "pydantic"
+    },
+    {
+      "file": "project.py",
+      "symbol": "parallel_workflow"
+    },
+    {
+      "file": "project.py",
+      "symbol": "parallel_graph"
+    },
+    {
+      "file": "project.py",
+      "symbol": "llm"
+    },
+    {
+      "file": "project.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "rag.py",
+      "symbol": "__future__"
+    },
+    {
+      "file": "rag.py",
+      "symbol": "annotations"
+    },
+    {
+      "file": "rag.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "rag.py",
+      "symbol": "pydantic"
+    },
+    {
+      "file": "chat.py",
+      "symbol": "__future__"
+    },
+    {
+      "file": "chat.py",
+      "symbol": "annotations"
+    },
+    {
+      "file": "chat.py",
+      "symbol": "pydantic"
+    },
+    {
+      "file": "llm.py",
+      "symbol": "__future__"
+    },
+    {
+      "file": "llm.py",
+      "symbol": "annotations"
+    },
+    {
+      "file": "llm.py",
+      "symbol": "threading"
+    },
+    {
+      "file": "llm.py",
+      "symbol": "Lock"
+    },
+    {
+      "file": "llm.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "llm.py",
+      "symbol": "type"
+    },
+    {
+      "file": "llm.py",
+      "symbol": "ignore"
+    },
+    {
+      "file": "llm.py",
+      "symbol": "defined"
+    },
+    {
+      "file": "llm.py",
+      "symbol": "prompt_optimizer"
+    },
+    {
+      "file": "ollama_service.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "ollama_service.py",
+      "symbol": "services"
+    },
+    {
+      "file": "ollama_service.py",
+      "symbol": "llm"
+    },
+    {
+      "file": "reflection_service.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "reflection_service.py",
+      "symbol": "difflib"
+    },
+    {
+      "file": "reflection_service.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "zip_service.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "bundle_exporter.py",
+      "symbol": "zipfile"
+    },
+    {
+      "file": "bundle_exporter.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "bundle_exporter.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "bundle_exporter.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "compose_generator.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "deployment_report.py",
+      "symbol": "dataclasses"
+    },
+    {
+      "file": "deployment_report.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "docker_generator.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "docker_generator.py",
+      "symbol": "Dict"
+    },
+    {
+      "file": "docker_generator.py",
+      "symbol": "Any"
+    },
+    {
+      "file": "env_detector.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "github_actions.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "render_generator.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "validator.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "validator.py",
+      "symbol": "Set"
+    },
+    {
+      "file": "validator.py",
+      "symbol": "services"
+    },
+    {
+      "file": "validator.py",
+      "symbol": "deployment_report"
+    },
+    {
+      "file": "cache.py",
+      "symbol": "collections"
+    },
+    {
+      "file": "cache.py",
+      "symbol": "threading"
+    },
+    {
+      "file": "cache.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "cache.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "retry.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "timer.py",
+      "symbol": "types"
+    },
+    {
+      "file": "timer.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "api_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "api_checker.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "models"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "architecture_checker.py",
+      "symbol": "get_all_files"
+    },
+    {
+      "file": "database_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "database_checker.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "dependency_checker.py",
+      "symbol": "models"
+    },
+    {
+      "file": "dependency_checker.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "dependency_checker.py",
+      "symbol": "Quick"
+    },
+    {
+      "file": "dependency_checker.py",
+      "symbol": "its"
+    },
+    {
+      "file": "dependency_checker.py",
+      "symbol": "root"
+    },
+    {
+      "file": "dependency_checker.py",
+      "symbol": "statements"
+    },
+    {
+      "file": "documentation_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "documentation_checker.py",
+      "symbol": "models"
+    },
+    {
+      "file": "documentation_checker.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "frontend_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "frontend_checker.py",
+      "symbol": "models"
+    },
+    {
+      "file": "frontend_checker.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "frontend_checker.py",
+      "symbol": "Match"
+    },
+    {
+      "file": "frontend_checker.py",
+      "symbol": "like"
+    },
+    {
+      "file": "frontend_checker.py",
+      "symbol": "Y"
+    },
+    {
+      "file": "frontend_checker.py",
+      "symbol": "reference"
+    },
+    {
+      "file": "frontend_checker.py",
+      "symbol": "found"
+    },
+    {
+      "file": "frontend_checker.py",
+      "symbol": "Import"
+    },
+    {
+      "file": "frontend_checker.py",
+      "symbol": "dependency"
+    },
+    {
+      "file": "frontend_checker.py",
+      "symbol": "detected"
+    },
+    {
+      "file": "frontend_checker.py",
+      "symbol": "between"
+    },
+    {
+      "file": "models.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "models.py",
+      "symbol": "pydantic"
+    },
+    {
+      "file": "performance_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "performance_checker.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "performance_checker.py",
+      "symbol": "models"
+    },
+    {
+      "file": "performance_checker.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "quality_score.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "quality_score.py",
+      "symbol": "Dict"
+    },
+    {
+      "file": "quality_score.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "quality_score.py",
+      "symbol": "validation"
+    },
+    {
+      "file": "quality_score.py",
+      "symbol": "models"
+    },
+    {
+      "file": "security_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "security_checker.py",
+      "symbol": "models"
+    },
+    {
+      "file": "security_checker.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "syntax_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "syntax_checker.py",
+      "symbol": "models"
+    },
+    {
+      "file": "syntax_checker.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "utils.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "utils.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "validator.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "validator.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "validator.py",
+      "symbol": "Dict"
+    },
+    {
+      "file": "validator.py",
+      "symbol": "models"
+    },
+    {
+      "file": "project_validator.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "project_validator.py",
+      "symbol": "dataclasses"
+    },
+    {
+      "file": "project_validator.py",
+      "symbol": "generators"
+    },
+    {
+      "file": "project_validator.py",
+      "symbol": "dependency_generator"
+    },
+    {
+      "file": "file_writer.py",
+      "symbol": "os"
+    },
+    {
+      "file": "file_writer.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "project_builder.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "project_builder.py",
+      "symbol": "typing"
+    },
+    {
+      "file": "project_builder.py",
+      "symbol": "workflow"
+    },
+    {
+      "file": "project_builder.py",
+      "symbol": "file_writer"
+    },
+    {
+      "file": "vite.config.js",
+      "symbol": "vitejs"
+    },
+    {
+      "file": "App.jsx",
+      "symbol": "layouts"
+    },
+    {
+      "file": "main.jsx",
+      "symbol": "dom"
+    },
+    {
+      "file": "main.jsx",
+      "symbol": "client"
+    },
+    {
+      "file": "main.jsx",
+      "symbol": "index"
+    },
+    {
+      "file": "main.jsx",
+      "symbol": "css"
+    },
+    {
+      "file": "main.jsx",
+      "symbol": "jsx"
+    },
+    {
+      "file": "ChatBox.jsx",
+      "symbol": "icons"
+    },
+    {
+      "file": "ChatBox.jsx",
+      "symbol": "api"
+    },
+    {
+      "file": "ChatBox.jsx",
+      "symbol": "conversationApi"
+    },
+    {
+      "file": "ChatBox.jsx",
+      "symbol": "plannerApi"
+    },
+    {
+      "file": "ChatBox.jsx",
+      "symbol": "ragApi"
+    },
+    {
+      "file": "ChatBox.jsx",
+      "symbol": "utils"
+    },
+    {
+      "file": "ChatBox.jsx",
+      "symbol": "chatStorage"
+    },
+    {
+      "file": "ChatBox.jsx",
+      "symbol": "projectApi"
+    },
+    {
+      "file": "ChatBox.jsx",
+      "symbol": "hot"
+    },
+    {
+      "file": "CodeBlock.jsx",
+      "symbol": "icons"
+    },
+    {
+      "file": "FileExplorer.jsx",
+      "symbol": "icons"
+    },
+    {
+      "file": "FileExplorer.jsx",
+      "symbol": "services"
+    },
+    {
+      "file": "FileExplorer.jsx",
+      "symbol": "projectApi"
+    },
+    {
+      "file": "InputBar.jsx",
+      "symbol": "icons"
+    },
+    {
+      "file": "Message.jsx",
+      "symbol": "markdown"
+    },
+    {
+      "file": "Message.jsx",
+      "symbol": "gfm"
+    },
+    {
+      "file": "Message.jsx",
+      "symbol": "Prism"
+    },
+    {
+      "file": "Message.jsx",
+      "symbol": "dist"
+    },
+    {
+      "file": "Message.jsx",
+      "symbol": "esm"
+    },
+    {
+      "file": "Message.jsx",
+      "symbol": "styles"
+    },
+    {
+      "file": "Message.jsx",
+      "symbol": "prism"
+    },
+    {
+      "file": "Message.jsx",
+      "symbol": "icons"
+    },
+    {
+      "file": "MetricsDashboard.jsx",
+      "symbol": "FaClock"
+    },
+    {
+      "file": "MetricsDashboard.jsx",
+      "symbol": "icons"
+    },
+    {
+      "file": "MetricsDashboard.jsx",
+      "symbol": "services"
+    },
+    {
+      "file": "MetricsDashboard.jsx",
+      "symbol": "projectApi"
+    },
+    {
+      "file": "PlannerCard.jsx",
+      "symbol": "markdown"
+    },
+    {
+      "file": "PlannerCard.jsx",
+      "symbol": "gfm"
+    },
+    {
+      "file": "ReflectionDashboard.jsx",
+      "symbol": "icons"
+    },
+    {
+      "file": "ReflectionDashboard.jsx",
+      "symbol": "services"
+    },
+    {
+      "file": "ReflectionDashboard.jsx",
+      "symbol": "projectApi"
+    },
+    {
+      "file": "Sidebar.jsx",
+      "symbol": "FaFolderOpen"
+    },
+    {
+      "file": "Sidebar.jsx",
+      "symbol": "icons"
+    },
+    {
+      "file": "Sidebar.jsx",
+      "symbol": "utils"
+    },
+    {
+      "file": "Sidebar.jsx",
+      "symbol": "chatStorage"
+    },
+    {
+      "file": "Dashboard.jsx",
+      "symbol": "FaTrophy"
+    },
+    {
+      "file": "Dashboard.jsx",
+      "symbol": "icons"
+    },
+    {
+      "file": "Home.jsx",
+      "symbol": "layouts"
+    },
+    {
+      "file": "LearningDashboard.jsx",
+      "symbol": "FaSyncAlt"
+    },
+    {
+      "file": "LearningDashboard.jsx",
+      "symbol": "FaBug"
+    },
+    {
+      "file": "LearningDashboard.jsx",
+      "symbol": "icons"
+    },
+    {
+      "file": "Planner.jsx",
+      "symbol": "components"
+    },
+    {
+      "file": "Planner.jsx",
+      "symbol": "services"
+    },
+    {
+      "file": "Planner.jsx",
+      "symbol": "plannerApi"
+    },
+    {
+      "file": "PluginsDashboard.jsx",
+      "symbol": "React"
+    },
+    {
+      "file": "PluginsDashboard.jsx",
+      "symbol": "FaInfinity"
+    },
+    {
+      "file": "ProjectGenerator.jsx",
+      "symbol": "useEffect"
+    },
+    {
+      "file": "ProjectGenerator.jsx",
+      "symbol": "markdown"
+    },
+    {
+      "file": "ProjectGenerator.jsx",
+      "symbol": "gfm"
+    },
+    {
+      "file": "ProjectGenerator.jsx",
+      "symbol": "Prism"
+    },
+    {
+      "file": "ProjectGenerator.jsx",
+      "symbol": "dist"
+    },
+    {
+      "file": "ProjectGenerator.jsx",
+      "symbol": "esm"
+    },
+    {
+      "file": "ProjectGenerator.jsx",
+      "symbol": "styles"
+    },
+    {
+      "file": "ProjectGenerator.jsx",
+      "symbol": "prism"
+    },
+    {
+      "file": "ProjectGenerator.jsx",
+      "symbol": "services"
+    },
+    {
+      "file": "ProjectGenerator.jsx",
+      "symbol": "projectApi"
+    },
+    {
+      "file": "api.js",
+      "symbol": "utils"
+    },
+    {
+      "file": "api.js",
+      "symbol": "chatStorage"
+    },
+    {
+      "file": "api.js",
+      "symbol": "conversationApi"
+    },
+    {
+      "file": "plannerApi.js",
+      "symbol": "utils"
+    },
+    {
+      "file": "plannerApi.js",
+      "symbol": "chatStorage"
+    },
+    {
+      "file": "generate_optimization_reports.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "generate_optimization_reports.py",
+      "symbol": "fallbacks"
+    },
+    {
+      "file": "generate_optimization_reports.py",
+      "symbol": "L10"
+    },
+    {
+      "file": "test_api_checker.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_api_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_api_checker.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_api_checker.py",
+      "symbol": "validation"
+    },
+    {
+      "file": "test_cache.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_cache.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "test_consensus.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_consensus.py",
+      "symbol": "consensus"
+    },
+    {
+      "file": "test_database_checker.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_database_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_database_checker.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_database_checker.py",
+      "symbol": "validation"
+    },
+    {
+      "file": "test_day12_memory.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_day14_efficiency.py",
+      "symbol": "services"
+    },
+    {
+      "file": "test_day14_efficiency.py",
+      "symbol": "llm"
+    },
+    {
+      "file": "test_day22_generators.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_day22_generators.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_day22_generators.py",
+      "symbol": "validators"
+    },
+    {
+      "file": "test_day22_generators.py",
+      "symbol": "React"
+    },
+    {
+      "file": "test_day22_generators.py",
+      "symbol": "BrowserRouter"
+    },
+    {
+      "file": "test_day22_generators.py",
+      "symbol": "nfrom"
+    },
+    {
+      "file": "test_day22_generators.py",
+      "symbol": "MongoClient"
+    },
+    {
+      "file": "test_day22_generators.py",
+      "symbol": "zip_service"
+    },
+    {
+      "file": "test_day23_self_heal.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_day23_self_heal.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_day23_self_heal.py",
+      "symbol": "unittest"
+    },
+    {
+      "file": "test_day23_self_heal.py",
+      "symbol": "AsyncMock"
+    },
+    {
+      "file": "test_day23_self_heal.py",
+      "symbol": "report_generator"
+    },
+    {
+      "file": "test_day23_self_heal.py",
+      "symbol": "ReportGenerator"
+    },
+    {
+      "file": "test_day23_self_heal.py",
+      "symbol": "func_b"
+    },
+    {
+      "file": "test_day23_self_heal.py",
+      "symbol": "func_a"
+    },
+    {
+      "file": "test_day23_self_heal.py",
+      "symbol": "nprint"
+    },
+    {
+      "file": "test_debate.py",
+      "symbol": "tempfile"
+    },
+    {
+      "file": "test_debate.py",
+      "symbol": "asyncio"
+    },
+    {
+      "file": "test_debate.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_debate.py",
+      "symbol": "unittest"
+    },
+    {
+      "file": "test_debate.py",
+      "symbol": "CritiqueEvaluator"
+    },
+    {
+      "file": "test_debug.py",
+      "symbol": "unittest"
+    },
+    {
+      "file": "test_dependency.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_dependency.py",
+      "symbol": "plugins"
+    },
+    {
+      "file": "test_dependency_checker.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_dependency_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_dependency_checker.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_dependency_checker.py",
+      "symbol": "validation"
+    },
+    {
+      "file": "test_dependency_checker.py",
+      "symbol": "main"
+    },
+    {
+      "file": "test_deployment.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_deployment.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_deployment.py",
+      "symbol": "docker_generator"
+    },
+    {
+      "file": "test_deployment.py",
+      "symbol": "compose_generator"
+    },
+    {
+      "file": "test_deployment.py",
+      "symbol": "env_detector"
+    },
+    {
+      "file": "test_deployment.py",
+      "symbol": "agents"
+    },
+    {
+      "file": "test_deployment.py",
+      "symbol": "napp"
+    },
+    {
+      "file": "test_deployment.py",
+      "symbol": "nprocess"
+    },
+    {
+      "file": "test_deployment.py",
+      "symbol": "nimport"
+    },
+    {
+      "file": "test_deployment.py",
+      "symbol": "ndb"
+    },
+    {
+      "file": "test_evolution.py",
+      "symbol": "tempfile"
+    },
+    {
+      "file": "test_evolution.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_evolution.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_evolution.py",
+      "symbol": "nprint"
+    },
+    {
+      "file": "test_evolution.py",
+      "symbol": "System"
+    },
+    {
+      "file": "test_evolution.py",
+      "symbol": "OK"
+    },
+    {
+      "file": "test_frontend_checker.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_frontend_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_frontend_checker.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_frontend_checker.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_frontend_checker.py",
+      "symbol": "validation"
+    },
+    {
+      "file": "test_installation.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_installation.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_installation.py",
+      "symbol": "plugins"
+    },
+    {
+      "file": "test_knowledge.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_knowledge.py",
+      "symbol": "tempfile"
+    },
+    {
+      "file": "test_knowledge.py",
+      "symbol": "json"
+    },
+    {
+      "file": "test_knowledge.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_knowledge.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_knowledge.py",
+      "symbol": "knowledge_manager"
+    },
+    {
+      "file": "test_learning.py",
+      "symbol": "tempfile"
+    },
+    {
+      "file": "test_learning.py",
+      "symbol": "asyncio"
+    },
+    {
+      "file": "test_learning.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_learning.py",
+      "symbol": "unittest"
+    },
+    {
+      "file": "test_learning.py",
+      "symbol": "MagicMock"
+    },
+    {
+      "file": "test_lifecycle.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_lifecycle.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_lifecycle.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_lifecycle.py",
+      "symbol": "plugins"
+    },
+    {
+      "file": "test_monitor.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_monitor.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_monitor.py",
+      "symbol": "plugins"
+    },
+    {
+      "file": "test_monitoring.py",
+      "symbol": "MagicMock"
+    },
+    {
+      "file": "test_parallel.py",
+      "symbol": "unittest"
+    },
+    {
+      "file": "test_parallel.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_parallel.py",
+      "symbol": "models"
+    },
+    {
+      "file": "test_parallel.py",
+      "symbol": "reflection_node"
+    },
+    {
+      "file": "test_patch_applier.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_patch_applier.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_patch_applier.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_patch_applier.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_patch_applier.py",
+      "symbol": "review"
+    },
+    {
+      "file": "test_patch_generator.py",
+      "symbol": "unittest"
+    },
+    {
+      "file": "test_performance.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "test_performance.py",
+      "symbol": "graph"
+    },
+    {
+      "file": "test_performance_checker.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_performance_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_performance_checker.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_performance_checker.py",
+      "symbol": "validation"
+    },
+    {
+      "file": "test_permissions.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_permissions.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_permissions.py",
+      "symbol": "plugins"
+    },
+    {
+      "file": "test_plugin_loader.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_plugin_loader.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_plugin_loader.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_plugin_loader.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_plugin_loader.py",
+      "symbol": "plugins"
+    },
+    {
+      "file": "test_plugin_registry.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_plugin_registry.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_plugin_registry.py",
+      "symbol": "plugins"
+    },
+    {
+      "file": "test_project_builder.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_project_builder.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_project_builder.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_project_builder.py",
+      "symbol": "unittest"
+    },
+    {
+      "file": "test_project_builder.py",
+      "symbol": "testclient"
+    },
+    {
+      "file": "test_project_builder.py",
+      "symbol": "project_builder"
+    },
+    {
+      "file": "test_project_builder.py",
+      "symbol": "models"
+    },
+    {
+      "file": "test_project_builder.py",
+      "symbol": "reflection_node"
+    },
+    {
+      "file": "test_project_intelligence.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_project_intelligence.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_project_intelligence.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_project_intelligence.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_project_intelligence.py",
+      "symbol": "project_intelligence"
+    },
+    {
+      "file": "test_project_intelligence.py",
+      "symbol": "intelligence_manager"
+    },
+    {
+      "file": "test_project_intelligence.py",
+      "symbol": "sqlalchemy"
+    },
+    {
+      "file": "test_project_intelligence.py",
+      "symbol": "React"
+    },
+    {
+      "file": "test_project_manager.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_project_manager.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_project_manager.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_project_manager.py",
+      "symbol": "state_engine"
+    },
+    {
+      "file": "test_project_manager.py",
+      "symbol": "task_scheduler"
+    },
+    {
+      "file": "test_project_manager.py",
+      "symbol": "TaskScheduler"
+    },
+    {
+      "file": "test_project_manager.py",
+      "symbol": "progress_tracker"
+    },
+    {
+      "file": "test_project_manager.py",
+      "symbol": "ProgressTracker"
+    },
+    {
+      "file": "test_project_manager.py",
+      "symbol": "milestone_generator"
+    },
+    {
+      "file": "test_project_manager.py",
+      "symbol": "MilestoneGenerator"
+    },
+    {
+      "file": "test_project_manager.py",
+      "symbol": "decision_store"
+    },
+    {
+      "file": "test_quality_score.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_quality_score.py",
+      "symbol": "models"
+    },
+    {
+      "file": "test_rag_routes.py",
+      "symbol": "testclient"
+    },
+    {
+      "file": "test_rag_routes.py",
+      "symbol": "main"
+    },
+    {
+      "file": "test_reflection.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_reflection.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_reflection.py",
+      "symbol": "unittest"
+    },
+    {
+      "file": "test_reflection.py",
+      "symbol": "AsyncMock"
+    },
+    {
+      "file": "test_reflection.py",
+      "symbol": "services"
+    },
+    {
+      "file": "test_reflection.py",
+      "symbol": "reflection_service"
+    },
+    {
+      "file": "test_retry.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_retry.py",
+      "symbol": "utils"
+    },
+    {
+      "file": "test_reviewer.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_reviewer.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_reviewer.py",
+      "symbol": "unittest"
+    },
+    {
+      "file": "test_security_checker.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_security_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_security_checker.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_security_checker.py",
+      "symbol": "validation"
+    },
+    {
+      "file": "test_self_heal.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_self_heal.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_self_heal.py",
+      "symbol": "unittest"
+    },
+    {
+      "file": "test_self_heal.py",
+      "symbol": "AsyncMock"
+    },
+    {
+      "file": "test_syntax_checker.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_syntax_checker.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_syntax_checker.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_syntax_checker.py",
+      "symbol": "validation"
+    },
+    {
+      "file": "test_test_parser.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_test_parser.py",
+      "symbol": "review"
+    },
+    {
+      "file": "test_validation.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_validation.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_validation.py",
+      "symbol": "unittest"
+    },
+    {
+      "file": "test_validation.py",
+      "symbol": "AsyncMock"
+    },
+    {
+      "file": "test_validation.py",
+      "symbol": "os"
+    },
+    {
+      "file": "test_validation.py",
+      "symbol": "Depends"
+    },
+    {
+      "file": "test_validation.py",
+      "symbol": "components"
+    },
+    {
+      "file": "test_validation.py",
+      "symbol": "Broken"
+    },
+    {
+      "file": "test_validation.py",
+      "symbol": "reference"
+    },
+    {
+      "file": "test_validator.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "test_validator.py",
+      "symbol": "Path"
+    },
+    {
+      "file": "test_validator.py",
+      "symbol": "unittest"
+    },
+    {
+      "file": "test_validator.py",
+      "symbol": "models"
+    },
+    {
+      "file": "test_versioning.py",
+      "symbol": "pytest"
+    },
+    {
+      "file": "test_versioning.py",
+      "symbol": "backend"
+    },
+    {
+      "file": "test_versioning.py",
+      "symbol": "plugins"
+    },
+    {
+      "file": "test_versioning.py",
+      "symbol": "dependency"
+    },
+    {
+      "file": "test_workflow.py",
+      "symbol": "asyncio"
+    },
+    {
+      "file": "test_workflow.py",
+      "symbol": "testclient"
+    },
+    {
+      "file": "test_workflow.py",
+      "symbol": "main"
+    },
+    {
+      "file": "test_workflow.py",
+      "symbol": "models"
+    },
+    {
+      "file": "test_workflow.py",
+      "symbol": "unittest"
+    },
+    {
+      "file": "verify_debate_scenarios.py",
+      "symbol": "time"
+    },
+    {
+      "file": "verify_debate_scenarios.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "verify_debate_scenarios.py",
+      "symbol": "DebateMemory"
+    },
+    {
+      "file": "verify_debate_scenarios.py",
+      "symbol": "DebateVoting"
+    },
+    {
+      "file": "verify_debate_scenarios.py",
+      "symbol": "critique"
+    },
+    {
+      "file": "verify_debate_scenarios.py",
+      "symbol": "CritiqueEvaluator"
+    },
+    {
+      "file": "verify_debate_scenarios.py",
+      "symbol": "moderator"
+    },
+    {
+      "file": "verify_debate_scenarios.py",
+      "symbol": "DebateModerator"
+    },
+    {
+      "file": "verify_debate_scenarios.py",
+      "symbol": "ConsensusEngine"
+    },
+    {
+      "file": "verify_evolution_scenarios.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "verify_evolution_scenarios.py",
+      "symbol": "evolution_pipeline"
+    },
+    {
+      "file": "verify_evolution_scenarios.py",
+      "symbol": "project_scorer"
+    },
+    {
+      "file": "verify_evolution_scenarios.py",
+      "symbol": "ProjectScorer"
+    },
+    {
+      "file": "verify_evolution_scenarios.py",
+      "symbol": "security_inspector"
+    },
+    {
+      "file": "verify_evolution_scenarios.py",
+      "symbol": "SecurityInspector"
+    },
+    {
+      "file": "verify_evolution_scenarios.py",
+      "symbol": "refactoring_agent"
+    },
+    {
+      "file": "verify_evolution_scenarios.py",
+      "symbol": "RefactoringAgent"
+    },
+    {
+      "file": "verify_evolution_scenarios.py",
+      "symbol": "benchmarker"
+    },
+    {
+      "file": "verify_evolution_scenarios.py",
+      "symbol": "Benchmarker"
+    },
+    {
+      "file": "verify_knowledge_scenarios.py",
+      "symbol": "json"
+    },
+    {
+      "file": "verify_knowledge_scenarios.py",
+      "symbol": "time"
+    },
+    {
+      "file": "verify_knowledge_scenarios.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "verify_knowledge_scenarios.py",
+      "symbol": "knowledge_manager"
+    },
+    {
+      "file": "verify_knowledge_scenarios.py",
+      "symbol": "knowledge_graph"
+    },
+    {
+      "file": "verify_knowledge_scenarios.py",
+      "symbol": "KnowledgeGraph"
+    },
+    {
+      "file": "verify_knowledge_scenarios.py",
+      "symbol": "graph_builder"
+    },
+    {
+      "file": "verify_knowledge_scenarios.py",
+      "symbol": "GraphBuilder"
+    },
+    {
+      "file": "verify_learning_scenarios.py",
+      "symbol": "json"
+    },
+    {
+      "file": "verify_learning_scenarios.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "verify_learning_scenarios.py",
+      "symbol": "knowledge_manager"
+    },
+    {
+      "file": "verify_plugins_scenarios.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "verify_project_intelligence.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "verify_project_intelligence.py",
+      "symbol": "intelligence_manager"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "state_engine"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "ProjectStateEngine"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "sprint_planner"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "SprintPlanner"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "dependency_graph"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "DependencyGraph"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "task_scheduler"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "TaskScheduler"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "progress_tracker"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "ProgressTracker"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "resume_engine"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "ResumeEngine"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "bug_backlog"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "BugBacklog"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "milestone_generator"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "MilestoneGenerator"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "decision_store"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "DecisionStore"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "standup_generator"
+    },
+    {
+      "file": "verify_project_manager.py",
+      "symbol": "StandupGenerator"
+    },
+    {
+      "file": "verify_sre_scenarios.py",
+      "symbol": "pathlib"
+    },
+    {
+      "file": "verify_sre_scenarios.py",
+      "symbol": "HealthChecker"
+    },
+    {
+      "file": "verify_sre_scenarios.py",
+      "symbol": "MetricsCollector"
+    },
+    {
+      "file": "verify_sre_scenarios.py",
+      "symbol": "IncidentDetector"
+    },
+    {
+      "file": "verify_sre_scenarios.py",
+      "symbol": "config"
+    },
+    {
+      "file": "verify_sre_scenarios.py",
+      "symbol": "sre_settings"
+    },
+    {
+      "file": "verify_sre_scenarios.py",
+      "symbol": "RootCauseAnalyzer"
+    }
+  ]
+}
