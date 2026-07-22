@@ -1,8 +1,68 @@
 @import "tailwindcss";
 
-body{
+html {
+    scroll-behavior: smooth;
+}
 
-font-family:'Inter',sans-serif;
-background:#343541;
+body {
+    font-family: 'Inter', sans-serif;
+    background: #0B0F19;
+    margin: 0;
+}
 
+::selection {
+    background: rgba(99, 102, 241, 0.35);
+    color: #fff;
+}
+
+/* Slim, theme-matched scrollbars for the app's dark surfaces */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #1e293b;
+    border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #334155;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #1e293b transparent;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.2s ease-out;
+}
+
+@keyframes spin-slow {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin-slow {
+    animation: spin-slow 3s linear infinite;
 }

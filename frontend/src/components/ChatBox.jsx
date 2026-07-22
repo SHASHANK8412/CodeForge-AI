@@ -441,10 +441,17 @@ function ChatBox() {
                             <Message key={index} sender={msg.sender} text={msg.text} />
                         ))}
                         {loading && (
-                            <div className="flex justify-start">
-                                <div className="bg-[#1E293B]/70 border border-gray-800/60 rounded-2xl px-5 py-4 max-w-md shadow-lg flex items-center gap-3">
-                                    <Loading />
-                                    <span className="text-xs text-gray-400 animate-pulse">Running compilation heuristics...</span>
+                            <div className="flex w-full justify-start mb-4">
+                                <div className="w-full max-w-4xl rounded-2xl p-6 shadow-xl border bg-[#1E293B] border-gray-800/80">
+                                    <div className="flex items-center justify-between pb-3 border-b border-gray-800/40 mb-4">
+                                        <span className="text-xs font-bold tracking-wider uppercase text-emerald-400">
+                                            🤖 AIForge Agent
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Loading />
+                                        <span className="text-xs text-gray-400 animate-pulse">Running compilation heuristics...</span>
+                                    </div>
                                 </div>
                             </div>
                         )}

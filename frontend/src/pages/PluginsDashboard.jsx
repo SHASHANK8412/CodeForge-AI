@@ -97,6 +97,16 @@ function PluginsDashboard() {
 
             {/* Installed plugins lists */}
             <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">Installed Plugins</h2>
+            {!loading && Object.keys(plugins).length === 0 && (
+                <div className="bg-[#0F172A] border border-dashed border-gray-800 rounded-xl p-10 text-center mb-8">
+                    <FaPlug size={24} className="text-gray-600 mx-auto mb-3" />
+                    <h3 className="text-sm font-semibold text-gray-300">No plugins installed yet</h3>
+                    <p className="text-xs text-gray-500 max-w-sm mx-auto mt-1">
+                        Browse the marketplace catalog below to sandbox your first AWS, Docker, or Slack integration.
+                    </p>
+                </div>
+            )}
+            {Object.keys(plugins).length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 {Object.keys(plugins).map((key) => {
                     const p = plugins[key];
@@ -140,6 +150,7 @@ function PluginsDashboard() {
                     );
                 })}
             </div>
+            )}
 
             {/* SRE Marketplace */}
             <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">Plugin Marketplace</h2>

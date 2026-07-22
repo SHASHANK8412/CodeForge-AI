@@ -188,7 +188,7 @@ function ProjectGenerator() {
     };
 
     return (
-        <div className="flex-1 flex overflow-hidden bg-[#0B0F19] text-white">
+        <div className="flex-1 flex overflow-hidden bg-[#0B0F19] text-white relative">
             {/* Center Area: Generator & Tabs */}
             <div className="flex-1 flex flex-col min-w-0 overflow-y-auto p-6 space-y-6">
                 <div>
@@ -363,7 +363,13 @@ function ProjectGenerator() {
 
             {/* Right Collapsible Panel */}
             {rightPanelOpen && (
-                <div className="w-80 bg-[#111827] border-l border-gray-800 flex flex-col h-full animate-fade-in">
+                <>
+                    {/* Backdrop: only shown below the lg breakpoint, tap-to-close */}
+                    <div
+                        onClick={() => setRightPanelOpen(false)}
+                        className="lg:hidden fixed inset-0 bg-black/50 z-10 animate-fade-in"
+                    />
+                    <div className="w-80 max-w-[85vw] bg-[#111827] border-l border-gray-800 flex flex-col h-full animate-fade-in absolute right-0 top-0 bottom-0 z-20 shadow-2xl lg:static lg:shadow-none">
                     {/* Header Tabs */}
                     <div className="flex border-b border-gray-800 bg-[#0F172A]">
                         <button
@@ -447,7 +453,8 @@ function ProjectGenerator() {
                             />
                         )}
                     </div>
-                </div>
+                    </div>
+                </>
             )}
         </div>
     );

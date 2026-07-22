@@ -40,13 +40,16 @@ class GraphState(TypedDict):
 
 
 ARCHITECT_REQUIRED_SECTIONS = [
-    "project architecture",
-    "folder structure",
-    "frontend files",
-    "backend files",
+    "high-level architecture",
     "database schema",
-    "api routes",
-    "dependencies",
+    "api specifications",
+    "folder structure",
+    "development roadmap",
+    "task breakdown",
+    "dependency graph",
+    "risk analysis",
+    "testing strategy",
+    "deployment strategy",
 ]
 
 
@@ -175,6 +178,9 @@ def classify_selector(state: GraphState):
 
     if state.get("execution_mode") == "fast" and state.get("route") == "explanation":
         return "explanation"
+
+    if state.get("execution_mode") == "fast" and state.get("route") == "coding":
+        return "coding"
 
     return "full"
 
@@ -417,9 +423,9 @@ def coding_node(state: GraphState):
         "memory_context": state.get("memory_context", ""),
         "collaboration_mode": state.get("collaboration_mode", False),
         "execution_mode": state.get("execution_mode", "full"),
-        "plan": state["plan"],
-        "architecture": state["architecture"],
-        "route": state["route"],
+        "plan": state.get("plan", ""),
+        "architecture": state.get("architecture", ""),
+        "route": state.get("route", "coding"),
         "agent_name": "coding",
         "generated_code": response,
         "response": response,
@@ -783,6 +789,7 @@ builder.add_conditional_edges(
         "full": "planner",
         "resume": "resume",
         "explanation": "explanation",
+        "coding": "coding",
     },
 )
 builder.add_edge("planner", "architect")

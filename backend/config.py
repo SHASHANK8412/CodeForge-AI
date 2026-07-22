@@ -24,8 +24,8 @@ OLLAMA_BASE_OPTIONS = {
 
 # Per-task context window sizes (num_ctx). Prevents VRAM bloat and speeds up prefill.
 TASK_NUM_CTX = {
-    "planner": 2048,
-    "architect": 4096,
+    "planner": 6144,
+    "architect": 8192,
     "frontend": 8192,
     "backend": 8192,
     "database": 4096,
@@ -37,9 +37,14 @@ TASK_NUM_CTX = {
 }
 
 # Per-task output length caps (num_predict). Increased to prevent truncation/incomplete responses.
+# Planner (9 sections) and Architect (11 sections) each produce a full structured report plus a
+# trailing JSON block, so they need a larger budget than a single-section agent reply. Measured
+# on CPU-only local Ollama (~3.4 tok/s): a real 9-section planner report finished at ~1167
+# tokens, well under budget, so these caps are a safety ceiling, not the expected length —
+# kept well below 4000 to bound worst-case latency (a 4000 cap risks 15-20+ min on CPU).
 TASK_NUM_PREDICT = {
-    "planner": 2500,
-    "architect": 2048,
+    "planner": 2200,
+    "architect": 2800,
     "frontend": 2048,
     "backend": 2048,
     "database": 1500,

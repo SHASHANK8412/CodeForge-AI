@@ -180,4 +180,26 @@ export async function fetchMetrics() {
     return response.json();
 }
 
+/**
+ * Fetches the self-evolution pipeline's latest quality scores and run history.
+ */
+export async function fetchEvolutionStatus() {
+    const response = await fetch(`${API}/dashboard/evolution/status`);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch evolution status: ${response.status}`);
+    }
+    return response.json();
+}
+
+/**
+ * Fetches the installed SRE plugin registry.
+ */
+export async function fetchPlugins() {
+    const response = await fetch(`${API}/plugins`);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch plugins: ${response.status}`);
+    }
+    return response.json();
+}
+
 
