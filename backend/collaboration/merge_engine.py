@@ -24,19 +24,25 @@ class MergeEngine:
     def merge(self, agent_outputs: Dict[str, Any], decisions: List[ResolutionDecision]) -> MergeSummary:
         workspace: Dict[str, str] = {}
         files_by_agent: Dict[str, int] = {
+            "planner": 0,
+            "architect": 0,
             "frontend": 0,
             "backend": 0,
             "database": 0,
             "documentation": 0,
-            "testing": 0
+            "testing": 0,
+            "reviewer": 0
         }
 
         # Apply resolution decisions to outputs
+        plan_out = agent_outputs.get("planner", {})
+        arch_out = agent_outputs.get("architect", {})
         fe_out = agent_outputs.get("frontend", {})
         be_out = agent_outputs.get("backend", {})
         db_out = agent_outputs.get("database", {})
         doc_out = agent_outputs.get("documentation", {})
         test_out = agent_outputs.get("testing", {})
+        rev_out = agent_outputs.get("reviewer", {})
 
         # Process resolutions
         for dec in decisions:
@@ -56,11 +62,14 @@ class MergeEngine:
 
         # Collect files into unified workspace
         for agent_name, agent_data in [
+            ("planner", plan_out),
+            ("architect", arch_out),
             ("frontend", fe_out),
             ("backend", be_out),
             ("database", db_out),
             ("documentation", doc_out),
-            ("testing", test_out)
+            ("testing", test_out),
+            ("reviewer", rev_out)
         ]:
             if isinstance(agent_data, dict) and "files" in agent_data:
                 for fpath, fcontent in agent_data["files"].items():

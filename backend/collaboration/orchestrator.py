@@ -118,6 +118,34 @@ class CollaborativeOrchestrator:
                 self.shared_memory.update_registry("component_registry", out["components"])
                 self.bus.publish(agent_name, "component_spec", out)
 
+            elif agent_name == "planner":
+                out = {
+                    "plan": f"Executive plan for: {prompt}",
+                    "files": {
+                        "docs/PLAN.md": f"# Executive Plan\n\nScope and milestones for: {prompt}"
+                    }
+                }
+                self.bus.publish(agent_name, "plan_spec", out)
+
+            elif agent_name == "architect":
+                out = {
+                    "architecture": f"System architecture for: {prompt}",
+                    "files": {
+                        "docs/ARCHITECTURE.md": f"# Architecture Specification\n\nTopology and component interactions for: {prompt}"
+                    }
+                }
+                self.bus.publish(agent_name, "arch_spec", out)
+
+            elif agent_name == "reviewer":
+                out = {
+                    "review_findings": ["No critical vulnerabilities detected"],
+                    "files": {
+                        "review.json": '{"quality_score": 95, "findings": []}',
+                        "review.md": "# Code Review Report\n\nCode quality passed with 95/100."
+                    }
+                }
+                self.bus.publish(agent_name, "review_spec", out)
+
             elif agent_name == "documentation":
                 out = {
                     "documented_routes": ["/api/v1/tasks"],
@@ -153,7 +181,7 @@ class CollaborativeOrchestrator:
         task_assignments = {t.target_agent: t for t in tasks}
 
         # 2. Concurrent Agent Execution
-        agent_names = ["database", "backend", "frontend", "documentation", "testing"]
+        agent_names = ["planner", "architect", "database", "backend", "frontend", "testing", "reviewer", "documentation"]
         agent_tasks_coroutines = [
             self.execute_agent_task(agent, task_assignments[agent], prompt, forced_conflict=forced_conflict)
             for agent in agent_names
