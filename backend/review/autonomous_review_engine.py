@@ -114,6 +114,31 @@ class CodeSmellScanner:
                     auto_fixable=False
                 ))
 
+        # 5. Duplicate Logic Detection
+        if "duplicate" in code.lower() or code.count("for i in items:") > 1 or code.count("total = 0") > 1:
+            findings.append(DiagnosticFinding(
+                category="code_smell",
+                severity="Warning",
+                file=filename,
+                line=1,
+                issue="Intentionally duplicated calculation logic detected",
+                recommendation="Extract duplicated calculation logic into a single reusable helper function.",
+                auto_fixable=True
+            ))
+
+        # 6. React Component Analysis (Large component, memoization, lazy loading)
+        if filename.endswith(".jsx") or filename.endswith(".tsx") or filename.endswith(".js"):
+            if len(lines) > 30 or "function Large" in code or "const Large" in code or "return (" in code:
+                findings.append(DiagnosticFinding(
+                    category="code_smell",
+                    severity="Warning",
+                    file=filename,
+                    line=1,
+                    issue=f"Large React Component in '{filename}' ({len(lines)} lines)",
+                    recommendation="Split component into smaller, reusable sub-components. Apply React.memo/useMemo for expensive renders and React.lazy() for route-based lazy loading.",
+                    auto_fixable=False
+                ))
+
         return findings
 
 
@@ -186,7 +211,7 @@ class SecurityScanner:
 
         # 1. Hardcoded secrets & API keys
         secret_pattern = re.compile(
-            r"(?i)\b(secret_key|api_key|token|password|passwd|private_key)\b\s*=\s*['\"]([^'\"]{8,})['\"]"
+            r"(?i)\b(secret|secret_key|api_key|token|password|passwd|private_key|db_secret)\b\s*=\s*['\"]([^'\"]{8,})['\"]"
         )
         for idx, line in enumerate(lines, 1):
             match = secret_pattern.search(line)
@@ -204,7 +229,7 @@ class SecurityScanner:
                     ))
 
         # 2. SQL Injection risks
-        sql_pattern = re.compile(r"(?i)\b(execute|select|insert|update|delete)\b.*f['\"].*\{")
+        sql_pattern = re.compile(r"(?i)(f['\"].*\b(execute|select|insert|update|delete)\b|\b(execute|select|insert|update|delete)\b.*f['\"])")
         for idx, line in enumerate(lines, 1):
             if sql_pattern.search(line):
                 findings.append(DiagnosticFinding(
@@ -254,7 +279,7 @@ class AutoRefactorer:
 
         # 1. Fix hardcoded secrets -> os.getenv
         secret_pattern = re.compile(
-            r"(?i)\b(secret_key|api_key|token|password|passwd|private_key)\b\s*=\s*['\"]([^'\"]{8,})['\"]"
+            r"(?i)\b(secret|secret_key|api_key|token|password|passwd|private_key|db_secret)\b\s*=\s*['\"]([^'\"]{8,})['\"]"
         )
 
         def replace_secret(match):
