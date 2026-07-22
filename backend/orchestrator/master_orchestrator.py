@@ -161,6 +161,31 @@ class MasterOrchestratorAgent:
         self.max_retries = 3
         self.backoff_factor = 1.5
 
+    def get_live_progress(self) -> Dict[str, Any]:
+        """Returns live task progress categorized by status: completed, running, waiting, failed."""
+        progress = {
+            "completed": [],
+            "running": [],
+            "waiting": [],
+            "failed": []
+        }
+        for node in self.graph.nodes.values():
+            if node.status == "completed":
+                progress["completed"].append(node.id)
+            elif node.status == "running" or node.status == "retrying":
+                progress["running"].append(node.id)
+            elif node.status == "failed":
+                progress["failed"].append(node.id)
+            else:
+                progress["waiting"].append(node.id)
+        return progress
+
+    def detect_idle_workers(self) -> List[str]:
+        """Identifies available agent worker slots that can take pending tasks."""
+        active_agents = {node.agent_name for node in self.graph.nodes.values() if node.status == "running"}
+        all_agents = {node.agent_name for node in self.graph.nodes.values()}
+        return list(all_agents - active_agents)
+
     def build_default_task_graph(self, prompt: str) -> DependencyTaskGraph:
         graph = DependencyTaskGraph()
 
@@ -284,12 +309,20 @@ class MasterOrchestratorAgent:
             health_status = "Failed"
 
         # Produce Final Execution Report
+        live_progress = self.get_live_progress()
         execution_report = {
             "prompt": prompt,
             "project_health": health_status,
             "total_execution_time_ms": total_time_ms,
             "total_tokens_used": total_tokens,
             "total_retries": total_retries,
+            "live_progress_counts": {
+                "completed": len(live_progress["completed"]),
+                "running": len(live_progress["running"]),
+                "waiting": len(live_progress["waiting"]),
+                "failed": len(live_progress["failed"])
+            },
+            "idle_workers": self.detect_idle_workers(),
             "total_tasks_completed": sum(1 for n in self.graph.nodes.values() if n.status == "completed"),
             "total_tasks_failed": len(failures),
             "task_nodes": [
