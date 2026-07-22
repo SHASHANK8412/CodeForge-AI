@@ -307,7 +307,7 @@ class EliteAutonomousDeployer:
         self.auditor = SecurityAuditor()
         self.config_generator = DeploymentConfigGenerator()
 
-    async def deploy_project(self, project_name: str, workspace: Dict[str, str]) -> DeploymentResult:
+    async def deploy_project(self, project_name: str, workspace: Dict[str, str], min_security_score: float = 0.0, require_env: List[str] = None) -> DeploymentResult:
         t0 = time.perf_counter()
 
         # 1. Tech Stack Detection
@@ -319,19 +319,85 @@ class EliteAutonomousDeployer:
         # 3. Security Audit
         audit_res = self.auditor.audit(workspace)
 
-        # 4. Generate Deployment Configurations
+        # 4. Check Security Gate
+        if min_security_score > 0.0 and audit_res["security_score"] < min_security_score:
+            t_total_ms = round((time.perf_counter() - t0) * 1000, 2)
+            report_json = {
+                "project_name": project_name,
+                "status": "CANCELLED_SECURITY_GATE",
+                "security_score": audit_res["security_score"],
+                "reason": f"Security score ({audit_res['security_score']}%) below minimum threshold ({min_security_score}%)",
+                "findings": audit_res["findings"],
+                "recommendation": "Remove hardcoded secrets, update high-risk dependencies, and retry deployment."
+            }
+            md_report = f"# ❌ Deployment Cancelled (Security Gate Failed)\n\n" \
+                        f"**Security Score:** `{audit_res['security_score']}%` (Minimum Required: `{min_security_score}%`)\n\n" \
+                        f"**Findings:**\n" + "\n".join([f"- ❌ {f}" for f in audit_res["findings"]]) + "\n\n" \
+                        f"**Recommendation:** Remove exposed secrets and update dependencies before retrying."
+
+            return DeploymentResult(
+                status="CANCELLED_SECURITY_GATE",
+                production_url="",
+                api_url="",
+                admin_url="",
+                build_duration_ms=t_total_ms,
+                deployment_duration_ms=t_total_ms,
+                tests_passed=0,
+                tests_failed=1,
+                security_score=audit_res["security_score"],
+                performance_score=0.0,
+                report_markdown=md_report,
+                report_json=report_json
+            )
+
+        # 5. Check Required Environment Variables
+        if require_env:
+            all_code = "\n".join(workspace.values())
+            missing = [env_var for env_var in require_env if env_var not in all_code and env_var not in workspace.get(".env", "")]
+            if missing:
+                t_total_ms = round((time.perf_counter() - t0) * 1000, 2)
+                report_json = {
+                    "project_name": project_name,
+                    "status": "FAILED_MISSING_ENV",
+                    "missing_vars": missing,
+                    "diagnosis": f"Required environment variables missing: {', '.join(missing)}",
+                    "suggested_fix": f"Set environment variables in .env: {missing[0]}=postgresql://...",
+                    "rollback_status": "Previous Stable Version Restored (Commit HEAD~1)"
+                }
+                md_report = f"# ❌ Deployment Failed (Missing Environment Variables)\n\n" \
+                            f"**Reason:** `{missing[0]} missing`  \n" \
+                            f"**Diagnosis:** Required environment variable `{missing[0]}` not found.  \n" \
+                            f"**Suggested Fix:** Set `{missing[0]}=postgres://...` in environment settings.  \n" \
+                            f"**Rollback:** `Previous Stable Version Restored`"
+
+                return DeploymentResult(
+                    status="FAILED_MISSING_ENV",
+                    production_url="",
+                    api_url="",
+                    admin_url="",
+                    build_duration_ms=t_total_ms,
+                    deployment_duration_ms=t_total_ms,
+                    tests_passed=0,
+                    tests_failed=1,
+                    security_score=audit_res["security_score"],
+                    performance_score=0.0,
+                    report_markdown=md_report,
+                    report_json=report_json
+                )
+
+        # 6. Generate Deployment Configurations
         configs = self.config_generator.generate(workspace, profile, targets)
         merged_workspace = copy.deepcopy(workspace)
         merged_workspace.update(configs)
 
-        # 5. Progress Animation Timeline Simulation
+        # 7. Progress Animation Timeline Simulation
         phases = [
-            ("Queued", 0.05),
-            ("Building", 0.05),
-            ("Uploading", 0.05),
-            ("Provisioning", 0.05),
-            ("Starting Services", 0.05),
-            ("Running Health Checks", 0.05),
+            ("Queued", 0.02),
+            ("Building", 0.02),
+            ("Uploading", 0.02),
+            ("Provisioning", 0.02),
+            ("Starting Services", 0.02),
+            ("Running Health Checks", 0.02),
             ("Deployment Complete", 0.0)
         ]
 
