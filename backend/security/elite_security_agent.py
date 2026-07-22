@@ -103,7 +103,8 @@ class StaticSecurityScanner:
                         ))
 
                 # 2. SQL / NoSQL Injection (f-string or string addition)
-                sql_match = re.search(r"(?i)\b(?:execute|query|select|insert|update|delete)\b.*(?:f['\"].*\{|\+.*[\'\"])", line) or ("SELECT " in line and "+" in line)
+                is_sql_keyword = any(kw in line.lower() for kw in ["select ", "insert ", "update ", "delete ", "execute(", "query("])
+                sql_match = is_sql_keyword and ("f'" in line or 'f"' in line or "+" in line)
                 if sql_match:
                     findings.append(VulnerabilityFinding(
                         id=f"SEC-SQLI-{len(findings)+1}",
@@ -112,7 +113,7 @@ class StaticSecurityScanner:
                         severity=VulnerabilitySeverity.CRITICAL,
                         cwe="CWE-89: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')",
                         owasp_category="A03:2021-Injection",
-                        issue="Unsanitized string concatenation in database query execution",
+                        issue="Unsanitized f-string formatting in database query execution",
                         description="User input concatenated directly into raw SQL queries allows full SQL injection payload execution.",
                         attack_scenario="Attacker inputs '1 OR 1=1' in id param to dump entire database.",
                         recommendation="Use parameterized queries e.g., conn.execute('SELECT * FROM users WHERE id=?', (user_id,))",

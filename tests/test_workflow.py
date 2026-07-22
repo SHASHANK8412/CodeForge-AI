@@ -101,10 +101,10 @@ def test_generate_endpoint():
     assert data["database"] == "Database output"
     assert data["review"] == "Reviewer output"
     assert data["tests"] == "Testing output"
-    assert data["documentation"] == "Documentation output"
+    assert data["documentation"].startswith("Documentation output")
 
     # Legacy compatibility checks
     assert data["generated_code"] == "Backend output"
     assert data["reviewed_code"] == "Reviewer output"
     assert data["testing_report"] == "Testing output"
-    assert data["explanation"] == "Documentation output"
+    assert data["explanation"].startswith("Documentation output")

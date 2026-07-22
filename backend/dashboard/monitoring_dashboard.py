@@ -129,7 +129,7 @@ async def simulate_failure(signature: str = Query(..., description="Signature of
     }
 
 @router.get("/export-analytics")
-def export_analytics_report(format: str = Query("json", regex="^(json|csv)$")):
+def export_analytics_report(format: str = Query("json", pattern="^(json|csv)$")):
     """
     Exports structured SRE performance metrics as JSON file or CSV data.
     """

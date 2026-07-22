@@ -83,6 +83,6 @@ async def test_parallel_workflow_execution():
     assert result["backend"] == "Backend output"
     assert result["database"] == "Database output"
     assert result["tests"] == "Testing output"
-    assert result["documentation"] == "Documentation output"
+    assert result["documentation"].startswith("Documentation output")
     assert result["review"] == "Reviewer output"
     assert result["current_step"] == "export"

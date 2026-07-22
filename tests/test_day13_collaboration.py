@@ -79,13 +79,16 @@ class DummyMemoryManager:
 
 
 def test_validate_architecture_sections_complete():
-    architecture = """# Project Architecture
-# Folder Structure
-# Frontend Files
-# Backend Files
+    architecture = """# High-Level Architecture
 # Database Schema
-# API Routes
-# Dependencies
+# API Specifications
+# Folder Structure
+# Development Roadmap
+# Task Breakdown
+# Dependency Graph
+# Risk Analysis
+# Testing Strategy
+# Deployment Strategy
 """
     is_complete, missing = workflow.validate_architecture_sections(architecture)
     assert is_complete is True

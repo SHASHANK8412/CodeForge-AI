@@ -114,7 +114,7 @@ def main():
     # ==============================================================
     issues = [f.issue for f in res.findings]
 
-    has_sqli = any("concatenation" in i.lower() or "sql" in i.lower() for i in issues)
+    has_sqli = any("f-string" in i.lower() or "concatenation" in i.lower() or "sql" in i.lower() for i in issues)
     has_cmd = any("os.system" in i.lower() for i in issues)
     has_secret = any("secret" in i.lower() for i in issues)
     has_auth = any("admin" in i.lower() or "authentication" in i.lower() for i in issues)

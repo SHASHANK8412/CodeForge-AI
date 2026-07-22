@@ -76,13 +76,16 @@ def _mock_graph_agents():
 
 
 def test_validate_architecture_sections_complete():
-    architecture = """# Project Architecture
-# Folder Structure
-# Frontend Files
-# Backend Files
+    architecture = """# High-Level Architecture
 # Database Schema
-# API Routes
-# Dependencies
+# API Specifications
+# Folder Structure
+# Development Roadmap
+# Task Breakdown
+# Dependency Graph
+# Risk Analysis
+# Testing Strategy
+# Deployment Strategy
 """
     is_complete, missing = workflow.validate_architecture_sections(architecture)
     assert is_complete is True
@@ -90,12 +93,12 @@ def test_validate_architecture_sections_complete():
 
 
 def test_enforce_architecture_sections_adds_quality_warning():
-    architecture = "# Folder Structure\n# API Routes"
+    architecture = "# Folder Structure\n# API Specifications"
     enriched = workflow.enforce_architecture_sections(architecture)
 
     assert "Architecture Quality Check" in enriched
     assert "Status: Incomplete" in enriched
-    assert "Project Architecture" in enriched
+    assert "High-Level Architecture" in enriched
     assert "Database Schema" in enriched
 
 
