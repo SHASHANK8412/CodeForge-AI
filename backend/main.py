@@ -101,6 +101,10 @@ async def generate(request: PromptRequest):
             }
         )
 
+        from backend.planner.comprehensive_planner import ComprehensivePlanner
+        planner = ComprehensivePlanner()
+        planning_artifacts = planner.plan_project(request.prompt)
+
         elapsed_ms = (perf_counter() - started_at) * 1000
         print(f"/generate completed in {elapsed_ms:.1f}ms")
 
@@ -113,6 +117,9 @@ async def generate(request: PromptRequest):
             "review": result.get("review", ""),
             "tests": result.get("tests", ""),
             "documentation": result.get("documentation", ""),
+
+            # Day 42 Architecture & Planning Artifacts
+            "planning_artifacts": planning_artifacts,
 
             # Preserve existing functionality
             "generated_code": result.get("backend", ""),
