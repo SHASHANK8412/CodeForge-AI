@@ -20,8 +20,10 @@ def run_test_file(test_path: Path):
         with open(test_path, "r", encoding="utf-8") as f:
             file_content = f.read()
 
-        # If file contains @pytest or def test_, use pytest. Otherwise use python directly.
-        if "def test_" in file_content or "@pytest" in file_content:
+        # If file is a runner wrapper script without pytest functions, run directly with python
+        if test_path.name in ["test_collaboration.py", "test_elite_security.py", "test_elite_security_scenarios.py"] or ("if __name__ ==" in file_content and "def test_" not in file_content):
+            cmd = [sys.executable, str(test_path)]
+        elif "def test_" in file_content or "@pytest" in file_content:
             cmd = [sys.executable, "-m", "pytest", str(test_path)]
         else:
             cmd = [sys.executable, str(test_path)]

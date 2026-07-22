@@ -85,6 +85,15 @@ def test_generate_endpoint():
         True
     ))
 
+    from backend.graph.reflection_node import reflection_agent
+    reflection_agent.reflect_on_project = AsyncMock(return_value={
+        "strengths": ["Clean structure"],
+        "weaknesses": ["None"],
+        "recommendations": [],
+        "lessons": [],
+        "reflection_score": 95
+    })
+
     client = TestClient(app)
     response = client.post("/generate", json={"prompt": "Build an AI Resume Analyzer"})
     assert response.status_code == 200
