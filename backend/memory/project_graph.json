@@ -1199,6 +1199,35 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/agents/confidence_agent.py"
+    },
+    {
+      "node_type": "class",
+      "name": "ConfidenceAgent",
+      "file": "backend/agents/confidence_agent.py",
+      "id": "Class:ConfidenceAgent"
+    },
+    {
+      "node_type": "function",
+      "name": "evaluate_confidence",
+      "file": "backend/agents/confidence_agent.py",
+      "id": "Function:evaluate_confidence"
+    },
+    {
+      "id": "Module:logging"
+    },
+    {
+      "id": "Module:typing.Dict"
+    },
+    {
+      "id": "Module:typing.Any"
+    },
+    {
+      "id": "Module:typing.List"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/agents/database_agent.py"
     },
     {
@@ -1234,18 +1263,6 @@
       "name": "detect_stack",
       "file": "backend/agents/deployment_agent.py",
       "id": "Function:detect_stack"
-    },
-    {
-      "id": "Module:logging"
-    },
-    {
-      "id": "Module:typing.Dict"
-    },
-    {
-      "id": "Module:typing.List"
-    },
-    {
-      "id": "Module:typing.Any"
     },
     {
       "id": "Module:backend.services.deployment.docker_generator.DockerGenerator"
@@ -1424,6 +1441,47 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/agents/learning_agent.py"
+    },
+    {
+      "node_type": "class",
+      "name": "LearningAgent",
+      "file": "backend/agents/learning_agent.py",
+      "id": "Class:LearningAgent"
+    },
+    {
+      "node_type": "function",
+      "name": "_init_memory",
+      "file": "backend/llm/model_memory.py",
+      "id": "Function:_init_memory"
+    },
+    {
+      "node_type": "function",
+      "name": "_load_json",
+      "file": "backend/learning/best_practices.py",
+      "id": "Function:_load_json"
+    },
+    {
+      "node_type": "function",
+      "name": "_save_json",
+      "file": "backend/project_intelligence/intelligence_manager.py",
+      "id": "Function:_save_json"
+    },
+    {
+      "node_type": "function",
+      "name": "analyze_project_and_learn",
+      "file": "backend/agents/learning_agent.py",
+      "id": "Function:analyze_project_and_learn"
+    },
+    {
+      "id": "Module:json"
+    },
+    {
+      "id": "Module:time"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/agents/pair_programmer_agent.py"
     },
     {
@@ -1470,6 +1528,23 @@
       "name": "PlannerAgent",
       "file": "backend/agents/planner_agent.py",
       "id": "Class:PlannerAgent"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/agents/quality_analyzer.py"
+    },
+    {
+      "node_type": "class",
+      "name": "EnterpriseQualityAnalyzer",
+      "file": "backend/agents/quality_analyzer.py",
+      "id": "Class:EnterpriseQualityAnalyzer"
+    },
+    {
+      "node_type": "function",
+      "name": "evaluate_project_quality",
+      "file": "backend/agents/quality_analyzer.py",
+      "id": "Function:evaluate_project_quality"
     },
     {
       "node_type": "file",
@@ -1521,9 +1596,6 @@
       "name": "reflect_on_project",
       "file": "backend/agents/reflection_agent.py",
       "id": "Function:reflect_on_project"
-    },
-    {
-      "id": "Module:json"
     },
     {
       "node_type": "file",
@@ -2007,9 +2079,6 @@
       "id": "Module:dataclasses.field"
     },
     {
-      "id": "Module:time"
-    },
-    {
       "node_type": "file",
       "ext": ".py",
       "id": "backend/collaboration/communication_manager.py"
@@ -2205,7 +2274,7 @@
     {
       "node_type": "function",
       "name": "detect_conflicts",
-      "file": "backend/debate/consensus.py",
+      "file": "backend/sprint/conflict_detector.py",
       "id": "Function:detect_conflicts"
     },
     {
@@ -4426,12 +4495,6 @@
     },
     {
       "node_type": "function",
-      "name": "_init_memory",
-      "file": "backend/llm/model_memory.py",
-      "id": "Function:_init_memory"
-    },
-    {
-      "node_type": "function",
       "name": "_load",
       "file": "backend/optimizer/history.py",
       "id": "Function:_load"
@@ -4476,18 +4539,6 @@
       "name": "_init_defaults",
       "file": "backend/learning/best_practices.py",
       "id": "Function:_init_defaults"
-    },
-    {
-      "node_type": "function",
-      "name": "_load_json",
-      "file": "backend/learning/best_practices.py",
-      "id": "Function:_load_json"
-    },
-    {
-      "node_type": "function",
-      "name": "_save_json",
-      "file": "backend/project_intelligence/intelligence_manager.py",
-      "id": "Function:_save_json"
     },
     {
       "node_type": "function",
@@ -10209,6 +10260,185 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/sprint/conflict_detector.py"
+    },
+    {
+      "node_type": "class",
+      "name": "ConflictDetector",
+      "file": "backend/sprint/conflict_detector.py",
+      "id": "Class:ConflictDetector"
+    },
+    {
+      "id": "Module:backend.sprint.task.SprintTask"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/sprint/dependency_graph.py"
+    },
+    {
+      "node_type": "class",
+      "name": "SprintDependencyGraph",
+      "file": "backend/sprint/dependency_graph.py",
+      "id": "Class:SprintDependencyGraph"
+    },
+    {
+      "node_type": "function",
+      "name": "add_task",
+      "file": "backend/sprint/dependency_graph.py",
+      "id": "Function:add_task"
+    },
+    {
+      "node_type": "function",
+      "name": "get_runnable_tasks",
+      "file": "backend/sprint/dependency_graph.py",
+      "id": "Function:get_runnable_tasks"
+    },
+    {
+      "node_type": "function",
+      "name": "is_all_completed",
+      "file": "backend/sprint/dependency_graph.py",
+      "id": "Function:is_all_completed"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/sprint/progress_tracker.py"
+    },
+    {
+      "node_type": "class",
+      "name": "SprintProgressTracker",
+      "file": "backend/sprint/progress_tracker.py",
+      "id": "Class:SprintProgressTracker"
+    },
+    {
+      "node_type": "function",
+      "name": "get_progress_metrics",
+      "file": "backend/sprint/progress_tracker.py",
+      "id": "Function:get_progress_metrics"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/sprint/scheduler.py"
+    },
+    {
+      "node_type": "class",
+      "name": "SprintScheduler",
+      "file": "backend/sprint/scheduler.py",
+      "id": "Class:SprintScheduler"
+    },
+    {
+      "node_type": "function",
+      "name": "execute_task_simulated",
+      "file": "backend/sprint/scheduler.py",
+      "id": "Function:execute_task_simulated"
+    },
+    {
+      "node_type": "function",
+      "name": "run_sprint",
+      "file": "backend/sprint/scheduler.py",
+      "id": "Function:run_sprint"
+    },
+    {
+      "id": "Module:backend.sprint.dependency_graph.SprintDependencyGraph"
+    },
+    {
+      "id": "Module:backend.sprint.conflict_detector.ConflictDetector"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/sprint/sprint_manager.py"
+    },
+    {
+      "node_type": "class",
+      "name": "SprintManagerAgent",
+      "file": "backend/sprint/sprint_manager.py",
+      "id": "Class:SprintManagerAgent"
+    },
+    {
+      "node_type": "function",
+      "name": "plan_sprint_tasks",
+      "file": "backend/sprint/sprint_manager.py",
+      "id": "Function:plan_sprint_tasks"
+    },
+    {
+      "node_type": "function",
+      "name": "execute_sprint",
+      "file": "backend/sprint/sprint_manager.py",
+      "id": "Function:execute_sprint"
+    },
+    {
+      "id": "Module:backend.sprint.scheduler.SprintScheduler"
+    },
+    {
+      "id": "Module:backend.sprint.progress_tracker.SprintProgressTracker"
+    },
+    {
+      "id": "Module:backend.sprint.sprint_report.SprintReportGenerator"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/sprint/sprint_report.py"
+    },
+    {
+      "node_type": "class",
+      "name": "SprintReportGenerator",
+      "file": "backend/sprint/sprint_report.py",
+      "id": "Class:SprintReportGenerator"
+    },
+    {
+      "node_type": "function",
+      "name": "generate_sprint_report",
+      "file": "backend/sprint/sprint_report.py",
+      "id": "Function:generate_sprint_report"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/sprint/task.py"
+    },
+    {
+      "node_type": "class",
+      "name": "SprintTask",
+      "file": "backend/sprint/task.py",
+      "id": "Class:SprintTask"
+    },
+    {
+      "node_type": "function",
+      "name": "mark_running",
+      "file": "backend/sprint/task.py",
+      "id": "Function:mark_running"
+    },
+    {
+      "node_type": "function",
+      "name": "mark_review",
+      "file": "backend/sprint/task.py",
+      "id": "Function:mark_review"
+    },
+    {
+      "node_type": "function",
+      "name": "mark_completed",
+      "file": "backend/sprint/task.py",
+      "id": "Function:mark_completed"
+    },
+    {
+      "node_type": "function",
+      "name": "mark_failed",
+      "file": "backend/sprint/task.py",
+      "id": "Function:mark_failed"
+    },
+    {
+      "node_type": "function",
+      "name": "prepare_retry",
+      "file": "backend/sprint/task.py",
+      "id": "Function:prepare_retry"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/tests/test_autonomous_deployer.py"
     },
     {
@@ -10357,6 +10587,14 @@
     },
     {
       "id": "Module:tests.verify_day80_workspace.main"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/tests/test_day81_sprint.py"
+    },
+    {
+      "id": "Module:tests.verify_day81_sprint.main"
     },
     {
       "node_type": "file",
@@ -11306,15 +11544,15 @@
     },
     {
       "node_type": "function",
-      "name": "handleFileSelect",
-      "file": "frontend/src/App.jsx",
-      "id": "Function:handleFileSelect"
-    },
-    {
-      "node_type": "function",
       "name": "App",
       "file": "generated_projects/Build a Todo application using React_ FastAPI and MongoDB/frontend/src/App.jsx",
       "id": "Function:App"
+    },
+    {
+      "node_type": "function",
+      "name": "handleFileSelect",
+      "file": "frontend/src/App.jsx",
+      "id": "Function:handleFileSelect"
     },
     {
       "id": "Module:react"
@@ -11364,9 +11602,9 @@
     },
     {
       "node_type": "function",
-      "name": "handleThemeToggle",
+      "name": "handleSettingsClick",
       "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:handleThemeToggle"
+      "id": "Function:handleSettingsClick"
     },
     {
       "node_type": "function",
@@ -11376,21 +11614,21 @@
     },
     {
       "node_type": "function",
-      "name": "handleSettingsClick",
+      "name": "ChatBox",
       "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:handleSettingsClick"
+      "id": "Function:ChatBox"
+    },
+    {
+      "node_type": "function",
+      "name": "handleThemeToggle",
+      "file": "frontend/src/components/ChatBox.jsx",
+      "id": "Function:handleThemeToggle"
     },
     {
       "node_type": "function",
       "name": "formatStructuredResponse",
       "file": "frontend/src/components/ChatBox.jsx",
       "id": "Function:formatStructuredResponse"
-    },
-    {
-      "node_type": "function",
-      "name": "ChatBox",
-      "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:ChatBox"
     },
     {
       "id": "Module:react-icons/fa"
@@ -11440,15 +11678,15 @@
     },
     {
       "node_type": "function",
-      "name": "copyCode",
-      "file": "frontend/src/components/CodeBlock.jsx",
-      "id": "Function:copyCode"
-    },
-    {
-      "node_type": "function",
       "name": "CodeBlock",
       "file": "frontend/src/components/CodeBlock.jsx",
       "id": "Function:CodeBlock"
+    },
+    {
+      "node_type": "function",
+      "name": "copyCode",
+      "file": "frontend/src/components/CodeBlock.jsx",
+      "id": "Function:copyCode"
     },
     {
       "node_type": "file",
@@ -11472,9 +11710,9 @@
     },
     {
       "node_type": "function",
-      "name": "toggleFolder",
+      "name": "FileExplorer",
       "file": "frontend/src/components/FileExplorer.jsx",
-      "id": "Function:toggleFolder"
+      "id": "Function:FileExplorer"
     },
     {
       "node_type": "function",
@@ -11484,15 +11722,15 @@
     },
     {
       "node_type": "function",
-      "name": "renderNode",
+      "name": "toggleFolder",
       "file": "frontend/src/components/FileExplorer.jsx",
-      "id": "Function:renderNode"
+      "id": "Function:toggleFolder"
     },
     {
       "node_type": "function",
-      "name": "FileExplorer",
+      "name": "renderNode",
       "file": "frontend/src/components/FileExplorer.jsx",
-      "id": "Function:FileExplorer"
+      "id": "Function:renderNode"
     },
     {
       "node_type": "file",
@@ -11501,15 +11739,15 @@
     },
     {
       "node_type": "function",
-      "name": "InputBar",
-      "file": "frontend/src/components/InputBar.jsx",
-      "id": "Function:InputBar"
-    },
-    {
-      "node_type": "function",
       "name": "handleSend",
       "file": "frontend/src/components/InputBar.jsx",
       "id": "Function:handleSend"
+    },
+    {
+      "node_type": "function",
+      "name": "InputBar",
+      "file": "frontend/src/components/InputBar.jsx",
+      "id": "Function:InputBar"
     },
     {
       "node_type": "function",
@@ -11535,21 +11773,21 @@
     },
     {
       "node_type": "function",
+      "name": "Message",
+      "file": "frontend/src/components/Message.jsx",
+      "id": "Function:Message"
+    },
+    {
+      "node_type": "function",
       "name": "handleCopy",
       "file": "frontend/src/components/Message.jsx",
       "id": "Function:handleCopy"
     },
     {
       "node_type": "function",
-      "name": "handleFeedback",
+      "name": "copyEntireMessage",
       "file": "frontend/src/components/Message.jsx",
-      "id": "Function:handleFeedback"
-    },
-    {
-      "node_type": "function",
-      "name": "Message",
-      "file": "frontend/src/components/Message.jsx",
-      "id": "Function:Message"
+      "id": "Function:copyEntireMessage"
     },
     {
       "node_type": "function",
@@ -11559,9 +11797,9 @@
     },
     {
       "node_type": "function",
-      "name": "copyEntireMessage",
+      "name": "handleFeedback",
       "file": "frontend/src/components/Message.jsx",
-      "id": "Function:copyEntireMessage"
+      "id": "Function:handleFeedback"
     },
     {
       "id": "Module:react-markdown"
@@ -11649,15 +11887,15 @@
     },
     {
       "node_type": "function",
-      "name": "syncActiveSession",
-      "file": "frontend/src/components/Sidebar.jsx",
-      "id": "Function:syncActiveSession"
-    },
-    {
-      "node_type": "function",
       "name": "handleOpenSession",
       "file": "frontend/src/components/Sidebar.jsx",
       "id": "Function:handleOpenSession"
+    },
+    {
+      "node_type": "function",
+      "name": "syncActiveSession",
+      "file": "frontend/src/components/Sidebar.jsx",
+      "id": "Function:syncActiveSession"
     },
     {
       "node_type": "file",
@@ -11692,9 +11930,9 @@
     },
     {
       "node_type": "function",
-      "name": "Dashboard",
-      "file": "generated_projects/Build a Todo application using React_ FastAPI and MongoDB/frontend/src/components/Dashboard.jsx",
-      "id": "Function:Dashboard"
+      "name": "SkeletonBlock",
+      "file": "frontend/src/pages/Dashboard.jsx",
+      "id": "Function:SkeletonBlock"
     },
     {
       "node_type": "function",
@@ -11704,9 +11942,9 @@
     },
     {
       "node_type": "function",
-      "name": "SkeletonBlock",
-      "file": "frontend/src/pages/Dashboard.jsx",
-      "id": "Function:SkeletonBlock"
+      "name": "Dashboard",
+      "file": "generated_projects/Build a Todo application using React_ FastAPI and MongoDB/frontend/src/components/Dashboard.jsx",
+      "id": "Function:Dashboard"
     },
     {
       "node_type": "file",
@@ -11825,6 +12063,12 @@
     },
     {
       "node_type": "function",
+      "name": "handleSwitchProject",
+      "file": "frontend/src/pages/WorkspaceDashboard.jsx",
+      "id": "Function:handleSwitchProject"
+    },
+    {
+      "node_type": "function",
       "name": "handleSearch",
       "file": "frontend/src/pages/WorkspaceDashboard.jsx",
       "id": "Function:handleSearch"
@@ -11834,12 +12078,6 @@
       "name": "WorkspaceDashboard",
       "file": "frontend/src/pages/WorkspaceDashboard.jsx",
       "id": "Function:WorkspaceDashboard"
-    },
-    {
-      "node_type": "function",
-      "name": "handleSwitchProject",
-      "file": "frontend/src/pages/WorkspaceDashboard.jsx",
-      "id": "Function:handleSwitchProject"
     },
     {
       "node_type": "file",
@@ -11859,6 +12097,24 @@
     },
     {
       "node_type": "function",
+      "name": "sendConversationMessage",
+      "file": "frontend/src/services/conversationApi.js",
+      "id": "Function:sendConversationMessage"
+    },
+    {
+      "node_type": "function",
+      "name": "listConversations",
+      "file": "frontend/src/services/conversationApi.js",
+      "id": "Function:listConversations"
+    },
+    {
+      "node_type": "function",
+      "name": "deleteConversation",
+      "file": "frontend/src/services/conversationApi.js",
+      "id": "Function:deleteConversation"
+    },
+    {
+      "node_type": "function",
       "name": "createConversation",
       "file": "frontend/src/services/conversationApi.js",
       "id": "Function:createConversation"
@@ -11871,27 +12127,9 @@
     },
     {
       "node_type": "function",
-      "name": "deleteConversation",
-      "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:deleteConversation"
-    },
-    {
-      "node_type": "function",
-      "name": "sendConversationMessage",
-      "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:sendConversationMessage"
-    },
-    {
-      "node_type": "function",
       "name": "getConversationHistory",
       "file": "frontend/src/services/conversationApi.js",
       "id": "Function:getConversationHistory"
-    },
-    {
-      "node_type": "function",
-      "name": "listConversations",
-      "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:listConversations"
     },
     {
       "node_type": "file",
@@ -11911,48 +12149,6 @@
     },
     {
       "node_type": "function",
-      "name": "fetchProjects",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchProjects"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchProjectFiles",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchProjectFiles"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchLessons",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchLessons"
-    },
-    {
-      "node_type": "function",
-      "name": "generateProject",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:generateProject"
-    },
-    {
-      "node_type": "function",
-      "name": "generateProjectStream",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:generateProjectStream"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchProjectFileContent",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchProjectFileContent"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchPlugins",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchPlugins"
-    },
-    {
-      "node_type": "function",
       "name": "fetchReflection",
       "file": "frontend/src/services/projectApi.js",
       "id": "Function:fetchReflection"
@@ -11965,9 +12161,51 @@
     },
     {
       "node_type": "function",
+      "name": "generateProjectStream",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:generateProjectStream"
+    },
+    {
+      "node_type": "function",
       "name": "fetchMetrics",
       "file": "frontend/src/services/projectApi.js",
       "id": "Function:fetchMetrics"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchPlugins",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchPlugins"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchLessons",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchLessons"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchProjectFileContent",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchProjectFileContent"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchProjects",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchProjects"
+    },
+    {
+      "node_type": "function",
+      "name": "generateProject",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:generateProject"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchProjectFiles",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchProjectFiles"
     },
     {
       "node_type": "file",
@@ -11998,33 +12236,9 @@
     },
     {
       "node_type": "function",
-      "name": "getChatSessions",
+      "name": "createSessionId",
       "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:getChatSessions"
-    },
-    {
-      "node_type": "function",
-      "name": "getSavedMessages",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:getSavedMessages"
-    },
-    {
-      "node_type": "function",
-      "name": "resetChatSession",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:resetChatSession"
-    },
-    {
-      "node_type": "function",
-      "name": "saveMessages",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:saveMessages"
-    },
-    {
-      "node_type": "function",
-      "name": "loadSessionMessages",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:loadSessionMessages"
+      "id": "Function:createSessionId"
     },
     {
       "node_type": "function",
@@ -12034,15 +12248,33 @@
     },
     {
       "node_type": "function",
+      "name": "getChatSessions",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:getChatSessions"
+    },
+    {
+      "node_type": "function",
+      "name": "saveMessages",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:saveMessages"
+    },
+    {
+      "node_type": "function",
+      "name": "getSavedMessages",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:getSavedMessages"
+    },
+    {
+      "node_type": "function",
       "name": "clearActiveSessionId",
       "file": "frontend/src/utils/chatStorage.js",
       "id": "Function:clearActiveSessionId"
     },
     {
       "node_type": "function",
-      "name": "clearSessionMessages",
+      "name": "resetChatSession",
       "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:clearSessionMessages"
+      "id": "Function:resetChatSession"
     },
     {
       "node_type": "function",
@@ -12052,9 +12284,15 @@
     },
     {
       "node_type": "function",
-      "name": "createSessionId",
+      "name": "clearSessionMessages",
       "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:createSessionId"
+      "id": "Function:clearSessionMessages"
+    },
+    {
+      "node_type": "function",
+      "name": "loadSessionMessages",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:loadSessionMessages"
     },
     {
       "node_type": "file",
@@ -14740,6 +14978,20 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "tests/verify_day81_sprint.py"
+    },
+    {
+      "node_type": "function",
+      "name": "run_day81_tests",
+      "file": "tests/verify_day81_sprint.py",
+      "id": "Function:run_day81_tests"
+    },
+    {
+      "id": "Module:backend.sprint.sprint_manager.SprintManagerAgent"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "tests/verify_debate_scenarios.py"
     },
     {
@@ -16210,6 +16462,36 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "backend/agents/confidence_agent.py",
+      "target": "Class:ConfidenceAgent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/confidence_agent.py",
+      "target": "Function:evaluate_confidence"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/confidence_agent.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/confidence_agent.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/confidence_agent.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/confidence_agent.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "backend/agents/database_agent.py",
       "target": "Class:DatabaseAgent"
     },
@@ -16610,6 +16892,76 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "backend/agents/learning_agent.py",
+      "target": "Class:LearningAgent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/learning_agent.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/learning_agent.py",
+      "target": "Function:_init_memory"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/learning_agent.py",
+      "target": "Function:_load_json"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/learning_agent.py",
+      "target": "Function:_save_json"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/learning_agent.py",
+      "target": "Function:analyze_project_and_learn"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/learning_agent.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/learning_agent.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/learning_agent.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/learning_agent.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/learning_agent.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/learning_agent.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/learning_agent.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/learning_agent.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "backend/agents/pair_programmer_agent.py",
       "target": "Class:PairProgrammerAgent"
     },
@@ -16697,6 +17049,56 @@
       "relation": "IMPORTS",
       "source": "backend/agents/planner_agent.py",
       "target": "Module:backend.agents.base_agent.BaseAgent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/quality_analyzer.py",
+      "target": "Class:EnterpriseQualityAnalyzer"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/quality_analyzer.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/quality_analyzer.py",
+      "target": "Function:evaluate_project_quality"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/quality_analyzer.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/quality_analyzer.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/quality_analyzer.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/quality_analyzer.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/quality_analyzer.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/quality_analyzer.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/quality_analyzer.py",
+      "target": "Module:typing.Optional"
     },
     {
       "relation": "CONTAINS",
@@ -30189,6 +30591,381 @@
       "target": "Module:logging"
     },
     {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/conflict_detector.py",
+      "target": "Class:ConflictDetector"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/conflict_detector.py",
+      "target": "Function:detect_conflicts"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/conflict_detector.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/conflict_detector.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/conflict_detector.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/conflict_detector.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/conflict_detector.py",
+      "target": "Module:backend.sprint.task.SprintTask"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/dependency_graph.py",
+      "target": "Class:SprintDependencyGraph"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/dependency_graph.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/dependency_graph.py",
+      "target": "Function:add_task"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/dependency_graph.py",
+      "target": "Function:get_runnable_tasks"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/dependency_graph.py",
+      "target": "Function:is_all_completed"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/dependency_graph.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/dependency_graph.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/dependency_graph.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/dependency_graph.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/dependency_graph.py",
+      "target": "Module:typing.Set"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/dependency_graph.py",
+      "target": "Module:backend.sprint.task.SprintTask"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/progress_tracker.py",
+      "target": "Class:SprintProgressTracker"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/progress_tracker.py",
+      "target": "Function:get_progress_metrics"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/progress_tracker.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/progress_tracker.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/progress_tracker.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/progress_tracker.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/progress_tracker.py",
+      "target": "Module:backend.sprint.task.SprintTask"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/scheduler.py",
+      "target": "Class:SprintScheduler"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/scheduler.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/scheduler.py",
+      "target": "Function:execute_task_simulated"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/scheduler.py",
+      "target": "Function:run_sprint"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/scheduler.py",
+      "target": "Module:asyncio"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/scheduler.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/scheduler.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/scheduler.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/scheduler.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/scheduler.py",
+      "target": "Module:typing.Callable"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/scheduler.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/scheduler.py",
+      "target": "Module:backend.sprint.task.SprintTask"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/scheduler.py",
+      "target": "Module:backend.sprint.dependency_graph.SprintDependencyGraph"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/scheduler.py",
+      "target": "Module:backend.sprint.conflict_detector.ConflictDetector"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/sprint_manager.py",
+      "target": "Class:SprintManagerAgent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/sprint_manager.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/sprint_manager.py",
+      "target": "Function:plan_sprint_tasks"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/sprint_manager.py",
+      "target": "Function:execute_sprint"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_manager.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_manager.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_manager.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_manager.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_manager.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_manager.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_manager.py",
+      "target": "Module:backend.sprint.task.SprintTask"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_manager.py",
+      "target": "Module:backend.sprint.dependency_graph.SprintDependencyGraph"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_manager.py",
+      "target": "Module:backend.sprint.scheduler.SprintScheduler"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_manager.py",
+      "target": "Module:backend.sprint.progress_tracker.SprintProgressTracker"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_manager.py",
+      "target": "Module:backend.sprint.sprint_report.SprintReportGenerator"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/sprint_report.py",
+      "target": "Class:SprintReportGenerator"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/sprint_report.py",
+      "target": "Function:generate_sprint_report"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_report.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_report.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_report.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_report.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_report.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/sprint_report.py",
+      "target": "Module:backend.sprint.task.SprintTask"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/task.py",
+      "target": "Class:SprintTask"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/task.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/task.py",
+      "target": "Function:mark_running"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/task.py",
+      "target": "Function:mark_review"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/task.py",
+      "target": "Function:mark_completed"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/task.py",
+      "target": "Function:mark_failed"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/task.py",
+      "target": "Function:prepare_retry"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/sprint/task.py",
+      "target": "Function:to_dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/task.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/task.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/task.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/task.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/sprint/task.py",
+      "target": "Module:typing.Optional"
+    },
+    {
       "relation": "IMPORTS",
       "source": "backend/tests/test_autonomous_deployer.py",
       "target": "Module:sys"
@@ -30472,6 +31249,21 @@
       "relation": "IMPORTS",
       "source": "backend/tests/test_day80_workspace.py",
       "target": "Module:tests.verify_day80_workspace.main"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/tests/test_day81_sprint.py",
+      "target": "Module:sys"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/tests/test_day81_sprint.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/tests/test_day81_sprint.py",
+      "target": "Module:tests.verify_day81_sprint.main"
     },
     {
       "relation": "IMPORTS",
@@ -32706,12 +33498,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/App.jsx",
-      "target": "Function:handleFileSelect"
+      "target": "Function:App"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/App.jsx",
-      "target": "Function:App"
+      "target": "Function:handleFileSelect"
     },
     {
       "relation": "IMPORTS",
@@ -32781,7 +33573,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:handleThemeToggle"
+      "target": "Function:handleSettingsClick"
     },
     {
       "relation": "CONTAINS",
@@ -32791,17 +33583,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:handleSettingsClick"
+      "target": "Function:ChatBox"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "Function:handleThemeToggle"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/ChatBox.jsx",
       "target": "Function:formatStructuredResponse"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:ChatBox"
     },
     {
       "relation": "IMPORTS",
@@ -32871,12 +33663,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/CodeBlock.jsx",
-      "target": "Function:copyCode"
+      "target": "Function:CodeBlock"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/CodeBlock.jsx",
-      "target": "Function:CodeBlock"
+      "target": "Function:copyCode"
     },
     {
       "relation": "IMPORTS",
@@ -32891,7 +33683,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/FileExplorer.jsx",
-      "target": "Function:toggleFolder"
+      "target": "Function:FileExplorer"
     },
     {
       "relation": "CONTAINS",
@@ -32901,12 +33693,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/FileExplorer.jsx",
-      "target": "Function:renderNode"
+      "target": "Function:toggleFolder"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/FileExplorer.jsx",
-      "target": "Function:FileExplorer"
+      "target": "Function:renderNode"
     },
     {
       "relation": "IMPORTS",
@@ -32926,12 +33718,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/InputBar.jsx",
-      "target": "Function:InputBar"
+      "target": "Function:handleSend"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/InputBar.jsx",
-      "target": "Function:handleSend"
+      "target": "Function:InputBar"
     },
     {
       "relation": "CONTAINS",
@@ -32956,17 +33748,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Message.jsx",
+      "target": "Function:Message"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/Message.jsx",
       "target": "Function:handleCopy"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Message.jsx",
-      "target": "Function:handleFeedback"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/Message.jsx",
-      "target": "Function:Message"
+      "target": "Function:copyEntireMessage"
     },
     {
       "relation": "CONTAINS",
@@ -32976,7 +33768,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Message.jsx",
-      "target": "Function:copyEntireMessage"
+      "target": "Function:handleFeedback"
     },
     {
       "relation": "IMPORTS",
@@ -33091,12 +33883,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Sidebar.jsx",
-      "target": "Function:syncActiveSession"
+      "target": "Function:handleOpenSession"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Sidebar.jsx",
-      "target": "Function:handleOpenSession"
+      "target": "Function:syncActiveSession"
     },
     {
       "relation": "IMPORTS",
@@ -33126,7 +33918,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Dashboard.jsx",
-      "target": "Function:Dashboard"
+      "target": "Function:SkeletonBlock"
     },
     {
       "relation": "CONTAINS",
@@ -33136,7 +33928,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Dashboard.jsx",
-      "target": "Function:SkeletonBlock"
+      "target": "Function:Dashboard"
     },
     {
       "relation": "IMPORTS",
@@ -33306,17 +34098,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/WorkspaceDashboard.jsx",
+      "target": "Function:handleSwitchProject"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/pages/WorkspaceDashboard.jsx",
       "target": "Function:handleSearch"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/WorkspaceDashboard.jsx",
       "target": "Function:WorkspaceDashboard"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/pages/WorkspaceDashboard.jsx",
-      "target": "Function:handleSwitchProject"
     },
     {
       "relation": "IMPORTS",
@@ -33341,6 +34133,21 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
+      "target": "Function:sendConversationMessage"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/conversationApi.js",
+      "target": "Function:listConversations"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/conversationApi.js",
+      "target": "Function:deleteConversation"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/conversationApi.js",
       "target": "Function:createConversation"
     },
     {
@@ -33351,22 +34158,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:deleteConversation"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:sendConversationMessage"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/conversationApi.js",
       "target": "Function:getConversationHistory"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:listConversations"
     },
     {
       "relation": "IMPORTS",
@@ -33386,41 +34178,6 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchProjects"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchProjectFiles"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchLessons"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:generateProject"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:generateProjectStream"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchProjectFileContent"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchPlugins"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
       "target": "Function:fetchReflection"
     },
     {
@@ -33431,7 +34188,42 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
+      "target": "Function:generateProjectStream"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
       "target": "Function:fetchMetrics"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
+      "target": "Function:fetchPlugins"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
+      "target": "Function:fetchLessons"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
+      "target": "Function:fetchProjectFileContent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
+      "target": "Function:fetchProjects"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
+      "target": "Function:generateProject"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
+      "target": "Function:fetchProjectFiles"
     },
     {
       "relation": "CONTAINS",
@@ -33451,27 +34243,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:getChatSessions"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:getSavedMessages"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:resetChatSession"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:saveMessages"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:loadSessionMessages"
+      "target": "Function:createSessionId"
     },
     {
       "relation": "CONTAINS",
@@ -33481,12 +34253,27 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:getChatSessions"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:saveMessages"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:getSavedMessages"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
       "target": "Function:clearActiveSessionId"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:clearSessionMessages"
+      "target": "Function:resetChatSession"
     },
     {
       "relation": "CONTAINS",
@@ -33496,7 +34283,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:createSessionId"
+      "target": "Function:clearSessionMessages"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:loadSessionMessages"
     },
     {
       "relation": "DEPENDS_ON",
@@ -39175,6 +39967,86 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Function:section"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Function:check"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Function:run_day81_tests"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Function:main"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Module:sys"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Module:asyncio"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Module:backend.sprint.sprint_manager.SprintManagerAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Module:backend.sprint.task.SprintTask"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Module:backend.sprint.dependency_graph.SprintDependencyGraph"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Module:backend.sprint.scheduler.SprintScheduler"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Module:backend.sprint.conflict_detector.ConflictDetector"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Module:backend.sprint.progress_tracker.SprintProgressTracker"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day81_sprint.py",
+      "target": "Module:backend.sprint.sprint_report.SprintReportGenerator"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "tests/verify_debate_scenarios.py",
       "target": "Function:run_debate_verification"
     },
@@ -39790,14 +40662,14 @@
     }
   ],
   "summary": {
-    "total_files": 688,
-    "total_functions": 1597,
-    "total_classes": 371,
+    "total_files": 700,
+    "total_functions": 1629,
+    "total_classes": 381,
     "total_apis": 109,
     "total_db_models": 0,
     "total_env_vars": 8,
     "total_dependencies": 327,
-    "total_nodes": 2906,
-    "total_edges": 4965
+    "total_nodes": 2954,
+    "total_edges": 5089
   }
 }

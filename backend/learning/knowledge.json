@@ -1,0 +1,48 @@
+[
+  {
+    "problem": "Forgot JWT middleware",
+    "solution": "Always create auth middleware in routes",
+    "confidence": 0.93
+  },
+  {
+    "problem": "Un-indexed DB queries",
+    "solution": "Add indexes to foreign key columns",
+    "confidence": 0.96
+  },
+  {
+    "problem": "Monolithic route files",
+    "solution": "Split routes into modular controllers",
+    "confidence": 0.95,
+    "timestamp": 1784813332.5511377
+  },
+  {
+    "problem": "Missing input validation",
+    "solution": "Add Pydantic schema validation",
+    "confidence": 0.95,
+    "timestamp": 1784813332.5511453
+  },
+  {
+    "problem": "Monolithic route files",
+    "solution": "Split routes into modular controllers",
+    "confidence": 0.95,
+    "timestamp": 1784813332.594798
+  },
+  {
+    "problem": "Missing input validation",
+    "solution": "Add Pydantic schema validation",
+    "confidence": 0.95,
+    "timestamp": 1784813332.5948014
+  },
+  {
+    "problem": "Monolithic route files",
+    "solution": "Split routes into modular controllers",
+    "confidence": 0.95,
+    "timestamp": 1784813332.6492054
+  },
+  {
+    "problem": "Missing input validation",
+    "solution": "Add Pydantic schema validation",
+    "confidence": 0.95,
+    "timestamp": 1784813332.6492095
+  }
+]
