@@ -34,5 +34,13 @@
   {
     "id": "bp_9",
     "rule": "Always enforce Pydantic v2 schemas and input sanitization headers."
+  },
+  {
+    "id": "bp_10",
+    "rule": "JWT Validation filters"
+  },
+  {
+    "id": "bp_11",
+    "rule": "JWT"
   }
 ]

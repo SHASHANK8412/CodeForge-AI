@@ -97,12 +97,11 @@ class PromptOptimizer:
         _logger.info(f"PromptOptimizer: Enhanced user prompt '{original_prompt}' into production specification.")
         return enhanced
 
-    def optimize_prompt(self, agent_name: str, reviewer_feedback: str, use_llm: bool = False) -> str:
+    def optimize_prompt(self, agent_name: str, reviewer_feedback: str) -> str:
         _logger.info(f"Optimizing system prompt for agent '{agent_name}' due to feedback...")
         current_prompt = self.get_system_prompt(agent_name)
 
-        if use_llm:
-            refine_query = f"""
+        refine_query = f"""
 Current System Prompt for '{agent_name}':
 \"\"\"
 {current_prompt}
@@ -115,17 +114,15 @@ Critical Reviewer Feedback:
 
 Rewrite the Current System Prompt so the agent explicitly avoids the feedback issues. Output ONLY the revised prompt text.
 """
-            try:
-                optimized = generate_text(
-                    system_prompt="You are an expert prompt engineer. Output only the revised prompt text directly.",
-                    prompt=refine_query,
-                    model="qwen2.5-coder:latest",
-                    task="general"
-                ).strip()
-            except Exception as e:
-                _logger.warning(f"LLM prompt optimization unavailable ({e}), using rule-based prompt enhancement.")
-                optimized = f"{current_prompt}\n\n[RULE ENFORCEMENT]: System must strictly address reviewer feedback: {reviewer_feedback}"
-        else:
+        try:
+            optimized = generate_text(
+                system_prompt="You are an expert prompt engineer. Output only the revised prompt text directly.",
+                prompt=refine_query,
+                model="qwen2.5-coder:latest",
+                task="general"
+            ).strip()
+        except Exception as e:
+            _logger.warning(f"LLM prompt optimization unavailable ({e}), using rule-based prompt enhancement.")
             optimized = f"{current_prompt}\n\n[RULE ENFORCEMENT]: System must strictly address reviewer feedback: {reviewer_feedback}"
 
         if optimized:

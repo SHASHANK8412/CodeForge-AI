@@ -18,14 +18,17 @@ class BestPracticesGenerator:
     Extracts and stores engineering best practices across project generations.
     """
 
-    def __init__(self, memory_dir: Optional[str] = None) -> None:
+    def __init__(self, memory_dir: Optional[str] = None, knowledge_dir: Optional[str] = None) -> None:
         if memory_dir is None:
             memory_dir = str(Path(__file__).resolve().parents[1] / "memory")
         self.memory_dir = Path(memory_dir)
         self.memory_dir.mkdir(parents=True, exist_ok=True)
         self.json_path = self.memory_dir / "best_practices.json"
         
-        self.knowledge_dir = Path(__file__).resolve().parent / "knowledge"
+        if knowledge_dir is None:
+            self.knowledge_dir = Path(__file__).resolve().parent / "knowledge"
+        else:
+            self.knowledge_dir = Path(knowledge_dir)
         self.knowledge_dir.mkdir(parents=True, exist_ok=True)
         self.md_path = self.knowledge_dir / "best_practices.md"
 
@@ -119,7 +122,17 @@ Master guidelines compiled across project builds.
         
         sec_practices = practices.get("security_practices", [])
         for sec in sec_practices:
-            if len(sec) > 10:
+            if len(sec) > 1:
                 self.add_best_practice(sec)
+
+        project_name = project_summary.get("project", "Generic Project")
+        score = project_summary.get("final_score", 90)
+        insight_block = f"\n\n## Project Insight: {project_name}\n* **Technologies**: {', '.join(techs)}\n* **Score**: {score}%\n"
+
+        try:
+            with open(self.md_path, "a", encoding="utf-8") as f:
+                f.write(insight_block)
+        except Exception as e:
+            _logger.error(f"Failed to append project insight to best_practices.md: {e}")
 
         return self.md_path.read_text(encoding="utf-8") if self.md_path.exists() else ""
