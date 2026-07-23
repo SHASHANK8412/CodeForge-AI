@@ -611,6 +611,9 @@
       "id": "Module:backend.api.project.router"
     },
     {
+      "id": "Module:backend.routes.intelligence_routes.router"
+    },
+    {
       "id": "Module:backend.dashboard.monitoring_dashboard.global_scheduler"
     },
     {
@@ -2571,6 +2574,12 @@
     },
     {
       "node_type": "class",
+      "name": "MergeSummary",
+      "file": "backend/collaboration/merge_engine.py",
+      "id": "Class:MergeSummary"
+    },
+    {
+      "node_type": "class",
       "name": "AIMergeEngine",
       "file": "backend/collaboration/merge_engine.py",
       "id": "Class:AIMergeEngine"
@@ -2582,7 +2591,16 @@
       "id": "Function:resolve_merge_conflict"
     },
     {
+      "node_type": "function",
+      "name": "merge",
+      "file": "backend/collaboration/merge_engine.py",
+      "id": "Function:merge"
+    },
+    {
       "id": "Module:difflib"
+    },
+    {
+      "id": "Module:backend.collaboration.negotiation_agent.ResolutionDecision"
     },
     {
       "node_type": "file",
@@ -2670,9 +2688,6 @@
     },
     {
       "id": "Module:backend.collaboration.negotiation_agent.NegotiationAgent"
-    },
-    {
-      "id": "Module:backend.collaboration.negotiation_agent.ResolutionDecision"
     },
     {
       "id": "Module:backend.collaboration.merge_engine.MergeEngine"
@@ -2786,6 +2801,32 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/dashboard/analytics.py"
+    },
+    {
+      "node_type": "class",
+      "name": "DashboardAnalytics",
+      "file": "backend/dashboard/analytics.py",
+      "id": "Class:DashboardAnalytics"
+    },
+    {
+      "node_type": "function",
+      "name": "get_dashboard_data",
+      "file": "backend/dashboard/analytics.py",
+      "id": "Function:get_dashboard_data"
+    },
+    {
+      "id": "Module:backend.intelligence.metrics.global_metrics_engine"
+    },
+    {
+      "id": "Module:backend.intelligence.history_analyzer.global_history_analyzer"
+    },
+    {
+      "id": "Module:backend.database.quality_history.global_quality_history_db"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/dashboard/evolution_dashboard.py"
     },
     {
@@ -2856,7 +2897,7 @@
     {
       "node_type": "function",
       "name": "get_recommendations",
-      "file": "backend/dashboard/learning_dashboard.py",
+      "file": "backend/routes/intelligence_routes.py",
       "id": "Function:get_recommendations"
     },
     {
@@ -2877,7 +2918,7 @@
       "node_type": "api",
       "method": "GET",
       "endpoint": "/recommendations",
-      "file": "backend/dashboard/learning_dashboard.py",
+      "file": "backend/routes/intelligence_routes.py",
       "id": "API:GET /recommendations"
     },
     {
@@ -3001,6 +3042,52 @@
     },
     {
       "id": "Module:backend.monitoring.config.sre_settings"
+    },
+    {
+      "node_type": "file",
+      "ext": ".json",
+      "id": "backend/database/quality_history.json"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/database/quality_history.py"
+    },
+    {
+      "node_type": "class",
+      "name": "QualityHistoryDB",
+      "file": "backend/database/quality_history.py",
+      "id": "Class:QualityHistoryDB"
+    },
+    {
+      "node_type": "function",
+      "name": "_init_db",
+      "file": "backend/learning/project_memory.py",
+      "id": "Function:_init_db"
+    },
+    {
+      "node_type": "function",
+      "name": "_load_records",
+      "file": "backend/database/quality_history.py",
+      "id": "Function:_load_records"
+    },
+    {
+      "node_type": "function",
+      "name": "_save_records",
+      "file": "backend/database/quality_history.py",
+      "id": "Function:_save_records"
+    },
+    {
+      "node_type": "function",
+      "name": "add_record",
+      "file": "backend/monitoring/knowledge_base.py",
+      "id": "Function:add_record"
+    },
+    {
+      "node_type": "function",
+      "name": "get_all_records",
+      "file": "backend/database/quality_history.py",
+      "id": "Function:get_all_records"
     },
     {
       "node_type": "file",
@@ -4467,6 +4554,206 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/intelligence/architecture_score.py"
+    },
+    {
+      "node_type": "class",
+      "name": "ArchitectureScorer",
+      "file": "backend/intelligence/architecture_score.py",
+      "id": "Class:ArchitectureScorer"
+    },
+    {
+      "node_type": "function",
+      "name": "score_architecture",
+      "file": "backend/intelligence/architecture_score.py",
+      "id": "Function:score_architecture"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/intelligence/documentation_score.py"
+    },
+    {
+      "node_type": "class",
+      "name": "DocumentationScorer",
+      "file": "backend/intelligence/documentation_score.py",
+      "id": "Class:DocumentationScorer"
+    },
+    {
+      "node_type": "function",
+      "name": "score_documentation",
+      "file": "backend/intelligence/documentation_score.py",
+      "id": "Function:score_documentation"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/intelligence/history_analyzer.py"
+    },
+    {
+      "node_type": "class",
+      "name": "HistoryAnalyzer",
+      "file": "backend/intelligence/history_analyzer.py",
+      "id": "Class:HistoryAnalyzer"
+    },
+    {
+      "node_type": "function",
+      "name": "analyze_history",
+      "file": "backend/intelligence/history_analyzer.py",
+      "id": "Function:analyze_history"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/intelligence/maintainability_score.py"
+    },
+    {
+      "node_type": "class",
+      "name": "MaintainabilityScorer",
+      "file": "backend/intelligence/maintainability_score.py",
+      "id": "Class:MaintainabilityScorer"
+    },
+    {
+      "node_type": "function",
+      "name": "score_maintainability",
+      "file": "backend/intelligence/maintainability_score.py",
+      "id": "Function:score_maintainability"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/intelligence/metrics.py"
+    },
+    {
+      "node_type": "class",
+      "name": "MetricsEngine",
+      "file": "backend/intelligence/metrics.py",
+      "id": "Class:MetricsEngine"
+    },
+    {
+      "node_type": "function",
+      "name": "get_aggregate_metrics",
+      "file": "backend/intelligence/metrics.py",
+      "id": "Function:get_aggregate_metrics"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/intelligence/performance_score.py"
+    },
+    {
+      "node_type": "class",
+      "name": "PerformanceScorer",
+      "file": "backend/intelligence/performance_score.py",
+      "id": "Class:PerformanceScorer"
+    },
+    {
+      "node_type": "function",
+      "name": "score_performance",
+      "file": "backend/intelligence/performance_score.py",
+      "id": "Function:score_performance"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/intelligence/quality_engine.py"
+    },
+    {
+      "node_type": "class",
+      "name": "MasterQualityEngine",
+      "file": "backend/intelligence/quality_engine.py",
+      "id": "Class:MasterQualityEngine"
+    },
+    {
+      "node_type": "function",
+      "name": "analyze_project",
+      "file": "backend/routes/intelligence_routes.py",
+      "id": "Function:analyze_project"
+    },
+    {
+      "node_type": "function",
+      "name": "trigger_self_improvement_loop",
+      "file": "backend/intelligence/quality_engine.py",
+      "id": "Function:trigger_self_improvement_loop"
+    },
+    {
+      "id": "Module:backend.intelligence.architecture_score.global_architecture_scorer"
+    },
+    {
+      "id": "Module:backend.intelligence.performance_score.global_performance_scorer"
+    },
+    {
+      "id": "Module:backend.intelligence.security_score.global_security_scorer"
+    },
+    {
+      "id": "Module:backend.intelligence.documentation_score.global_documentation_scorer"
+    },
+    {
+      "id": "Module:backend.intelligence.test_score.global_test_scorer"
+    },
+    {
+      "id": "Module:backend.intelligence.maintainability_score.global_maintainability_scorer"
+    },
+    {
+      "id": "Module:backend.intelligence.recommendation_engine.global_recommendation_engine"
+    },
+    {
+      "id": "Module:backend.reports.report_generator.global_engineering_report_generator"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/intelligence/recommendation_engine.py"
+    },
+    {
+      "node_type": "class",
+      "name": "RecommendationEngine",
+      "file": "backend/intelligence/recommendation_engine.py",
+      "id": "Class:RecommendationEngine"
+    },
+    {
+      "node_type": "function",
+      "name": "generate_recommendations",
+      "file": "backend/intelligence/recommendation_engine.py",
+      "id": "Function:generate_recommendations"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/intelligence/security_score.py"
+    },
+    {
+      "node_type": "class",
+      "name": "SecurityScorer",
+      "file": "backend/intelligence/security_score.py",
+      "id": "Class:SecurityScorer"
+    },
+    {
+      "node_type": "function",
+      "name": "score_security",
+      "file": "backend/intelligence/security_score.py",
+      "id": "Function:score_security"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/intelligence/test_score.py"
+    },
+    {
+      "node_type": "class",
+      "name": "TestScorer",
+      "file": "backend/intelligence/test_score.py",
+      "id": "Class:TestScorer"
+    },
+    {
+      "node_type": "function",
+      "name": "score_testing",
+      "file": "backend/intelligence/test_score.py",
+      "id": "Function:score_testing"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/knowledge/knowledge_manager.py"
     },
     {
@@ -4721,7 +5008,7 @@
     {
       "node_type": "function",
       "name": "generate_report",
-      "file": "backend/knowledge/memory/evolution_report.py",
+      "file": "backend/reports/report_generator.py",
       "id": "Function:generate_report"
     },
     {
@@ -4734,12 +5021,6 @@
       "name": "ProjectMemory",
       "file": "backend/memory/project_memory.py",
       "id": "Class:ProjectMemory"
-    },
-    {
-      "node_type": "function",
-      "name": "_init_db",
-      "file": "backend/learning/project_memory.py",
-      "id": "Function:_init_db"
     },
     {
       "node_type": "function",
@@ -6547,12 +6828,6 @@
     },
     {
       "node_type": "function",
-      "name": "add_record",
-      "file": "backend/monitoring/knowledge_base.py",
-      "id": "Function:add_record"
-    },
-    {
-      "node_type": "function",
       "name": "get_best_strategy",
       "file": "backend/monitoring/knowledge_base.py",
       "id": "Function:get_best_strategy"
@@ -8222,6 +8497,11 @@
     {
       "node_type": "file",
       "ext": ".txt",
+      "id": "backend/rag/documents/2e23b802e7594ef19c4483af1c9317a5_sample.txt"
+    },
+    {
+      "node_type": "file",
+      "ext": ".txt",
       "id": "backend/rag/documents/2e9090544fd841e2ba15596dbbf87bd5_sample.txt"
     },
     {
@@ -8433,6 +8713,11 @@
       "node_type": "file",
       "ext": ".txt",
       "id": "backend/rag/documents/beadde95ffed4d2895d7291df3d87f01_sample.txt"
+    },
+    {
+      "node_type": "file",
+      "ext": ".txt",
+      "id": "backend/rag/documents/c1e48b79f3fc4fb58b100fa3c5da6b40_sample.txt"
     },
     {
       "node_type": "file",
@@ -8761,6 +9046,17 @@
       "node_type": "file",
       "ext": ".json",
       "id": "backend/reports/quality_report.json"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/reports/report_generator.py"
+    },
+    {
+      "node_type": "class",
+      "name": "EngineeringReportGenerator",
+      "file": "backend/reports/report_generator.py",
+      "id": "Class:EngineeringReportGenerator"
     },
     {
       "node_type": "file",
@@ -9465,6 +9761,63 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/routes/intelligence_routes.py"
+    },
+    {
+      "node_type": "function",
+      "name": "get_latest_quality",
+      "file": "backend/routes/intelligence_routes.py",
+      "id": "Function:get_latest_quality"
+    },
+    {
+      "node_type": "function",
+      "name": "get_quality_history",
+      "file": "backend/routes/intelligence_routes.py",
+      "id": "Function:get_quality_history"
+    },
+    {
+      "node_type": "function",
+      "name": "get_dashboard_analytics",
+      "file": "backend/routes/intelligence_routes.py",
+      "id": "Function:get_dashboard_analytics"
+    },
+    {
+      "node_type": "api",
+      "method": "GET",
+      "endpoint": "/quality/latest",
+      "file": "backend/routes/intelligence_routes.py",
+      "id": "API:GET /quality/latest"
+    },
+    {
+      "node_type": "api",
+      "method": "GET",
+      "endpoint": "/quality/history",
+      "file": "backend/routes/intelligence_routes.py",
+      "id": "API:GET /quality/history"
+    },
+    {
+      "node_type": "api",
+      "method": "GET",
+      "endpoint": "/dashboard",
+      "file": "backend/routes/llm_routes.py",
+      "id": "API:GET /dashboard"
+    },
+    {
+      "node_type": "api",
+      "method": "POST",
+      "endpoint": "/analyze",
+      "file": "backend/routes/pair_programmer_routes.py",
+      "id": "API:POST /analyze"
+    },
+    {
+      "id": "Module:backend.intelligence.quality_engine.global_quality_engine"
+    },
+    {
+      "id": "Module:backend.dashboard.analytics.global_dashboard_analytics"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/routes/learning_routes.py"
     },
     {
@@ -9541,13 +9894,6 @@
       "endpoint": "/cycle",
       "file": "backend/routes/learning_routes.py",
       "id": "API:POST /cycle"
-    },
-    {
-      "node_type": "api",
-      "method": "GET",
-      "endpoint": "/dashboard",
-      "file": "backend/routes/llm_routes.py",
-      "id": "API:GET /dashboard"
     },
     {
       "node_type": "api",
@@ -9691,13 +10037,6 @@
       "endpoint": "/edit",
       "file": "backend/routes/pair_programmer_routes.py",
       "id": "API:POST /edit"
-    },
-    {
-      "node_type": "api",
-      "method": "POST",
-      "endpoint": "/analyze",
-      "file": "backend/routes/pair_programmer_routes.py",
-      "id": "API:POST /analyze"
     },
     {
       "id": "Module:backend.agents.pair_programmer_agent.PairProgrammerAgent"
@@ -11085,6 +11424,14 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/tests/test_day86_87_intelligence.py"
+    },
+    {
+      "id": "Module:tests.verify_day86_87_intelligence.main"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/tests/test_elite_security.py"
     },
     {
@@ -12094,15 +12441,9 @@
     },
     {
       "node_type": "function",
-      "name": "toUiMessages",
+      "name": "formatStructuredResponse",
       "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:toUiMessages"
-    },
-    {
-      "node_type": "function",
-      "name": "handleSettingsClick",
-      "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:handleSettingsClick"
+      "id": "Function:formatStructuredResponse"
     },
     {
       "node_type": "function",
@@ -12112,9 +12453,15 @@
     },
     {
       "node_type": "function",
-      "name": "formatStructuredResponse",
+      "name": "toUiMessages",
       "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:formatStructuredResponse"
+      "id": "Function:toUiMessages"
+    },
+    {
+      "node_type": "function",
+      "name": "handleSettingsClick",
+      "file": "frontend/src/components/ChatBox.jsx",
+      "id": "Function:handleSettingsClick"
     },
     {
       "id": "Module:react-icons/fa"
@@ -12196,9 +12543,9 @@
     },
     {
       "node_type": "function",
-      "name": "toggleFolder",
+      "name": "FileExplorer",
       "file": "frontend/src/components/FileExplorer.jsx",
-      "id": "Function:toggleFolder"
+      "id": "Function:FileExplorer"
     },
     {
       "node_type": "function",
@@ -12214,9 +12561,9 @@
     },
     {
       "node_type": "function",
-      "name": "FileExplorer",
+      "name": "toggleFolder",
       "file": "frontend/src/components/FileExplorer.jsx",
-      "id": "Function:FileExplorer"
+      "id": "Function:toggleFolder"
     },
     {
       "node_type": "file",
@@ -12259,21 +12606,9 @@
     },
     {
       "node_type": "function",
-      "name": "handleFeedback",
-      "file": "frontend/src/components/Message.jsx",
-      "id": "Function:handleFeedback"
-    },
-    {
-      "node_type": "function",
       "name": "copyEntireMessage",
       "file": "frontend/src/components/Message.jsx",
       "id": "Function:copyEntireMessage"
-    },
-    {
-      "node_type": "function",
-      "name": "handleCopy",
-      "file": "frontend/src/components/Message.jsx",
-      "id": "Function:handleCopy"
     },
     {
       "node_type": "function",
@@ -12283,9 +12618,21 @@
     },
     {
       "node_type": "function",
+      "name": "handleFeedback",
+      "file": "frontend/src/components/Message.jsx",
+      "id": "Function:handleFeedback"
+    },
+    {
+      "node_type": "function",
       "name": "Message",
       "file": "frontend/src/components/Message.jsx",
       "id": "Function:Message"
+    },
+    {
+      "node_type": "function",
+      "name": "handleCopy",
+      "file": "frontend/src/components/Message.jsx",
+      "id": "Function:handleCopy"
     },
     {
       "id": "Module:react-markdown"
@@ -12328,15 +12675,15 @@
     },
     {
       "node_type": "function",
-      "name": "PlannerCard",
-      "file": "frontend/src/components/PlannerCard.jsx",
-      "id": "Function:PlannerCard"
-    },
-    {
-      "node_type": "function",
       "name": "SectionCard",
       "file": "frontend/src/components/PlannerCard.jsx",
       "id": "Function:SectionCard"
+    },
+    {
+      "node_type": "function",
+      "name": "PlannerCard",
+      "file": "frontend/src/components/PlannerCard.jsx",
+      "id": "Function:PlannerCard"
     },
     {
       "node_type": "file",
@@ -12367,15 +12714,15 @@
     },
     {
       "node_type": "function",
-      "name": "syncActiveSession",
-      "file": "frontend/src/components/Sidebar.jsx",
-      "id": "Function:syncActiveSession"
-    },
-    {
-      "node_type": "function",
       "name": "Sidebar",
       "file": "frontend/src/components/Sidebar.jsx",
       "id": "Function:Sidebar"
+    },
+    {
+      "node_type": "function",
+      "name": "syncActiveSession",
+      "file": "frontend/src/components/Sidebar.jsx",
+      "id": "Function:syncActiveSession"
     },
     {
       "node_type": "function",
@@ -12416,9 +12763,9 @@
     },
     {
       "node_type": "function",
-      "name": "Dashboard",
-      "file": "generated_projects/Build a Todo application using React_ FastAPI and MongoDB/frontend/src/components/Dashboard.jsx",
-      "id": "Function:Dashboard"
+      "name": "StatCard",
+      "file": "frontend/src/pages/Dashboard.jsx",
+      "id": "Function:StatCard"
     },
     {
       "node_type": "function",
@@ -12428,9 +12775,9 @@
     },
     {
       "node_type": "function",
-      "name": "StatCard",
-      "file": "frontend/src/pages/Dashboard.jsx",
-      "id": "Function:StatCard"
+      "name": "Dashboard",
+      "file": "generated_projects/Build a Todo application using React_ FastAPI and MongoDB/frontend/src/components/Dashboard.jsx",
+      "id": "Function:Dashboard"
     },
     {
       "node_type": "file",
@@ -12473,15 +12820,15 @@
     },
     {
       "node_type": "function",
-      "name": "handleGenerate",
-      "file": "frontend/src/pages/Planner.jsx",
-      "id": "Function:handleGenerate"
-    },
-    {
-      "node_type": "function",
       "name": "Planner",
       "file": "frontend/src/pages/Planner.jsx",
       "id": "Function:Planner"
+    },
+    {
+      "node_type": "function",
+      "name": "handleGenerate",
+      "file": "frontend/src/pages/Planner.jsx",
+      "id": "Function:handleGenerate"
     },
     {
       "id": "Module:../components/PlannerCard"
@@ -12493,15 +12840,15 @@
     },
     {
       "node_type": "function",
-      "name": "PluginsDashboard",
-      "file": "frontend/src/pages/PluginsDashboard.jsx",
-      "id": "Function:PluginsDashboard"
-    },
-    {
-      "node_type": "function",
       "name": "getPluginIcon",
       "file": "frontend/src/pages/PluginsDashboard.jsx",
       "id": "Function:getPluginIcon"
+    },
+    {
+      "node_type": "function",
+      "name": "PluginsDashboard",
+      "file": "frontend/src/pages/PluginsDashboard.jsx",
+      "id": "Function:PluginsDashboard"
     },
     {
       "node_type": "api",
@@ -12517,15 +12864,15 @@
     },
     {
       "node_type": "function",
-      "name": "ProjectGenerator",
-      "file": "frontend/src/pages/ProjectGenerator.jsx",
-      "id": "Function:ProjectGenerator"
-    },
-    {
-      "node_type": "function",
       "name": "getStageStatus",
       "file": "frontend/src/pages/ProjectGenerator.jsx",
       "id": "Function:getStageStatus"
+    },
+    {
+      "node_type": "function",
+      "name": "ProjectGenerator",
+      "file": "frontend/src/pages/ProjectGenerator.jsx",
+      "id": "Function:ProjectGenerator"
     },
     {
       "node_type": "function",
@@ -12539,7 +12886,31 @@
     {
       "node_type": "file",
       "ext": ".jsx",
+      "id": "frontend/src/pages/QualityDashboard.jsx"
+    },
+    {
+      "node_type": "function",
+      "name": "QualityDashboard",
+      "file": "frontend/src/pages/QualityDashboard.jsx",
+      "id": "Function:QualityDashboard"
+    },
+    {
+      "node_type": "api",
+      "method": "GET/POST",
+      "endpoint": "/intelligence/dashboard",
+      "file": "frontend/src/pages/QualityDashboard.jsx",
+      "id": "API:GET/POST /intelligence/dashboard"
+    },
+    {
+      "node_type": "file",
+      "ext": ".jsx",
       "id": "frontend/src/pages/WorkspaceDashboard.jsx"
+    },
+    {
+      "node_type": "function",
+      "name": "handleSwitchProject",
+      "file": "frontend/src/pages/WorkspaceDashboard.jsx",
+      "id": "Function:handleSwitchProject"
     },
     {
       "node_type": "function",
@@ -12552,12 +12923,6 @@
       "name": "handleSendChat",
       "file": "frontend/src/pages/WorkspaceDashboard.jsx",
       "id": "Function:handleSendChat"
-    },
-    {
-      "node_type": "function",
-      "name": "handleSwitchProject",
-      "file": "frontend/src/pages/WorkspaceDashboard.jsx",
-      "id": "Function:handleSwitchProject"
     },
     {
       "node_type": "function",
@@ -12583,12 +12948,6 @@
     },
     {
       "node_type": "function",
-      "name": "sendConversationMessage",
-      "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:sendConversationMessage"
-    },
-    {
-      "node_type": "function",
       "name": "listConversations",
       "file": "frontend/src/services/conversationApi.js",
       "id": "Function:listConversations"
@@ -12601,12 +12960,6 @@
     },
     {
       "node_type": "function",
-      "name": "deleteConversation",
-      "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:deleteConversation"
-    },
-    {
-      "node_type": "function",
       "name": "getConversationHistory",
       "file": "frontend/src/services/conversationApi.js",
       "id": "Function:getConversationHistory"
@@ -12616,6 +12969,18 @@
       "name": "renameConversation",
       "file": "frontend/src/services/conversationApi.js",
       "id": "Function:renameConversation"
+    },
+    {
+      "node_type": "function",
+      "name": "sendConversationMessage",
+      "file": "frontend/src/services/conversationApi.js",
+      "id": "Function:sendConversationMessage"
+    },
+    {
+      "node_type": "function",
+      "name": "deleteConversation",
+      "file": "frontend/src/services/conversationApi.js",
+      "id": "Function:deleteConversation"
     },
     {
       "node_type": "file",
@@ -12635,54 +13000,6 @@
     },
     {
       "node_type": "function",
-      "name": "fetchLessons",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchLessons"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchMetrics",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchMetrics"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchProjectFiles",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchProjectFiles"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchPlugins",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchPlugins"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchProjects",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchProjects"
-    },
-    {
-      "node_type": "function",
-      "name": "generateProject",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:generateProject"
-    },
-    {
-      "node_type": "function",
-      "name": "generateProjectStream",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:generateProjectStream"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchReflection",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchReflection"
-    },
-    {
-      "node_type": "function",
       "name": "fetchProjectFileContent",
       "file": "frontend/src/services/projectApi.js",
       "id": "Function:fetchProjectFileContent"
@@ -12692,6 +13009,54 @@
       "name": "fetchEvolutionStatus",
       "file": "frontend/src/services/projectApi.js",
       "id": "Function:fetchEvolutionStatus"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchMetrics",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchMetrics"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchPlugins",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchPlugins"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchProjectFiles",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchProjectFiles"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchProjects",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchProjects"
+    },
+    {
+      "node_type": "function",
+      "name": "generateProjectStream",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:generateProjectStream"
+    },
+    {
+      "node_type": "function",
+      "name": "generateProject",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:generateProject"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchReflection",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchReflection"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchLessons",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchLessons"
     },
     {
       "node_type": "file",
@@ -12722,48 +13087,6 @@
     },
     {
       "node_type": "function",
-      "name": "clearSessionMessages",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:clearSessionMessages"
-    },
-    {
-      "node_type": "function",
-      "name": "getSavedMessages",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:getSavedMessages"
-    },
-    {
-      "node_type": "function",
-      "name": "setActiveSessionId",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:setActiveSessionId"
-    },
-    {
-      "node_type": "function",
-      "name": "loadSessionMessages",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:loadSessionMessages"
-    },
-    {
-      "node_type": "function",
-      "name": "getActiveSessionId",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:getActiveSessionId"
-    },
-    {
-      "node_type": "function",
-      "name": "resetChatSession",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:resetChatSession"
-    },
-    {
-      "node_type": "function",
-      "name": "createSessionId",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:createSessionId"
-    },
-    {
-      "node_type": "function",
       "name": "clearActiveSessionId",
       "file": "frontend/src/utils/chatStorage.js",
       "id": "Function:clearActiveSessionId"
@@ -12776,9 +13099,51 @@
     },
     {
       "node_type": "function",
+      "name": "setActiveSessionId",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:setActiveSessionId"
+    },
+    {
+      "node_type": "function",
+      "name": "getSavedMessages",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:getSavedMessages"
+    },
+    {
+      "node_type": "function",
+      "name": "clearSessionMessages",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:clearSessionMessages"
+    },
+    {
+      "node_type": "function",
+      "name": "getActiveSessionId",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:getActiveSessionId"
+    },
+    {
+      "node_type": "function",
       "name": "saveMessages",
       "file": "frontend/src/utils/chatStorage.js",
       "id": "Function:saveMessages"
+    },
+    {
+      "node_type": "function",
+      "name": "createSessionId",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:createSessionId"
+    },
+    {
+      "node_type": "function",
+      "name": "resetChatSession",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:resetChatSession"
+    },
+    {
+      "node_type": "function",
+      "name": "loadSessionMessages",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:loadSessionMessages"
     },
     {
       "node_type": "file",
@@ -13591,6 +13956,12 @@
       "node_type": "file",
       "ext": ".py",
       "id": "tests/test_collaboration.py"
+    },
+    {
+      "node_type": "function",
+      "name": "test_collaboration_suite",
+      "file": "tests/test_collaboration.py",
+      "id": "Function:test_collaboration_suite"
     },
     {
       "node_type": "file",
@@ -15509,6 +15880,56 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "tests/verify_day86_87_intelligence.py"
+    },
+    {
+      "node_type": "function",
+      "name": "run_day86_87_tests",
+      "file": "tests/verify_day86_87_intelligence.py",
+      "id": "Function:run_day86_87_tests"
+    },
+    {
+      "id": "Module:backend.intelligence.quality_engine.MasterQualityEngine"
+    },
+    {
+      "id": "Module:backend.intelligence.architecture_score.ArchitectureScorer"
+    },
+    {
+      "id": "Module:backend.intelligence.performance_score.PerformanceScorer"
+    },
+    {
+      "id": "Module:backend.intelligence.security_score.SecurityScorer"
+    },
+    {
+      "id": "Module:backend.intelligence.documentation_score.DocumentationScorer"
+    },
+    {
+      "id": "Module:backend.intelligence.test_score.TestScorer"
+    },
+    {
+      "id": "Module:backend.intelligence.maintainability_score.MaintainabilityScorer"
+    },
+    {
+      "id": "Module:backend.intelligence.recommendation_engine.RecommendationEngine"
+    },
+    {
+      "id": "Module:backend.intelligence.history_analyzer.HistoryAnalyzer"
+    },
+    {
+      "id": "Module:backend.intelligence.metrics.MetricsEngine"
+    },
+    {
+      "id": "Module:backend.database.quality_history.QualityHistoryDB"
+    },
+    {
+      "id": "Module:backend.reports.report_generator.EngineeringReportGenerator"
+    },
+    {
+      "id": "Module:backend.dashboard.analytics.DashboardAnalytics"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "tests/verify_debate_scenarios.py"
     },
     {
@@ -16356,6 +16777,11 @@
       "relation": "IMPORTS",
       "source": "backend/main.py",
       "target": "Module:backend.api.project.router"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/main.py",
+      "target": "Module:backend.routes.intelligence_routes.router"
     },
     {
       "relation": "IMPORTS",
@@ -19175,12 +19601,22 @@
     {
       "relation": "CONTAINS",
       "source": "backend/collaboration/merge_engine.py",
+      "target": "Class:MergeSummary"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/merge_engine.py",
       "target": "Class:AIMergeEngine"
     },
     {
       "relation": "CONTAINS",
       "source": "backend/collaboration/merge_engine.py",
       "target": "Function:resolve_merge_conflict"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/merge_engine.py",
+      "target": "Function:merge"
     },
     {
       "relation": "IMPORTS",
@@ -19206,6 +19642,21 @@
       "relation": "IMPORTS",
       "source": "backend/collaboration/merge_engine.py",
       "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/merge_engine.py",
+      "target": "Module:dataclasses.dataclass"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/merge_engine.py",
+      "target": "Module:dataclasses.field"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/merge_engine.py",
+      "target": "Module:backend.collaboration.negotiation_agent.ResolutionDecision"
     },
     {
       "relation": "CONTAINS",
@@ -19599,6 +20050,51 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "backend/dashboard/analytics.py",
+      "target": "Class:DashboardAnalytics"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/dashboard/analytics.py",
+      "target": "Function:get_dashboard_data"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/dashboard/analytics.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/dashboard/analytics.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/dashboard/analytics.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/dashboard/analytics.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/dashboard/analytics.py",
+      "target": "Module:backend.intelligence.metrics.global_metrics_engine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/dashboard/analytics.py",
+      "target": "Module:backend.intelligence.history_analyzer.global_history_analyzer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/dashboard/analytics.py",
+      "target": "Module:backend.database.quality_history.global_quality_history_db"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "backend/dashboard/evolution_dashboard.py",
       "target": "Function:get_evolution_status"
     },
@@ -19881,6 +20377,81 @@
       "relation": "IMPORTS",
       "source": "backend/dashboard/monitoring_dashboard.py",
       "target": "Module:backend.monitoring.config.sre_settings"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/database/quality_history.py",
+      "target": "Class:QualityHistoryDB"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/database/quality_history.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/database/quality_history.py",
+      "target": "Function:_init_db"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/database/quality_history.py",
+      "target": "Function:_load_records"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/database/quality_history.py",
+      "target": "Function:_save_records"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/database/quality_history.py",
+      "target": "Function:add_record"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/database/quality_history.py",
+      "target": "Function:get_all_records"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/database/quality_history.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/database/quality_history.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/database/quality_history.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/database/quality_history.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/database/quality_history.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/database/quality_history.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/database/quality_history.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/database/quality_history.py",
+      "target": "Module:typing.Optional"
     },
     {
       "relation": "CONTAINS",
@@ -22506,6 +23077,366 @@
       "relation": "IMPORTS",
       "source": "backend/graph/workflow.py",
       "target": "Module:backend.utils.summarizer.summarize_architecture"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/architecture_score.py",
+      "target": "Class:ArchitectureScorer"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/architecture_score.py",
+      "target": "Function:score_architecture"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/architecture_score.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/architecture_score.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/architecture_score.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/architecture_score.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/documentation_score.py",
+      "target": "Class:DocumentationScorer"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/documentation_score.py",
+      "target": "Function:score_documentation"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/documentation_score.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/documentation_score.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/documentation_score.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/documentation_score.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/history_analyzer.py",
+      "target": "Class:HistoryAnalyzer"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/history_analyzer.py",
+      "target": "Function:analyze_history"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/history_analyzer.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/history_analyzer.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/history_analyzer.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/history_analyzer.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/maintainability_score.py",
+      "target": "Class:MaintainabilityScorer"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/maintainability_score.py",
+      "target": "Function:score_maintainability"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/maintainability_score.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/maintainability_score.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/maintainability_score.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/maintainability_score.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/metrics.py",
+      "target": "Class:MetricsEngine"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/metrics.py",
+      "target": "Function:get_aggregate_metrics"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/metrics.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/metrics.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/metrics.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/metrics.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/performance_score.py",
+      "target": "Class:PerformanceScorer"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/performance_score.py",
+      "target": "Function:score_performance"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/performance_score.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/performance_score.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/performance_score.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/performance_score.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Class:MasterQualityEngine"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Function:analyze_project"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Function:trigger_self_improvement_loop"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Module:backend.intelligence.architecture_score.global_architecture_scorer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Module:backend.intelligence.performance_score.global_performance_scorer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Module:backend.intelligence.security_score.global_security_scorer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Module:backend.intelligence.documentation_score.global_documentation_scorer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Module:backend.intelligence.test_score.global_test_scorer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Module:backend.intelligence.maintainability_score.global_maintainability_scorer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Module:backend.intelligence.recommendation_engine.global_recommendation_engine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Module:backend.database.quality_history.global_quality_history_db"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/quality_engine.py",
+      "target": "Module:backend.reports.report_generator.global_engineering_report_generator"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/recommendation_engine.py",
+      "target": "Class:RecommendationEngine"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/recommendation_engine.py",
+      "target": "Function:generate_recommendations"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/recommendation_engine.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/recommendation_engine.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/recommendation_engine.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/recommendation_engine.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/security_score.py",
+      "target": "Class:SecurityScorer"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/security_score.py",
+      "target": "Function:score_security"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/security_score.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/security_score.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/security_score.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/security_score.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/test_score.py",
+      "target": "Class:TestScorer"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/intelligence/test_score.py",
+      "target": "Function:score_testing"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/test_score.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/test_score.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/test_score.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/intelligence/test_score.py",
+      "target": "Module:typing.List"
     },
     {
       "relation": "CONTAINS",
@@ -28829,6 +29760,46 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "backend/reports/report_generator.py",
+      "target": "Class:EngineeringReportGenerator"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/reports/report_generator.py",
+      "target": "Function:generate_report"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/reports/report_generator.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/reports/report_generator.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/reports/report_generator.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/reports/report_generator.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/reports/report_generator.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/reports/report_generator.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "backend/repository/dependency_graph.py",
       "target": "Class:RepositoryDependencyGraph"
     },
@@ -30051,6 +31022,106 @@
       "relation": "IMPORTS",
       "source": "backend/routes/graph_routes.py",
       "target": "Module:backend.graph.visualizer.GraphVisualizer"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "Function:get_latest_quality"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "Function:get_quality_history"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "Function:get_recommendations"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "Function:get_dashboard_analytics"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "Function:analyze_project"
+    },
+    {
+      "relation": "DEFINES_ROUTE",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "API:GET /quality/latest"
+    },
+    {
+      "relation": "DEFINES_ROUTE",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "API:GET /quality/history"
+    },
+    {
+      "relation": "DEFINES_ROUTE",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "API:GET /recommendations"
+    },
+    {
+      "relation": "DEFINES_ROUTE",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "API:GET /dashboard"
+    },
+    {
+      "relation": "DEFINES_ROUTE",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "API:POST /analyze"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "Module:fastapi.APIRouter"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "Module:fastapi.Body"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "Module:backend.intelligence.quality_engine.global_quality_engine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "Module:backend.intelligence.recommendation_engine.global_recommendation_engine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "Module:backend.database.quality_history.global_quality_history_db"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/routes/intelligence_routes.py",
+      "target": "Module:backend.dashboard.analytics.global_dashboard_analytics"
     },
     {
       "relation": "CONTAINS",
@@ -32664,6 +33735,21 @@
     },
     {
       "relation": "IMPORTS",
+      "source": "backend/tests/test_day86_87_intelligence.py",
+      "target": "Module:sys"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/tests/test_day86_87_intelligence.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/tests/test_day86_87_intelligence.py",
+      "target": "Module:tests.verify_day86_87_intelligence.main"
+    },
+    {
+      "relation": "IMPORTS",
       "source": "backend/tests/test_elite_security.py",
       "target": "Module:sys"
     },
@@ -34975,12 +36061,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:toUiMessages"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:handleSettingsClick"
+      "target": "Function:formatStructuredResponse"
     },
     {
       "relation": "CONTAINS",
@@ -34990,7 +36071,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:formatStructuredResponse"
+      "target": "Function:toUiMessages"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "Function:handleSettingsClick"
     },
     {
       "relation": "IMPORTS",
@@ -35080,7 +36166,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/FileExplorer.jsx",
-      "target": "Function:toggleFolder"
+      "target": "Function:FileExplorer"
     },
     {
       "relation": "CONTAINS",
@@ -35095,7 +36181,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/FileExplorer.jsx",
-      "target": "Function:FileExplorer"
+      "target": "Function:toggleFolder"
     },
     {
       "relation": "IMPORTS",
@@ -35145,17 +36231,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Message.jsx",
-      "target": "Function:handleFeedback"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/Message.jsx",
       "target": "Function:copyEntireMessage"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/Message.jsx",
-      "target": "Function:handleCopy"
     },
     {
       "relation": "CONTAINS",
@@ -35165,7 +36241,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Message.jsx",
+      "target": "Function:handleFeedback"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/Message.jsx",
       "target": "Function:Message"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/Message.jsx",
+      "target": "Function:handleCopy"
     },
     {
       "relation": "IMPORTS",
@@ -35225,12 +36311,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/PlannerCard.jsx",
-      "target": "Function:PlannerCard"
+      "target": "Function:SectionCard"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/PlannerCard.jsx",
-      "target": "Function:SectionCard"
+      "target": "Function:PlannerCard"
     },
     {
       "relation": "IMPORTS",
@@ -35275,12 +36361,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Sidebar.jsx",
-      "target": "Function:syncActiveSession"
+      "target": "Function:Sidebar"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Sidebar.jsx",
-      "target": "Function:Sidebar"
+      "target": "Function:syncActiveSession"
     },
     {
       "relation": "CONTAINS",
@@ -35315,7 +36401,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Dashboard.jsx",
-      "target": "Function:Dashboard"
+      "target": "Function:StatCard"
     },
     {
       "relation": "CONTAINS",
@@ -35325,7 +36411,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Dashboard.jsx",
-      "target": "Function:StatCard"
+      "target": "Function:Dashboard"
     },
     {
       "relation": "IMPORTS",
@@ -35385,12 +36471,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Planner.jsx",
-      "target": "Function:handleGenerate"
+      "target": "Function:Planner"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Planner.jsx",
-      "target": "Function:Planner"
+      "target": "Function:handleGenerate"
     },
     {
       "relation": "IMPORTS",
@@ -35410,12 +36496,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/PluginsDashboard.jsx",
-      "target": "Function:PluginsDashboard"
+      "target": "Function:getPluginIcon"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/PluginsDashboard.jsx",
-      "target": "Function:getPluginIcon"
+      "target": "Function:PluginsDashboard"
     },
     {
       "relation": "DEFINES_ROUTE",
@@ -35435,12 +36521,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/ProjectGenerator.jsx",
-      "target": "Function:ProjectGenerator"
+      "target": "Function:getStageStatus"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/ProjectGenerator.jsx",
-      "target": "Function:getStageStatus"
+      "target": "Function:ProjectGenerator"
     },
     {
       "relation": "CONTAINS",
@@ -35489,6 +36575,26 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "frontend/src/pages/QualityDashboard.jsx",
+      "target": "Function:QualityDashboard"
+    },
+    {
+      "relation": "DEFINES_ROUTE",
+      "source": "frontend/src/pages/QualityDashboard.jsx",
+      "target": "API:GET/POST /intelligence/dashboard"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "frontend/src/pages/QualityDashboard.jsx",
+      "target": "Module:react"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/pages/WorkspaceDashboard.jsx",
+      "target": "Function:handleSwitchProject"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "frontend/src/pages/WorkspaceDashboard.jsx",
       "target": "Function:handleSearch"
     },
@@ -35496,11 +36602,6 @@
       "relation": "CONTAINS",
       "source": "frontend/src/pages/WorkspaceDashboard.jsx",
       "target": "Function:handleSendChat"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/pages/WorkspaceDashboard.jsx",
-      "target": "Function:handleSwitchProject"
     },
     {
       "relation": "CONTAINS",
@@ -35530,11 +36631,6 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:sendConversationMessage"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/conversationApi.js",
       "target": "Function:listConversations"
     },
     {
@@ -35545,17 +36641,22 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:deleteConversation"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/conversationApi.js",
       "target": "Function:getConversationHistory"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
       "target": "Function:renameConversation"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/conversationApi.js",
+      "target": "Function:sendConversationMessage"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/conversationApi.js",
+      "target": "Function:deleteConversation"
     },
     {
       "relation": "IMPORTS",
@@ -35575,7 +36676,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchLessons"
+      "target": "Function:fetchProjectFileContent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
+      "target": "Function:fetchEvolutionStatus"
     },
     {
       "relation": "CONTAINS",
@@ -35585,12 +36691,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchProjectFiles"
+      "target": "Function:fetchPlugins"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchPlugins"
+      "target": "Function:fetchProjectFiles"
     },
     {
       "relation": "CONTAINS",
@@ -35600,12 +36706,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:generateProject"
+      "target": "Function:generateProjectStream"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:generateProjectStream"
+      "target": "Function:generateProject"
     },
     {
       "relation": "CONTAINS",
@@ -35615,12 +36721,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchProjectFileContent"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchEvolutionStatus"
+      "target": "Function:fetchLessons"
     },
     {
       "relation": "CONTAINS",
@@ -35640,41 +36741,6 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:clearSessionMessages"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:getSavedMessages"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:setActiveSessionId"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:loadSessionMessages"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:getActiveSessionId"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:resetChatSession"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:createSessionId"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
       "target": "Function:clearActiveSessionId"
     },
     {
@@ -35685,7 +36751,42 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:setActiveSessionId"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:getSavedMessages"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:clearSessionMessages"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:getActiveSessionId"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
       "target": "Function:saveMessages"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:createSessionId"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:resetChatSession"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:loadSessionMessages"
     },
     {
       "relation": "DEPENDS_ON",
@@ -36726,6 +37827,11 @@
       "relation": "IMPORTS",
       "source": "tests/test_cache.py",
       "target": "Module:backend.utils.cache.reset_cache_stats"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/test_collaboration.py",
+      "target": "Function:test_collaboration_suite"
     },
     {
       "relation": "IMPORTS",
@@ -41649,6 +42755,116 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Function:section"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Function:check"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Function:run_day86_87_tests"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Function:main"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:sys"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:asyncio"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:backend.intelligence.quality_engine.MasterQualityEngine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:backend.intelligence.architecture_score.ArchitectureScorer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:backend.intelligence.performance_score.PerformanceScorer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:backend.intelligence.security_score.SecurityScorer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:backend.intelligence.documentation_score.DocumentationScorer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:backend.intelligence.test_score.TestScorer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:backend.intelligence.maintainability_score.MaintainabilityScorer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:backend.intelligence.recommendation_engine.RecommendationEngine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:backend.intelligence.history_analyzer.HistoryAnalyzer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:backend.intelligence.metrics.MetricsEngine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:backend.database.quality_history.QualityHistoryDB"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:backend.reports.report_generator.EngineeringReportGenerator"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day86_87_intelligence.py",
+      "target": "Module:backend.dashboard.analytics.DashboardAnalytics"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "tests/verify_debate_scenarios.py",
       "target": "Function:run_debate_verification"
     },
@@ -42264,14 +43480,14 @@
     }
   ],
   "summary": {
-    "total_files": 729,
-    "total_functions": 1675,
-    "total_classes": 399,
-    "total_apis": 109,
+    "total_files": 749,
+    "total_functions": 1706,
+    "total_classes": 413,
+    "total_apis": 115,
     "total_db_models": 0,
     "total_env_vars": 8,
     "total_dependencies": 327,
-    "total_nodes": 3060,
-    "total_edges": 5306
+    "total_nodes": 3147,
+    "total_edges": 5465
   }
 }

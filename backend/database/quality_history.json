@@ -1,0 +1,62 @@
+[
+  {
+    "project_name": "E-Commerce Microservice",
+    "timestamp": 1784209095.630415,
+    "overall_score": 88.5,
+    "latency_ms": 1420,
+    "llm_model": "qwen2.5-coder:latest",
+    "tokens_used": 11200,
+    "errors_count": 1,
+    "retries": 1
+  },
+  {
+    "project_name": "Enterprise SaaS CRM",
+    "timestamp": 1784641095.6304178,
+    "overall_score": 94.3,
+    "latency_ms": 980,
+    "llm_model": "qwen2.5-coder:latest",
+    "tokens_used": 12800,
+    "errors_count": 0,
+    "retries": 0
+  },
+  {
+    "project_name": "Enterprise Microservice Platform",
+    "timestamp": 1784813895.6796658,
+    "overall_score": 92.8,
+    "latency_ms": 1200,
+    "llm_model": "qwen2.5-coder:latest",
+    "tokens_used": 12500,
+    "errors_count": 0,
+    "retries": 0
+  },
+  {
+    "project_name": "Flawed Microservice",
+    "timestamp": 1784813895.6987488,
+    "overall_score": 92.0,
+    "latency_ms": 1200,
+    "llm_model": "qwen2.5-coder:latest",
+    "tokens_used": 12500,
+    "errors_count": 0,
+    "retries": 0
+  },
+  {
+    "project_name": "Sample Project V1",
+    "timestamp": 1784813895.7197275,
+    "overall_score": 93.5,
+    "latency_ms": 1200,
+    "llm_model": "qwen2.5-coder:latest",
+    "tokens_used": 12500,
+    "errors_count": 0,
+    "retries": 0
+  },
+  {
+    "project_name": "Enterprise Microservice Platform (Self-Improved)",
+    "timestamp": 1784813895.7409053,
+    "overall_score": 100.0,
+    "latency_ms": 1200,
+    "llm_model": "qwen2.5-coder:latest",
+    "tokens_used": 12500,
+    "errors_count": 0,
+    "retries": 0
+  }
+]

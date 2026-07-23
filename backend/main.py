@@ -69,6 +69,9 @@ def register_routers() -> None:
     from backend.api.project import router as project_manager_router
     app.include_router(project_manager_router)
 
+    from backend.routes.intelligence_routes import router as intelligence_engine_router
+    app.include_router(intelligence_engine_router)
+
 
 register_routers()
 

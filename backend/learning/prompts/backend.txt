@@ -6,11 +6,23 @@ Include logging to track application behavior and diagnose issues.
 Handle exceptions gracefully to maintain system stability.
 Implement JWT authentication for all protected user routes.
 
-[RULE ENFORCEMENT]: System must strictly address reviewer feedback: Missing JWT authentication on protected user routes
-[RULE ENFORCEMENT]: System must strictly address reviewer feedback: Errors encountered during build of API_Project_1: Missing input validation for payload
+[RULE ENFORCEMENT]: System must strictly address reviewer feedback: Missing input validation for payload
 
 [ADDITIONAL REQUIREMENT]: Ensure that all payloads are validated before processing to prevent data integrity and security issues.
 
-[REVISION REQUIRED]: Explicitly implement JWT authentication on all protected user routes.
-[REVISION REQUIRED]: Implement comprehensive input validation for all payloads to ensure data integrity and security.
+[REVISION REQUIRED]: Implement comprehensive input validation for all payloads to ensure data integrity and security. Specifically, validate the following:
+- Payload structure
+- Data types of each field
+- Presence of required fields
+- Range or length constraints where applicable
+- Sanitize inputs to remove any malicious code
+
+Ensure that validation is performed at both the API endpoint and within service layers to provide an additional layer of protection.
+
+[NEW REQUIREMENT]: Implement JWT authentication for all protected user routes to ensure secure access.
+
+[REVISION REQUIRED]: Address the following feedback from the critical review:
+- Ensure input validation is implemented for all payloads.
+- Validate payload structure, data types, presence of required fields, range or length constraints, and sanitize inputs.
+- Apply validation at both API endpoints and service layers.
 """
