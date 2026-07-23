@@ -1,0 +1,96 @@
+{
+  "nodes": [
+    {
+      "id": "JWT",
+      "type": "Security"
+    },
+    {
+      "id": "Authentication",
+      "type": "Pattern"
+    },
+    {
+      "id": "FastAPI",
+      "type": "Backend Framework"
+    },
+    {
+      "id": "React",
+      "type": "Frontend Framework"
+    },
+    {
+      "id": "MongoDB",
+      "type": "Database"
+    },
+    {
+      "id": "AI Resume Analyzer",
+      "type": "Project"
+    },
+    {
+      "id": "Docker Container",
+      "type": "Deployment"
+    },
+    {
+      "id": "AI Medical Imaging Portal",
+      "type": "Project"
+    },
+    {
+      "id": "PostgreSQL",
+      "type": "Technology"
+    },
+    {
+      "id": "Docker",
+      "type": "Technology"
+    }
+  ],
+  "edges": [
+    {
+      "source": "JWT",
+      "target": "Authentication",
+      "relation": "provides"
+    },
+    {
+      "source": "Authentication",
+      "target": "FastAPI",
+      "relation": "implemented_in"
+    },
+    {
+      "source": "FastAPI",
+      "target": "React",
+      "relation": "connects_with"
+    },
+    {
+      "source": "React",
+      "target": "MongoDB",
+      "relation": "persists_to"
+    },
+    {
+      "source": "FastAPI",
+      "target": "AI Resume Analyzer",
+      "relation": "powers"
+    },
+    {
+      "source": "AI Resume Analyzer",
+      "target": "Docker Container",
+      "relation": "deployed_via"
+    },
+    {
+      "source": "FastAPI",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "React",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "PostgreSQL",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "Docker",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    }
+  ]
+}

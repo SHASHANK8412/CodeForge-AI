@@ -1574,7 +1574,7 @@
     {
       "node_type": "function",
       "name": "_init_memory",
-      "file": "backend/llm/model_memory.py",
+      "file": "backend/memory/project_memory.py",
       "id": "Function:_init_memory"
     },
     {
@@ -5019,13 +5019,13 @@
     {
       "node_type": "class",
       "name": "ProjectMemory",
-      "file": "backend/memory/project_memory.py",
+      "file": "backend/knowledge/memory/project_memory.py",
       "id": "Class:ProjectMemory"
     },
     {
       "node_type": "function",
       "name": "save_project",
-      "file": "backend/memory/project_memory.py",
+      "file": "backend/learning/project_memory.py",
       "id": "Function:save_project"
     },
     {
@@ -5206,9 +5206,9 @@
     },
     {
       "node_type": "class",
-      "name": "EmbeddingsGenerator",
+      "name": "VectorEmbeddingEngine",
       "file": "backend/learning/embeddings.py",
-      "id": "Class:EmbeddingsGenerator"
+      "id": "Class:VectorEmbeddingEngine"
     },
     {
       "node_type": "function",
@@ -5218,9 +5218,9 @@
     },
     {
       "node_type": "function",
-      "name": "compute_cosine_similarity",
+      "name": "cosine_similarity",
       "file": "backend/learning/embeddings.py",
-      "id": "Function:compute_cosine_similarity"
+      "id": "Function:cosine_similarity"
     },
     {
       "id": "Module:math"
@@ -5333,33 +5333,21 @@
     },
     {
       "node_type": "class",
-      "name": "MasterProjectLearner",
+      "name": "ProjectLearnerEngine",
       "file": "backend/learning/learner.py",
-      "id": "Class:MasterProjectLearner"
+      "id": "Class:ProjectLearnerEngine"
     },
     {
       "node_type": "function",
-      "name": "query_prior_knowledge",
+      "name": "record_completed_project",
       "file": "backend/learning/learner.py",
-      "id": "Function:query_prior_knowledge"
+      "id": "Function:record_completed_project"
     },
     {
-      "node_type": "function",
-      "name": "learn_from_project",
-      "file": "backend/learning/learner.py",
-      "id": "Function:learn_from_project"
+      "id": "Module:backend.memory.project_memory.global_project_memory"
     },
     {
-      "id": "Module:backend.learning.project_memory.ProjectMemoryDB"
-    },
-    {
-      "id": "Module:backend.learning.embeddings.EmbeddingsGenerator"
-    },
-    {
-      "id": "Module:backend.learning.similarity.SimilaritySearchEngine"
-    },
-    {
-      "id": "Module:backend.learning.scorer.QualityScorer"
+      "id": "Module:backend.memory.vector_memory.global_vector_memory"
     },
     {
       "node_type": "file",
@@ -5566,6 +5554,40 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/learning/ranking.py"
+    },
+    {
+      "node_type": "class",
+      "name": "CodeRankingEngine",
+      "file": "backend/learning/ranking.py",
+      "id": "Class:CodeRankingEngine"
+    },
+    {
+      "node_type": "function",
+      "name": "rank_project_quality",
+      "file": "backend/learning/ranking.py",
+      "id": "Function:rank_project_quality"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/learning/recommender.py"
+    },
+    {
+      "node_type": "class",
+      "name": "ComponentRecommenderEngine",
+      "file": "backend/learning/recommender.py",
+      "id": "Class:ComponentRecommenderEngine"
+    },
+    {
+      "node_type": "function",
+      "name": "recommend_reusable_components",
+      "file": "backend/learning/recommender.py",
+      "id": "Function:recommend_reusable_components"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/learning/reflection_engine.py"
     },
     {
@@ -5613,6 +5635,12 @@
       "name": "get_reusable_patterns",
       "file": "backend/learning/similarity.py",
       "id": "Function:get_reusable_patterns"
+    },
+    {
+      "id": "Module:backend.learning.project_memory.ProjectMemoryDB"
+    },
+    {
+      "id": "Module:backend.learning.embeddings.EmbeddingsGenerator"
     },
     {
       "node_type": "file",
@@ -6285,31 +6313,28 @@
       "id": "backend/memory/project_memory.py"
     },
     {
-      "node_type": "function",
-      "name": "_session_file",
-      "file": "backend/memory/vector_memory.py",
-      "id": "Function:_session_file"
-    },
-    {
-      "node_type": "function",
-      "name": "load_project",
+      "node_type": "class",
+      "name": "ProjectMemoryStore",
       "file": "backend/memory/project_memory.py",
-      "id": "Function:load_project"
+      "id": "Class:ProjectMemoryStore"
     },
     {
       "node_type": "function",
-      "name": "update_project",
+      "name": "_load_projects",
       "file": "backend/memory/project_memory.py",
-      "id": "Function:update_project"
+      "id": "Function:_load_projects"
     },
     {
       "node_type": "function",
-      "name": "clear_project",
+      "name": "_save_projects",
       "file": "backend/memory/project_memory.py",
-      "id": "Function:clear_project"
+      "id": "Function:_save_projects"
     },
     {
-      "id": "Module:copy.deepcopy"
+      "node_type": "function",
+      "name": "store_project",
+      "file": "backend/memory/project_memory.py",
+      "id": "Function:store_project"
     },
     {
       "node_type": "file",
@@ -6333,48 +6358,36 @@
     },
     {
       "node_type": "class",
-      "name": "VectorMemory",
+      "name": "VectorMemoryStore",
       "file": "backend/memory/vector_memory.py",
-      "id": "Class:VectorMemory"
+      "id": "Class:VectorMemoryStore"
     },
     {
       "node_type": "function",
-      "name": "_read_records",
+      "name": "_load_vectors",
       "file": "backend/memory/vector_memory.py",
-      "id": "Function:_read_records"
+      "id": "Function:_load_vectors"
     },
     {
       "node_type": "function",
-      "name": "_write_records",
+      "name": "_save_vectors",
       "file": "backend/memory/vector_memory.py",
-      "id": "Function:_write_records"
+      "id": "Function:_save_vectors"
     },
     {
       "node_type": "function",
-      "name": "add_text",
+      "name": "add_vector",
       "file": "backend/memory/vector_memory.py",
-      "id": "Function:add_text"
+      "id": "Function:add_vector"
     },
     {
       "node_type": "function",
-      "name": "_tokenize",
+      "name": "search_similar",
       "file": "backend/memory/vector_memory.py",
-      "id": "Function:_tokenize"
+      "id": "Function:search_similar"
     },
     {
-      "node_type": "function",
-      "name": "_cosine_similarity",
-      "file": "backend/memory/vector_memory.py",
-      "id": "Function:_cosine_similarity"
-    },
-    {
-      "node_type": "function",
-      "name": "search",
-      "file": "backend/memory/vector_memory.py",
-      "id": "Function:search"
-    },
-    {
-      "id": "Module:collections.Counter"
+      "id": "Module:backend.learning.embeddings.global_embedding_engine"
     },
     {
       "node_type": "file",
@@ -8513,6 +8526,11 @@
       "node_type": "file",
       "ext": ".txt",
       "id": "backend/rag/documents/3306d06018d04391aa36a4dce32ba90d_sample.txt"
+    },
+    {
+      "node_type": "file",
+      "ext": ".txt",
+      "id": "backend/rag/documents/3394330e0c4149b188760ea39caffb7a_sample.txt"
     },
     {
       "node_type": "file",
@@ -12377,15 +12395,15 @@
     },
     {
       "node_type": "function",
-      "name": "App",
-      "file": "generated_projects/Build a Todo application using React_ FastAPI and MongoDB/frontend/src/App.jsx",
-      "id": "Function:App"
-    },
-    {
-      "node_type": "function",
       "name": "handleFileSelect",
       "file": "frontend/src/App.jsx",
       "id": "Function:handleFileSelect"
+    },
+    {
+      "node_type": "function",
+      "name": "App",
+      "file": "generated_projects/Build a Todo application using React_ FastAPI and MongoDB/frontend/src/App.jsx",
+      "id": "Function:App"
     },
     {
       "id": "Module:react"
@@ -12435,21 +12453,9 @@
     },
     {
       "node_type": "function",
-      "name": "ChatBox",
-      "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:ChatBox"
-    },
-    {
-      "node_type": "function",
       "name": "formatStructuredResponse",
       "file": "frontend/src/components/ChatBox.jsx",
       "id": "Function:formatStructuredResponse"
-    },
-    {
-      "node_type": "function",
-      "name": "handleThemeToggle",
-      "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:handleThemeToggle"
     },
     {
       "node_type": "function",
@@ -12459,9 +12465,21 @@
     },
     {
       "node_type": "function",
+      "name": "ChatBox",
+      "file": "frontend/src/components/ChatBox.jsx",
+      "id": "Function:ChatBox"
+    },
+    {
+      "node_type": "function",
       "name": "handleSettingsClick",
       "file": "frontend/src/components/ChatBox.jsx",
       "id": "Function:handleSettingsClick"
+    },
+    {
+      "node_type": "function",
+      "name": "handleThemeToggle",
+      "file": "frontend/src/components/ChatBox.jsx",
+      "id": "Function:handleThemeToggle"
     },
     {
       "id": "Module:react-icons/fa"
@@ -12543,9 +12561,9 @@
     },
     {
       "node_type": "function",
-      "name": "FileExplorer",
+      "name": "renderNode",
       "file": "frontend/src/components/FileExplorer.jsx",
-      "id": "Function:FileExplorer"
+      "id": "Function:renderNode"
     },
     {
       "node_type": "function",
@@ -12555,9 +12573,9 @@
     },
     {
       "node_type": "function",
-      "name": "renderNode",
+      "name": "FileExplorer",
       "file": "frontend/src/components/FileExplorer.jsx",
-      "id": "Function:renderNode"
+      "id": "Function:FileExplorer"
     },
     {
       "node_type": "function",
@@ -12572,12 +12590,6 @@
     },
     {
       "node_type": "function",
-      "name": "handleTemplateClick",
-      "file": "frontend/src/components/InputBar.jsx",
-      "id": "Function:handleTemplateClick"
-    },
-    {
-      "node_type": "function",
       "name": "InputBar",
       "file": "frontend/src/components/InputBar.jsx",
       "id": "Function:InputBar"
@@ -12587,6 +12599,12 @@
       "name": "handleSend",
       "file": "frontend/src/components/InputBar.jsx",
       "id": "Function:handleSend"
+    },
+    {
+      "node_type": "function",
+      "name": "handleTemplateClick",
+      "file": "frontend/src/components/InputBar.jsx",
+      "id": "Function:handleTemplateClick"
     },
     {
       "node_type": "file",
@@ -12606,21 +12624,15 @@
     },
     {
       "node_type": "function",
-      "name": "copyEntireMessage",
+      "name": "handleFeedback",
       "file": "frontend/src/components/Message.jsx",
-      "id": "Function:copyEntireMessage"
+      "id": "Function:handleFeedback"
     },
     {
       "node_type": "function",
       "name": "CodeWrapper",
       "file": "frontend/src/components/Message.jsx",
       "id": "Function:CodeWrapper"
-    },
-    {
-      "node_type": "function",
-      "name": "handleFeedback",
-      "file": "frontend/src/components/Message.jsx",
-      "id": "Function:handleFeedback"
     },
     {
       "node_type": "function",
@@ -12633,6 +12645,12 @@
       "name": "handleCopy",
       "file": "frontend/src/components/Message.jsx",
       "id": "Function:handleCopy"
+    },
+    {
+      "node_type": "function",
+      "name": "copyEntireMessage",
+      "file": "frontend/src/components/Message.jsx",
+      "id": "Function:copyEntireMessage"
     },
     {
       "id": "Module:react-markdown"
@@ -12720,15 +12738,15 @@
     },
     {
       "node_type": "function",
-      "name": "syncActiveSession",
-      "file": "frontend/src/components/Sidebar.jsx",
-      "id": "Function:syncActiveSession"
-    },
-    {
-      "node_type": "function",
       "name": "handleOpenSession",
       "file": "frontend/src/components/Sidebar.jsx",
       "id": "Function:handleOpenSession"
+    },
+    {
+      "node_type": "function",
+      "name": "syncActiveSession",
+      "file": "frontend/src/components/Sidebar.jsx",
+      "id": "Function:syncActiveSession"
     },
     {
       "node_type": "file",
@@ -12820,15 +12838,15 @@
     },
     {
       "node_type": "function",
-      "name": "Planner",
-      "file": "frontend/src/pages/Planner.jsx",
-      "id": "Function:Planner"
-    },
-    {
-      "node_type": "function",
       "name": "handleGenerate",
       "file": "frontend/src/pages/Planner.jsx",
       "id": "Function:handleGenerate"
+    },
+    {
+      "node_type": "function",
+      "name": "Planner",
+      "file": "frontend/src/pages/Planner.jsx",
+      "id": "Function:Planner"
     },
     {
       "id": "Module:../components/PlannerCard"
@@ -12948,9 +12966,9 @@
     },
     {
       "node_type": "function",
-      "name": "listConversations",
+      "name": "deleteConversation",
       "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:listConversations"
+      "id": "Function:deleteConversation"
     },
     {
       "node_type": "function",
@@ -12960,9 +12978,9 @@
     },
     {
       "node_type": "function",
-      "name": "getConversationHistory",
+      "name": "sendConversationMessage",
       "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:getConversationHistory"
+      "id": "Function:sendConversationMessage"
     },
     {
       "node_type": "function",
@@ -12972,15 +12990,15 @@
     },
     {
       "node_type": "function",
-      "name": "sendConversationMessage",
+      "name": "listConversations",
       "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:sendConversationMessage"
+      "id": "Function:listConversations"
     },
     {
       "node_type": "function",
-      "name": "deleteConversation",
+      "name": "getConversationHistory",
       "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:deleteConversation"
+      "id": "Function:getConversationHistory"
     },
     {
       "node_type": "file",
@@ -13000,9 +13018,27 @@
     },
     {
       "node_type": "function",
+      "name": "generateProject",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:generateProject"
+    },
+    {
+      "node_type": "function",
       "name": "fetchProjectFileContent",
       "file": "frontend/src/services/projectApi.js",
       "id": "Function:fetchProjectFileContent"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchProjects",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchProjects"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchLessons",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchLessons"
     },
     {
       "node_type": "function",
@@ -13030,9 +13066,9 @@
     },
     {
       "node_type": "function",
-      "name": "fetchProjects",
+      "name": "fetchReflection",
       "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchProjects"
+      "id": "Function:fetchReflection"
     },
     {
       "node_type": "function",
@@ -13041,39 +13077,21 @@
       "id": "Function:generateProjectStream"
     },
     {
-      "node_type": "function",
-      "name": "generateProject",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:generateProject"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchReflection",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchReflection"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchLessons",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchLessons"
-    },
-    {
       "node_type": "file",
       "ext": ".js",
       "id": "frontend/src/services/ragApi.js"
     },
     {
       "node_type": "function",
-      "name": "uploadRagDocuments",
-      "file": "frontend/src/services/ragApi.js",
-      "id": "Function:uploadRagDocuments"
-    },
-    {
-      "node_type": "function",
       "name": "queryRagDocuments",
       "file": "frontend/src/services/ragApi.js",
       "id": "Function:queryRagDocuments"
+    },
+    {
+      "node_type": "function",
+      "name": "uploadRagDocuments",
+      "file": "frontend/src/services/ragApi.js",
+      "id": "Function:uploadRagDocuments"
     },
     {
       "node_type": "file",
@@ -13087,15 +13105,15 @@
     },
     {
       "node_type": "function",
-      "name": "clearActiveSessionId",
+      "name": "getSavedMessages",
       "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:clearActiveSessionId"
+      "id": "Function:getSavedMessages"
     },
     {
       "node_type": "function",
-      "name": "getChatSessions",
+      "name": "clearActiveSessionId",
       "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:getChatSessions"
+      "id": "Function:clearActiveSessionId"
     },
     {
       "node_type": "function",
@@ -13105,9 +13123,9 @@
     },
     {
       "node_type": "function",
-      "name": "getSavedMessages",
+      "name": "saveMessages",
       "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:getSavedMessages"
+      "id": "Function:saveMessages"
     },
     {
       "node_type": "function",
@@ -13123,9 +13141,15 @@
     },
     {
       "node_type": "function",
-      "name": "saveMessages",
+      "name": "getChatSessions",
       "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:saveMessages"
+      "id": "Function:getChatSessions"
+    },
+    {
+      "node_type": "function",
+      "name": "loadSessionMessages",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:loadSessionMessages"
     },
     {
       "node_type": "function",
@@ -13138,12 +13162,6 @@
       "name": "resetChatSession",
       "file": "frontend/src/utils/chatStorage.js",
       "id": "Function:resetChatSession"
-    },
-    {
-      "node_type": "function",
-      "name": "loadSessionMessages",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:loadSessionMessages"
     },
     {
       "node_type": "file",
@@ -15770,6 +15788,12 @@
     },
     {
       "id": "Module:backend.learning.learner.MasterProjectLearner"
+    },
+    {
+      "id": "Module:backend.learning.similarity.SimilaritySearchEngine"
+    },
+    {
+      "id": "Module:backend.learning.scorer.QualityScorer"
     },
     {
       "id": "Module:backend.optimizer.prompt_optimizer.SelfImprovingPromptOptimizer"
@@ -24356,7 +24380,7 @@
     {
       "relation": "CONTAINS",
       "source": "backend/learning/embeddings.py",
-      "target": "Class:EmbeddingsGenerator"
+      "target": "Class:VectorEmbeddingEngine"
     },
     {
       "relation": "CONTAINS",
@@ -24366,7 +24390,7 @@
     {
       "relation": "CONTAINS",
       "source": "backend/learning/embeddings.py",
-      "target": "Function:compute_cosine_similarity"
+      "target": "Function:cosine_similarity"
     },
     {
       "relation": "IMPORTS",
@@ -24581,27 +24605,12 @@
     {
       "relation": "CONTAINS",
       "source": "backend/learning/learner.py",
-      "target": "Class:MasterProjectLearner"
+      "target": "Class:ProjectLearnerEngine"
     },
     {
       "relation": "CONTAINS",
       "source": "backend/learning/learner.py",
-      "target": "Function:__init__"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "backend/learning/learner.py",
-      "target": "Function:query_prior_knowledge"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "backend/learning/learner.py",
-      "target": "Function:learn_from_project"
-    },
-    {
-      "relation": "IMPORTS",
-      "source": "backend/learning/learner.py",
-      "target": "Module:time"
+      "target": "Function:record_completed_project"
     },
     {
       "relation": "IMPORTS",
@@ -24626,27 +24635,12 @@
     {
       "relation": "IMPORTS",
       "source": "backend/learning/learner.py",
-      "target": "Module:typing.Optional"
+      "target": "Module:backend.memory.project_memory.global_project_memory"
     },
     {
       "relation": "IMPORTS",
       "source": "backend/learning/learner.py",
-      "target": "Module:backend.learning.project_memory.ProjectMemoryDB"
-    },
-    {
-      "relation": "IMPORTS",
-      "source": "backend/learning/learner.py",
-      "target": "Module:backend.learning.embeddings.EmbeddingsGenerator"
-    },
-    {
-      "relation": "IMPORTS",
-      "source": "backend/learning/learner.py",
-      "target": "Module:backend.learning.similarity.SimilaritySearchEngine"
-    },
-    {
-      "relation": "IMPORTS",
-      "source": "backend/learning/learner.py",
-      "target": "Module:backend.learning.scorer.QualityScorer"
+      "target": "Module:backend.memory.vector_memory.global_vector_memory"
     },
     {
       "relation": "CONTAINS",
@@ -25112,6 +25106,66 @@
       "relation": "IMPORTS",
       "source": "backend/learning/prompt_optimizer.py",
       "target": "Module:backend.services.llm.generate_text"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/ranking.py",
+      "target": "Class:CodeRankingEngine"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/ranking.py",
+      "target": "Function:rank_project_quality"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/ranking.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/ranking.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/ranking.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/ranking.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/recommender.py",
+      "target": "Class:ComponentRecommenderEngine"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/recommender.py",
+      "target": "Function:recommend_reusable_components"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/recommender.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/recommender.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/recommender.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/recommender.py",
+      "target": "Module:typing.List"
     },
     {
       "relation": "CONTAINS",
@@ -26156,7 +26210,7 @@
     {
       "relation": "CONTAINS",
       "source": "backend/memory/project_memory.py",
-      "target": "Class:ProjectMemory"
+      "target": "Class:ProjectMemoryStore"
     },
     {
       "relation": "CONTAINS",
@@ -26166,32 +26220,27 @@
     {
       "relation": "CONTAINS",
       "source": "backend/memory/project_memory.py",
-      "target": "Function:_session_file"
+      "target": "Function:_init_memory"
     },
     {
       "relation": "CONTAINS",
       "source": "backend/memory/project_memory.py",
-      "target": "Function:load_project"
+      "target": "Function:_load_projects"
     },
     {
       "relation": "CONTAINS",
       "source": "backend/memory/project_memory.py",
-      "target": "Function:save_project"
+      "target": "Function:_save_projects"
     },
     {
       "relation": "CONTAINS",
       "source": "backend/memory/project_memory.py",
-      "target": "Function:update_project"
+      "target": "Function:store_project"
     },
     {
       "relation": "CONTAINS",
       "source": "backend/memory/project_memory.py",
-      "target": "Function:clear_project"
-    },
-    {
-      "relation": "IMPORTS",
-      "source": "backend/memory/project_memory.py",
-      "target": "Module:__future__.annotations"
+      "target": "Function:get_all_projects"
     },
     {
       "relation": "IMPORTS",
@@ -26201,22 +26250,12 @@
     {
       "relation": "IMPORTS",
       "source": "backend/memory/project_memory.py",
-      "target": "Module:re"
+      "target": "Module:time"
     },
     {
       "relation": "IMPORTS",
       "source": "backend/memory/project_memory.py",
-      "target": "Module:copy.deepcopy"
-    },
-    {
-      "relation": "IMPORTS",
-      "source": "backend/memory/project_memory.py",
-      "target": "Module:datetime.datetime"
-    },
-    {
-      "relation": "IMPORTS",
-      "source": "backend/memory/project_memory.py",
-      "target": "Module:datetime.timezone"
+      "target": "Module:logging"
     },
     {
       "relation": "IMPORTS",
@@ -26226,12 +26265,27 @@
     {
       "relation": "IMPORTS",
       "source": "backend/memory/project_memory.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/memory/project_memory.py",
       "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/memory/project_memory.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/memory/project_memory.py",
+      "target": "Module:typing.Optional"
     },
     {
       "relation": "CONTAINS",
       "source": "backend/memory/vector_memory.py",
-      "target": "Class:VectorMemory"
+      "target": "Class:VectorMemoryStore"
     },
     {
       "relation": "CONTAINS",
@@ -26241,47 +26295,27 @@
     {
       "relation": "CONTAINS",
       "source": "backend/memory/vector_memory.py",
-      "target": "Function:_session_file"
+      "target": "Function:_init_store"
     },
     {
       "relation": "CONTAINS",
       "source": "backend/memory/vector_memory.py",
-      "target": "Function:_read_records"
+      "target": "Function:_load_vectors"
     },
     {
       "relation": "CONTAINS",
       "source": "backend/memory/vector_memory.py",
-      "target": "Function:_write_records"
+      "target": "Function:_save_vectors"
     },
     {
       "relation": "CONTAINS",
       "source": "backend/memory/vector_memory.py",
-      "target": "Function:add_text"
+      "target": "Function:add_vector"
     },
     {
       "relation": "CONTAINS",
       "source": "backend/memory/vector_memory.py",
-      "target": "Function:_tokenize"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "backend/memory/vector_memory.py",
-      "target": "Function:_cosine_similarity"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "backend/memory/vector_memory.py",
-      "target": "Function:search"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "backend/memory/vector_memory.py",
-      "target": "Function:clear"
-    },
-    {
-      "relation": "IMPORTS",
-      "source": "backend/memory/vector_memory.py",
-      "target": "Module:__future__.annotations"
+      "target": "Function:search_similar"
     },
     {
       "relation": "IMPORTS",
@@ -26291,27 +26325,7 @@
     {
       "relation": "IMPORTS",
       "source": "backend/memory/vector_memory.py",
-      "target": "Module:math"
-    },
-    {
-      "relation": "IMPORTS",
-      "source": "backend/memory/vector_memory.py",
-      "target": "Module:re"
-    },
-    {
-      "relation": "IMPORTS",
-      "source": "backend/memory/vector_memory.py",
-      "target": "Module:collections.Counter"
-    },
-    {
-      "relation": "IMPORTS",
-      "source": "backend/memory/vector_memory.py",
-      "target": "Module:datetime.datetime"
-    },
-    {
-      "relation": "IMPORTS",
-      "source": "backend/memory/vector_memory.py",
-      "target": "Module:datetime.timezone"
+      "target": "Module:logging"
     },
     {
       "relation": "IMPORTS",
@@ -26321,7 +26335,27 @@
     {
       "relation": "IMPORTS",
       "source": "backend/memory/vector_memory.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/memory/vector_memory.py",
       "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/memory/vector_memory.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/memory/vector_memory.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/memory/vector_memory.py",
+      "target": "Module:backend.learning.embeddings.global_embedding_engine"
     },
     {
       "relation": "CONTAINS",
@@ -35981,12 +36015,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/App.jsx",
-      "target": "Function:App"
+      "target": "Function:handleFileSelect"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/App.jsx",
-      "target": "Function:handleFileSelect"
+      "target": "Function:App"
     },
     {
       "relation": "IMPORTS",
@@ -36056,17 +36090,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:ChatBox"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/ChatBox.jsx",
       "target": "Function:formatStructuredResponse"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:handleThemeToggle"
     },
     {
       "relation": "CONTAINS",
@@ -36076,7 +36100,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/ChatBox.jsx",
+      "target": "Function:ChatBox"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/ChatBox.jsx",
       "target": "Function:handleSettingsClick"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "Function:handleThemeToggle"
     },
     {
       "relation": "IMPORTS",
@@ -36166,7 +36200,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/FileExplorer.jsx",
-      "target": "Function:FileExplorer"
+      "target": "Function:renderNode"
     },
     {
       "relation": "CONTAINS",
@@ -36176,7 +36210,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/FileExplorer.jsx",
-      "target": "Function:renderNode"
+      "target": "Function:FileExplorer"
     },
     {
       "relation": "CONTAINS",
@@ -36201,17 +36235,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/InputBar.jsx",
-      "target": "Function:handleTemplateClick"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/InputBar.jsx",
       "target": "Function:InputBar"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/InputBar.jsx",
       "target": "Function:handleSend"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/InputBar.jsx",
+      "target": "Function:handleTemplateClick"
     },
     {
       "relation": "IMPORTS",
@@ -36231,17 +36265,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Message.jsx",
-      "target": "Function:copyEntireMessage"
+      "target": "Function:handleFeedback"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Message.jsx",
       "target": "Function:CodeWrapper"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/Message.jsx",
-      "target": "Function:handleFeedback"
     },
     {
       "relation": "CONTAINS",
@@ -36252,6 +36281,11 @@
       "relation": "CONTAINS",
       "source": "frontend/src/components/Message.jsx",
       "target": "Function:handleCopy"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/Message.jsx",
+      "target": "Function:copyEntireMessage"
     },
     {
       "relation": "IMPORTS",
@@ -36366,12 +36400,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Sidebar.jsx",
-      "target": "Function:syncActiveSession"
+      "target": "Function:handleOpenSession"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Sidebar.jsx",
-      "target": "Function:handleOpenSession"
+      "target": "Function:syncActiveSession"
     },
     {
       "relation": "IMPORTS",
@@ -36471,12 +36505,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Planner.jsx",
-      "target": "Function:Planner"
+      "target": "Function:handleGenerate"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Planner.jsx",
-      "target": "Function:handleGenerate"
+      "target": "Function:Planner"
     },
     {
       "relation": "IMPORTS",
@@ -36631,7 +36665,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:listConversations"
+      "target": "Function:deleteConversation"
     },
     {
       "relation": "CONTAINS",
@@ -36641,7 +36675,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:getConversationHistory"
+      "target": "Function:sendConversationMessage"
     },
     {
       "relation": "CONTAINS",
@@ -36651,12 +36685,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:sendConversationMessage"
+      "target": "Function:listConversations"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:deleteConversation"
+      "target": "Function:getConversationHistory"
     },
     {
       "relation": "IMPORTS",
@@ -36676,7 +36710,22 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
+      "target": "Function:generateProject"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
       "target": "Function:fetchProjectFileContent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
+      "target": "Function:fetchProjects"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
+      "target": "Function:fetchLessons"
     },
     {
       "relation": "CONTAINS",
@@ -36701,7 +36750,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchProjects"
+      "target": "Function:fetchReflection"
     },
     {
       "relation": "CONTAINS",
@@ -36710,28 +36759,13 @@
     },
     {
       "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:generateProject"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchReflection"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchLessons"
+      "source": "frontend/src/services/ragApi.js",
+      "target": "Function:queryRagDocuments"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/ragApi.js",
       "target": "Function:uploadRagDocuments"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/ragApi.js",
-      "target": "Function:queryRagDocuments"
     },
     {
       "relation": "IMPORTS",
@@ -36741,12 +36775,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:clearActiveSessionId"
+      "target": "Function:getSavedMessages"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:getChatSessions"
+      "target": "Function:clearActiveSessionId"
     },
     {
       "relation": "CONTAINS",
@@ -36756,7 +36790,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:getSavedMessages"
+      "target": "Function:saveMessages"
     },
     {
       "relation": "CONTAINS",
@@ -36771,7 +36805,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:saveMessages"
+      "target": "Function:getChatSessions"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:loadSessionMessages"
     },
     {
       "relation": "CONTAINS",
@@ -36782,11 +36821,6 @@
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
       "target": "Function:resetChatSession"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:loadSessionMessages"
     },
     {
       "relation": "DEPENDS_ON",
@@ -43480,14 +43514,14 @@
     }
   ],
   "summary": {
-    "total_files": 749,
-    "total_functions": 1706,
-    "total_classes": 413,
+    "total_files": 752,
+    "total_functions": 1703,
+    "total_classes": 415,
     "total_apis": 115,
     "total_db_models": 0,
     "total_env_vars": 8,
     "total_dependencies": 327,
-    "total_nodes": 3147,
-    "total_edges": 5465
+    "total_nodes": 3152,
+    "total_edges": 5467
   }
 }

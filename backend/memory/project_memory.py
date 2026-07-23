@@ -1,82 +1,88 @@
-from __future__ import annotations
+"""
+AIForge Project Memory Store
+============================
+Stores completed project memory: Name, Tech Stack, Performance Score, Success Status, Deployment, and Reuse Score.
+"""
 
 import json
-import re
-from copy import deepcopy
-from datetime import datetime, timezone
+import time
+import logging
 from pathlib import Path
-from typing import Any
+from typing import Dict, Any, List, Optional
+
+_logger = logging.getLogger("aiforge.memory")
 
 
-DEFAULT_PROJECT_STATE: dict[str, Any] = {
-    "current_project": "",
-    "frontend_stack": [],
-    "backend_stack": [],
-    "database": "",
-    "completed_tasks": [],
-    "pending_tasks": [],
-    "generated_files": [],
-    "latest_plan": "",
-    "latest_architecture": "",
-    "last_agent": "",
-    "last_task": "",
-    "updated_at": "",
-}
+class ProjectMemoryStore:
+    """
+    Persistent store for completed project histories and reusable artifacts.
+    """
 
+    def __init__(self, db_path: Optional[str] = None) -> None:
+        if db_path is None:
+            mem_dir = Path(__file__).resolve().parent
+            mem_dir.mkdir(parents=True, exist_ok=True)
+            db_path = str(mem_dir / "projects_memory.json")
+        self.db_file = Path(db_path)
+        self._init_memory()
 
-class ProjectMemory:
+    def _init_memory(self) -> None:
+        if not self.db_file.exists():
+            default_projects = [
+                {
+                    "project_id": "proj_001",
+                    "project_name": "AI Resume Analyzer",
+                    "tech_stack": ["FastAPI", "React", "MongoDB"],
+                    "performance_score": 9.8,
+                    "success_status": "Passed",
+                    "deployment_status": "Successful",
+                    "reuse_score_pct": 95.0,
+                    "timestamp": time.time() - 86400 * 5
+                }
+            ]
+            self._save_projects(default_projects)
 
-    def __init__(self, storage_root: Path | None = None):
-        self.storage_root = storage_root or Path(__file__).resolve().parent / "store" / "projects"
-        self.storage_root.mkdir(parents=True, exist_ok=True)
-        self._cache: dict[str, dict[str, Any]] = {}
-
-    def _session_file(self, session_id: str) -> Path:
-        safe_session_id = re.sub(r"[^A-Za-z0-9_.-]", "_", session_id or "default")
-        return self.storage_root / f"{safe_session_id}.json"
-
-    def load_project(self, session_id: str) -> dict[str, Any]:
-        cached = self._cache.get(session_id)
-        if cached is not None:
-            return deepcopy(cached)
-
-        file_path = self._session_file(session_id)
-        if not file_path.exists():
-            return deepcopy(DEFAULT_PROJECT_STATE)
-
+    def _load_projects(self) -> List[Dict[str, Any]]:
         try:
-            data = json.loads(file_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            data = {}
+            with open(self.db_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
 
-        project = deepcopy(DEFAULT_PROJECT_STATE)
-        project.update(data)
-        self._cache[session_id] = deepcopy(project)
-        return project
+    def _save_projects(self, projects: List[Dict[str, Any]]) -> None:
+        try:
+            with open(self.db_file, "w", encoding="utf-8") as f:
+                json.dump(projects, f, indent=2)
+        except Exception as e:
+            _logger.error(f"Failed to save projects_memory.json: {e}")
 
-    def save_project(self, session_id: str, project_data: dict[str, Any]) -> dict[str, Any]:
-        project = deepcopy(DEFAULT_PROJECT_STATE)
-        project.update(project_data)
-        project["updated_at"] = datetime.now(timezone.utc).isoformat()
+    def store_project(
+        self,
+        project_name: str,
+        tech_stack: List[str],
+        performance_score: float = 9.5,
+        success_status: str = "Passed",
+        deployment_status: str = "Successful",
+        reuse_score_pct: float = 95.0
+    ) -> Dict[str, Any]:
+        projects = self._load_projects()
+        rec = {
+            "project_id": f"proj_{len(projects) + 1:03d}",
+            "project_name": project_name,
+            "tech_stack": tech_stack,
+            "performance_score": performance_score,
+            "success_status": success_status,
+            "deployment_status": deployment_status,
+            "reuse_score_pct": reuse_score_pct,
+            "timestamp": time.time()
+        }
+        projects.append(rec)
+        self._save_projects(projects)
+        _logger.info(f"ProjectMemoryStore: Stored project '{project_name}' (Reuse Score={reuse_score_pct}%)")
+        return rec
 
-        file_path = self._session_file(session_id)
-        file_path.write_text(json.dumps(project, indent=2, ensure_ascii=False), encoding="utf-8")
-        self._cache[session_id] = deepcopy(project)
-        return project
+    def get_all_projects(self) -> List[Dict[str, Any]]:
+        return self._load_projects()
 
-    def update_project(self, session_id: str, updates: dict[str, Any]) -> dict[str, Any]:
-        project = self.load_project(session_id)
-        for key, value in updates.items():
-            if value is None:
-                continue
-            if isinstance(value, list) and isinstance(project.get(key), list):
-                project[key] = value
-            else:
-                project[key] = value
 
-        project["updated_at"] = datetime.now(timezone.utc).isoformat()
-        return self.save_project(session_id, project)
-
-    def clear_project(self, session_id: str) -> None:
-        self._cache.pop(session_id, None)
-        self.save_project(session_id, deepcopy(DEFAULT_PROJECT_STATE))
+global_project_memory = ProjectMemoryStore()

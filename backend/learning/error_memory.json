@@ -1,0 +1,8 @@
+[
+  {
+    "error_type": "ImportError",
+    "cause": "Wrong relative import path across packages",
+    "recommended_fix": "Use absolute package import 'from backend.routes import auth'",
+    "occurrences": 3
+  }
+]

@@ -1,92 +1,85 @@
-from __future__ import annotations
+"""
+AIForge Vector Memory Store
+===========================
+Persistent vector database storing project embeddings, code snippets, and architectural patterns.
+"""
 
 import json
-import math
-import re
-from collections import Counter
-from datetime import datetime, timezone
+import logging
 from pathlib import Path
-from typing import Any
+from typing import Dict, Any, List, Optional
+from backend.learning.embeddings import global_embedding_engine
+
+_logger = logging.getLogger("aiforge.memory")
 
 
-class VectorMemory:
+class VectorMemoryStore:
+    """
+    Vector memory store index.
+    """
 
-    def __init__(self, storage_root: Path | None = None):
-        self.storage_root = storage_root or Path(__file__).resolve().parent / "store" / "vectors"
-        self.storage_root.mkdir(parents=True, exist_ok=True)
-        self._cache: dict[str, list[dict[str, Any]]] = {}
+    def __init__(self, store_path: Optional[str] = None) -> None:
+        if store_path is None:
+            mem_dir = Path(__file__).resolve().parent
+            mem_dir.mkdir(parents=True, exist_ok=True)
+            store_path = str(mem_dir / "vector_store.json")
+        self.store_file = Path(store_path)
+        self._init_store()
 
-    def _session_file(self, session_id: str) -> Path:
-        safe_session_id = re.sub(r"[^A-Za-z0-9_.-]", "_", session_id or "default")
-        return self.storage_root / f"{safe_session_id}.json"
+    def _init_store(self) -> None:
+        if not self.store_file.exists():
+            default_vectors = [
+                {
+                    "id": "proj_restaurant",
+                    "text": "Restaurant Food Delivery App with FastAPI, React, and MongoDB",
+                    "vector": global_embedding_engine.generate_embedding("Restaurant Food Delivery App with FastAPI, React, and MongoDB"),
+                    "metadata": {"project_name": "Restaurant App", "stack": ["FastAPI", "React", "MongoDB"]}
+                }
+            ]
+            self._save_vectors(default_vectors)
 
-    def _read_records(self, session_id: str) -> list[dict[str, Any]]:
-        cached = self._cache.get(session_id)
-        if cached is not None:
-            return [dict(record) for record in cached]
-
-        file_path = self._session_file(session_id)
-        if not file_path.exists():
-            return []
-
+    def _load_vectors(self) -> List[Dict[str, Any]]:
         try:
-            records = json.loads(file_path.read_text(encoding="utf-8"))
-            self._cache[session_id] = [dict(record) for record in records]
-            return records
-        except json.JSONDecodeError:
+            with open(self.store_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
             return []
 
-    def _write_records(self, session_id: str, records: list[dict[str, Any]]) -> None:
-        file_path = self._session_file(session_id)
-        file_path.write_text(json.dumps(records, indent=2, ensure_ascii=False), encoding="utf-8")
-        self._cache[session_id] = [dict(record) for record in records]
+    def _save_vectors(self, vectors: List[Dict[str, Any]]) -> None:
+        try:
+            with open(self.store_file, "w", encoding="utf-8") as f:
+                json.dump(vectors, f, indent=2)
+        except Exception as e:
+            _logger.error(f"Failed to save vector_store.json: {e}")
 
-    def add_text(self, session_id: str, text: str, metadata: dict[str, Any] | None = None) -> dict[str, Any]:
-        record = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+    def add_vector(self, doc_id: str, text: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+        vectors = self._load_vectors()
+        vec = global_embedding_engine.generate_embedding(text)
+        entry = {
+            "id": doc_id,
             "text": text,
-            "metadata": metadata or {},
+            "vector": vec,
+            "metadata": metadata
         }
+        vectors.append(entry)
+        self._save_vectors(vectors)
+        return entry
 
-        records = self._read_records(session_id)
-        records.append(record)
-        self._write_records(session_id, records)
-        return record
+    def search_similar(self, query_text: str, top_k: int = 3) -> List[Dict[str, Any]]:
+        query_vec = global_embedding_engine.generate_embedding(query_text)
+        vectors = self._load_vectors()
+        results = []
+        for item in vectors:
+            sim = global_embedding_engine.cosine_similarity(query_vec, item["vector"])
+            results.append({
+                "id": item["id"],
+                "similarity_score": sim,
+                "text": item["text"],
+                "metadata": item["metadata"]
+            })
 
-    def _tokenize(self, text: str) -> list[str]:
-        return re.findall(r"[a-z0-9]+", text.lower())
+        results.sort(key=lambda x: x["similarity_score"], reverse=True)
+        return results[:top_k]
 
-    def _cosine_similarity(self, left: str, right: str) -> float:
-        left_tokens = Counter(self._tokenize(left))
-        right_tokens = Counter(self._tokenize(right))
 
-        if not left_tokens or not right_tokens:
-            return 0.0
-
-        common = set(left_tokens) & set(right_tokens)
-        numerator = sum(left_tokens[token] * right_tokens[token] for token in common)
-        left_norm = math.sqrt(sum(value * value for value in left_tokens.values()))
-        right_norm = math.sqrt(sum(value * value for value in right_tokens.values()))
-
-        if left_norm == 0 or right_norm == 0:
-            return 0.0
-
-        return numerator / (left_norm * right_norm)
-
-    def search(self, session_id: str, query: str, top_k: int = 3) -> list[dict[str, Any]]:
-        records = self._read_records(session_id)
-        scored_records = []
-
-        for record in records:
-            score = self._cosine_similarity(query, record.get("text", ""))
-            if score > 0:
-                scored_records.append({**record, "score": round(score, 4)})
-
-        scored_records.sort(key=lambda item: item["score"], reverse=True)
-        return scored_records[:top_k]
-
-    def clear(self, session_id: str) -> None:
-        file_path = self._session_file(session_id)
-        if file_path.exists():
-            file_path.unlink()
-        self._cache.pop(session_id, None)
+global_vector_memory = VectorMemoryStore()

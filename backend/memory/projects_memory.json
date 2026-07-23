@@ -1,0 +1,31 @@
+[
+  {
+    "project_id": "proj_001",
+    "project_name": "AI Resume Analyzer",
+    "tech_stack": [
+      "FastAPI",
+      "React",
+      "MongoDB"
+    ],
+    "performance_score": 9.8,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784382076.6439812
+  },
+  {
+    "project_id": "proj_002",
+    "project_name": "AI Medical Imaging Portal",
+    "tech_stack": [
+      "FastAPI",
+      "React",
+      "PostgreSQL",
+      "Docker"
+    ],
+    "performance_score": 9.7,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 96.0,
+    "timestamp": 1784814128.05445
+  }
+]
