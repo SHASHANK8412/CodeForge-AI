@@ -1,18 +1,12 @@
 [
   {
-    "iteration": 1,
-    "score": 82
-  },
-  {
-    "iteration": 2,
-    "score": 88
-  },
-  {
-    "iteration": 3,
-    "score": 93
-  },
-  {
-    "iteration": 4,
-    "score": 96
+    "timestamp": 1784812765.642216,
+    "initial_score": 77,
+    "final_score": 95,
+    "refactored_files": [
+      "backend/main.py"
+    ],
+    "security_findings_count": 0,
+    "duration_seconds": 0.011348962783813477
   }
 ]

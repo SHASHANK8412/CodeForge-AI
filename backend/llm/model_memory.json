@@ -198,6 +198,41 @@
       "latency": 1.5,
       "quality_score": 91.0,
       "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 0.055732599925249815,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "quick_fix",
+      "model": "qwen",
+      "latency": 0.05240839999169111,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 0.08,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 1.2,
+      "quality_score": 99.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 1.5,
+      "quality_score": 91.0,
+      "cost": 0.0
     }
   ]
 }

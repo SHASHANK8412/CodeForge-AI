@@ -1574,6 +1574,23 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/analysis/architecture.py"
+    },
+    {
+      "node_type": "class",
+      "name": "ArchitectureChecker",
+      "file": "backend/validation/architecture_checker.py",
+      "id": "Class:ArchitectureChecker"
+    },
+    {
+      "node_type": "function",
+      "name": "analyze_architecture",
+      "file": "backend/analysis/architecture.py",
+      "id": "Function:analyze_architecture"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/api/plugins.py"
     },
     {
@@ -4182,7 +4199,7 @@
     {
       "node_type": "function",
       "name": "_init_db",
-      "file": "backend/knowledge/memory/project_memory.py",
+      "file": "backend/learning/project_memory.py",
       "id": "Function:_init_db"
     },
     {
@@ -4194,7 +4211,7 @@
     {
       "node_type": "function",
       "name": "get_all_projects",
-      "file": "backend/knowledge/memory/project_memory.py",
+      "file": "backend/learning/project_memory.py",
       "id": "Function:get_all_projects"
     },
     {
@@ -4290,13 +4307,13 @@
     {
       "node_type": "function",
       "name": "_load",
-      "file": "backend/llm/model_memory.py",
+      "file": "backend/optimizer/history.py",
       "id": "Function:_load"
     },
     {
       "node_type": "function",
       "name": "_save",
-      "file": "backend/llm/model_memory.py",
+      "file": "backend/optimizer/history.py",
       "id": "Function:_save"
     },
     {
@@ -4389,6 +4406,32 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/learning/embeddings.py"
+    },
+    {
+      "node_type": "class",
+      "name": "EmbeddingsGenerator",
+      "file": "backend/learning/embeddings.py",
+      "id": "Class:EmbeddingsGenerator"
+    },
+    {
+      "node_type": "function",
+      "name": "generate_embedding",
+      "file": "backend/learning/embeddings.py",
+      "id": "Function:generate_embedding"
+    },
+    {
+      "node_type": "function",
+      "name": "compute_cosine_similarity",
+      "file": "backend/learning/embeddings.py",
+      "id": "Function:compute_cosine_similarity"
+    },
+    {
+      "id": "Module:math"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/learning/experience_db.py"
     },
     {
@@ -4400,7 +4443,7 @@
     {
       "node_type": "function",
       "name": "search_similar_projects",
-      "file": "backend/learning/experience_db.py",
+      "file": "backend/learning/similarity.py",
       "id": "Function:search_similar_projects"
     },
     {
@@ -4423,7 +4466,7 @@
     {
       "node_type": "function",
       "name": "_init_store",
-      "file": "backend/learning/experience_store.py",
+      "file": "backend/optimizer/history.py",
       "id": "Function:_init_store"
     },
     {
@@ -4481,6 +4524,41 @@
     },
     {
       "id": "Module:backend.learning.experience_store.ExperienceStore"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/learning/learner.py"
+    },
+    {
+      "node_type": "class",
+      "name": "MasterProjectLearner",
+      "file": "backend/learning/learner.py",
+      "id": "Class:MasterProjectLearner"
+    },
+    {
+      "node_type": "function",
+      "name": "query_prior_knowledge",
+      "file": "backend/learning/learner.py",
+      "id": "Function:query_prior_knowledge"
+    },
+    {
+      "node_type": "function",
+      "name": "learn_from_project",
+      "file": "backend/learning/learner.py",
+      "id": "Function:learn_from_project"
+    },
+    {
+      "id": "Module:backend.learning.project_memory.ProjectMemoryDB"
+    },
+    {
+      "id": "Module:backend.learning.embeddings.EmbeddingsGenerator"
+    },
+    {
+      "id": "Module:backend.learning.similarity.SimilaritySearchEngine"
+    },
+    {
+      "id": "Module:backend.learning.scorer.QualityScorer"
     },
     {
       "node_type": "file",
@@ -4630,6 +4708,17 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/learning/project_memory.py"
+    },
+    {
+      "node_type": "class",
+      "name": "ProjectMemoryDB",
+      "file": "backend/learning/project_memory.py",
+      "id": "Class:ProjectMemoryDB"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/learning/prompt_optimizer.py"
     },
     {
@@ -4684,6 +4773,40 @@
       "name": "generate_reflection",
       "file": "backend/learning/reflection_engine.py",
       "id": "Function:generate_reflection"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/learning/scorer.py"
+    },
+    {
+      "node_type": "class",
+      "name": "QualityScorer",
+      "file": "backend/learning/scorer.py",
+      "id": "Class:QualityScorer"
+    },
+    {
+      "node_type": "function",
+      "name": "score_project",
+      "file": "backend/learning/scorer.py",
+      "id": "Function:score_project"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/learning/similarity.py"
+    },
+    {
+      "node_type": "class",
+      "name": "SimilaritySearchEngine",
+      "file": "backend/learning/similarity.py",
+      "id": "Class:SimilaritySearchEngine"
+    },
+    {
+      "node_type": "function",
+      "name": "get_reusable_patterns",
+      "file": "backend/learning/similarity.py",
+      "id": "Function:get_reusable_patterns"
     },
     {
       "node_type": "file",
@@ -5385,6 +5508,11 @@
     {
       "node_type": "file",
       "ext": ".json",
+      "id": "backend/memory/prompt_history.json"
+    },
+    {
+      "node_type": "file",
+      "ext": ".json",
       "id": "backend/memory/reflection_history.json"
     },
     {
@@ -5433,9 +5561,6 @@
       "name": "search",
       "file": "backend/memory/vector_memory.py",
       "id": "Function:search"
-    },
-    {
-      "id": "Module:math"
     },
     {
       "id": "Module:collections.Counter"
@@ -6119,6 +6244,107 @@
       "name": "validate_recovery",
       "file": "backend/monitoring/validator.py",
       "id": "Function:validate_recovery"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/optimizer/evaluator.py"
+    },
+    {
+      "node_type": "class",
+      "name": "PromptEvaluator",
+      "file": "backend/optimizer/evaluator.py",
+      "id": "Class:PromptEvaluator"
+    },
+    {
+      "node_type": "function",
+      "name": "evaluate_variant",
+      "file": "backend/optimizer/evaluator.py",
+      "id": "Function:evaluate_variant"
+    },
+    {
+      "node_type": "function",
+      "name": "select_winning_prompt",
+      "file": "backend/optimizer/evaluator.py",
+      "id": "Function:select_winning_prompt"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/optimizer/history.py"
+    },
+    {
+      "node_type": "class",
+      "name": "PromptHistoryStore",
+      "file": "backend/optimizer/history.py",
+      "id": "Class:PromptHistoryStore"
+    },
+    {
+      "node_type": "function",
+      "name": "record_prompt_version",
+      "file": "backend/optimizer/history.py",
+      "id": "Function:record_prompt_version"
+    },
+    {
+      "node_type": "function",
+      "name": "get_highest_scoring_prompt",
+      "file": "backend/optimizer/history.py",
+      "id": "Function:get_highest_scoring_prompt"
+    },
+    {
+      "node_type": "function",
+      "name": "get_all_history",
+      "file": "backend/optimizer/history.py",
+      "id": "Function:get_all_history"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/optimizer/mutation.py"
+    },
+    {
+      "node_type": "class",
+      "name": "PromptMutationEngine",
+      "file": "backend/optimizer/mutation.py",
+      "id": "Class:PromptMutationEngine"
+    },
+    {
+      "node_type": "function",
+      "name": "generate_mutations",
+      "file": "backend/optimizer/mutation.py",
+      "id": "Function:generate_mutations"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/optimizer/prompt_optimizer.py"
+    },
+    {
+      "node_type": "class",
+      "name": "SelfImprovingPromptOptimizer",
+      "file": "backend/optimizer/prompt_optimizer.py",
+      "id": "Class:SelfImprovingPromptOptimizer"
+    },
+    {
+      "node_type": "function",
+      "name": "optimize_prompt_variants",
+      "file": "backend/optimizer/prompt_optimizer.py",
+      "id": "Function:optimize_prompt_variants"
+    },
+    {
+      "node_type": "function",
+      "name": "get_best_prompt",
+      "file": "backend/optimizer/prompt_optimizer.py",
+      "id": "Function:get_best_prompt"
+    },
+    {
+      "id": "Module:backend.optimizer.mutation.PromptMutationEngine"
+    },
+    {
+      "id": "Module:backend.optimizer.evaluator.PromptEvaluator"
+    },
+    {
+      "id": "Module:backend.optimizer.history.PromptHistoryStore"
     },
     {
       "node_type": "file",
@@ -7369,6 +7595,11 @@
     {
       "node_type": "file",
       "ext": ".txt",
+      "id": "backend/rag/documents/3306d06018d04391aa36a4dce32ba90d_sample.txt"
+    },
+    {
+      "node_type": "file",
+      "ext": ".txt",
       "id": "backend/rag/documents/367be273872f4adda302a56d56fdba51_sample.txt"
     },
     {
@@ -7480,6 +7711,11 @@
       "node_type": "file",
       "ext": ".txt",
       "id": "backend/rag/documents/7d29d853e9e046b5a0a3bc4d33783aa6_sample.txt"
+    },
+    {
+      "node_type": "file",
+      "ext": ".txt",
+      "id": "backend/rag/documents/7ea24893d2274c138d3268120fc787cd_sample.txt"
     },
     {
       "node_type": "file",
@@ -7872,13 +8108,131 @@
     {
       "node_type": "file",
       "ext": ".py",
-      "id": "backend/review/architecture_checker.py"
+      "id": "backend/repository/dependency_graph.py"
     },
     {
       "node_type": "class",
-      "name": "ArchitectureChecker",
-      "file": "backend/validation/architecture_checker.py",
-      "id": "Class:ArchitectureChecker"
+      "name": "RepositoryDependencyGraph",
+      "file": "backend/repository/dependency_graph.py",
+      "id": "Class:RepositoryDependencyGraph"
+    },
+    {
+      "node_type": "function",
+      "name": "build_graph_from_metadata",
+      "file": "backend/repository/dependency_graph.py",
+      "id": "Function:build_graph_from_metadata"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/repository/indexer.py"
+    },
+    {
+      "node_type": "class",
+      "name": "RepositoryIndexer",
+      "file": "backend/repository/indexer.py",
+      "id": "Class:RepositoryIndexer"
+    },
+    {
+      "node_type": "function",
+      "name": "index_repository",
+      "file": "backend/repository/indexer.py",
+      "id": "Function:index_repository"
+    },
+    {
+      "id": "Module:backend.repository.scanner.RepositoryScanner"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/repository/repository_memory.py"
+    },
+    {
+      "node_type": "class",
+      "name": "RepositoryMemory",
+      "file": "backend/repository/repository_memory.py",
+      "id": "Class:RepositoryMemory"
+    },
+    {
+      "node_type": "function",
+      "name": "build_repository_memory",
+      "file": "backend/repository/repository_memory.py",
+      "id": "Function:build_repository_memory"
+    },
+    {
+      "node_type": "function",
+      "name": "get_upgraded_prompt",
+      "file": "backend/repository/repository_memory.py",
+      "id": "Function:get_upgraded_prompt"
+    },
+    {
+      "id": "Module:backend.repository.indexer.RepositoryIndexer"
+    },
+    {
+      "id": "Module:backend.repository.symbol_table.RepositorySymbolTable"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/repository/scanner.py"
+    },
+    {
+      "node_type": "class",
+      "name": "RepositoryScanner",
+      "file": "backend/repository/scanner.py",
+      "id": "Class:RepositoryScanner"
+    },
+    {
+      "node_type": "function",
+      "name": "scan_repository",
+      "file": "backend/repository/scanner.py",
+      "id": "Function:scan_repository"
+    },
+    {
+      "node_type": "function",
+      "name": "extract_file_metadata",
+      "file": "backend/repository/scanner.py",
+      "id": "Function:extract_file_metadata"
+    },
+    {
+      "node_type": "function",
+      "name": "_scan_python",
+      "file": "backend/repository/scanner.py",
+      "id": "Function:_scan_python"
+    },
+    {
+      "node_type": "function",
+      "name": "_scan_javascript",
+      "file": "backend/repository/scanner.py",
+      "id": "Function:_scan_javascript"
+    },
+    {
+      "node_type": "function",
+      "name": "_scan_config_or_doc",
+      "file": "backend/repository/scanner.py",
+      "id": "Function:_scan_config_or_doc"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/repository/symbol_table.py"
+    },
+    {
+      "node_type": "class",
+      "name": "RepositorySymbolTable",
+      "file": "backend/repository/symbol_table.py",
+      "id": "Class:RepositorySymbolTable"
+    },
+    {
+      "node_type": "function",
+      "name": "build_symbol_table",
+      "file": "backend/repository/symbol_table.py",
+      "id": "Function:build_symbol_table"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/review/architecture_checker.py"
     },
     {
       "node_type": "function",
@@ -9710,6 +10064,14 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/tests/test_day76_77_learning_optimizer.py"
+    },
+    {
+      "id": "Module:tests.verify_day76_77_learning_optimizer.main"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/tests/test_elite_security.py"
     },
     {
@@ -10518,15 +10880,15 @@
     },
     {
       "node_type": "function",
-      "name": "App",
-      "file": "generated_projects/Build a Todo application using React_ FastAPI and MongoDB/frontend/src/App.jsx",
-      "id": "Function:App"
-    },
-    {
-      "node_type": "function",
       "name": "handleFileSelect",
       "file": "frontend/src/App.jsx",
       "id": "Function:handleFileSelect"
+    },
+    {
+      "node_type": "function",
+      "name": "App",
+      "file": "generated_projects/Build a Todo application using React_ FastAPI and MongoDB/frontend/src/App.jsx",
+      "id": "Function:App"
     },
     {
       "id": "Module:react"
@@ -10582,15 +10944,9 @@
     },
     {
       "node_type": "function",
-      "name": "formatStructuredResponse",
+      "name": "handleSettingsClick",
       "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:formatStructuredResponse"
-    },
-    {
-      "node_type": "function",
-      "name": "handleThemeToggle",
-      "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:handleThemeToggle"
+      "id": "Function:handleSettingsClick"
     },
     {
       "node_type": "function",
@@ -10600,9 +10956,15 @@
     },
     {
       "node_type": "function",
-      "name": "handleSettingsClick",
+      "name": "handleThemeToggle",
       "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:handleSettingsClick"
+      "id": "Function:handleThemeToggle"
+    },
+    {
+      "node_type": "function",
+      "name": "formatStructuredResponse",
+      "file": "frontend/src/components/ChatBox.jsx",
+      "id": "Function:formatStructuredResponse"
     },
     {
       "id": "Module:react-icons/fa"
@@ -10684,9 +11046,9 @@
     },
     {
       "node_type": "function",
-      "name": "FileExplorer",
+      "name": "toggleFolder",
       "file": "frontend/src/components/FileExplorer.jsx",
-      "id": "Function:FileExplorer"
+      "id": "Function:toggleFolder"
     },
     {
       "node_type": "function",
@@ -10696,20 +11058,26 @@
     },
     {
       "node_type": "function",
-      "name": "toggleFolder",
-      "file": "frontend/src/components/FileExplorer.jsx",
-      "id": "Function:toggleFolder"
-    },
-    {
-      "node_type": "function",
       "name": "renderNode",
       "file": "frontend/src/components/FileExplorer.jsx",
       "id": "Function:renderNode"
     },
     {
+      "node_type": "function",
+      "name": "FileExplorer",
+      "file": "frontend/src/components/FileExplorer.jsx",
+      "id": "Function:FileExplorer"
+    },
+    {
       "node_type": "file",
       "ext": ".jsx",
       "id": "frontend/src/components/InputBar.jsx"
+    },
+    {
+      "node_type": "function",
+      "name": "handleSend",
+      "file": "frontend/src/components/InputBar.jsx",
+      "id": "Function:handleSend"
     },
     {
       "node_type": "function",
@@ -10722,12 +11090,6 @@
       "name": "handleTemplateClick",
       "file": "frontend/src/components/InputBar.jsx",
       "id": "Function:handleTemplateClick"
-    },
-    {
-      "node_type": "function",
-      "name": "handleSend",
-      "file": "frontend/src/components/InputBar.jsx",
-      "id": "Function:handleSend"
     },
     {
       "node_type": "file",
@@ -10816,15 +11178,15 @@
     },
     {
       "node_type": "function",
-      "name": "SectionCard",
-      "file": "frontend/src/components/PlannerCard.jsx",
-      "id": "Function:SectionCard"
-    },
-    {
-      "node_type": "function",
       "name": "PlannerCard",
       "file": "frontend/src/components/PlannerCard.jsx",
       "id": "Function:PlannerCard"
+    },
+    {
+      "node_type": "function",
+      "name": "SectionCard",
+      "file": "frontend/src/components/PlannerCard.jsx",
+      "id": "Function:SectionCard"
     },
     {
       "node_type": "file",
@@ -10855,15 +11217,15 @@
     },
     {
       "node_type": "function",
-      "name": "Sidebar",
-      "file": "frontend/src/components/Sidebar.jsx",
-      "id": "Function:Sidebar"
-    },
-    {
-      "node_type": "function",
       "name": "syncActiveSession",
       "file": "frontend/src/components/Sidebar.jsx",
       "id": "Function:syncActiveSession"
+    },
+    {
+      "node_type": "function",
+      "name": "Sidebar",
+      "file": "frontend/src/components/Sidebar.jsx",
+      "id": "Function:Sidebar"
     },
     {
       "node_type": "function",
@@ -10904,9 +11266,9 @@
     },
     {
       "node_type": "function",
-      "name": "Dashboard",
-      "file": "generated_projects/Build a Todo application using React_ FastAPI and MongoDB/frontend/src/components/Dashboard.jsx",
-      "id": "Function:Dashboard"
+      "name": "SkeletonBlock",
+      "file": "frontend/src/pages/Dashboard.jsx",
+      "id": "Function:SkeletonBlock"
     },
     {
       "node_type": "function",
@@ -10916,9 +11278,9 @@
     },
     {
       "node_type": "function",
-      "name": "SkeletonBlock",
-      "file": "frontend/src/pages/Dashboard.jsx",
-      "id": "Function:SkeletonBlock"
+      "name": "Dashboard",
+      "file": "generated_projects/Build a Todo application using React_ FastAPI and MongoDB/frontend/src/components/Dashboard.jsx",
+      "id": "Function:Dashboard"
     },
     {
       "node_type": "file",
@@ -10961,15 +11323,15 @@
     },
     {
       "node_type": "function",
-      "name": "Planner",
-      "file": "frontend/src/pages/Planner.jsx",
-      "id": "Function:Planner"
-    },
-    {
-      "node_type": "function",
       "name": "handleGenerate",
       "file": "frontend/src/pages/Planner.jsx",
       "id": "Function:handleGenerate"
+    },
+    {
+      "node_type": "function",
+      "name": "Planner",
+      "file": "frontend/src/pages/Planner.jsx",
+      "id": "Function:Planner"
     },
     {
       "id": "Module:../components/PlannerCard"
@@ -10981,15 +11343,15 @@
     },
     {
       "node_type": "function",
-      "name": "getPluginIcon",
-      "file": "frontend/src/pages/PluginsDashboard.jsx",
-      "id": "Function:getPluginIcon"
-    },
-    {
-      "node_type": "function",
       "name": "PluginsDashboard",
       "file": "frontend/src/pages/PluginsDashboard.jsx",
       "id": "Function:PluginsDashboard"
+    },
+    {
+      "node_type": "function",
+      "name": "getPluginIcon",
+      "file": "frontend/src/pages/PluginsDashboard.jsx",
+      "id": "Function:getPluginIcon"
     },
     {
       "node_type": "api",
@@ -11005,6 +11367,12 @@
     },
     {
       "node_type": "function",
+      "name": "ProjectGenerator",
+      "file": "frontend/src/pages/ProjectGenerator.jsx",
+      "id": "Function:ProjectGenerator"
+    },
+    {
+      "node_type": "function",
       "name": "copyFileCode",
       "file": "frontend/src/pages/ProjectGenerator.jsx",
       "id": "Function:copyFileCode"
@@ -11014,12 +11382,6 @@
       "name": "getStageStatus",
       "file": "frontend/src/pages/ProjectGenerator.jsx",
       "id": "Function:getStageStatus"
-    },
-    {
-      "node_type": "function",
-      "name": "ProjectGenerator",
-      "file": "frontend/src/pages/ProjectGenerator.jsx",
-      "id": "Function:ProjectGenerator"
     },
     {
       "id": "Module:../components/FileExplorer"
@@ -11042,6 +11404,24 @@
     },
     {
       "node_type": "function",
+      "name": "listConversations",
+      "file": "frontend/src/services/conversationApi.js",
+      "id": "Function:listConversations"
+    },
+    {
+      "node_type": "function",
+      "name": "createConversation",
+      "file": "frontend/src/services/conversationApi.js",
+      "id": "Function:createConversation"
+    },
+    {
+      "node_type": "function",
+      "name": "deleteConversation",
+      "file": "frontend/src/services/conversationApi.js",
+      "id": "Function:deleteConversation"
+    },
+    {
+      "node_type": "function",
       "name": "sendConversationMessage",
       "file": "frontend/src/services/conversationApi.js",
       "id": "Function:sendConversationMessage"
@@ -11054,27 +11434,9 @@
     },
     {
       "node_type": "function",
-      "name": "deleteConversation",
-      "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:deleteConversation"
-    },
-    {
-      "node_type": "function",
-      "name": "createConversation",
-      "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:createConversation"
-    },
-    {
-      "node_type": "function",
       "name": "renameConversation",
       "file": "frontend/src/services/conversationApi.js",
       "id": "Function:renameConversation"
-    },
-    {
-      "node_type": "function",
-      "name": "listConversations",
-      "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:listConversations"
     },
     {
       "node_type": "file",
@@ -11094,27 +11456,21 @@
     },
     {
       "node_type": "function",
-      "name": "generateProjectStream",
+      "name": "fetchProjectFiles",
       "file": "frontend/src/services/projectApi.js",
-      "id": "Function:generateProjectStream"
+      "id": "Function:fetchProjectFiles"
     },
     {
       "node_type": "function",
-      "name": "fetchPlugins",
+      "name": "fetchProjectFileContent",
       "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchPlugins"
+      "id": "Function:fetchProjectFileContent"
     },
     {
       "node_type": "function",
       "name": "fetchMetrics",
       "file": "frontend/src/services/projectApi.js",
       "id": "Function:fetchMetrics"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchProjectFiles",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchProjectFiles"
     },
     {
       "node_type": "function",
@@ -11130,15 +11486,15 @@
     },
     {
       "node_type": "function",
-      "name": "generateProject",
+      "name": "generateProjectStream",
       "file": "frontend/src/services/projectApi.js",
-      "id": "Function:generateProject"
+      "id": "Function:generateProjectStream"
     },
     {
       "node_type": "function",
-      "name": "fetchReflection",
+      "name": "fetchPlugins",
       "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchReflection"
+      "id": "Function:fetchPlugins"
     },
     {
       "node_type": "function",
@@ -11148,9 +11504,15 @@
     },
     {
       "node_type": "function",
-      "name": "fetchProjectFileContent",
+      "name": "generateProject",
       "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchProjectFileContent"
+      "id": "Function:generateProject"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchReflection",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchReflection"
     },
     {
       "node_type": "file",
@@ -11181,45 +11543,9 @@
     },
     {
       "node_type": "function",
-      "name": "getActiveSessionId",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:getActiveSessionId"
-    },
-    {
-      "node_type": "function",
-      "name": "clearActiveSessionId",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:clearActiveSessionId"
-    },
-    {
-      "node_type": "function",
-      "name": "createSessionId",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:createSessionId"
-    },
-    {
-      "node_type": "function",
       "name": "loadSessionMessages",
       "file": "frontend/src/utils/chatStorage.js",
       "id": "Function:loadSessionMessages"
-    },
-    {
-      "node_type": "function",
-      "name": "setActiveSessionId",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:setActiveSessionId"
-    },
-    {
-      "node_type": "function",
-      "name": "saveMessages",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:saveMessages"
-    },
-    {
-      "node_type": "function",
-      "name": "resetChatSession",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:resetChatSession"
     },
     {
       "node_type": "function",
@@ -11229,15 +11555,51 @@
     },
     {
       "node_type": "function",
+      "name": "getChatSessions",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:getChatSessions"
+    },
+    {
+      "node_type": "function",
+      "name": "setActiveSessionId",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:setActiveSessionId"
+    },
+    {
+      "node_type": "function",
+      "name": "createSessionId",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:createSessionId"
+    },
+    {
+      "node_type": "function",
+      "name": "getActiveSessionId",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:getActiveSessionId"
+    },
+    {
+      "node_type": "function",
+      "name": "resetChatSession",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:resetChatSession"
+    },
+    {
+      "node_type": "function",
+      "name": "saveMessages",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:saveMessages"
+    },
+    {
+      "node_type": "function",
       "name": "clearSessionMessages",
       "file": "frontend/src/utils/chatStorage.js",
       "id": "Function:clearSessionMessages"
     },
     {
       "node_type": "function",
-      "name": "getChatSessions",
+      "name": "clearActiveSessionId",
       "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:getChatSessions"
+      "id": "Function:clearActiveSessionId"
     },
     {
       "node_type": "file",
@@ -13848,6 +14210,23 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "tests/verify_day76_77_learning_optimizer.py"
+    },
+    {
+      "node_type": "function",
+      "name": "run_day76_77_tests",
+      "file": "tests/verify_day76_77_learning_optimizer.py",
+      "id": "Function:run_day76_77_tests"
+    },
+    {
+      "id": "Module:backend.learning.learner.MasterProjectLearner"
+    },
+    {
+      "id": "Module:backend.optimizer.prompt_optimizer.SelfImprovingPromptOptimizer"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "tests/verify_debate_scenarios.py"
     },
     {
@@ -15849,6 +16228,41 @@
       "relation": "IMPORTS",
       "source": "backend/agents/testing_agent.py",
       "target": "Module:backend.agents.base_agent.BaseAgent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/analysis/architecture.py",
+      "target": "Class:ArchitectureChecker"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/analysis/architecture.py",
+      "target": "Function:analyze_architecture"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/analysis/architecture.py",
+      "target": "Module:re"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/analysis/architecture.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/analysis/architecture.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/analysis/architecture.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/analysis/architecture.py",
+      "target": "Module:typing.List"
     },
     {
       "relation": "CONTAINS",
@@ -20582,6 +20996,46 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "backend/learning/embeddings.py",
+      "target": "Class:EmbeddingsGenerator"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/embeddings.py",
+      "target": "Function:generate_embedding"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/embeddings.py",
+      "target": "Function:compute_cosine_similarity"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/embeddings.py",
+      "target": "Module:math"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/embeddings.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/embeddings.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/embeddings.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/embeddings.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "backend/learning/experience_db.py",
       "target": "Class:ExperienceDatabase"
     },
@@ -20764,6 +21218,76 @@
       "relation": "IMPORTS",
       "source": "backend/learning/feedback_analyzer.py",
       "target": "Module:backend.learning.experience_store.ExperienceStore"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/learner.py",
+      "target": "Class:MasterProjectLearner"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/learner.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/learner.py",
+      "target": "Function:query_prior_knowledge"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/learner.py",
+      "target": "Function:learn_from_project"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/learner.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/learner.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/learner.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/learner.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/learner.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/learner.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/learner.py",
+      "target": "Module:backend.learning.project_memory.ProjectMemoryDB"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/learner.py",
+      "target": "Module:backend.learning.embeddings.EmbeddingsGenerator"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/learner.py",
+      "target": "Module:backend.learning.similarity.SimilaritySearchEngine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/learner.py",
+      "target": "Module:backend.learning.scorer.QualityScorer"
     },
     {
       "relation": "CONTAINS",
@@ -21087,6 +21611,76 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "backend/learning/project_memory.py",
+      "target": "Class:ProjectMemoryDB"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/project_memory.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/project_memory.py",
+      "target": "Function:_init_db"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/project_memory.py",
+      "target": "Function:save_project"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/project_memory.py",
+      "target": "Function:get_all_projects"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/project_memory.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/project_memory.py",
+      "target": "Module:sqlite3"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/project_memory.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/project_memory.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/project_memory.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/project_memory.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/project_memory.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/project_memory.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/project_memory.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "backend/learning/prompt_optimizer.py",
       "target": "Class:PromptOptimizer"
     },
@@ -21204,6 +21798,96 @@
       "relation": "IMPORTS",
       "source": "backend/learning/reflection_engine.py",
       "target": "Module:backend.services.llm.generate_text"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/scorer.py",
+      "target": "Class:QualityScorer"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/scorer.py",
+      "target": "Function:score_project"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/scorer.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/scorer.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/scorer.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/scorer.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/similarity.py",
+      "target": "Class:SimilaritySearchEngine"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/similarity.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/similarity.py",
+      "target": "Function:search_similar_projects"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/similarity.py",
+      "target": "Function:get_reusable_patterns"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/similarity.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/similarity.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/similarity.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/similarity.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/similarity.py",
+      "target": "Module:typing.Tuple"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/similarity.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/similarity.py",
+      "target": "Module:backend.learning.project_memory.ProjectMemoryDB"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/similarity.py",
+      "target": "Module:backend.learning.embeddings.EmbeddingsGenerator"
     },
     {
       "relation": "CONTAINS",
@@ -23054,6 +23738,211 @@
       "relation": "IMPORTS",
       "source": "backend/monitoring/validator.py",
       "target": "Module:backend.monitoring.health_checker.HealthChecker"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/evaluator.py",
+      "target": "Class:PromptEvaluator"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/evaluator.py",
+      "target": "Function:evaluate_variant"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/evaluator.py",
+      "target": "Function:select_winning_prompt"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/evaluator.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/evaluator.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/evaluator.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/evaluator.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/history.py",
+      "target": "Class:PromptHistoryStore"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/history.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/history.py",
+      "target": "Function:_init_store"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/history.py",
+      "target": "Function:_load"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/history.py",
+      "target": "Function:_save"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/history.py",
+      "target": "Function:record_prompt_version"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/history.py",
+      "target": "Function:get_highest_scoring_prompt"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/history.py",
+      "target": "Function:get_all_history"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/history.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/history.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/history.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/history.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/history.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/history.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/history.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/history.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/mutation.py",
+      "target": "Class:PromptMutationEngine"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/mutation.py",
+      "target": "Function:generate_mutations"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/mutation.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/mutation.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/mutation.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/mutation.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/prompt_optimizer.py",
+      "target": "Class:SelfImprovingPromptOptimizer"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/prompt_optimizer.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/prompt_optimizer.py",
+      "target": "Function:optimize_prompt_variants"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/optimizer/prompt_optimizer.py",
+      "target": "Function:get_best_prompt"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/prompt_optimizer.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/prompt_optimizer.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/prompt_optimizer.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/prompt_optimizer.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/prompt_optimizer.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/prompt_optimizer.py",
+      "target": "Module:backend.optimizer.mutation.PromptMutationEngine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/prompt_optimizer.py",
+      "target": "Module:backend.optimizer.evaluator.PromptEvaluator"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/optimizer/prompt_optimizer.py",
+      "target": "Module:backend.optimizer.history.PromptHistoryStore"
     },
     {
       "relation": "CONTAINS",
@@ -25319,6 +26208,281 @@
       "relation": "IMPORTS",
       "source": "backend/rag/utils/vector_store.py",
       "target": "Module:backend.rag.utils.embeddings.EmbeddingGenerator"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/dependency_graph.py",
+      "target": "Class:RepositoryDependencyGraph"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/dependency_graph.py",
+      "target": "Function:build_graph_from_metadata"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/dependency_graph.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/dependency_graph.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/dependency_graph.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/dependency_graph.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/dependency_graph.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/dependency_graph.py",
+      "target": "Module:networkx"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/indexer.py",
+      "target": "Class:RepositoryIndexer"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/indexer.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/indexer.py",
+      "target": "Function:index_repository"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/indexer.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/indexer.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/indexer.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/indexer.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/indexer.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/indexer.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/indexer.py",
+      "target": "Module:backend.repository.scanner.RepositoryScanner"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/repository_memory.py",
+      "target": "Class:RepositoryMemory"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/repository_memory.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/repository_memory.py",
+      "target": "Function:build_repository_memory"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/repository_memory.py",
+      "target": "Function:get_upgraded_prompt"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/repository_memory.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/repository_memory.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/repository_memory.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/repository_memory.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/repository_memory.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/repository_memory.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/repository_memory.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/repository_memory.py",
+      "target": "Module:backend.repository.indexer.RepositoryIndexer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/repository_memory.py",
+      "target": "Module:backend.repository.symbol_table.RepositorySymbolTable"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/scanner.py",
+      "target": "Class:RepositoryScanner"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/scanner.py",
+      "target": "Function:scan_repository"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/scanner.py",
+      "target": "Function:extract_file_metadata"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/scanner.py",
+      "target": "Function:_scan_python"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/scanner.py",
+      "target": "Function:_scan_javascript"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/scanner.py",
+      "target": "Function:_scan_config_or_doc"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/scanner.py",
+      "target": "Module:os"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/scanner.py",
+      "target": "Module:ast"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/scanner.py",
+      "target": "Module:re"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/scanner.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/scanner.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/scanner.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/scanner.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/scanner.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/scanner.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/scanner.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/scanner.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/symbol_table.py",
+      "target": "Class:RepositorySymbolTable"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/repository/symbol_table.py",
+      "target": "Function:build_symbol_table"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/symbol_table.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/symbol_table.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/symbol_table.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/symbol_table.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/repository/symbol_table.py",
+      "target": "Module:typing.Optional"
     },
     {
       "relation": "CONTAINS",
@@ -28252,6 +29416,21 @@
     },
     {
       "relation": "IMPORTS",
+      "source": "backend/tests/test_day76_77_learning_optimizer.py",
+      "target": "Module:sys"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/tests/test_day76_77_learning_optimizer.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/tests/test_day76_77_learning_optimizer.py",
+      "target": "Module:tests.verify_day76_77_learning_optimizer.main"
+    },
+    {
+      "relation": "IMPORTS",
       "source": "backend/tests/test_elite_security.py",
       "target": "Module:sys"
     },
@@ -30178,12 +31357,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/App.jsx",
-      "target": "Function:App"
+      "target": "Function:handleFileSelect"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/App.jsx",
-      "target": "Function:handleFileSelect"
+      "target": "Function:App"
     },
     {
       "relation": "IMPORTS",
@@ -30258,12 +31437,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:formatStructuredResponse"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:handleThemeToggle"
+      "target": "Function:handleSettingsClick"
     },
     {
       "relation": "CONTAINS",
@@ -30273,7 +31447,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:handleSettingsClick"
+      "target": "Function:handleThemeToggle"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "Function:formatStructuredResponse"
     },
     {
       "relation": "IMPORTS",
@@ -30363,7 +31542,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/FileExplorer.jsx",
-      "target": "Function:FileExplorer"
+      "target": "Function:toggleFolder"
     },
     {
       "relation": "CONTAINS",
@@ -30373,12 +31552,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/FileExplorer.jsx",
-      "target": "Function:toggleFolder"
+      "target": "Function:renderNode"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/FileExplorer.jsx",
-      "target": "Function:renderNode"
+      "target": "Function:FileExplorer"
     },
     {
       "relation": "IMPORTS",
@@ -30398,17 +31577,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/InputBar.jsx",
+      "target": "Function:handleSend"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/InputBar.jsx",
       "target": "Function:InputBar"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/InputBar.jsx",
       "target": "Function:handleTemplateClick"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/InputBar.jsx",
-      "target": "Function:handleSend"
     },
     {
       "relation": "IMPORTS",
@@ -30508,12 +31687,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/PlannerCard.jsx",
-      "target": "Function:SectionCard"
+      "target": "Function:PlannerCard"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/PlannerCard.jsx",
-      "target": "Function:PlannerCard"
+      "target": "Function:SectionCard"
     },
     {
       "relation": "IMPORTS",
@@ -30558,12 +31737,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Sidebar.jsx",
-      "target": "Function:Sidebar"
+      "target": "Function:syncActiveSession"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Sidebar.jsx",
-      "target": "Function:syncActiveSession"
+      "target": "Function:Sidebar"
     },
     {
       "relation": "CONTAINS",
@@ -30598,7 +31777,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Dashboard.jsx",
-      "target": "Function:Dashboard"
+      "target": "Function:SkeletonBlock"
     },
     {
       "relation": "CONTAINS",
@@ -30608,7 +31787,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Dashboard.jsx",
-      "target": "Function:SkeletonBlock"
+      "target": "Function:Dashboard"
     },
     {
       "relation": "IMPORTS",
@@ -30668,12 +31847,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Planner.jsx",
-      "target": "Function:Planner"
+      "target": "Function:handleGenerate"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Planner.jsx",
-      "target": "Function:handleGenerate"
+      "target": "Function:Planner"
     },
     {
       "relation": "IMPORTS",
@@ -30693,12 +31872,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/PluginsDashboard.jsx",
-      "target": "Function:getPluginIcon"
+      "target": "Function:PluginsDashboard"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/PluginsDashboard.jsx",
-      "target": "Function:PluginsDashboard"
+      "target": "Function:getPluginIcon"
     },
     {
       "relation": "DEFINES_ROUTE",
@@ -30718,17 +31897,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/ProjectGenerator.jsx",
+      "target": "Function:ProjectGenerator"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/pages/ProjectGenerator.jsx",
       "target": "Function:copyFileCode"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/ProjectGenerator.jsx",
       "target": "Function:getStageStatus"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/pages/ProjectGenerator.jsx",
-      "target": "Function:ProjectGenerator"
     },
     {
       "relation": "IMPORTS",
@@ -30788,6 +31967,21 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
+      "target": "Function:listConversations"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/conversationApi.js",
+      "target": "Function:createConversation"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/conversationApi.js",
+      "target": "Function:deleteConversation"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/conversationApi.js",
       "target": "Function:sendConversationMessage"
     },
     {
@@ -30798,22 +31992,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:deleteConversation"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:createConversation"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/conversationApi.js",
       "target": "Function:renameConversation"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:listConversations"
     },
     {
       "relation": "IMPORTS",
@@ -30833,22 +32012,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:generateProjectStream"
+      "target": "Function:fetchProjectFiles"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchPlugins"
+      "target": "Function:fetchProjectFileContent"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
       "target": "Function:fetchMetrics"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchProjectFiles"
     },
     {
       "relation": "CONTAINS",
@@ -30863,12 +32037,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:generateProject"
+      "target": "Function:generateProjectStream"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchReflection"
+      "target": "Function:fetchPlugins"
     },
     {
       "relation": "CONTAINS",
@@ -30878,7 +32052,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchProjectFileContent"
+      "target": "Function:generateProject"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
+      "target": "Function:fetchReflection"
     },
     {
       "relation": "CONTAINS",
@@ -30898,37 +32077,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:getActiveSessionId"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:clearActiveSessionId"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:createSessionId"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
       "target": "Function:loadSessionMessages"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:setActiveSessionId"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:saveMessages"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:resetChatSession"
     },
     {
       "relation": "CONTAINS",
@@ -30938,12 +32087,42 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:getChatSessions"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:setActiveSessionId"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:createSessionId"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:getActiveSessionId"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:resetChatSession"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:saveMessages"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
       "target": "Function:clearSessionMessages"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:getChatSessions"
+      "target": "Function:clearActiveSessionId"
     },
     {
       "relation": "DEPENDS_ON",
@@ -36352,6 +37531,91 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Function:section"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Function:check"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Function:run_day76_77_tests"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Function:main"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Module:sys"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Module:asyncio"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Module:backend.learning.learner.MasterProjectLearner"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Module:backend.learning.project_memory.ProjectMemoryDB"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Module:backend.learning.similarity.SimilaritySearchEngine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Module:backend.learning.scorer.QualityScorer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Module:backend.optimizer.prompt_optimizer.SelfImprovingPromptOptimizer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Module:backend.optimizer.mutation.PromptMutationEngine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Module:backend.optimizer.evaluator.PromptEvaluator"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day76_77_learning_optimizer.py",
+      "target": "Module:backend.optimizer.history.PromptHistoryStore"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "tests/verify_debate_scenarios.py",
       "target": "Function:run_debate_verification"
     },
@@ -36862,14 +38126,14 @@
     }
   ],
   "summary": {
-    "total_files": 631,
-    "total_functions": 1491,
-    "total_classes": 342,
+    "total_files": 651,
+    "total_functions": 1534,
+    "total_classes": 357,
     "total_apis": 100,
     "total_db_models": 0,
     "total_env_vars": 8,
     "total_dependencies": 327,
-    "total_nodes": 2717,
-    "total_edges": 4577
+    "total_nodes": 2790,
+    "total_edges": 4754
   }
 }
