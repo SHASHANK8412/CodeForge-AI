@@ -96,5 +96,194 @@
     "execution_time_s": 12.0,
     "llm_used": "qwen2.5-coder:latest",
     "timestamp": 1784815991.7253492
+  },
+  {
+    "experience_id": "exp_004",
+    "prompt": "Build a Production E-Commerce Microservice",
+    "architecture": "FastAPI + React + MongoDB",
+    "generated_files_count": 0,
+    "bug_fixes": [
+      {
+        "error": "CORS Error",
+        "fix": "allow_origins=['*']"
+      },
+      {
+        "error": "Render timeout",
+        "fix": "Increase worker timeout to 120s"
+      }
+    ],
+    "deployment_insights": {
+      "status": "success",
+      "worker_timeout_s": 120
+    },
+    "user_preferences": [
+      "FastAPI",
+      "Tailwind",
+      "MongoDB",
+      "Docker",
+      "JWT"
+    ],
+    "performance_score": 91.0,
+    "execution_time_s": 12.0,
+    "llm_used": "qwen2.5-coder:latest",
+    "timestamp": 1784816728.1311805
+  },
+  {
+    "experience_id": "exp_005",
+    "prompt": "Deploy Enterprise Analytics Portal",
+    "architecture": "FastAPI + Redis",
+    "generated_files_count": 0,
+    "bug_fixes": [
+      {
+        "error": "CORS Error",
+        "fix": "allow_origins=['*']"
+      },
+      {
+        "error": "Render timeout",
+        "fix": "Increase worker timeout to 120s"
+      }
+    ],
+    "deployment_insights": {
+      "status": "success",
+      "worker_timeout_s": 120,
+      "container_ready": true
+    },
+    "user_preferences": [
+      "FastAPI",
+      "Tailwind",
+      "MongoDB",
+      "Docker",
+      "JWT"
+    ],
+    "performance_score": 94.0,
+    "execution_time_s": 12.0,
+    "llm_used": "qwen2.5-coder:latest",
+    "timestamp": 1784816728.151411
+  },
+  {
+    "experience_id": "exp_006",
+    "prompt": "Build a Production E-Commerce Microservice",
+    "architecture": "FastAPI + React + MongoDB",
+    "generated_files_count": 0,
+    "bug_fixes": [
+      {
+        "error": "CORS Error",
+        "fix": "allow_origins=['*']"
+      },
+      {
+        "error": "Render timeout",
+        "fix": "Increase worker timeout to 120s"
+      }
+    ],
+    "deployment_insights": {
+      "status": "success",
+      "worker_timeout_s": 120
+    },
+    "user_preferences": [
+      "FastAPI",
+      "Tailwind",
+      "MongoDB",
+      "Docker",
+      "JWT"
+    ],
+    "performance_score": 91.0,
+    "execution_time_s": 12.0,
+    "llm_used": "qwen2.5-coder:latest",
+    "timestamp": 1784816832.8096266
+  },
+  {
+    "experience_id": "exp_007",
+    "prompt": "Deploy Enterprise Analytics Portal",
+    "architecture": "FastAPI + Redis",
+    "generated_files_count": 0,
+    "bug_fixes": [
+      {
+        "error": "CORS Error",
+        "fix": "allow_origins=['*']"
+      },
+      {
+        "error": "Render timeout",
+        "fix": "Increase worker timeout to 120s"
+      }
+    ],
+    "deployment_insights": {
+      "status": "success",
+      "worker_timeout_s": 120,
+      "container_ready": true
+    },
+    "user_preferences": [
+      "FastAPI",
+      "Tailwind",
+      "MongoDB",
+      "Docker",
+      "JWT"
+    ],
+    "performance_score": 94.0,
+    "execution_time_s": 12.0,
+    "llm_used": "qwen2.5-coder:latest",
+    "timestamp": 1784816832.8284752
+  },
+  {
+    "experience_id": "exp_008",
+    "prompt": "Build a Production E-Commerce Microservice",
+    "architecture": "FastAPI + React + MongoDB",
+    "generated_files_count": 0,
+    "bug_fixes": [
+      {
+        "error": "CORS Error",
+        "fix": "allow_origins=['*']"
+      },
+      {
+        "error": "Render timeout",
+        "fix": "Increase worker timeout to 120s"
+      }
+    ],
+    "deployment_insights": {
+      "status": "success",
+      "worker_timeout_s": 120
+    },
+    "user_preferences": [
+      "FastAPI",
+      "Tailwind",
+      "MongoDB",
+      "Docker",
+      "JWT"
+    ],
+    "performance_score": 91.0,
+    "execution_time_s": 12.0,
+    "llm_used": "qwen2.5-coder:latest",
+    "timestamp": 1784816891.158907
+  },
+  {
+    "experience_id": "exp_009",
+    "prompt": "Deploy Enterprise Analytics Portal",
+    "architecture": "FastAPI + Redis",
+    "generated_files_count": 0,
+    "bug_fixes": [
+      {
+        "error": "CORS Error",
+        "fix": "allow_origins=['*']"
+      },
+      {
+        "error": "Render timeout",
+        "fix": "Increase worker timeout to 120s"
+      }
+    ],
+    "deployment_insights": {
+      "status": "success",
+      "worker_timeout_s": 120,
+      "container_ready": true
+    },
+    "user_preferences": [
+      "FastAPI",
+      "Tailwind",
+      "MongoDB",
+      "Docker",
+      "JWT"
+    ],
+    "performance_score": 94.0,
+    "execution_time_s": 12.0,
+    "llm_used": "qwen2.5-coder:latest",
+    "timestamp": 1784816891.1760266
   }
 ]

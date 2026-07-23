@@ -3401,6 +3401,69 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/evolution/evaluator.py"
+    },
+    {
+      "node_type": "class",
+      "name": "EvolutionEvaluator",
+      "file": "backend/evolution/evaluator.py",
+      "id": "Class:EvolutionEvaluator"
+    },
+    {
+      "node_type": "function",
+      "name": "evaluate_build",
+      "file": "backend/evolution/evaluator.py",
+      "id": "Function:evaluate_build"
+    },
+    {
+      "node_type": "file",
+      "ext": ".json",
+      "id": "backend/evolution/evolution_genomes.json"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/evolution/evolution_graph.py"
+    },
+    {
+      "node_type": "class",
+      "name": "EvolutionGraphStore",
+      "file": "backend/evolution/evolution_graph.py",
+      "id": "Class:EvolutionGraphStore"
+    },
+    {
+      "node_type": "function",
+      "name": "_init_store",
+      "file": "backend/optimizer/history.py",
+      "id": "Function:_init_store"
+    },
+    {
+      "node_type": "function",
+      "name": "_load_genomes",
+      "file": "backend/evolution/evolution_graph.py",
+      "id": "Function:_load_genomes"
+    },
+    {
+      "node_type": "function",
+      "name": "_save_genomes",
+      "file": "backend/evolution/evolution_graph.py",
+      "id": "Function:_save_genomes"
+    },
+    {
+      "node_type": "function",
+      "name": "get_agent_genome",
+      "file": "backend/evolution/evolution_graph.py",
+      "id": "Function:get_agent_genome"
+    },
+    {
+      "node_type": "function",
+      "name": "update_agent_genome",
+      "file": "backend/evolution/evolution_graph.py",
+      "id": "Function:update_agent_genome"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/evolution/evolution_pipeline.py"
     },
     {
@@ -3499,6 +3562,61 @@
     },
     {
       "id": "Module:backend.evolution.doc_updater.DocumentationUpdater"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/evolution/mutation.py"
+    },
+    {
+      "node_type": "class",
+      "name": "AgentMutationEngine",
+      "file": "backend/evolution/mutation.py",
+      "id": "Class:AgentMutationEngine"
+    },
+    {
+      "node_type": "function",
+      "name": "mutate_prompt",
+      "file": "backend/evolution/mutation.py",
+      "id": "Function:mutate_prompt"
+    },
+    {
+      "node_type": "function",
+      "name": "mutate_genome",
+      "file": "backend/evolution/mutation.py",
+      "id": "Function:mutate_genome"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/evolution/optimizer.py"
+    },
+    {
+      "node_type": "class",
+      "name": "AgentOptimizer",
+      "file": "backend/evolution/optimizer.py",
+      "id": "Class:AgentOptimizer"
+    },
+    {
+      "node_type": "function",
+      "name": "benchmark_and_select_best_version",
+      "file": "backend/evolution/optimizer.py",
+      "id": "Function:benchmark_and_select_best_version"
+    },
+    {
+      "node_type": "function",
+      "name": "evaluate_and_adopt_prompt_mutation",
+      "file": "backend/evolution/optimizer.py",
+      "id": "Function:evaluate_and_adopt_prompt_mutation"
+    },
+    {
+      "id": "Module:backend.evolution.evaluator.global_evolution_evaluator"
+    },
+    {
+      "id": "Module:backend.evolution.mutation.global_mutation_engine"
+    },
+    {
+      "id": "Module:backend.evolution.evolution_graph.global_evolution_graph_store"
     },
     {
       "node_type": "file",
@@ -5303,6 +5421,46 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/learning/experience.py"
+    },
+    {
+      "node_type": "class",
+      "name": "ExperienceDB",
+      "file": "backend/learning/experience.py",
+      "id": "Class:ExperienceDB"
+    },
+    {
+      "node_type": "function",
+      "name": "_load_experiences",
+      "file": "backend/learning/experience.py",
+      "id": "Function:_load_experiences"
+    },
+    {
+      "node_type": "function",
+      "name": "_save_experiences",
+      "file": "backend/learning/experience.py",
+      "id": "Function:_save_experiences"
+    },
+    {
+      "node_type": "function",
+      "name": "record_experience",
+      "file": "backend/learning/experience.py",
+      "id": "Function:record_experience"
+    },
+    {
+      "node_type": "function",
+      "name": "get_all_experiences",
+      "file": "backend/learning/experience_store.py",
+      "id": "Function:get_all_experiences"
+    },
+    {
+      "node_type": "file",
+      "ext": ".json",
+      "id": "backend/learning/experience_db.json"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/learning/experience_db.py"
     },
     {
@@ -5336,21 +5494,9 @@
     },
     {
       "node_type": "function",
-      "name": "_init_store",
-      "file": "backend/optimizer/history.py",
-      "id": "Function:_init_store"
-    },
-    {
-      "node_type": "function",
       "name": "add_experience",
       "file": "backend/learning/experience_store.py",
       "id": "Function:add_experience"
-    },
-    {
-      "node_type": "function",
-      "name": "get_all_experiences",
-      "file": "backend/learning/experience_store.py",
-      "id": "Function:get_all_experiences"
     },
     {
       "node_type": "function",
@@ -5737,6 +5883,29 @@
       "name": "generate_reflection",
       "file": "backend/learning/reflection_engine.py",
       "id": "Function:generate_reflection"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/learning/retriever.py"
+    },
+    {
+      "node_type": "class",
+      "name": "ExperienceRetriever",
+      "file": "backend/learning/retriever.py",
+      "id": "Class:ExperienceRetriever"
+    },
+    {
+      "node_type": "function",
+      "name": "retrieve_experience_context",
+      "file": "backend/learning/retriever.py",
+      "id": "Function:retrieve_experience_context"
+    },
+    {
+      "id": "Module:backend.learning.experience.global_experience_db"
+    },
+    {
+      "id": "Module:backend.learning.embeddings.global_embedding_engine"
     },
     {
       "node_type": "file",
@@ -6520,9 +6689,6 @@
       "name": "search_similar",
       "file": "backend/memory/vector_memory.py",
       "id": "Function:search_similar"
-    },
-    {
-      "id": "Module:backend.learning.embeddings.global_embedding_engine"
     },
     {
       "node_type": "file",
@@ -8640,7 +8806,17 @@
     {
       "node_type": "file",
       "ext": ".txt",
+      "id": "backend/rag/documents/1c92687e9b1a44bb81326a70d0ecf677_sample.txt"
+    },
+    {
+      "node_type": "file",
+      "ext": ".txt",
       "id": "backend/rag/documents/20921243b0324fbf96eb24d802c8d0bf_sample.txt"
+    },
+    {
+      "node_type": "file",
+      "ext": ".txt",
+      "id": "backend/rag/documents/23b4226029794b92bce6e7b2fb2c2568_sample.txt"
     },
     {
       "node_type": "file",
@@ -8870,6 +9046,11 @@
     {
       "node_type": "file",
       "ext": ".txt",
+      "id": "backend/rag/documents/bd25dca5471e4081a1e36ad06323881f_sample.txt"
+    },
+    {
+      "node_type": "file",
+      "ext": ".txt",
       "id": "backend/rag/documents/beadde95ffed4d2895d7291df3d87f01_sample.txt"
     },
     {
@@ -8906,6 +9087,11 @@
       "node_type": "file",
       "ext": ".txt",
       "id": "backend/rag/documents/f05621eb38334e679bea1927250bf251_sample.txt"
+    },
+    {
+      "node_type": "file",
+      "ext": ".txt",
+      "id": "backend/rag/documents/f0eaa0073ab54d868dc08b1479066f1f_sample.txt"
     },
     {
       "node_type": "file",
@@ -11592,6 +11778,14 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/tests/test_day90_91_experience_evolution.py"
+    },
+    {
+      "id": "Module:tests.verify_day90_91_experience_evolution.main"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/tests/test_elite_security.py"
     },
     {
@@ -12537,15 +12731,15 @@
     },
     {
       "node_type": "function",
-      "name": "handleFileSelect",
-      "file": "frontend/src/App.jsx",
-      "id": "Function:handleFileSelect"
-    },
-    {
-      "node_type": "function",
       "name": "App",
       "file": "generated_projects/Build a Todo application using React_ FastAPI and MongoDB/frontend/src/App.jsx",
       "id": "Function:App"
+    },
+    {
+      "node_type": "function",
+      "name": "handleFileSelect",
+      "file": "frontend/src/App.jsx",
+      "id": "Function:handleFileSelect"
     },
     {
       "id": "Module:react"
@@ -12595,21 +12789,15 @@
     },
     {
       "node_type": "function",
+      "name": "handleThemeToggle",
+      "file": "frontend/src/components/ChatBox.jsx",
+      "id": "Function:handleThemeToggle"
+    },
+    {
+      "node_type": "function",
       "name": "toUiMessages",
       "file": "frontend/src/components/ChatBox.jsx",
       "id": "Function:toUiMessages"
-    },
-    {
-      "node_type": "function",
-      "name": "formatStructuredResponse",
-      "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:formatStructuredResponse"
-    },
-    {
-      "node_type": "function",
-      "name": "handleSettingsClick",
-      "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:handleSettingsClick"
     },
     {
       "node_type": "function",
@@ -12619,9 +12807,15 @@
     },
     {
       "node_type": "function",
-      "name": "handleThemeToggle",
+      "name": "handleSettingsClick",
       "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:handleThemeToggle"
+      "id": "Function:handleSettingsClick"
+    },
+    {
+      "node_type": "function",
+      "name": "formatStructuredResponse",
+      "file": "frontend/src/components/ChatBox.jsx",
+      "id": "Function:formatStructuredResponse"
     },
     {
       "id": "Module:react-icons/fa"
@@ -12709,6 +12903,12 @@
     },
     {
       "node_type": "function",
+      "name": "renderNode",
+      "file": "frontend/src/components/FileExplorer.jsx",
+      "id": "Function:renderNode"
+    },
+    {
+      "node_type": "function",
       "name": "handleProjectChange",
       "file": "frontend/src/components/FileExplorer.jsx",
       "id": "Function:handleProjectChange"
@@ -12718,12 +12918,6 @@
       "name": "FileExplorer",
       "file": "frontend/src/components/FileExplorer.jsx",
       "id": "Function:FileExplorer"
-    },
-    {
-      "node_type": "function",
-      "name": "renderNode",
-      "file": "frontend/src/components/FileExplorer.jsx",
-      "id": "Function:renderNode"
     },
     {
       "node_type": "file",
@@ -12738,15 +12932,15 @@
     },
     {
       "node_type": "function",
-      "name": "handleTemplateClick",
-      "file": "frontend/src/components/InputBar.jsx",
-      "id": "Function:handleTemplateClick"
-    },
-    {
-      "node_type": "function",
       "name": "InputBar",
       "file": "frontend/src/components/InputBar.jsx",
       "id": "Function:InputBar"
+    },
+    {
+      "node_type": "function",
+      "name": "handleTemplateClick",
+      "file": "frontend/src/components/InputBar.jsx",
+      "id": "Function:handleTemplateClick"
     },
     {
       "node_type": "file",
@@ -12766,21 +12960,15 @@
     },
     {
       "node_type": "function",
-      "name": "CodeWrapper",
-      "file": "frontend/src/components/Message.jsx",
-      "id": "Function:CodeWrapper"
-    },
-    {
-      "node_type": "function",
       "name": "Message",
       "file": "frontend/src/components/Message.jsx",
       "id": "Function:Message"
     },
     {
       "node_type": "function",
-      "name": "copyEntireMessage",
+      "name": "handleFeedback",
       "file": "frontend/src/components/Message.jsx",
-      "id": "Function:copyEntireMessage"
+      "id": "Function:handleFeedback"
     },
     {
       "node_type": "function",
@@ -12790,9 +12978,15 @@
     },
     {
       "node_type": "function",
-      "name": "handleFeedback",
+      "name": "CodeWrapper",
       "file": "frontend/src/components/Message.jsx",
-      "id": "Function:handleFeedback"
+      "id": "Function:CodeWrapper"
+    },
+    {
+      "node_type": "function",
+      "name": "copyEntireMessage",
+      "file": "frontend/src/components/Message.jsx",
+      "id": "Function:copyEntireMessage"
     },
     {
       "id": "Module:react-markdown"
@@ -12835,15 +13029,15 @@
     },
     {
       "node_type": "function",
-      "name": "PlannerCard",
-      "file": "frontend/src/components/PlannerCard.jsx",
-      "id": "Function:PlannerCard"
-    },
-    {
-      "node_type": "function",
       "name": "SectionCard",
       "file": "frontend/src/components/PlannerCard.jsx",
       "id": "Function:SectionCard"
+    },
+    {
+      "node_type": "function",
+      "name": "PlannerCard",
+      "file": "frontend/src/components/PlannerCard.jsx",
+      "id": "Function:PlannerCard"
     },
     {
       "node_type": "file",
@@ -12874,15 +13068,15 @@
     },
     {
       "node_type": "function",
-      "name": "Sidebar",
-      "file": "frontend/src/components/Sidebar.jsx",
-      "id": "Function:Sidebar"
-    },
-    {
-      "node_type": "function",
       "name": "handleOpenSession",
       "file": "frontend/src/components/Sidebar.jsx",
       "id": "Function:handleOpenSession"
+    },
+    {
+      "node_type": "function",
+      "name": "Sidebar",
+      "file": "frontend/src/components/Sidebar.jsx",
+      "id": "Function:Sidebar"
     },
     {
       "node_type": "function",
@@ -12980,15 +13174,15 @@
     },
     {
       "node_type": "function",
-      "name": "Planner",
-      "file": "frontend/src/pages/Planner.jsx",
-      "id": "Function:Planner"
-    },
-    {
-      "node_type": "function",
       "name": "handleGenerate",
       "file": "frontend/src/pages/Planner.jsx",
       "id": "Function:handleGenerate"
+    },
+    {
+      "node_type": "function",
+      "name": "Planner",
+      "file": "frontend/src/pages/Planner.jsx",
+      "id": "Function:Planner"
     },
     {
       "id": "Module:../components/PlannerCard"
@@ -13000,15 +13194,15 @@
     },
     {
       "node_type": "function",
-      "name": "getPluginIcon",
-      "file": "frontend/src/pages/PluginsDashboard.jsx",
-      "id": "Function:getPluginIcon"
-    },
-    {
-      "node_type": "function",
       "name": "PluginsDashboard",
       "file": "frontend/src/pages/PluginsDashboard.jsx",
       "id": "Function:PluginsDashboard"
+    },
+    {
+      "node_type": "function",
+      "name": "getPluginIcon",
+      "file": "frontend/src/pages/PluginsDashboard.jsx",
+      "id": "Function:getPluginIcon"
     },
     {
       "node_type": "api",
@@ -13108,21 +13302,9 @@
     },
     {
       "node_type": "function",
-      "name": "deleteConversation",
+      "name": "sendConversationMessage",
       "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:deleteConversation"
-    },
-    {
-      "node_type": "function",
-      "name": "createConversation",
-      "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:createConversation"
-    },
-    {
-      "node_type": "function",
-      "name": "listConversations",
-      "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:listConversations"
+      "id": "Function:sendConversationMessage"
     },
     {
       "node_type": "function",
@@ -13132,15 +13314,27 @@
     },
     {
       "node_type": "function",
-      "name": "getConversationHistory",
+      "name": "listConversations",
       "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:getConversationHistory"
+      "id": "Function:listConversations"
     },
     {
       "node_type": "function",
-      "name": "sendConversationMessage",
+      "name": "createConversation",
       "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:sendConversationMessage"
+      "id": "Function:createConversation"
+    },
+    {
+      "node_type": "function",
+      "name": "deleteConversation",
+      "file": "frontend/src/services/conversationApi.js",
+      "id": "Function:deleteConversation"
+    },
+    {
+      "node_type": "function",
+      "name": "getConversationHistory",
+      "file": "frontend/src/services/conversationApi.js",
+      "id": "Function:getConversationHistory"
     },
     {
       "node_type": "file",
@@ -13166,15 +13360,9 @@
     },
     {
       "node_type": "function",
-      "name": "fetchReflection",
+      "name": "generateProject",
       "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchReflection"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchProjectFileContent",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchProjectFileContent"
+      "id": "Function:generateProject"
     },
     {
       "node_type": "function",
@@ -13184,9 +13372,15 @@
     },
     {
       "node_type": "function",
-      "name": "fetchProjects",
+      "name": "fetchEvolutionStatus",
       "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchProjects"
+      "id": "Function:fetchEvolutionStatus"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchReflection",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchReflection"
     },
     {
       "node_type": "function",
@@ -13196,21 +13390,15 @@
     },
     {
       "node_type": "function",
-      "name": "fetchEvolutionStatus",
+      "name": "fetchProjectFileContent",
       "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchEvolutionStatus"
+      "id": "Function:fetchProjectFileContent"
     },
     {
       "node_type": "function",
-      "name": "generateProject",
+      "name": "fetchProjects",
       "file": "frontend/src/services/projectApi.js",
-      "id": "Function:generateProject"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchMetrics",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchMetrics"
+      "id": "Function:fetchProjects"
     },
     {
       "node_type": "function",
@@ -13219,21 +13407,27 @@
       "id": "Function:generateProjectStream"
     },
     {
+      "node_type": "function",
+      "name": "fetchMetrics",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchMetrics"
+    },
+    {
       "node_type": "file",
       "ext": ".js",
       "id": "frontend/src/services/ragApi.js"
     },
     {
       "node_type": "function",
-      "name": "uploadRagDocuments",
-      "file": "frontend/src/services/ragApi.js",
-      "id": "Function:uploadRagDocuments"
-    },
-    {
-      "node_type": "function",
       "name": "queryRagDocuments",
       "file": "frontend/src/services/ragApi.js",
       "id": "Function:queryRagDocuments"
+    },
+    {
+      "node_type": "function",
+      "name": "uploadRagDocuments",
+      "file": "frontend/src/services/ragApi.js",
+      "id": "Function:uploadRagDocuments"
     },
     {
       "node_type": "file",
@@ -13247,21 +13441,21 @@
     },
     {
       "node_type": "function",
-      "name": "getSavedMessages",
+      "name": "getChatSessions",
       "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:getSavedMessages"
-    },
-    {
-      "node_type": "function",
-      "name": "getActiveSessionId",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:getActiveSessionId"
+      "id": "Function:getChatSessions"
     },
     {
       "node_type": "function",
       "name": "clearSessionMessages",
       "file": "frontend/src/utils/chatStorage.js",
       "id": "Function:clearSessionMessages"
+    },
+    {
+      "node_type": "function",
+      "name": "getActiveSessionId",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:getActiveSessionId"
     },
     {
       "node_type": "function",
@@ -13277,9 +13471,9 @@
     },
     {
       "node_type": "function",
-      "name": "setActiveSessionId",
+      "name": "saveMessages",
       "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:setActiveSessionId"
+      "id": "Function:saveMessages"
     },
     {
       "node_type": "function",
@@ -13289,21 +13483,21 @@
     },
     {
       "node_type": "function",
-      "name": "saveMessages",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:saveMessages"
-    },
-    {
-      "node_type": "function",
       "name": "createSessionId",
       "file": "frontend/src/utils/chatStorage.js",
       "id": "Function:createSessionId"
     },
     {
       "node_type": "function",
-      "name": "getChatSessions",
+      "name": "getSavedMessages",
       "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:getChatSessions"
+      "id": "Function:getSavedMessages"
+    },
+    {
+      "node_type": "function",
+      "name": "setActiveSessionId",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:setActiveSessionId"
     },
     {
       "node_type": "file",
@@ -16124,6 +16318,23 @@
     },
     {
       "id": "Module:backend.learning.analytics.global_learning_analytics"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "tests/verify_day90_91_experience_evolution.py"
+    },
+    {
+      "node_type": "function",
+      "name": "run_day90_91_tests",
+      "file": "tests/verify_day90_91_experience_evolution.py",
+      "id": "Function:run_day90_91_tests"
+    },
+    {
+      "id": "Module:backend.learning.retriever.global_experience_retriever"
+    },
+    {
+      "id": "Module:backend.evolution.optimizer.global_agent_optimizer"
     },
     {
       "node_type": "file",
@@ -21233,6 +21444,106 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "backend/evolution/evaluator.py",
+      "target": "Class:EvolutionEvaluator"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/evolution/evaluator.py",
+      "target": "Function:evaluate_build"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/evaluator.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/evaluator.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/evaluator.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/evaluator.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/evolution/evolution_graph.py",
+      "target": "Class:EvolutionGraphStore"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/evolution/evolution_graph.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/evolution/evolution_graph.py",
+      "target": "Function:_init_store"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/evolution/evolution_graph.py",
+      "target": "Function:_load_genomes"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/evolution/evolution_graph.py",
+      "target": "Function:_save_genomes"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/evolution/evolution_graph.py",
+      "target": "Function:get_agent_genome"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/evolution/evolution_graph.py",
+      "target": "Function:update_agent_genome"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/evolution_graph.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/evolution_graph.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/evolution_graph.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/evolution_graph.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/evolution_graph.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/evolution_graph.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/evolution_graph.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "backend/evolution/evolution_pipeline.py",
       "target": "Class:EvolutionPipeline"
     },
@@ -21430,6 +21741,101 @@
       "relation": "IMPORTS",
       "source": "backend/evolution/migration.py",
       "target": "Module:backend.evolution.doc_updater.DocumentationUpdater"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/evolution/mutation.py",
+      "target": "Class:AgentMutationEngine"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/evolution/mutation.py",
+      "target": "Function:mutate_prompt"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/evolution/mutation.py",
+      "target": "Function:mutate_genome"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/mutation.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/mutation.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/mutation.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/mutation.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/evolution/optimizer.py",
+      "target": "Class:AgentOptimizer"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/evolution/optimizer.py",
+      "target": "Function:benchmark_and_select_best_version"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/evolution/optimizer.py",
+      "target": "Function:evaluate_and_adopt_prompt_mutation"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/optimizer.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/optimizer.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/optimizer.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/optimizer.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/optimizer.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/optimizer.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/optimizer.py",
+      "target": "Module:backend.evolution.evaluator.global_evolution_evaluator"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/optimizer.py",
+      "target": "Module:backend.evolution.mutation.global_mutation_engine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/evolution/optimizer.py",
+      "target": "Module:backend.evolution.evolution_graph.global_evolution_graph_store"
     },
     {
       "relation": "CONTAINS",
@@ -24703,6 +25109,81 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "backend/learning/experience.py",
+      "target": "Class:ExperienceDB"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/experience.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/experience.py",
+      "target": "Function:_init_db"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/experience.py",
+      "target": "Function:_load_experiences"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/experience.py",
+      "target": "Function:_save_experiences"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/experience.py",
+      "target": "Function:record_experience"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/experience.py",
+      "target": "Function:get_all_experiences"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/experience.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/experience.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/experience.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/experience.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/experience.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/experience.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/experience.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/experience.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "backend/learning/experience_db.py",
       "target": "Class:ExperienceDatabase"
     },
@@ -25590,6 +26071,46 @@
       "relation": "IMPORTS",
       "source": "backend/learning/reflection_engine.py",
       "target": "Module:backend.services.llm.generate_text"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/retriever.py",
+      "target": "Class:ExperienceRetriever"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/learning/retriever.py",
+      "target": "Function:retrieve_experience_context"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/retriever.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/retriever.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/retriever.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/retriever.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/retriever.py",
+      "target": "Module:backend.learning.experience.global_experience_db"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/learning/retriever.py",
+      "target": "Module:backend.learning.embeddings.global_embedding_engine"
     },
     {
       "relation": "CONTAINS",
@@ -34153,6 +34674,21 @@
     },
     {
       "relation": "IMPORTS",
+      "source": "backend/tests/test_day90_91_experience_evolution.py",
+      "target": "Module:sys"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/tests/test_day90_91_experience_evolution.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/tests/test_day90_91_experience_evolution.py",
+      "target": "Module:tests.verify_day90_91_experience_evolution.main"
+    },
+    {
+      "relation": "IMPORTS",
       "source": "backend/tests/test_elite_security.py",
       "target": "Module:sys"
     },
@@ -36384,12 +36920,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/App.jsx",
-      "target": "Function:handleFileSelect"
+      "target": "Function:App"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/App.jsx",
-      "target": "Function:App"
+      "target": "Function:handleFileSelect"
     },
     {
       "relation": "IMPORTS",
@@ -36459,17 +36995,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/ChatBox.jsx",
+      "target": "Function:handleThemeToggle"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/ChatBox.jsx",
       "target": "Function:toUiMessages"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:formatStructuredResponse"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:handleSettingsClick"
     },
     {
       "relation": "CONTAINS",
@@ -36479,7 +37010,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:handleThemeToggle"
+      "target": "Function:handleSettingsClick"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/ChatBox.jsx",
+      "target": "Function:formatStructuredResponse"
     },
     {
       "relation": "IMPORTS",
@@ -36574,17 +37110,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/FileExplorer.jsx",
+      "target": "Function:renderNode"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/FileExplorer.jsx",
       "target": "Function:handleProjectChange"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/FileExplorer.jsx",
       "target": "Function:FileExplorer"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/FileExplorer.jsx",
-      "target": "Function:renderNode"
     },
     {
       "relation": "IMPORTS",
@@ -36609,12 +37145,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/InputBar.jsx",
-      "target": "Function:handleTemplateClick"
+      "target": "Function:InputBar"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/InputBar.jsx",
-      "target": "Function:InputBar"
+      "target": "Function:handleTemplateClick"
     },
     {
       "relation": "IMPORTS",
@@ -36634,17 +37170,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Message.jsx",
-      "target": "Function:CodeWrapper"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/Message.jsx",
       "target": "Function:Message"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Message.jsx",
-      "target": "Function:copyEntireMessage"
+      "target": "Function:handleFeedback"
     },
     {
       "relation": "CONTAINS",
@@ -36654,7 +37185,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Message.jsx",
-      "target": "Function:handleFeedback"
+      "target": "Function:CodeWrapper"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/Message.jsx",
+      "target": "Function:copyEntireMessage"
     },
     {
       "relation": "IMPORTS",
@@ -36714,12 +37250,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/PlannerCard.jsx",
-      "target": "Function:PlannerCard"
+      "target": "Function:SectionCard"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/PlannerCard.jsx",
-      "target": "Function:SectionCard"
+      "target": "Function:PlannerCard"
     },
     {
       "relation": "IMPORTS",
@@ -36764,12 +37300,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Sidebar.jsx",
-      "target": "Function:Sidebar"
+      "target": "Function:handleOpenSession"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Sidebar.jsx",
-      "target": "Function:handleOpenSession"
+      "target": "Function:Sidebar"
     },
     {
       "relation": "CONTAINS",
@@ -36874,12 +37410,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Planner.jsx",
-      "target": "Function:Planner"
+      "target": "Function:handleGenerate"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Planner.jsx",
-      "target": "Function:handleGenerate"
+      "target": "Function:Planner"
     },
     {
       "relation": "IMPORTS",
@@ -36899,12 +37435,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/PluginsDashboard.jsx",
-      "target": "Function:getPluginIcon"
+      "target": "Function:PluginsDashboard"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/PluginsDashboard.jsx",
-      "target": "Function:PluginsDashboard"
+      "target": "Function:getPluginIcon"
     },
     {
       "relation": "DEFINES_ROUTE",
@@ -37034,17 +37570,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:deleteConversation"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:createConversation"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:listConversations"
+      "target": "Function:sendConversationMessage"
     },
     {
       "relation": "CONTAINS",
@@ -37054,12 +37580,22 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:getConversationHistory"
+      "target": "Function:listConversations"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:sendConversationMessage"
+      "target": "Function:createConversation"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/conversationApi.js",
+      "target": "Function:deleteConversation"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/conversationApi.js",
+      "target": "Function:getConversationHistory"
     },
     {
       "relation": "IMPORTS",
@@ -37084,12 +37620,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchReflection"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchProjectFileContent"
+      "target": "Function:generateProject"
     },
     {
       "relation": "CONTAINS",
@@ -37099,7 +37630,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchProjects"
+      "target": "Function:fetchEvolutionStatus"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
+      "target": "Function:fetchReflection"
     },
     {
       "relation": "CONTAINS",
@@ -37109,17 +37645,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchEvolutionStatus"
+      "target": "Function:fetchProjectFileContent"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:generateProject"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchMetrics"
+      "target": "Function:fetchProjects"
     },
     {
       "relation": "CONTAINS",
@@ -37128,13 +37659,18 @@
     },
     {
       "relation": "CONTAINS",
-      "source": "frontend/src/services/ragApi.js",
-      "target": "Function:uploadRagDocuments"
+      "source": "frontend/src/services/projectApi.js",
+      "target": "Function:fetchMetrics"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/ragApi.js",
       "target": "Function:queryRagDocuments"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/ragApi.js",
+      "target": "Function:uploadRagDocuments"
     },
     {
       "relation": "IMPORTS",
@@ -37144,17 +37680,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:getSavedMessages"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:getActiveSessionId"
+      "target": "Function:getChatSessions"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
       "target": "Function:clearSessionMessages"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:getActiveSessionId"
     },
     {
       "relation": "CONTAINS",
@@ -37169,7 +37705,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:setActiveSessionId"
+      "target": "Function:saveMessages"
     },
     {
       "relation": "CONTAINS",
@@ -37179,17 +37715,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:saveMessages"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
       "target": "Function:createSessionId"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:getChatSessions"
+      "target": "Function:getSavedMessages"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:setActiveSessionId"
     },
     {
       "relation": "DEPENDS_ON",
@@ -43363,6 +43899,81 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "tests/verify_day90_91_experience_evolution.py",
+      "target": "Function:section"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day90_91_experience_evolution.py",
+      "target": "Function:check"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day90_91_experience_evolution.py",
+      "target": "Function:run_day90_91_tests"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day90_91_experience_evolution.py",
+      "target": "Function:main"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day90_91_experience_evolution.py",
+      "target": "Module:sys"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day90_91_experience_evolution.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day90_91_experience_evolution.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day90_91_experience_evolution.py",
+      "target": "Module:asyncio"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day90_91_experience_evolution.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day90_91_experience_evolution.py",
+      "target": "Module:backend.learning.experience.global_experience_db"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day90_91_experience_evolution.py",
+      "target": "Module:backend.learning.retriever.global_experience_retriever"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day90_91_experience_evolution.py",
+      "target": "Module:backend.evolution.evaluator.global_evolution_evaluator"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day90_91_experience_evolution.py",
+      "target": "Module:backend.evolution.mutation.global_mutation_engine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day90_91_experience_evolution.py",
+      "target": "Module:backend.evolution.evolution_graph.global_evolution_graph_store"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day90_91_experience_evolution.py",
+      "target": "Module:backend.evolution.optimizer.global_agent_optimizer"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "tests/verify_debate_scenarios.py",
       "target": "Function:run_debate_verification"
     },
@@ -43978,14 +44589,14 @@
     }
   ],
   "summary": {
-    "total_files": 761,
-    "total_functions": 1724,
-    "total_classes": 418,
+    "total_files": 775,
+    "total_functions": 1746,
+    "total_classes": 424,
     "total_apis": 115,
     "total_db_models": 0,
     "total_env_vars": 8,
     "total_dependencies": 327,
-    "total_nodes": 3186,
-    "total_edges": 5525
+    "total_nodes": 3227,
+    "total_edges": 5605
   }
 }

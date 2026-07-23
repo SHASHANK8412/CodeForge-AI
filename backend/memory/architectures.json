@@ -63,10 +63,10 @@
     "project_type": "Inventory",
     "architecture": "FastAPI + PostgreSQL + Docker",
     "technologies": [
-      "FastAPI",
-      "Docker",
       "PostgreSQL",
-      "React"
+      "Docker",
+      "React",
+      "FastAPI"
     ],
     "success_rate": 100.0,
     "avg_time_seconds": 32.0,
@@ -74,7 +74,7 @@
     "best_practices": [
       "Proven architecture for Inventory"
     ],
-    "total_runs": 15
+    "total_runs": 20
   },
   "API": {
     "project_type": "API",
@@ -82,7 +82,7 @@
     "technologies": [
       "FastAPI"
     ],
-    "success_rate": 2.1,
+    "success_rate": 1.5,
     "avg_time_seconds": 20.0,
     "common_bugs": [
       "Missing input validation for payload"
@@ -90,16 +90,16 @@
     "best_practices": [
       "Proven architecture for API"
     ],
-    "total_runs": 24
+    "total_runs": 34
   },
   "Dashboard": {
     "project_type": "Dashboard",
     "architecture": "React + FastAPI + PostgreSQL",
     "technologies": [
+      "PostgreSQL",
       "React",
-      "FastAPI",
       "Redis",
-      "PostgreSQL"
+      "FastAPI"
     ],
     "success_rate": 100.0,
     "avg_time_seconds": 36.5,
@@ -107,6 +107,6 @@
     "best_practices": [
       "Proven architecture for Dashboard"
     ],
-    "total_runs": 8
+    "total_runs": 10
   }
 }

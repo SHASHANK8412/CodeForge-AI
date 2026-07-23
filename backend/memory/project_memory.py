@@ -94,3 +94,4 @@ class ProjectMemoryStore:
 
 
 global_project_memory = ProjectMemoryStore()
+ProjectMemory = ProjectMemoryStore

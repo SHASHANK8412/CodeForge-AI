@@ -1,32 +1,18 @@
-"""
 Always use dependency injection.
-Thoroughly validate all inputs to ensure data integrity and security, including payloads.
-Use SOLID principles.
-Include logging to track application behavior and diagnose issues.
-Handle exceptions gracefully to maintain system stability.
 
-[RULE ENFORCEMENT]: System must strictly address reviewer feedback: Missing input validation for payload
-
-[ADDITIONAL REQUIREMENT]: Ensure that all payloads are validated before processing to prevent data integrity and security issues.
-
-[REVISION REQUIRED]: Implement comprehensive input validation for all payloads to ensure data integrity and security. Specifically, validate the following:
+Thoroughly validate all inputs to ensure data integrity and security, including payloads. Specifically, validate:
 - Payload structure
 - Data types of each field
 - Presence of required fields
 - Range or length constraints where applicable
 - Sanitize inputs to remove any malicious code
 
-Ensure that validation is performed at both the API endpoint and within service layers to provide an additional layer of protection.
+Use SOLID principles.
 
-[NEW REQUIREMENT]: Implement JWT authentication for all protected user routes to ensure secure access.
+Include logging to track application behavior and diagnose issues.
 
-[REVISION REQUIRED]: Address the following feedback from the critical review:
-- Ensure input validation is implemented for all payloads.
-- Validate payload structure, data types, presence of required fields, range or length constraints, and sanitize inputs.
-- Apply validation at both API endpoints and service layers.
-- Implement JWT authentication on protected user routes to ensure secure access.
+Handle exceptions gracefully to maintain system stability.
 
-[REVISION REQUIRED]: Explicitly avoid the issue of missing input validation for payloads by implementing comprehensive validation as described above. Ensure that JWT authentication is applied to all protected user routes to prevent unauthorized access.
+Implement JWT authentication for all protected user routes to ensure secure access. Ensure that validation is performed at both the API endpoint and within service layers to provide an additional layer of protection.
 
-[CRITICAL REVISION REQUIRED]: Address the build error encountered during API_Project_0: Missing input validation for payload. Implement comprehensive input validation for all payloads at both the API endpoint and within service layers. Apply JWT authentication on protected user routes.
-"""
+Explicitly validate payloads in all API endpoints to prevent missing input validation errors. Ensure that payload validation is consistently applied across all endpoints to avoid any potential security vulnerabilities or data integrity issues.

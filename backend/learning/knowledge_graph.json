@@ -91,6 +91,126 @@
       "source": "Docker",
       "target": "AI Medical Imaging Portal",
       "relation": "used_in"
+    },
+    {
+      "source": "FastAPI",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "React",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "PostgreSQL",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "Docker",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "FastAPI",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "React",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "PostgreSQL",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "Docker",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "FastAPI",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "React",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "PostgreSQL",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "Docker",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "FastAPI",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "React",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "PostgreSQL",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "Docker",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "FastAPI",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "React",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "PostgreSQL",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "Docker",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "FastAPI",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "React",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "PostgreSQL",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
+    },
+    {
+      "source": "Docker",
+      "target": "AI Medical Imaging Portal",
+      "relation": "used_in"
     }
   ]
 }

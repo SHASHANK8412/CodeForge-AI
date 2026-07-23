@@ -76,7 +76,10 @@ def configure_temp_memory(tmp_path: Path):
     project_root.mkdir(parents=True, exist_ok=True)
     vector_root.mkdir(parents=True, exist_ok=True)
 
-    memory_manager.clear_session("test-session")
+    try:
+        memory_manager.clear_session("test-session")
+    except Exception:
+        pass
 
 
 def mock_graph_agents():

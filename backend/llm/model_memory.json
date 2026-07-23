@@ -548,6 +548,181 @@
       "latency": 1.5,
       "quality_score": 91.0,
       "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 0.06278489995747805,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "quick_fix",
+      "model": "qwen",
+      "latency": 0.06145259994082153,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 0.08,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 1.2,
+      "quality_score": 99.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 1.5,
+      "quality_score": 91.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 0.06338970002252609,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "quick_fix",
+      "model": "qwen",
+      "latency": 0.05315290007274598,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 0.08,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 1.2,
+      "quality_score": 99.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 1.5,
+      "quality_score": 91.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 0.06386729993391782,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "quick_fix",
+      "model": "qwen",
+      "latency": 0.06121289997827262,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 0.08,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 1.2,
+      "quality_score": 99.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 1.5,
+      "quality_score": 91.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 0.05896129994653165,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "quick_fix",
+      "model": "qwen",
+      "latency": 0.05015509994700551,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 0.08,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 1.2,
+      "quality_score": 99.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 1.5,
+      "quality_score": 91.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 0.05895920004695654,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "quick_fix",
+      "model": "qwen",
+      "latency": 0.0557418999960646,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 0.08,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 1.2,
+      "quality_score": 99.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 1.5,
+      "quality_score": 91.0,
+      "cost": 0.0
     }
   ]
 }

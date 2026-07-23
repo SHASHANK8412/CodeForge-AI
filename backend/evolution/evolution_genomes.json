@@ -1,8 +1,8 @@
 {
   "Planner": {
     "agent_role": "Planner",
-    "version": "v2.0",
-    "version_id": 2,
+    "version": "v3.0",
+    "version_id": 3,
     "prompt": "You are an expert Planner engineer focused on performance, accessibility, responsive UI, clean architecture, production-ready code, and high Lighthouse scores.",
     "model": "qwen2.5-coder:latest",
     "temperature": 0.2,
@@ -10,7 +10,7 @@
     "context_size": 16384,
     "memory_usage_mb": 42.0,
     "success_rate_pct": 98.0,
-    "average_score": 97.0
+    "average_score": 100.0
   },
   "Reviewer": {
     "agent_role": "Reviewer",
