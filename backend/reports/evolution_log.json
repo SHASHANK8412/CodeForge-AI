@@ -1,12 +1,12 @@
 [
   {
-    "timestamp": 1784772009.5595534,
+    "timestamp": 1784772216.226151,
     "initial_score": 77,
     "final_score": 95,
     "refactored_files": [
       "backend/main.py"
     ],
     "security_findings_count": 0,
-    "duration_seconds": 0.022303342819213867
+    "duration_seconds": 0.010235071182250977
   }
 ]

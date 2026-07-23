@@ -1,0 +1,8 @@
+{
+  "prompt": "Refactor authentication with JWT verification",
+  "files_modified": [
+    "backend/auth/jwt_handler.py",
+    "backend/routes/auth_routes.py"
+  ],
+  "status": "Success"
+}
