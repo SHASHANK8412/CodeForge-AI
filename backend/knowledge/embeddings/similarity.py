@@ -20,14 +20,22 @@ class SimilarityMatcher:
         # Build keywords list from the target past project
         project_keywords = set()
         
-        name = project.get("name", "").lower()
-        project_type = project.get("type", "").lower()
-        frameworks = [f.lower() for f in project.get("frameworks", "").split(",") if f]
+        name = (project.get("name") or "").lower()
+        project_type = (project.get("type") or "").lower()
+        fw_val = project.get("frameworks") or ""
+        if isinstance(fw_val, list):
+            frameworks = [str(f).lower() for f in fw_val if f]
+        else:
+            frameworks = [f.lower() for f in str(fw_val).split(",") if f]
 
-        project_keywords.add(name)
-        project_keywords.add(project_type)
+        for w in name.split():
+            project_keywords.add(w)
+        for w in project_type.split():
+            project_keywords.add(w)
         for f in frameworks:
             project_keywords.add(f)
+            for w in f.split():
+                project_keywords.add(w)
 
         # Count word overlaps
         overlap = len(prompt_words.intersection(project_keywords))
@@ -53,12 +61,12 @@ class SimilarityMatcher:
                 # Estimate reuse percentage based on similarity score
                 reuse_pct = int(score * 85.0 + 10.0)
                 matches.append({
-                    "project_name": p["name"],
+                    "project_name": p.get("name", p.get("project_name", "Unknown")),
                     "similarity_score": score,
                     "reusable_components": ["Authentication" if score > 0.4 else "Folder layout"],
-                    "architecture_match": p["backend"],
-                    "libraries": p["frameworks"],
-                    "folder_structure": p["folder_structure"],
+                    "architecture_match": p.get("backend", "FastAPI"),
+                    "libraries": p.get("frameworks", []),
+                    "folder_structure": p.get("folder_structure", []),
                     "estimated_reuse_pct": min(95, reuse_pct)
                 })
 

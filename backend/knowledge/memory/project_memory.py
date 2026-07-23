@@ -116,7 +116,12 @@ class ProjectMemory:
                 project.get("build_time", 40),
                 project.get("success_rate", 95.0)
             ))
-            conn.commit()
+    def get_all_projects(self) -> List[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM projects")
+            return [dict(row) for row in cursor.fetchall()]
 
     def save_bug(self, bug: Dict[str, Any]) -> None:
         desc = bug.get("description", "")
