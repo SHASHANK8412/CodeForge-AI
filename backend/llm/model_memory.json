@@ -1,0 +1,63 @@
+{
+  "coding": {
+    "preferred": "deepseek",
+    "qwen_score": 91,
+    "deepseek_score": 99,
+    "gpt_score": 99
+  },
+  "quick_fix": {
+    "preferred": "qwen",
+    "qwen_score": 100,
+    "deepseek_score": 90,
+    "gpt_score": 94
+  },
+  "explanation": {
+    "preferred": "gpt",
+    "qwen_score": 85,
+    "deepseek_score": 92,
+    "gpt_score": 98
+  },
+  "complex_architecture": {
+    "preferred": "gpt",
+    "qwen_score": 88,
+    "deepseek_score": 94,
+    "gpt_score": 99
+  },
+  "history": [
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 0.0558831999078393,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "quick_fix",
+      "model": "qwen",
+      "latency": 0.06445470009930432,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 0.08,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 1.2,
+      "quality_score": 99.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 1.5,
+      "quality_score": 91.0,
+      "cost": 0.0
+    }
+  ]
+}
