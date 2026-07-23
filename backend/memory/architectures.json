@@ -74,7 +74,7 @@
     "best_practices": [
       "Proven architecture for Inventory"
     ],
-    "total_runs": 14
+    "total_runs": 15
   },
   "API": {
     "project_type": "API",
@@ -82,7 +82,7 @@
     "technologies": [
       "FastAPI"
     ],
-    "success_rate": 2.2,
+    "success_rate": 2.1,
     "avg_time_seconds": 20.0,
     "common_bugs": [
       "Missing input validation for payload"
@@ -90,7 +90,7 @@
     "best_practices": [
       "Proven architecture for API"
     ],
-    "total_runs": 23
+    "total_runs": 24
   },
   "Dashboard": {
     "project_type": "Dashboard",

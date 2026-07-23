@@ -152,5 +152,77 @@
     "solution": "Add Pydantic schema validation",
     "confidence": 0.95,
     "timestamp": 1784814306.5767004
+  },
+  {
+    "problem": "Monolithic route files",
+    "solution": "Split routes into modular controllers",
+    "confidence": 0.95,
+    "timestamp": 1784815919.3022034
+  },
+  {
+    "problem": "Missing input validation",
+    "solution": "Add Pydantic schema validation",
+    "confidence": 0.95,
+    "timestamp": 1784815919.3022075
+  },
+  {
+    "problem": "Monolithic route files",
+    "solution": "Split routes into modular controllers",
+    "confidence": 0.95,
+    "timestamp": 1784815919.3700151
+  },
+  {
+    "problem": "Missing input validation",
+    "solution": "Add Pydantic schema validation",
+    "confidence": 0.95,
+    "timestamp": 1784815919.3700178
+  },
+  {
+    "problem": "Monolithic route files",
+    "solution": "Split routes into modular controllers",
+    "confidence": 0.95,
+    "timestamp": 1784815919.4533944
+  },
+  {
+    "problem": "Missing input validation",
+    "solution": "Add Pydantic schema validation",
+    "confidence": 0.95,
+    "timestamp": 1784815919.453397
+  },
+  {
+    "problem": "Monolithic route files",
+    "solution": "Split routes into modular controllers",
+    "confidence": 0.95,
+    "timestamp": 1784815919.6499214
+  },
+  {
+    "problem": "Missing input validation",
+    "solution": "Add Pydantic schema validation",
+    "confidence": 0.95,
+    "timestamp": 1784815919.6499264
+  },
+  {
+    "problem": "Monolithic route files",
+    "solution": "Split routes into modular controllers",
+    "confidence": 0.95,
+    "timestamp": 1784815919.7194939
+  },
+  {
+    "problem": "Missing input validation",
+    "solution": "Add Pydantic schema validation",
+    "confidence": 0.95,
+    "timestamp": 1784815919.7194972
+  },
+  {
+    "problem": "Monolithic route files",
+    "solution": "Split routes into modular controllers",
+    "confidence": 0.95,
+    "timestamp": 1784815919.7923079
+  },
+  {
+    "problem": "Missing input validation",
+    "solution": "Add Pydantic schema validation",
+    "confidence": 0.95,
+    "timestamp": 1784815919.7923703
   }
 ]

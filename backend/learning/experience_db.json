@@ -1,0 +1,100 @@
+[
+  {
+    "experience_id": "exp_001",
+    "prompt": "Build a Food Delivery App",
+    "architecture": "FastAPI + React + MongoDB",
+    "user_preferences": [
+      "FastAPI",
+      "Tailwind",
+      "MongoDB",
+      "Docker",
+      "JWT"
+    ],
+    "bug_fixes": [
+      {
+        "error": "CORS Error",
+        "fix": "allow_origins=['*']"
+      },
+      {
+        "error": "Render timeout",
+        "fix": "Increase worker timeout to 120s"
+      },
+      {
+        "error": "Jest async await failure",
+        "fix": "Use async waitFor wrapper"
+      }
+    ],
+    "deployment_insights": {
+      "status": "success",
+      "worker_timeout_s": 120,
+      "container_ready": true
+    },
+    "performance_score": 93.5,
+    "execution_time_s": 14.2,
+    "llm_used": "qwen2.5-coder:latest",
+    "timestamp": 1784729591.5503073
+  },
+  {
+    "experience_id": "exp_002",
+    "prompt": "Build a Production E-Commerce Microservice",
+    "architecture": "FastAPI + React + MongoDB",
+    "generated_files_count": 0,
+    "bug_fixes": [
+      {
+        "error": "CORS Error",
+        "fix": "allow_origins=['*']"
+      },
+      {
+        "error": "Render timeout",
+        "fix": "Increase worker timeout to 120s"
+      }
+    ],
+    "deployment_insights": {
+      "status": "success",
+      "worker_timeout_s": 120
+    },
+    "user_preferences": [
+      "FastAPI",
+      "Tailwind",
+      "MongoDB",
+      "Docker",
+      "JWT"
+    ],
+    "performance_score": 91.0,
+    "execution_time_s": 12.0,
+    "llm_used": "qwen2.5-coder:latest",
+    "timestamp": 1784815991.6705956
+  },
+  {
+    "experience_id": "exp_003",
+    "prompt": "Deploy Enterprise Analytics Portal",
+    "architecture": "FastAPI + Redis",
+    "generated_files_count": 0,
+    "bug_fixes": [
+      {
+        "error": "CORS Error",
+        "fix": "allow_origins=['*']"
+      },
+      {
+        "error": "Render timeout",
+        "fix": "Increase worker timeout to 120s"
+      }
+    ],
+    "deployment_insights": {
+      "status": "success",
+      "worker_timeout_s": 120,
+      "container_ready": true
+    },
+    "user_preferences": [
+      "FastAPI",
+      "Tailwind",
+      "MongoDB",
+      "Docker",
+      "JWT"
+    ],
+    "performance_score": 94.0,
+    "execution_time_s": 12.0,
+    "llm_used": "qwen2.5-coder:latest",
+    "timestamp": 1784815991.7253492
+  }
+]

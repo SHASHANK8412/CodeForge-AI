@@ -1,0 +1,28 @@
+{
+  "Planner": {
+    "agent_role": "Planner",
+    "version": "v2.0",
+    "version_id": 2,
+    "prompt": "You are an expert Planner engineer focused on performance, accessibility, responsive UI, clean architecture, production-ready code, and high Lighthouse scores.",
+    "model": "qwen2.5-coder:latest",
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "context_size": 16384,
+    "memory_usage_mb": 42.0,
+    "success_rate_pct": 98.0,
+    "average_score": 97.0
+  },
+  "Reviewer": {
+    "agent_role": "Reviewer",
+    "version": "v1.0",
+    "version_id": 1,
+    "prompt": "You are an expert Reviewer Agent.",
+    "model": "qwen2.5-coder:latest",
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "context_size": 16384,
+    "memory_usage_mb": 38.0,
+    "success_rate_pct": 99.0,
+    "average_score": 95.0
+  }
+}

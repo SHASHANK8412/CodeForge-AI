@@ -263,5 +263,75 @@
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
     "timestamp": 1784814382.3197422
+  },
+  {
+    "project_id": "proj_016",
+    "project_name": "MERN Todo Application",
+    "tech_stack": [
+      "React",
+      "Node.js",
+      "Express",
+      "MongoDB",
+      "TailwindCSS"
+    ],
+    "performance_score": 9.8,
+    "overall_score": 95.0,
+    "bugs_fixed_count": 3,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784815904.8199077
+  },
+  {
+    "project_id": "proj_017",
+    "project_name": "MERN Todo Application",
+    "tech_stack": [
+      "React",
+      "Node.js",
+      "Express",
+      "MongoDB",
+      "TailwindCSS"
+    ],
+    "performance_score": 9.8,
+    "overall_score": 95.0,
+    "bugs_fixed_count": 3,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784815904.853482
+  },
+  {
+    "project_id": "proj_018",
+    "project_name": "LMS Education Portal",
+    "tech_stack": [
+      "React",
+      "FastAPI",
+      "PostgreSQL",
+      "Docker"
+    ],
+    "performance_score": 9.8,
+    "overall_score": 95.0,
+    "bugs_fixed_count": 3,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784815904.9203994
+  },
+  {
+    "project_id": "proj_019",
+    "project_name": "LMS Education Portal",
+    "tech_stack": [
+      "React",
+      "FastAPI",
+      "PostgreSQL",
+      "Docker"
+    ],
+    "performance_score": 9.8,
+    "overall_score": 95.0,
+    "bugs_fixed_count": 3,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784815904.9888847
   }
 ]
