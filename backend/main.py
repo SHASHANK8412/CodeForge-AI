@@ -57,6 +57,12 @@ def register_routers() -> None:
     from backend.routes.learning_routes import router as learning_engine_router
     app.include_router(learning_engine_router)
 
+    from backend.routes.graph_routes import router as graph_engine_router
+    app.include_router(graph_engine_router)
+
+    from backend.routes.evolution_routes import router as evolution_engine_router
+    app.include_router(evolution_engine_router)
+
     from backend.api.project import router as project_manager_router
     app.include_router(project_manager_router)
 
