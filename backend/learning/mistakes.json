@@ -88,5 +88,35 @@
     "project": "Build A Saas Crm For Small Businesses",
     "mistake": "Missing input validation",
     "fix": "Add Pydantic schema validation"
+  },
+  {
+    "project": "MERN E-Commerce App",
+    "mistake": "Monolithic route files",
+    "fix": "Split routes into modular controllers"
+  },
+  {
+    "project": "MERN E-Commerce App",
+    "mistake": "Missing input validation",
+    "fix": "Add Pydantic schema validation"
+  },
+  {
+    "project": "MERN E-Commerce App V2",
+    "mistake": "Monolithic route files",
+    "fix": "Split routes into modular controllers"
+  },
+  {
+    "project": "MERN E-Commerce App V2",
+    "mistake": "Missing input validation",
+    "fix": "Add Pydantic schema validation"
+  },
+  {
+    "project": "Build A Saas Crm For Small Businesses",
+    "mistake": "Monolithic route files",
+    "fix": "Split routes into modular controllers"
+  },
+  {
+    "project": "Build A Saas Crm For Small Businesses",
+    "mistake": "Missing input validation",
+    "fix": "Add Pydantic schema validation"
   }
 ]

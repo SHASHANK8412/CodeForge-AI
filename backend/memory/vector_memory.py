@@ -83,3 +83,4 @@ class VectorMemoryStore:
 
 
 global_vector_memory = VectorMemoryStore()
+VectorMemory = VectorMemoryStore

@@ -11,7 +11,9 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784382076.6439812
+    "timestamp": 1784382076.6439812,
+    "bugs_fixed_count": 3,
+    "overall_score": 95.0
   },
   {
     "project_id": "proj_002",
@@ -26,6 +28,240 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 96.0,
-    "timestamp": 1784814128.05445
+    "timestamp": 1784814128.05445,
+    "bugs_fixed_count": 3,
+    "overall_score": 95.0
+  },
+  {
+    "project_id": "proj_003",
+    "project_name": "MERN Todo Application",
+    "tech_stack": [
+      "React",
+      "Node.js",
+      "Express",
+      "MongoDB",
+      "TailwindCSS"
+    ],
+    "performance_score": 9.8,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784814281.0788496,
+    "bugs_fixed_count": 3,
+    "overall_score": 95.0
+  },
+  {
+    "project_id": "proj_004",
+    "project_name": "MERN Todo Application",
+    "tech_stack": [
+      "React",
+      "Node.js",
+      "Express",
+      "MongoDB",
+      "TailwindCSS"
+    ],
+    "performance_score": 9.8,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784814294.5263665,
+    "bugs_fixed_count": 3,
+    "overall_score": 95.0
+  },
+  {
+    "project_id": "proj_005",
+    "project_name": "MERN Todo Application",
+    "tech_stack": [
+      "React",
+      "Node.js",
+      "Express",
+      "MongoDB",
+      "TailwindCSS"
+    ],
+    "performance_score": 9.8,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784814302.4102714,
+    "bugs_fixed_count": 3,
+    "overall_score": 95.0
+  },
+  {
+    "project_id": "proj_006",
+    "project_name": "MERN Todo Application",
+    "tech_stack": [
+      "React",
+      "Node.js",
+      "Express",
+      "MongoDB",
+      "TailwindCSS"
+    ],
+    "performance_score": 9.8,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784814304.8370106,
+    "bugs_fixed_count": 3,
+    "overall_score": 95.0
+  },
+  {
+    "project_id": "proj_007",
+    "project_name": "MERN Todo Application",
+    "tech_stack": [
+      "React",
+      "Node.js",
+      "Express",
+      "MongoDB",
+      "TailwindCSS"
+    ],
+    "performance_score": 9.8,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784814314.1133773,
+    "bugs_fixed_count": 3,
+    "overall_score": 95.0
+  },
+  {
+    "project_id": "proj_008",
+    "project_name": "MERN Todo Application",
+    "tech_stack": [
+      "React",
+      "Node.js",
+      "Express",
+      "MongoDB",
+      "TailwindCSS"
+    ],
+    "performance_score": 9.8,
+    "overall_score": 95.0,
+    "bugs_fixed_count": 3,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784814328.3224924
+  },
+  {
+    "project_id": "proj_009",
+    "project_name": "MERN Todo Application",
+    "tech_stack": [
+      "React",
+      "Node.js",
+      "Express",
+      "MongoDB",
+      "TailwindCSS"
+    ],
+    "performance_score": 9.8,
+    "overall_score": 95.0,
+    "bugs_fixed_count": 3,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784814341.822482
+  },
+  {
+    "project_id": "proj_010",
+    "project_name": "MERN Todo Application",
+    "tech_stack": [
+      "React",
+      "Node.js",
+      "Express",
+      "MongoDB",
+      "TailwindCSS"
+    ],
+    "performance_score": 9.8,
+    "overall_score": 95.0,
+    "bugs_fixed_count": 3,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784814351.2823062
+  },
+  {
+    "project_id": "proj_011",
+    "project_name": "MERN Todo Application",
+    "tech_stack": [
+      "React",
+      "Node.js",
+      "Express",
+      "MongoDB",
+      "TailwindCSS"
+    ],
+    "performance_score": 9.8,
+    "overall_score": 95.0,
+    "bugs_fixed_count": 3,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784814361.3995323
+  },
+  {
+    "project_id": "proj_012",
+    "project_name": "MERN Todo Application",
+    "tech_stack": [
+      "React",
+      "Node.js",
+      "Express",
+      "MongoDB",
+      "TailwindCSS"
+    ],
+    "performance_score": 9.8,
+    "overall_score": 95.0,
+    "bugs_fixed_count": 3,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784814371.4023476
+  },
+  {
+    "project_id": "proj_013",
+    "project_name": "LMS Education Portal",
+    "tech_stack": [
+      "React",
+      "FastAPI",
+      "PostgreSQL",
+      "Docker"
+    ],
+    "performance_score": 9.8,
+    "overall_score": 95.0,
+    "bugs_fixed_count": 3,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784814371.4975424
+  },
+  {
+    "project_id": "proj_014",
+    "project_name": "MERN Todo Application",
+    "tech_stack": [
+      "React",
+      "Node.js",
+      "Express",
+      "MongoDB",
+      "TailwindCSS"
+    ],
+    "performance_score": 9.8,
+    "overall_score": 95.0,
+    "bugs_fixed_count": 3,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784814382.267777
+  },
+  {
+    "project_id": "proj_015",
+    "project_name": "LMS Education Portal",
+    "tech_stack": [
+      "React",
+      "FastAPI",
+      "PostgreSQL",
+      "Docker"
+    ],
+    "performance_score": 9.8,
+    "overall_score": 95.0,
+    "bugs_fixed_count": 3,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784814382.3197422
   }
 ]

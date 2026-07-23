@@ -603,5 +603,61 @@
     "rating": 98.0,
     "user_prompt": "Build an Inventory Management System",
     "timestamp": 1784814127.8191054
+  },
+  {
+    "id": "exp_1784814178971",
+    "project": "API_Project_0",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI",
+    "success": false,
+    "execution_time": 20.0,
+    "errors": [
+      "Missing input validation for payload"
+    ],
+    "fixes": [],
+    "rating": 75.0,
+    "user_prompt": "Build User API",
+    "timestamp": 1784814178.9711509
+  },
+  {
+    "id": "exp_1784814291293",
+    "project": "API_Project_1",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI",
+    "success": false,
+    "execution_time": 20.0,
+    "errors": [
+      "Missing input validation for payload"
+    ],
+    "fixes": [],
+    "rating": 75.0,
+    "user_prompt": "Build User API",
+    "timestamp": 1784814291.2939768
+  },
+  {
+    "id": "exp_1784814397728",
+    "project": "Inventory App",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI + PostgreSQL + Docker",
+    "success": true,
+    "execution_time": 32.0,
+    "errors": [],
+    "fixes": [],
+    "rating": 98.0,
+    "user_prompt": "Build an Inventory Management System",
+    "timestamp": 1784814397.7281995
+  },
+  {
+    "id": "exp_1784814397745",
+    "project": "Inventory App",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI + PostgreSQL + Docker",
+    "success": true,
+    "execution_time": 32.0,
+    "errors": [],
+    "fixes": [],
+    "rating": 98.0,
+    "user_prompt": "Build an Inventory Management System",
+    "timestamp": 1784814397.7453847
   }
 ]

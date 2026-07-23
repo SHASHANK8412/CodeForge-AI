@@ -14,5 +14,29 @@
     "success": true,
     "duration_seconds": 2.5,
     "confidence": 0.95
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "PostgreSQL unavailable",
+    "strategy": "Restart Backend Process",
+    "success": false,
+    "duration_seconds": 0.8006198406219482,
+    "confidence": 0.96
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "PostgreSQL unavailable",
+    "strategy": "Restart Database",
+    "success": false,
+    "duration_seconds": 1.8008551597595215,
+    "confidence": 0.96
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "PostgreSQL unavailable",
+    "strategy": "Restart Database",
+    "success": false,
+    "duration_seconds": 2.8015363216400146,
+    "confidence": 0.96
   }
 ]

@@ -35,3 +35,4 @@ class SemanticSimilarityEngine:
 
 
 global_similarity_engine = SemanticSimilarityEngine()
+SimilaritySearchEngine = SemanticSimilarityEngine
