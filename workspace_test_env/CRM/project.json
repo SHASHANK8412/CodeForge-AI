@@ -1,0 +1,10 @@
+{
+  "id": "proj_crm",
+  "name": "CRM",
+  "description": "CRM Enterprise Suite",
+  "status": "ACTIVE",
+  "created_at": 1784813015.122307,
+  "updated_at": 1784813015.125462,
+  "chat_history_count": 0,
+  "logs_count": 0
+}

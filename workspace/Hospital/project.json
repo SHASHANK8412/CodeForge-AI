@@ -1,0 +1,10 @@
+{
+  "id": "proj_hospital",
+  "name": "Hospital",
+  "description": "Hospital Enterprise Suite",
+  "status": "ACTIVE",
+  "created_at": 1784813015.0720177,
+  "updated_at": 1784813015.0747945,
+  "chat_history_count": 0,
+  "logs_count": 0
+}
