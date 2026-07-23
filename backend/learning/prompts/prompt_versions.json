@@ -1,0 +1,62 @@
+[
+  {
+    "version": "v1.0",
+    "agent": "planner",
+    "quality_score": 82.0
+  },
+  {
+    "version": "v2.0",
+    "agent": "planner",
+    "quality_score": 94.0
+  },
+  {
+    "version": "v3.0",
+    "agent": "planner",
+    "quality_score": 98.0
+  },
+  {
+    "version": "v4.0",
+    "agent": "backend",
+    "quality_score": 97.5
+  },
+  {
+    "version": "v5.0",
+    "agent": "backend",
+    "quality_score": 97.5
+  },
+  {
+    "version": "v6.0",
+    "agent": "backend",
+    "quality_score": 97.5
+  },
+  {
+    "version": "v7.0",
+    "agent": "backend",
+    "quality_score": 97.5
+  },
+  {
+    "version": "v8.0",
+    "agent": "backend",
+    "quality_score": 97.5
+  },
+  {
+    "version": "v9.0",
+    "agent": "backend",
+    "quality_score": 97.5
+  },
+  {
+    "version": "v10.0",
+    "agent": "backend",
+    "quality_score": 97.5
+  },
+  {
+    "version": "v11.0",
+    "agent": "backend",
+    "quality_score": 97.5
+  },
+  {
+    "version": "v12.0",
+    "agent": "backend",
+    "quality_score": 97.5
+  }
+]

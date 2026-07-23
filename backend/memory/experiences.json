@@ -1,0 +1,200 @@
+[
+  {
+    "id": "exp_init_1",
+    "project": "Food Delivery App",
+    "language": "React/FastAPI",
+    "architecture": "MERN",
+    "success": true,
+    "execution_time": 42.0,
+    "errors": [
+      "Missing authentication"
+    ],
+    "fixes": [
+      "Added JWT"
+    ],
+    "rating": 95.0,
+    "user_prompt": "Build Food Delivery App with JWT",
+    "timestamp": 1784725433.8635862
+  },
+  {
+    "id": "exp_init_2",
+    "project": "Chat Application",
+    "language": "React/FastAPI",
+    "architecture": "React + FastAPI + Redis + Postgres",
+    "success": true,
+    "execution_time": 38.5,
+    "errors": [],
+    "fixes": [],
+    "rating": 98.0,
+    "user_prompt": "Build real-time chat app",
+    "timestamp": 1784768633.863589
+  },
+  {
+    "id": "exp_1784811833905",
+    "project": "Inventory App",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI + PostgreSQL + Docker",
+    "success": true,
+    "execution_time": 32.0,
+    "errors": [],
+    "fixes": [],
+    "rating": 98.0,
+    "user_prompt": "Build an Inventory Management System",
+    "timestamp": 1784811833.9051595
+  },
+  {
+    "id": "exp_1784811863663",
+    "project": "API_Project_0",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI",
+    "success": false,
+    "execution_time": 20.0,
+    "errors": [
+      "Missing input validation for payload"
+    ],
+    "fixes": [],
+    "rating": 75.0,
+    "user_prompt": "Build User API",
+    "timestamp": 1784811863.6636813
+  },
+  {
+    "id": "exp_1784811869104",
+    "project": "Inventory App",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI + PostgreSQL + Docker",
+    "success": true,
+    "execution_time": 32.0,
+    "errors": [],
+    "fixes": [],
+    "rating": 98.0,
+    "user_prompt": "Build an Inventory Management System",
+    "timestamp": 1784811869.1047742
+  },
+  {
+    "id": "exp_1784811875363",
+    "project": "API_Project_1",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI",
+    "success": false,
+    "execution_time": 20.0,
+    "errors": [
+      "Missing input validation for payload"
+    ],
+    "fixes": [],
+    "rating": 75.0,
+    "user_prompt": "Build User API",
+    "timestamp": 1784811875.3630722
+  },
+  {
+    "id": "exp_1784811881434",
+    "project": "API_Project_0",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI",
+    "success": false,
+    "execution_time": 20.0,
+    "errors": [
+      "Missing input validation for payload"
+    ],
+    "fixes": [],
+    "rating": 75.0,
+    "user_prompt": "Build User API",
+    "timestamp": 1784811881.4346526
+  },
+  {
+    "id": "exp_1784811894359",
+    "project": "SaaS Analytics Dashboard",
+    "language": "React/FastAPI",
+    "architecture": "React + FastAPI + PostgreSQL",
+    "success": true,
+    "execution_time": 36.5,
+    "errors": [],
+    "fixes": [],
+    "rating": 99.0,
+    "user_prompt": "Build a SaaS Analytics Dashboard",
+    "timestamp": 1784811894.3597307
+  },
+  {
+    "id": "exp_1784811902332",
+    "project": "Inventory App",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI + PostgreSQL + Docker",
+    "success": true,
+    "execution_time": 32.0,
+    "errors": [],
+    "fixes": [],
+    "rating": 98.0,
+    "user_prompt": "Build an Inventory Management System",
+    "timestamp": 1784811902.3323724
+  },
+  {
+    "id": "exp_1784811902445",
+    "project": "API_Project_0",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI",
+    "success": false,
+    "execution_time": 20.0,
+    "errors": [
+      "Missing input validation for payload"
+    ],
+    "fixes": [],
+    "rating": 75.0,
+    "user_prompt": "Build User API",
+    "timestamp": 1784811902.4452288
+  },
+  {
+    "id": "exp_1784811902494",
+    "project": "API_Project_1",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI",
+    "success": false,
+    "execution_time": 20.0,
+    "errors": [
+      "Missing input validation for payload"
+    ],
+    "fixes": [],
+    "rating": 75.0,
+    "user_prompt": "Build User API",
+    "timestamp": 1784811902.4947367
+  },
+  {
+    "id": "exp_1784811902614",
+    "project": "SaaS Analytics Dashboard",
+    "language": "React/FastAPI",
+    "architecture": "React + FastAPI + PostgreSQL",
+    "success": true,
+    "execution_time": 36.5,
+    "errors": [],
+    "fixes": [],
+    "rating": 99.0,
+    "user_prompt": "Build a SaaS Analytics Dashboard",
+    "timestamp": 1784811902.614313
+  },
+  {
+    "id": "exp_1784811904286",
+    "project": "API_Project_1",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI",
+    "success": false,
+    "execution_time": 20.0,
+    "errors": [
+      "Missing input validation for payload"
+    ],
+    "fixes": [],
+    "rating": 75.0,
+    "user_prompt": "Build User API",
+    "timestamp": 1784811904.2868097
+  },
+  {
+    "id": "exp_1784811916539",
+    "project": "SaaS Analytics Dashboard",
+    "language": "React/FastAPI",
+    "architecture": "React + FastAPI + PostgreSQL",
+    "success": true,
+    "execution_time": 36.5,
+    "errors": [],
+    "fixes": [],
+    "rating": 99.0,
+    "user_prompt": "Build a SaaS Analytics Dashboard",
+    "timestamp": 1784811916.539409
+  }
+]

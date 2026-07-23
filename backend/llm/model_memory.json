@@ -58,6 +58,111 @@
       "latency": 1.5,
       "quality_score": 91.0,
       "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 0.05681929993443191,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "quick_fix",
+      "model": "qwen",
+      "latency": 0.06566209997981787,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 0.08,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 1.2,
+      "quality_score": 99.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 1.5,
+      "quality_score": 91.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 0.06006689998321235,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "quick_fix",
+      "model": "qwen",
+      "latency": 0.05126390000805259,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 0.08,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 1.2,
+      "quality_score": 99.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 1.5,
+      "quality_score": 91.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 0.06360439991112798,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "quick_fix",
+      "model": "qwen",
+      "latency": 0.05574510002043098,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 0.08,
+      "quality_score": 100.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "deepseek",
+      "latency": 1.2,
+      "quality_score": 99.0,
+      "cost": 0.0
+    },
+    {
+      "task_type": "coding",
+      "model": "qwen",
+      "latency": 1.5,
+      "quality_score": 91.0,
+      "cost": 0.0
     }
   ]
 }

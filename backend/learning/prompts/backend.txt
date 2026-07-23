@@ -1,5 +1,8 @@
+"""
 Always use dependency injection.
-Validate inputs.
+Thoroughly validate all inputs to ensure data integrity and security, including payloads.
 Use SOLID principles.
-Include logging.
-Handle exceptions.
+Include logging to track application behavior and diagnose issues.
+Handle exceptions gracefully to maintain system stability.
+Implement JWT authentication for all protected user routes.
+"""

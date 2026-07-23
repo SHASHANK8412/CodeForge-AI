@@ -1,0 +1,112 @@
+{
+  "Chat App": {
+    "project_type": "Chat App",
+    "architecture": "React + FastAPI + Redis + Postgres",
+    "technologies": [
+      "React",
+      "FastAPI",
+      "Redis",
+      "PostgreSQL",
+      "Socket.io"
+    ],
+    "success_rate": 98.0,
+    "avg_time_seconds": 38.5,
+    "common_bugs": [
+      "WebSocket connection disconnect"
+    ],
+    "best_practices": [
+      "Use Redis pub/sub for WebSocket message broadcasting"
+    ],
+    "total_runs": 12
+  },
+  "Todo App": {
+    "project_type": "Todo App",
+    "architecture": "React + FastAPI + SQLite + JWT",
+    "technologies": [
+      "React",
+      "FastAPI",
+      "SQLite",
+      "JWT",
+      "TailwindCSS"
+    ],
+    "success_rate": 99.0,
+    "avg_time_seconds": 25.0,
+    "common_bugs": [
+      "Missing JWT middleware on CRUD endpoints"
+    ],
+    "best_practices": [
+      "Enforce JWT dependency injection on all route handlers"
+    ],
+    "total_runs": 25
+  },
+  "E-Commerce": {
+    "project_type": "E-Commerce",
+    "architecture": "React + Express + MongoDB + Stripe",
+    "technologies": [
+      "React",
+      "Express",
+      "MongoDB",
+      "Stripe",
+      "Docker"
+    ],
+    "success_rate": 96.0,
+    "avg_time_seconds": 45.0,
+    "common_bugs": [
+      "Unchecked payment webhook signatures"
+    ],
+    "best_practices": [
+      "Verify Stripe raw body webhook signatures"
+    ],
+    "total_runs": 18
+  },
+  "Inventory": {
+    "project_type": "Inventory",
+    "architecture": "FastAPI + PostgreSQL + Docker",
+    "technologies": [
+      "React",
+      "Docker",
+      "PostgreSQL",
+      "FastAPI"
+    ],
+    "success_rate": 100.0,
+    "avg_time_seconds": 32.0,
+    "common_bugs": [],
+    "best_practices": [
+      "Proven architecture for Inventory"
+    ],
+    "total_runs": 3
+  },
+  "API": {
+    "project_type": "API",
+    "architecture": "FastAPI",
+    "technologies": [
+      "FastAPI"
+    ],
+    "success_rate": 8.3,
+    "avg_time_seconds": 20.0,
+    "common_bugs": [
+      "Missing input validation for payload"
+    ],
+    "best_practices": [
+      "Proven architecture for API"
+    ],
+    "total_runs": 6
+  },
+  "Dashboard": {
+    "project_type": "Dashboard",
+    "architecture": "React + FastAPI + PostgreSQL",
+    "technologies": [
+      "FastAPI",
+      "PostgreSQL",
+      "Redis",
+      "React"
+    ],
+    "success_rate": 100.0,
+    "avg_time_seconds": 36.5,
+    "common_bugs": [],
+    "best_practices": [
+      "Proven architecture for Dashboard"
+    ],
+    "total_runs": 3
+  }
+}

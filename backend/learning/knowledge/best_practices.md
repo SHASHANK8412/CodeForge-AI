@@ -26,3 +26,5 @@ Master guidelines compiled from successful project builds.
 * **Security Protocols**: Use JWT middleware.
 * **API Schema**: Always use DTOs.
 * **Score**: 92%
+
+* Always enforce Pydantic v2 schemas and input sanitization headers.

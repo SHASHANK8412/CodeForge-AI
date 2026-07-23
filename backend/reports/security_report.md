@@ -1,6 +1,4 @@
-# Security Audit & Vulnerabilities Report
-
-Review of CORS policies, token authentication patterns, and validation layers.
-
-## 1. Audit Summary Findings
-Detected 0 potential vulnerability indicators:
+# Security Vulnerability Audit
+- SQL Injection: Critical (backend/routes/auth.py:24)
+- Hardcoded Secret: High (SECRET_KEY='123456')
+- Wildcard CORS: Medium (allow_origins=['*'])

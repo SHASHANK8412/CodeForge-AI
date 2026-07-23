@@ -1,0 +1,38 @@
+[
+  {
+    "id": "bp_1",
+    "rule": "Always enforce JWT token authentication and expiration limits on protected endpoints."
+  },
+  {
+    "id": "bp_2",
+    "rule": "Always validate inputs using Pydantic v2 schemas and sanitize request payloads."
+  },
+  {
+    "id": "bp_3",
+    "rule": "Always parameterize SQL queries to prevent SQL injection vulnerabilities."
+  },
+  {
+    "id": "bp_4",
+    "rule": "Always restrict CORS headers to explicit trusted origin domains."
+  },
+  {
+    "id": "bp_5",
+    "rule": "Always include pagination parameters (limit & offset) on database list queries."
+  },
+  {
+    "id": "bp_6",
+    "rule": "Always cache expensive API endpoints using Redis or LRU memory caches."
+  },
+  {
+    "id": "bp_7",
+    "rule": "Always write automated unit tests for core backend services and route controllers."
+  },
+  {
+    "id": "bp_8",
+    "rule": "Always generate Docker multi-stage build files with a non-root appuser."
+  },
+  {
+    "id": "bp_9",
+    "rule": "Always enforce Pydantic v2 schemas and input sanitization headers."
+  }
+]
