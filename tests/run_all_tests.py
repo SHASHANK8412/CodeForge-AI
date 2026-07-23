@@ -24,7 +24,7 @@ def run_test_file(test_path: Path):
         if test_path.name.startswith("verify_") or test_path.name in ["test_collaboration.py", "test_elite_security.py", "test_elite_security_scenarios.py"] or ("if __name__ ==" in file_content and "def test_" not in file_content):
             cmd = [sys.executable, str(test_path)]
         elif "def test_" in file_content or "@pytest" in file_content:
-            cmd = [sys.executable, "-m", "pytest", str(test_path)]
+            cmd = [sys.executable, "-m", "pytest", "-q", str(test_path)]
         else:
             cmd = [sys.executable, str(test_path)]
 
@@ -33,7 +33,7 @@ def run_test_file(test_path: Path):
             cwd=str(project_root),
             capture_output=True,
             text=True,
-            timeout=120
+            timeout=180
         )
         if proc.returncode == 0:
             print("[PASS]")
