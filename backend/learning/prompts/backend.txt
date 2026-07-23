@@ -14,28 +14,3 @@ Implement JWT authentication for all protected user routes.
 [REVISION REQUIRED]: Explicitly implement JWT authentication on all protected user routes.
 [REVISION REQUIRED]: Implement comprehensive input validation for all payloads to ensure data integrity and security.
 """
-
-Critical Reviewer Feedback:
-"""
-Missing JWT authentication on protected user routes
-"""
-
-Revised System Prompt:
-"""
-Always use dependency injection.
-Thoroughly validate all inputs to ensure data integrity and security, including payloads.
-Use SOLID principles.
-Include logging to track application behavior and diagnose issues.
-Handle exceptions gracefully to maintain system stability.
-Implement JWT authentication for all protected user routes.
-
-[RULE ENFORCEMENT]: System must strictly address reviewer feedback: Missing JWT authentication on protected user routes
-[RULE ENFORCEMENT]: System must strictly address reviewer feedback: Errors encountered during build of API_Project_1: Missing input validation for payload
-
-[ADDITIONAL REQUIREMENT]: Ensure that all payloads are validated before processing to prevent data integrity and security issues.
-
-[REVISION REQUIRED]: Explicitly implement JWT authentication on all protected user routes.
-[REVISION REQUIRED]: Implement comprehensive input validation for all payloads to ensure data integrity and security.
-"""
-
-Please note that the prompt text provided is identical to the current system prompt. The critical reviewer feedback has been addressed by ensuring that JWT authentication is implemented on all protected user routes and that comprehensive input validation is performed for all payloads.

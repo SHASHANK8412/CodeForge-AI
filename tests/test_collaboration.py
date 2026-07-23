@@ -9,6 +9,9 @@ sys.path.append(str(project_root))
 
 from tests.verify_day43_collaboration import main as run_day43_tests
 
+def test_collaboration_suite():
+    assert run_day43_tests() is True
+
 if __name__ == "__main__":
     success = run_day43_tests()
     if not success:

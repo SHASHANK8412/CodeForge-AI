@@ -44,5 +44,41 @@
     "solution": "Add Pydantic schema validation",
     "confidence": 0.95,
     "timestamp": 1784813332.6492095
+  },
+  {
+    "problem": "Monolithic route files",
+    "solution": "Split routes into modular controllers",
+    "confidence": 0.95,
+    "timestamp": 1784813369.2203672
+  },
+  {
+    "problem": "Missing input validation",
+    "solution": "Add Pydantic schema validation",
+    "confidence": 0.95,
+    "timestamp": 1784813369.2203708
+  },
+  {
+    "problem": "Monolithic route files",
+    "solution": "Split routes into modular controllers",
+    "confidence": 0.95,
+    "timestamp": 1784813369.2827904
+  },
+  {
+    "problem": "Missing input validation",
+    "solution": "Add Pydantic schema validation",
+    "confidence": 0.95,
+    "timestamp": 1784813369.2827933
+  },
+  {
+    "problem": "Monolithic route files",
+    "solution": "Split routes into modular controllers",
+    "confidence": 0.95,
+    "timestamp": 1784813369.3307562
+  },
+  {
+    "problem": "Missing input validation",
+    "solution": "Add Pydantic schema validation",
+    "confidence": 0.95,
+    "timestamp": 1784813369.3307588
   }
 ]

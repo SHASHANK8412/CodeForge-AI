@@ -1110,6 +1110,35 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/agents/architecture_recommender.py"
+    },
+    {
+      "node_type": "class",
+      "name": "ArchitectureRecommenderAgent",
+      "file": "backend/agents/architecture_recommender.py",
+      "id": "Class:ArchitectureRecommenderAgent"
+    },
+    {
+      "node_type": "function",
+      "name": "recommend_architecture",
+      "file": "backend/knowledge/recommendation/recommender.py",
+      "id": "Function:recommend_architecture"
+    },
+    {
+      "id": "Module:logging"
+    },
+    {
+      "id": "Module:typing.Dict"
+    },
+    {
+      "id": "Module:typing.Any"
+    },
+    {
+      "id": "Module:typing.List"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/agents/architect_agent.py"
     },
     {
@@ -1199,6 +1228,77 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/agents/collaboration_agent.py"
+    },
+    {
+      "node_type": "class",
+      "name": "EnterpriseCollaborationAgent",
+      "file": "backend/agents/collaboration_agent.py",
+      "id": "Class:EnterpriseCollaborationAgent"
+    },
+    {
+      "node_type": "function",
+      "name": "join_collaboration_session",
+      "file": "backend/agents/collaboration_agent.py",
+      "id": "Function:join_collaboration_session"
+    },
+    {
+      "node_type": "function",
+      "name": "resolve_conflicting_edits",
+      "file": "backend/agents/collaboration_agent.py",
+      "id": "Function:resolve_conflicting_edits"
+    },
+    {
+      "node_type": "function",
+      "name": "check_user_permission",
+      "file": "backend/agents/collaboration_agent.py",
+      "id": "Function:check_user_permission"
+    },
+    {
+      "node_type": "function",
+      "name": "get_workspace_snapshot",
+      "file": "backend/agents/collaboration_agent.py",
+      "id": "Function:get_workspace_snapshot"
+    },
+    {
+      "id": "Module:typing.Optional"
+    },
+    {
+      "id": "Module:backend.collaboration.workspace.SharedAIWorkspace"
+    },
+    {
+      "id": "Module:backend.collaboration.workspace.global_shared_workspace"
+    },
+    {
+      "id": "Module:backend.collaboration.presence.PresenceTracker"
+    },
+    {
+      "id": "Module:backend.collaboration.comments.CommentEngine"
+    },
+    {
+      "id": "Module:backend.collaboration.comments.global_comment_engine"
+    },
+    {
+      "id": "Module:backend.collaboration.permissions.RBACPermissionsManager"
+    },
+    {
+      "id": "Module:backend.collaboration.permissions.global_permissions_manager"
+    },
+    {
+      "id": "Module:backend.collaboration.history.VersionTimelineEngine"
+    },
+    {
+      "id": "Module:backend.collaboration.history.global_version_timeline"
+    },
+    {
+      "id": "Module:backend.collaboration.merge_engine.AIMergeEngine"
+    },
+    {
+      "id": "Module:backend.collaboration.merge_engine.global_merge_engine"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/agents/confidence_agent.py"
     },
     {
@@ -1214,16 +1314,21 @@
       "id": "Function:evaluate_confidence"
     },
     {
-      "id": "Module:logging"
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/agents/cost_estimator.py"
     },
     {
-      "id": "Module:typing.Dict"
+      "node_type": "class",
+      "name": "CostEstimatorAgent",
+      "file": "backend/agents/cost_estimator.py",
+      "id": "Class:CostEstimatorAgent"
     },
     {
-      "id": "Module:typing.Any"
-    },
-    {
-      "id": "Module:typing.List"
+      "node_type": "function",
+      "name": "estimate_costs",
+      "file": "backend/agents/cost_estimator.py",
+      "id": "Function:estimate_costs"
     },
     {
       "node_type": "file",
@@ -1335,9 +1440,6 @@
       "id": "Function:update_documentation"
     },
     {
-      "id": "Module:typing.Optional"
-    },
-    {
       "id": "Module:backend.repository.indexer.RepositoryIndexer"
     },
     {
@@ -1415,6 +1517,23 @@
     },
     {
       "id": "Module:backend.agents.frontend_agent.FrontendAgent"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/agents/feature_prioritizer.py"
+    },
+    {
+      "node_type": "class",
+      "name": "FeaturePrioritizerAgent",
+      "file": "backend/agents/feature_prioritizer.py",
+      "id": "Class:FeaturePrioritizerAgent"
+    },
+    {
+      "node_type": "function",
+      "name": "prioritize_features",
+      "file": "backend/agents/feature_prioritizer.py",
+      "id": "Function:prioritize_features"
     },
     {
       "node_type": "file",
@@ -1528,6 +1647,64 @@
       "name": "PlannerAgent",
       "file": "backend/agents/planner_agent.py",
       "id": "Class:PlannerAgent"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/agents/product_builder.py"
+    },
+    {
+      "node_type": "class",
+      "name": "MasterProductBuilderPipeline",
+      "file": "backend/agents/product_builder.py",
+      "id": "Class:MasterProductBuilderPipeline"
+    },
+    {
+      "node_type": "function",
+      "name": "build_autonomous_product",
+      "file": "backend/agents/product_builder.py",
+      "id": "Function:build_autonomous_product"
+    },
+    {
+      "id": "Module:backend.agents.product_planner.ProductPlannerAgent"
+    },
+    {
+      "id": "Module:backend.agents.feature_prioritizer.FeaturePrioritizerAgent"
+    },
+    {
+      "id": "Module:backend.agents.architecture_recommender.ArchitectureRecommenderAgent"
+    },
+    {
+      "id": "Module:backend.agents.cost_estimator.CostEstimatorAgent"
+    },
+    {
+      "id": "Module:backend.agents.startup_score_agent.StartupScoreAgent"
+    },
+    {
+      "id": "Module:backend.agents.quality_analyzer.EnterpriseQualityAnalyzer"
+    },
+    {
+      "id": "Module:backend.agents.learning_agent.LearningAgent"
+    },
+    {
+      "id": "Module:backend.agents.confidence_agent.ConfidenceAgent"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/agents/product_planner.py"
+    },
+    {
+      "node_type": "class",
+      "name": "ProductPlannerAgent",
+      "file": "backend/agents/product_planner.py",
+      "id": "Class:ProductPlannerAgent"
+    },
+    {
+      "node_type": "function",
+      "name": "plan_product",
+      "file": "backend/agents/product_planner.py",
+      "id": "Function:plan_product"
     },
     {
       "node_type": "file",
@@ -1664,6 +1841,64 @@
     },
     {
       "id": "Module:backend.agents.factory.AgentFactory"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/agents/sprint_manager.py"
+    },
+    {
+      "node_type": "class",
+      "name": "EnterpriseSprintManagerAgent",
+      "file": "backend/agents/sprint_manager.py",
+      "id": "Class:EnterpriseSprintManagerAgent"
+    },
+    {
+      "node_type": "function",
+      "name": "plan_sprint_management",
+      "file": "backend/agents/sprint_manager.py",
+      "id": "Function:plan_sprint_management"
+    },
+    {
+      "node_type": "function",
+      "name": "replan_on_scope_change",
+      "file": "backend/agents/sprint_manager.py",
+      "id": "Function:replan_on_scope_change"
+    },
+    {
+      "id": "Module:backend.project_management.task_splitter.TaskSplitter"
+    },
+    {
+      "id": "Module:backend.project_management.estimator.TaskEstimator"
+    },
+    {
+      "id": "Module:backend.project_management.dependency_graph.ProjectDependencyGraph"
+    },
+    {
+      "id": "Module:backend.project_management.kanban.KanbanBoardGenerator"
+    },
+    {
+      "id": "Module:backend.project_management.roadmap_generator.RoadmapGenerator"
+    },
+    {
+      "id": "Module:backend.project_management.velocity.VelocityCalculator"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/agents/startup_score_agent.py"
+    },
+    {
+      "node_type": "class",
+      "name": "StartupScoreAgent",
+      "file": "backend/agents/startup_score_agent.py",
+      "id": "Class:StartupScoreAgent"
+    },
+    {
+      "node_type": "function",
+      "name": "evaluate_startup_readiness",
+      "file": "backend/agents/startup_score_agent.py",
+      "id": "Function:evaluate_startup_readiness"
     },
     {
       "node_type": "file",
@@ -2031,6 +2266,29 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/collaboration/comments.py"
+    },
+    {
+      "node_type": "class",
+      "name": "CommentEngine",
+      "file": "backend/collaboration/comments.py",
+      "id": "Class:CommentEngine"
+    },
+    {
+      "node_type": "function",
+      "name": "add_comment",
+      "file": "backend/collaboration/comments.py",
+      "id": "Function:add_comment"
+    },
+    {
+      "node_type": "function",
+      "name": "get_comments_for_file",
+      "file": "backend/collaboration/comments.py",
+      "id": "Function:get_comments_for_file"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/collaboration/communication_bus.py"
     },
     {
@@ -2280,28 +2538,51 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/collaboration/history.py"
+    },
+    {
+      "node_type": "class",
+      "name": "VersionTimelineEngine",
+      "file": "backend/collaboration/history.py",
+      "id": "Class:VersionTimelineEngine"
+    },
+    {
+      "node_type": "function",
+      "name": "record_change",
+      "file": "backend/collaboration/history.py",
+      "id": "Function:record_change"
+    },
+    {
+      "node_type": "function",
+      "name": "rollback_to_version",
+      "file": "backend/collaboration/history.py",
+      "id": "Function:rollback_to_version"
+    },
+    {
+      "node_type": "function",
+      "name": "get_timeline",
+      "file": "backend/collaboration/history.py",
+      "id": "Function:get_timeline"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/collaboration/merge_engine.py"
     },
     {
       "node_type": "class",
-      "name": "MergeSummary",
+      "name": "AIMergeEngine",
       "file": "backend/collaboration/merge_engine.py",
-      "id": "Class:MergeSummary"
-    },
-    {
-      "node_type": "class",
-      "name": "MergeEngine",
-      "file": "backend/collaboration/merge_engine.py",
-      "id": "Class:MergeEngine"
+      "id": "Class:AIMergeEngine"
     },
     {
       "node_type": "function",
-      "name": "merge",
+      "name": "resolve_merge_conflict",
       "file": "backend/collaboration/merge_engine.py",
-      "id": "Function:merge"
+      "id": "Function:resolve_merge_conflict"
     },
     {
-      "id": "Module:backend.collaboration.negotiation_agent.ResolutionDecision"
+      "id": "Module:difflib"
     },
     {
       "node_type": "file",
@@ -2391,10 +2672,53 @@
       "id": "Module:backend.collaboration.negotiation_agent.NegotiationAgent"
     },
     {
+      "id": "Module:backend.collaboration.negotiation_agent.ResolutionDecision"
+    },
+    {
       "id": "Module:backend.collaboration.merge_engine.MergeEngine"
     },
     {
       "id": "Module:backend.collaboration.merge_engine.MergeSummary"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/collaboration/permissions.py"
+    },
+    {
+      "node_type": "class",
+      "name": "RBACPermissionsManager",
+      "file": "backend/collaboration/permissions.py",
+      "id": "Class:RBACPermissionsManager"
+    },
+    {
+      "node_type": "function",
+      "name": "check_permission",
+      "file": "backend/collaboration/permissions.py",
+      "id": "Function:check_permission"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/collaboration/presence.py"
+    },
+    {
+      "node_type": "class",
+      "name": "PresenceTracker",
+      "file": "backend/collaboration/presence.py",
+      "id": "Class:PresenceTracker"
+    },
+    {
+      "node_type": "function",
+      "name": "update_presence",
+      "file": "backend/collaboration/presence.py",
+      "id": "Function:update_presence"
+    },
+    {
+      "node_type": "function",
+      "name": "get_active_presence",
+      "file": "backend/collaboration/presence.py",
+      "id": "Function:get_active_presence"
     },
     {
       "node_type": "file",
@@ -2435,6 +2759,29 @@
       "name": "dispatch",
       "file": "backend/collaboration/task_dispatcher.py",
       "id": "Function:dispatch"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/collaboration/workspace.py"
+    },
+    {
+      "node_type": "class",
+      "name": "SharedAIWorkspace",
+      "file": "backend/collaboration/workspace.py",
+      "id": "Class:SharedAIWorkspace"
+    },
+    {
+      "node_type": "function",
+      "name": "connect_user",
+      "file": "backend/collaboration/workspace.py",
+      "id": "Function:connect_user"
+    },
+    {
+      "node_type": "function",
+      "name": "get_shared_memory",
+      "file": "backend/collaboration/workspace.py",
+      "id": "Function:get_shared_memory"
     },
     {
       "node_type": "file",
@@ -3089,9 +3436,6 @@
       "endpoint": "/api/v1/resource",
       "file": "backend/evolution/patch_generator.py",
       "id": "API:GET /api/v1/resource"
-    },
-    {
-      "id": "Module:difflib"
     },
     {
       "node_type": "file",
@@ -4460,12 +4804,6 @@
       "id": "Class:Recommender"
     },
     {
-      "node_type": "function",
-      "name": "recommend_architecture",
-      "file": "backend/knowledge/recommendation/recommender.py",
-      "id": "Function:recommend_architecture"
-    },
-    {
       "node_type": "file",
       "ext": ".py",
       "id": "backend/learning/architecture_evolver.py"
@@ -4704,6 +5042,11 @@
     },
     {
       "node_type": "file",
+      "ext": ".json",
+      "id": "backend/learning/knowledge.json"
+    },
+    {
+      "node_type": "file",
       "ext": ".py",
       "id": "backend/learning/learner.py"
     },
@@ -4835,6 +5178,11 @@
     },
     {
       "id": "Module:backend.learning.reflection_engine.ReflectionEngine"
+    },
+    {
+      "node_type": "file",
+      "ext": ".json",
+      "id": "backend/learning/mistakes.json"
     },
     {
       "node_type": "file",
@@ -7344,6 +7692,114 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/project_management/dependency_graph.py"
+    },
+    {
+      "node_type": "class",
+      "name": "ProjectDependencyGraph",
+      "file": "backend/project_management/dependency_graph.py",
+      "id": "Class:ProjectDependencyGraph"
+    },
+    {
+      "node_type": "function",
+      "name": "assign_dependencies",
+      "file": "backend/project_management/dependency_graph.py",
+      "id": "Function:assign_dependencies"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/project_management/estimator.py"
+    },
+    {
+      "node_type": "class",
+      "name": "TaskEstimator",
+      "file": "backend/project_management/estimator.py",
+      "id": "Class:TaskEstimator"
+    },
+    {
+      "node_type": "function",
+      "name": "estimate_task",
+      "file": "backend/project_management/estimator.py",
+      "id": "Function:estimate_task"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/project_management/kanban.py"
+    },
+    {
+      "node_type": "class",
+      "name": "KanbanBoardGenerator",
+      "file": "backend/project_management/kanban.py",
+      "id": "Class:KanbanBoardGenerator"
+    },
+    {
+      "node_type": "function",
+      "name": "generate_kanban_board",
+      "file": "backend/project_management/kanban.py",
+      "id": "Function:generate_kanban_board"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/project_management/roadmap_generator.py"
+    },
+    {
+      "node_type": "class",
+      "name": "RoadmapGenerator",
+      "file": "backend/project_management/roadmap_generator.py",
+      "id": "Class:RoadmapGenerator"
+    },
+    {
+      "node_type": "function",
+      "name": "generate_roadmap",
+      "file": "backend/project_manager/autonomous_manager.py",
+      "id": "Function:generate_roadmap"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/project_management/task_splitter.py"
+    },
+    {
+      "node_type": "class",
+      "name": "TaskSplitter",
+      "file": "backend/project_management/task_splitter.py",
+      "id": "Class:TaskSplitter"
+    },
+    {
+      "node_type": "function",
+      "name": "decompose_project",
+      "file": "backend/project_management/task_splitter.py",
+      "id": "Function:decompose_project"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/project_management/velocity.py"
+    },
+    {
+      "node_type": "class",
+      "name": "VelocityCalculator",
+      "file": "backend/project_management/velocity.py",
+      "id": "Class:VelocityCalculator"
+    },
+    {
+      "node_type": "function",
+      "name": "calculate_velocity",
+      "file": "backend/project_management/velocity.py",
+      "id": "Function:calculate_velocity"
+    },
+    {
+      "node_type": "function",
+      "name": "smart_replan",
+      "file": "backend/project_management/velocity.py",
+      "id": "Function:smart_replan"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/project_manager/autonomous_manager.py"
     },
     {
@@ -7351,12 +7807,6 @@
       "name": "AutonomousProjectManager",
       "file": "backend/project_manager/autonomous_manager.py",
       "id": "Class:AutonomousProjectManager"
-    },
-    {
-      "node_type": "function",
-      "name": "generate_roadmap",
-      "file": "backend/project_manager/autonomous_manager.py",
-      "id": "Function:generate_roadmap"
     },
     {
       "node_type": "function",
@@ -7837,6 +8287,11 @@
     {
       "node_type": "file",
       "ext": ".txt",
+      "id": "backend/rag/documents/52d2a75ce84b4ee7a357f7d9feee83e8_sample.txt"
+    },
+    {
+      "node_type": "file",
+      "ext": ".txt",
       "id": "backend/rag/documents/5536bd82150342fbbfec5872ae0b33a9_sample.txt"
     },
     {
@@ -7928,6 +8383,11 @@
       "node_type": "file",
       "ext": ".txt",
       "id": "backend/rag/documents/94b933e402d448f29983a62df75a0896_sample.txt"
+    },
+    {
+      "node_type": "file",
+      "ext": ".txt",
+      "id": "backend/rag/documents/9800b42817604494a52d51fa00a6f943_sample.txt"
     },
     {
       "node_type": "file",
@@ -8296,6 +8756,16 @@
       "node_type": "file",
       "ext": ".json",
       "id": "backend/reports/project_score.json"
+    },
+    {
+      "node_type": "file",
+      "ext": ".json",
+      "id": "backend/reports/quality_report.json"
+    },
+    {
+      "node_type": "file",
+      "ext": ".json",
+      "id": "backend/reports/startup_report.json"
     },
     {
       "node_type": "file",
@@ -10599,6 +11069,22 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "backend/tests/test_day82_83_enterprise.py"
+    },
+    {
+      "id": "Module:tests.verify_day82_83_enterprise.main"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "backend/tests/test_day84_85_sprint_collaboration.py"
+    },
+    {
+      "id": "Module:tests.verify_day84_85_sprint_collaboration.main"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "backend/tests/test_elite_security.py"
     },
     {
@@ -11602,9 +12088,9 @@
     },
     {
       "node_type": "function",
-      "name": "handleSettingsClick",
+      "name": "ChatBox",
       "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:handleSettingsClick"
+      "id": "Function:ChatBox"
     },
     {
       "node_type": "function",
@@ -11614,9 +12100,9 @@
     },
     {
       "node_type": "function",
-      "name": "ChatBox",
+      "name": "handleSettingsClick",
       "file": "frontend/src/components/ChatBox.jsx",
-      "id": "Function:ChatBox"
+      "id": "Function:handleSettingsClick"
     },
     {
       "node_type": "function",
@@ -11710,9 +12196,9 @@
     },
     {
       "node_type": "function",
-      "name": "FileExplorer",
+      "name": "toggleFolder",
       "file": "frontend/src/components/FileExplorer.jsx",
-      "id": "Function:FileExplorer"
+      "id": "Function:toggleFolder"
     },
     {
       "node_type": "function",
@@ -11722,15 +12208,15 @@
     },
     {
       "node_type": "function",
-      "name": "toggleFolder",
-      "file": "frontend/src/components/FileExplorer.jsx",
-      "id": "Function:toggleFolder"
-    },
-    {
-      "node_type": "function",
       "name": "renderNode",
       "file": "frontend/src/components/FileExplorer.jsx",
       "id": "Function:renderNode"
+    },
+    {
+      "node_type": "function",
+      "name": "FileExplorer",
+      "file": "frontend/src/components/FileExplorer.jsx",
+      "id": "Function:FileExplorer"
     },
     {
       "node_type": "file",
@@ -11739,9 +12225,9 @@
     },
     {
       "node_type": "function",
-      "name": "handleSend",
+      "name": "handleTemplateClick",
       "file": "frontend/src/components/InputBar.jsx",
-      "id": "Function:handleSend"
+      "id": "Function:handleTemplateClick"
     },
     {
       "node_type": "function",
@@ -11751,9 +12237,9 @@
     },
     {
       "node_type": "function",
-      "name": "handleTemplateClick",
+      "name": "handleSend",
       "file": "frontend/src/components/InputBar.jsx",
-      "id": "Function:handleTemplateClick"
+      "id": "Function:handleSend"
     },
     {
       "node_type": "file",
@@ -11773,15 +12259,9 @@
     },
     {
       "node_type": "function",
-      "name": "Message",
+      "name": "handleFeedback",
       "file": "frontend/src/components/Message.jsx",
-      "id": "Function:Message"
-    },
-    {
-      "node_type": "function",
-      "name": "handleCopy",
-      "file": "frontend/src/components/Message.jsx",
-      "id": "Function:handleCopy"
+      "id": "Function:handleFeedback"
     },
     {
       "node_type": "function",
@@ -11791,15 +12271,21 @@
     },
     {
       "node_type": "function",
+      "name": "handleCopy",
+      "file": "frontend/src/components/Message.jsx",
+      "id": "Function:handleCopy"
+    },
+    {
+      "node_type": "function",
       "name": "CodeWrapper",
       "file": "frontend/src/components/Message.jsx",
       "id": "Function:CodeWrapper"
     },
     {
       "node_type": "function",
-      "name": "handleFeedback",
+      "name": "Message",
       "file": "frontend/src/components/Message.jsx",
-      "id": "Function:handleFeedback"
+      "id": "Function:Message"
     },
     {
       "id": "Module:react-markdown"
@@ -11842,15 +12328,15 @@
     },
     {
       "node_type": "function",
-      "name": "SectionCard",
-      "file": "frontend/src/components/PlannerCard.jsx",
-      "id": "Function:SectionCard"
-    },
-    {
-      "node_type": "function",
       "name": "PlannerCard",
       "file": "frontend/src/components/PlannerCard.jsx",
       "id": "Function:PlannerCard"
+    },
+    {
+      "node_type": "function",
+      "name": "SectionCard",
+      "file": "frontend/src/components/PlannerCard.jsx",
+      "id": "Function:SectionCard"
     },
     {
       "node_type": "file",
@@ -11881,6 +12367,12 @@
     },
     {
       "node_type": "function",
+      "name": "syncActiveSession",
+      "file": "frontend/src/components/Sidebar.jsx",
+      "id": "Function:syncActiveSession"
+    },
+    {
+      "node_type": "function",
       "name": "Sidebar",
       "file": "frontend/src/components/Sidebar.jsx",
       "id": "Function:Sidebar"
@@ -11890,12 +12382,6 @@
       "name": "handleOpenSession",
       "file": "frontend/src/components/Sidebar.jsx",
       "id": "Function:handleOpenSession"
-    },
-    {
-      "node_type": "function",
-      "name": "syncActiveSession",
-      "file": "frontend/src/components/Sidebar.jsx",
-      "id": "Function:syncActiveSession"
     },
     {
       "node_type": "file",
@@ -11930,6 +12416,12 @@
     },
     {
       "node_type": "function",
+      "name": "Dashboard",
+      "file": "generated_projects/Build a Todo application using React_ FastAPI and MongoDB/frontend/src/components/Dashboard.jsx",
+      "id": "Function:Dashboard"
+    },
+    {
+      "node_type": "function",
       "name": "SkeletonBlock",
       "file": "frontend/src/pages/Dashboard.jsx",
       "id": "Function:SkeletonBlock"
@@ -11939,12 +12431,6 @@
       "name": "StatCard",
       "file": "frontend/src/pages/Dashboard.jsx",
       "id": "Function:StatCard"
-    },
-    {
-      "node_type": "function",
-      "name": "Dashboard",
-      "file": "generated_projects/Build a Todo application using React_ FastAPI and MongoDB/frontend/src/components/Dashboard.jsx",
-      "id": "Function:Dashboard"
     },
     {
       "node_type": "file",
@@ -12031,9 +12517,9 @@
     },
     {
       "node_type": "function",
-      "name": "copyFileCode",
+      "name": "ProjectGenerator",
       "file": "frontend/src/pages/ProjectGenerator.jsx",
-      "id": "Function:copyFileCode"
+      "id": "Function:ProjectGenerator"
     },
     {
       "node_type": "function",
@@ -12043,9 +12529,9 @@
     },
     {
       "node_type": "function",
-      "name": "ProjectGenerator",
+      "name": "copyFileCode",
       "file": "frontend/src/pages/ProjectGenerator.jsx",
-      "id": "Function:ProjectGenerator"
+      "id": "Function:copyFileCode"
     },
     {
       "id": "Module:../components/FileExplorer"
@@ -12054,6 +12540,12 @@
       "node_type": "file",
       "ext": ".jsx",
       "id": "frontend/src/pages/WorkspaceDashboard.jsx"
+    },
+    {
+      "node_type": "function",
+      "name": "handleSearch",
+      "file": "frontend/src/pages/WorkspaceDashboard.jsx",
+      "id": "Function:handleSearch"
     },
     {
       "node_type": "function",
@@ -12066,12 +12558,6 @@
       "name": "handleSwitchProject",
       "file": "frontend/src/pages/WorkspaceDashboard.jsx",
       "id": "Function:handleSwitchProject"
-    },
-    {
-      "node_type": "function",
-      "name": "handleSearch",
-      "file": "frontend/src/pages/WorkspaceDashboard.jsx",
-      "id": "Function:handleSearch"
     },
     {
       "node_type": "function",
@@ -12109,27 +12595,27 @@
     },
     {
       "node_type": "function",
-      "name": "deleteConversation",
-      "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:deleteConversation"
-    },
-    {
-      "node_type": "function",
       "name": "createConversation",
       "file": "frontend/src/services/conversationApi.js",
       "id": "Function:createConversation"
     },
     {
       "node_type": "function",
-      "name": "renameConversation",
+      "name": "deleteConversation",
       "file": "frontend/src/services/conversationApi.js",
-      "id": "Function:renameConversation"
+      "id": "Function:deleteConversation"
     },
     {
       "node_type": "function",
       "name": "getConversationHistory",
       "file": "frontend/src/services/conversationApi.js",
       "id": "Function:getConversationHistory"
+    },
+    {
+      "node_type": "function",
+      "name": "renameConversation",
+      "file": "frontend/src/services/conversationApi.js",
+      "id": "Function:renameConversation"
     },
     {
       "node_type": "file",
@@ -12149,21 +12635,9 @@
     },
     {
       "node_type": "function",
-      "name": "fetchReflection",
+      "name": "fetchLessons",
       "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchReflection"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchEvolutionStatus",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchEvolutionStatus"
-    },
-    {
-      "node_type": "function",
-      "name": "generateProjectStream",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:generateProjectStream"
+      "id": "Function:fetchLessons"
     },
     {
       "node_type": "function",
@@ -12173,21 +12647,15 @@
     },
     {
       "node_type": "function",
+      "name": "fetchProjectFiles",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchProjectFiles"
+    },
+    {
+      "node_type": "function",
       "name": "fetchPlugins",
       "file": "frontend/src/services/projectApi.js",
       "id": "Function:fetchPlugins"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchLessons",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchLessons"
-    },
-    {
-      "node_type": "function",
-      "name": "fetchProjectFileContent",
-      "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchProjectFileContent"
     },
     {
       "node_type": "function",
@@ -12203,9 +12671,27 @@
     },
     {
       "node_type": "function",
-      "name": "fetchProjectFiles",
+      "name": "generateProjectStream",
       "file": "frontend/src/services/projectApi.js",
-      "id": "Function:fetchProjectFiles"
+      "id": "Function:generateProjectStream"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchReflection",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchReflection"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchProjectFileContent",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchProjectFileContent"
+    },
+    {
+      "node_type": "function",
+      "name": "fetchEvolutionStatus",
+      "file": "frontend/src/services/projectApi.js",
+      "id": "Function:fetchEvolutionStatus"
     },
     {
       "node_type": "file",
@@ -12214,15 +12700,15 @@
     },
     {
       "node_type": "function",
-      "name": "queryRagDocuments",
-      "file": "frontend/src/services/ragApi.js",
-      "id": "Function:queryRagDocuments"
-    },
-    {
-      "node_type": "function",
       "name": "uploadRagDocuments",
       "file": "frontend/src/services/ragApi.js",
       "id": "Function:uploadRagDocuments"
+    },
+    {
+      "node_type": "function",
+      "name": "queryRagDocuments",
+      "file": "frontend/src/services/ragApi.js",
+      "id": "Function:queryRagDocuments"
     },
     {
       "node_type": "file",
@@ -12236,15 +12722,51 @@
     },
     {
       "node_type": "function",
-      "name": "createSessionId",
+      "name": "clearSessionMessages",
       "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:createSessionId"
+      "id": "Function:clearSessionMessages"
+    },
+    {
+      "node_type": "function",
+      "name": "getSavedMessages",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:getSavedMessages"
     },
     {
       "node_type": "function",
       "name": "setActiveSessionId",
       "file": "frontend/src/utils/chatStorage.js",
       "id": "Function:setActiveSessionId"
+    },
+    {
+      "node_type": "function",
+      "name": "loadSessionMessages",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:loadSessionMessages"
+    },
+    {
+      "node_type": "function",
+      "name": "getActiveSessionId",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:getActiveSessionId"
+    },
+    {
+      "node_type": "function",
+      "name": "resetChatSession",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:resetChatSession"
+    },
+    {
+      "node_type": "function",
+      "name": "createSessionId",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:createSessionId"
+    },
+    {
+      "node_type": "function",
+      "name": "clearActiveSessionId",
+      "file": "frontend/src/utils/chatStorage.js",
+      "id": "Function:clearActiveSessionId"
     },
     {
       "node_type": "function",
@@ -12257,42 +12779,6 @@
       "name": "saveMessages",
       "file": "frontend/src/utils/chatStorage.js",
       "id": "Function:saveMessages"
-    },
-    {
-      "node_type": "function",
-      "name": "getSavedMessages",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:getSavedMessages"
-    },
-    {
-      "node_type": "function",
-      "name": "clearActiveSessionId",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:clearActiveSessionId"
-    },
-    {
-      "node_type": "function",
-      "name": "resetChatSession",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:resetChatSession"
-    },
-    {
-      "node_type": "function",
-      "name": "getActiveSessionId",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:getActiveSessionId"
-    },
-    {
-      "node_type": "function",
-      "name": "clearSessionMessages",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:clearSessionMessages"
-    },
-    {
-      "node_type": "function",
-      "name": "loadSessionMessages",
-      "file": "frontend/src/utils/chatStorage.js",
-      "id": "Function:loadSessionMessages"
     },
     {
       "node_type": "file",
@@ -14992,6 +15478,37 @@
     {
       "node_type": "file",
       "ext": ".py",
+      "id": "tests/verify_day82_83_enterprise.py"
+    },
+    {
+      "node_type": "function",
+      "name": "run_day82_83_tests",
+      "file": "tests/verify_day82_83_enterprise.py",
+      "id": "Function:run_day82_83_tests"
+    },
+    {
+      "id": "Module:backend.agents.product_builder.MasterProductBuilderPipeline"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
+      "id": "tests/verify_day84_85_sprint_collaboration.py"
+    },
+    {
+      "node_type": "function",
+      "name": "run_day84_85_tests",
+      "file": "tests/verify_day84_85_sprint_collaboration.py",
+      "id": "Function:run_day84_85_tests"
+    },
+    {
+      "id": "Module:backend.agents.sprint_manager.EnterpriseSprintManagerAgent"
+    },
+    {
+      "id": "Module:backend.agents.collaboration_agent.EnterpriseCollaborationAgent"
+    },
+    {
+      "node_type": "file",
+      "ext": ".py",
       "id": "tests/verify_debate_scenarios.py"
     },
     {
@@ -16337,6 +16854,36 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "backend/agents/architecture_recommender.py",
+      "target": "Class:ArchitectureRecommenderAgent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/architecture_recommender.py",
+      "target": "Function:recommend_architecture"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/architecture_recommender.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/architecture_recommender.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/architecture_recommender.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/architecture_recommender.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "backend/agents/architect_agent.py",
       "target": "Class:ArchitectAgent"
     },
@@ -16462,6 +17009,116 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Class:EnterpriseCollaborationAgent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Function:join_collaboration_session"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Function:resolve_conflicting_edits"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Function:check_user_permission"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Function:get_workspace_snapshot"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:backend.collaboration.workspace.SharedAIWorkspace"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:backend.collaboration.workspace.global_shared_workspace"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:backend.collaboration.presence.PresenceTracker"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:backend.collaboration.comments.CommentEngine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:backend.collaboration.comments.global_comment_engine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:backend.collaboration.permissions.RBACPermissionsManager"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:backend.collaboration.permissions.global_permissions_manager"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:backend.collaboration.history.VersionTimelineEngine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:backend.collaboration.history.global_version_timeline"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:backend.collaboration.merge_engine.AIMergeEngine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/collaboration_agent.py",
+      "target": "Module:backend.collaboration.merge_engine.global_merge_engine"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "backend/agents/confidence_agent.py",
       "target": "Class:ConfidenceAgent"
     },
@@ -16488,6 +17145,36 @@
     {
       "relation": "IMPORTS",
       "source": "backend/agents/confidence_agent.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/cost_estimator.py",
+      "target": "Class:CostEstimatorAgent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/cost_estimator.py",
+      "target": "Function:estimate_costs"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/cost_estimator.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/cost_estimator.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/cost_estimator.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/cost_estimator.py",
       "target": "Module:typing.List"
     },
     {
@@ -16842,6 +17529,36 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "backend/agents/feature_prioritizer.py",
+      "target": "Class:FeaturePrioritizerAgent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/feature_prioritizer.py",
+      "target": "Function:prioritize_features"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/feature_prioritizer.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/feature_prioritizer.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/feature_prioritizer.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/feature_prioritizer.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "backend/agents/frontend_agent.py",
       "target": "Class:FrontendAgent"
     },
@@ -17049,6 +17766,121 @@
       "relation": "IMPORTS",
       "source": "backend/agents/planner_agent.py",
       "target": "Module:backend.agents.base_agent.BaseAgent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Class:MasterProductBuilderPipeline"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Function:build_autonomous_product"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Module:backend.agents.product_planner.ProductPlannerAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Module:backend.agents.feature_prioritizer.FeaturePrioritizerAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Module:backend.agents.architecture_recommender.ArchitectureRecommenderAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Module:backend.agents.cost_estimator.CostEstimatorAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Module:backend.agents.startup_score_agent.StartupScoreAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Module:backend.agents.quality_analyzer.EnterpriseQualityAnalyzer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Module:backend.agents.learning_agent.LearningAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_builder.py",
+      "target": "Module:backend.agents.confidence_agent.ConfidenceAgent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/product_planner.py",
+      "target": "Class:ProductPlannerAgent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/product_planner.py",
+      "target": "Function:plan_product"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_planner.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_planner.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_planner.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/product_planner.py",
+      "target": "Module:typing.List"
     },
     {
       "relation": "CONTAINS",
@@ -17294,6 +18126,131 @@
       "relation": "IMPORTS",
       "source": "backend/agents/router_agent.py",
       "target": "Module:backend.agents.factory.AgentFactory"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/sprint_manager.py",
+      "target": "Class:EnterpriseSprintManagerAgent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/sprint_manager.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/sprint_manager.py",
+      "target": "Function:plan_sprint_management"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/sprint_manager.py",
+      "target": "Function:replan_on_scope_change"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/sprint_manager.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/sprint_manager.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/sprint_manager.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/sprint_manager.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/sprint_manager.py",
+      "target": "Module:typing.Optional"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/sprint_manager.py",
+      "target": "Module:backend.project_management.task_splitter.TaskSplitter"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/sprint_manager.py",
+      "target": "Module:backend.project_management.estimator.TaskEstimator"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/sprint_manager.py",
+      "target": "Module:backend.project_management.dependency_graph.ProjectDependencyGraph"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/sprint_manager.py",
+      "target": "Module:backend.project_management.kanban.KanbanBoardGenerator"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/sprint_manager.py",
+      "target": "Module:backend.project_management.roadmap_generator.RoadmapGenerator"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/sprint_manager.py",
+      "target": "Module:backend.project_management.velocity.VelocityCalculator"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/startup_score_agent.py",
+      "target": "Class:StartupScoreAgent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/startup_score_agent.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/agents/startup_score_agent.py",
+      "target": "Function:evaluate_startup_readiness"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/startup_score_agent.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/startup_score_agent.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/startup_score_agent.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/startup_score_agent.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/startup_score_agent.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/startup_score_agent.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/agents/startup_score_agent.py",
+      "target": "Module:typing.Optional"
     },
     {
       "relation": "CONTAINS",
@@ -17792,6 +18749,51 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "backend/collaboration/comments.py",
+      "target": "Class:CommentEngine"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/comments.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/comments.py",
+      "target": "Function:add_comment"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/comments.py",
+      "target": "Function:get_comments_for_file"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/comments.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/comments.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/comments.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/comments.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/comments.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "backend/collaboration/communication_bus.py",
       "target": "Class:BusMessage"
     },
@@ -18122,18 +19124,73 @@
     },
     {
       "relation": "CONTAINS",
-      "source": "backend/collaboration/merge_engine.py",
-      "target": "Class:MergeSummary"
+      "source": "backend/collaboration/history.py",
+      "target": "Class:VersionTimelineEngine"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/history.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/history.py",
+      "target": "Function:record_change"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/history.py",
+      "target": "Function:rollback_to_version"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/history.py",
+      "target": "Function:get_timeline"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/history.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/history.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/history.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/history.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/history.py",
+      "target": "Module:typing.List"
     },
     {
       "relation": "CONTAINS",
       "source": "backend/collaboration/merge_engine.py",
-      "target": "Class:MergeEngine"
+      "target": "Class:AIMergeEngine"
     },
     {
       "relation": "CONTAINS",
       "source": "backend/collaboration/merge_engine.py",
-      "target": "Function:merge"
+      "target": "Function:resolve_merge_conflict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/merge_engine.py",
+      "target": "Module:difflib"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/merge_engine.py",
+      "target": "Module:logging"
     },
     {
       "relation": "IMPORTS",
@@ -18143,22 +19200,12 @@
     {
       "relation": "IMPORTS",
       "source": "backend/collaboration/merge_engine.py",
-      "target": "Module:typing.List"
-    },
-    {
-      "relation": "IMPORTS",
-      "source": "backend/collaboration/merge_engine.py",
       "target": "Module:typing.Any"
     },
     {
       "relation": "IMPORTS",
       "source": "backend/collaboration/merge_engine.py",
-      "target": "Module:dataclasses.dataclass"
-    },
-    {
-      "relation": "IMPORTS",
-      "source": "backend/collaboration/merge_engine.py",
-      "target": "Module:backend.collaboration.negotiation_agent.ResolutionDecision"
+      "target": "Module:typing.List"
     },
     {
       "relation": "CONTAINS",
@@ -18322,6 +19369,86 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "backend/collaboration/permissions.py",
+      "target": "Class:RBACPermissionsManager"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/permissions.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/permissions.py",
+      "target": "Function:check_permission"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/permissions.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/permissions.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/permissions.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/permissions.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/presence.py",
+      "target": "Class:PresenceTracker"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/presence.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/presence.py",
+      "target": "Function:update_presence"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/presence.py",
+      "target": "Function:get_active_presence"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/presence.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/presence.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/presence.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/presence.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/presence.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "backend/collaboration/shared_memory.py",
       "target": "Class:SharedContextMemory"
     },
@@ -18419,6 +19546,56 @@
       "relation": "IMPORTS",
       "source": "backend/collaboration/task_dispatcher.py",
       "target": "Module:uuid"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/workspace.py",
+      "target": "Class:SharedAIWorkspace"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/workspace.py",
+      "target": "Function:__init__"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/workspace.py",
+      "target": "Function:connect_user"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/collaboration/workspace.py",
+      "target": "Function:get_shared_memory"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/workspace.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/workspace.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/workspace.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/workspace.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/workspace.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/collaboration/workspace.py",
+      "target": "Module:typing.Optional"
     },
     {
       "relation": "CONTAINS",
@@ -26547,6 +27724,196 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "backend/project_management/dependency_graph.py",
+      "target": "Class:ProjectDependencyGraph"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/project_management/dependency_graph.py",
+      "target": "Function:assign_dependencies"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/dependency_graph.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/dependency_graph.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/dependency_graph.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/dependency_graph.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/project_management/estimator.py",
+      "target": "Class:TaskEstimator"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/project_management/estimator.py",
+      "target": "Function:estimate_task"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/estimator.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/estimator.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/estimator.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/estimator.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/project_management/kanban.py",
+      "target": "Class:KanbanBoardGenerator"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/project_management/kanban.py",
+      "target": "Function:generate_kanban_board"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/kanban.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/kanban.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/kanban.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/kanban.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/project_management/roadmap_generator.py",
+      "target": "Class:RoadmapGenerator"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/project_management/roadmap_generator.py",
+      "target": "Function:generate_roadmap"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/roadmap_generator.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/roadmap_generator.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/roadmap_generator.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/roadmap_generator.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/project_management/task_splitter.py",
+      "target": "Class:TaskSplitter"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/project_management/task_splitter.py",
+      "target": "Function:decompose_project"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/task_splitter.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/task_splitter.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/task_splitter.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/task_splitter.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/project_management/velocity.py",
+      "target": "Class:VelocityCalculator"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/project_management/velocity.py",
+      "target": "Function:calculate_velocity"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "backend/project_management/velocity.py",
+      "target": "Function:smart_replan"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/velocity.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/velocity.py",
+      "target": "Module:logging"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/velocity.py",
+      "target": "Module:typing.Dict"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/velocity.py",
+      "target": "Module:typing.Any"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/project_management/velocity.py",
+      "target": "Module:typing.List"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "backend/project_manager/autonomous_manager.py",
       "target": "Class:AutonomousProjectManager"
     },
@@ -31267,6 +32634,36 @@
     },
     {
       "relation": "IMPORTS",
+      "source": "backend/tests/test_day82_83_enterprise.py",
+      "target": "Module:sys"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/tests/test_day82_83_enterprise.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/tests/test_day82_83_enterprise.py",
+      "target": "Module:tests.verify_day82_83_enterprise.main"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/tests/test_day84_85_sprint_collaboration.py",
+      "target": "Module:sys"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/tests/test_day84_85_sprint_collaboration.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "backend/tests/test_day84_85_sprint_collaboration.py",
+      "target": "Module:tests.verify_day84_85_sprint_collaboration.main"
+    },
+    {
+      "relation": "IMPORTS",
       "source": "backend/tests/test_elite_security.py",
       "target": "Module:sys"
     },
@@ -33573,7 +34970,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:handleSettingsClick"
+      "target": "Function:ChatBox"
     },
     {
       "relation": "CONTAINS",
@@ -33583,7 +34980,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/ChatBox.jsx",
-      "target": "Function:ChatBox"
+      "target": "Function:handleSettingsClick"
     },
     {
       "relation": "CONTAINS",
@@ -33683,7 +35080,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/FileExplorer.jsx",
-      "target": "Function:FileExplorer"
+      "target": "Function:toggleFolder"
     },
     {
       "relation": "CONTAINS",
@@ -33693,12 +35090,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/FileExplorer.jsx",
-      "target": "Function:toggleFolder"
+      "target": "Function:renderNode"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/FileExplorer.jsx",
-      "target": "Function:renderNode"
+      "target": "Function:FileExplorer"
     },
     {
       "relation": "IMPORTS",
@@ -33718,7 +35115,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/InputBar.jsx",
-      "target": "Function:handleSend"
+      "target": "Function:handleTemplateClick"
     },
     {
       "relation": "CONTAINS",
@@ -33728,7 +35125,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/InputBar.jsx",
-      "target": "Function:handleTemplateClick"
+      "target": "Function:handleSend"
     },
     {
       "relation": "IMPORTS",
@@ -33748,12 +35145,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Message.jsx",
-      "target": "Function:Message"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/Message.jsx",
-      "target": "Function:handleCopy"
+      "target": "Function:handleFeedback"
     },
     {
       "relation": "CONTAINS",
@@ -33763,12 +35155,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Message.jsx",
+      "target": "Function:handleCopy"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/Message.jsx",
       "target": "Function:CodeWrapper"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Message.jsx",
-      "target": "Function:handleFeedback"
+      "target": "Function:Message"
     },
     {
       "relation": "IMPORTS",
@@ -33828,12 +35225,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/PlannerCard.jsx",
-      "target": "Function:SectionCard"
+      "target": "Function:PlannerCard"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/PlannerCard.jsx",
-      "target": "Function:PlannerCard"
+      "target": "Function:SectionCard"
     },
     {
       "relation": "IMPORTS",
@@ -33878,17 +35275,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Sidebar.jsx",
+      "target": "Function:syncActiveSession"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/components/Sidebar.jsx",
       "target": "Function:Sidebar"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/components/Sidebar.jsx",
       "target": "Function:handleOpenSession"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/components/Sidebar.jsx",
-      "target": "Function:syncActiveSession"
     },
     {
       "relation": "IMPORTS",
@@ -33918,17 +35315,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Dashboard.jsx",
+      "target": "Function:Dashboard"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/pages/Dashboard.jsx",
       "target": "Function:SkeletonBlock"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/Dashboard.jsx",
       "target": "Function:StatCard"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/pages/Dashboard.jsx",
-      "target": "Function:Dashboard"
     },
     {
       "relation": "IMPORTS",
@@ -34038,7 +35435,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/ProjectGenerator.jsx",
-      "target": "Function:copyFileCode"
+      "target": "Function:ProjectGenerator"
     },
     {
       "relation": "CONTAINS",
@@ -34048,7 +35445,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/ProjectGenerator.jsx",
-      "target": "Function:ProjectGenerator"
+      "target": "Function:copyFileCode"
     },
     {
       "relation": "IMPORTS",
@@ -34093,17 +35490,17 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/WorkspaceDashboard.jsx",
+      "target": "Function:handleSearch"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/pages/WorkspaceDashboard.jsx",
       "target": "Function:handleSendChat"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/pages/WorkspaceDashboard.jsx",
       "target": "Function:handleSwitchProject"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/pages/WorkspaceDashboard.jsx",
-      "target": "Function:handleSearch"
     },
     {
       "relation": "CONTAINS",
@@ -34143,22 +35540,22 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:deleteConversation"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/conversationApi.js",
       "target": "Function:createConversation"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
-      "target": "Function:renameConversation"
+      "target": "Function:deleteConversation"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/conversationApi.js",
       "target": "Function:getConversationHistory"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/conversationApi.js",
+      "target": "Function:renameConversation"
     },
     {
       "relation": "IMPORTS",
@@ -34178,17 +35575,7 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchReflection"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchEvolutionStatus"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:generateProjectStream"
+      "target": "Function:fetchLessons"
     },
     {
       "relation": "CONTAINS",
@@ -34198,17 +35585,12 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
+      "target": "Function:fetchProjectFiles"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
       "target": "Function:fetchPlugins"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchLessons"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchProjectFileContent"
     },
     {
       "relation": "CONTAINS",
@@ -34223,17 +35605,32 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/projectApi.js",
-      "target": "Function:fetchProjectFiles"
+      "target": "Function:generateProjectStream"
     },
     {
       "relation": "CONTAINS",
-      "source": "frontend/src/services/ragApi.js",
-      "target": "Function:queryRagDocuments"
+      "source": "frontend/src/services/projectApi.js",
+      "target": "Function:fetchReflection"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
+      "target": "Function:fetchProjectFileContent"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/projectApi.js",
+      "target": "Function:fetchEvolutionStatus"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/services/ragApi.js",
       "target": "Function:uploadRagDocuments"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/services/ragApi.js",
+      "target": "Function:queryRagDocuments"
     },
     {
       "relation": "IMPORTS",
@@ -34243,12 +35640,42 @@
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:createSessionId"
+      "target": "Function:clearSessionMessages"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:getSavedMessages"
     },
     {
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
       "target": "Function:setActiveSessionId"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:loadSessionMessages"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:getActiveSessionId"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:resetChatSession"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:createSessionId"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "frontend/src/utils/chatStorage.js",
+      "target": "Function:clearActiveSessionId"
     },
     {
       "relation": "CONTAINS",
@@ -34259,36 +35686,6 @@
       "relation": "CONTAINS",
       "source": "frontend/src/utils/chatStorage.js",
       "target": "Function:saveMessages"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:getSavedMessages"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:clearActiveSessionId"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:resetChatSession"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:getActiveSessionId"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:clearSessionMessages"
-    },
-    {
-      "relation": "CONTAINS",
-      "source": "frontend/src/utils/chatStorage.js",
-      "target": "Function:loadSessionMessages"
     },
     {
       "relation": "DEPENDS_ON",
@@ -40047,6 +41444,211 @@
     },
     {
       "relation": "CONTAINS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Function:section"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Function:check"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Function:run_day82_83_tests"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Function:main"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Module:sys"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Module:asyncio"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Module:backend.agents.learning_agent.LearningAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Module:backend.agents.quality_analyzer.EnterpriseQualityAnalyzer"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Module:backend.agents.confidence_agent.ConfidenceAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Module:backend.agents.product_planner.ProductPlannerAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Module:backend.agents.feature_prioritizer.FeaturePrioritizerAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Module:backend.agents.architecture_recommender.ArchitectureRecommenderAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Module:backend.agents.cost_estimator.CostEstimatorAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Module:backend.agents.startup_score_agent.StartupScoreAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day82_83_enterprise.py",
+      "target": "Module:backend.agents.product_builder.MasterProductBuilderPipeline"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Function:section"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Function:check"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Function:run_day84_85_tests"
+    },
+    {
+      "relation": "CONTAINS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Function:main"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:sys"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:json"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:time"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:asyncio"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:pathlib.Path"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:backend.agents.sprint_manager.EnterpriseSprintManagerAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:backend.project_management.task_splitter.TaskSplitter"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:backend.project_management.estimator.TaskEstimator"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:backend.project_management.dependency_graph.ProjectDependencyGraph"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:backend.project_management.kanban.KanbanBoardGenerator"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:backend.project_management.roadmap_generator.RoadmapGenerator"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:backend.project_management.velocity.VelocityCalculator"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:backend.agents.collaboration_agent.EnterpriseCollaborationAgent"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:backend.collaboration.workspace.SharedAIWorkspace"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:backend.collaboration.presence.PresenceTracker"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:backend.collaboration.comments.CommentEngine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:backend.collaboration.permissions.RBACPermissionsManager"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:backend.collaboration.history.VersionTimelineEngine"
+    },
+    {
+      "relation": "IMPORTS",
+      "source": "tests/verify_day84_85_sprint_collaboration.py",
+      "target": "Module:backend.collaboration.merge_engine.AIMergeEngine"
+    },
+    {
+      "relation": "CONTAINS",
       "source": "tests/verify_debate_scenarios.py",
       "target": "Function:run_debate_verification"
     },
@@ -40662,14 +42264,14 @@
     }
   ],
   "summary": {
-    "total_files": 700,
-    "total_functions": 1629,
-    "total_classes": 381,
+    "total_files": 729,
+    "total_functions": 1675,
+    "total_classes": 399,
     "total_apis": 109,
     "total_db_models": 0,
     "total_env_vars": 8,
     "total_dependencies": 327,
-    "total_nodes": 2954,
-    "total_edges": 5089
+    "total_nodes": 3060,
+    "total_edges": 5306
   }
 }

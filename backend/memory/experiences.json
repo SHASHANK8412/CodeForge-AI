@@ -392,5 +392,89 @@
     "rating": 75.0,
     "user_prompt": "Build User API",
     "timestamp": 1784813166.4125316
+  },
+  {
+    "id": "exp_1784813454662",
+    "project": "Inventory App",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI + PostgreSQL + Docker",
+    "success": true,
+    "execution_time": 32.0,
+    "errors": [],
+    "fixes": [],
+    "rating": 98.0,
+    "user_prompt": "Build an Inventory Management System",
+    "timestamp": 1784813454.6622233
+  },
+  {
+    "id": "exp_1784813487570",
+    "project": "API_Project_0",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI",
+    "success": false,
+    "execution_time": 20.0,
+    "errors": [
+      "Missing input validation for payload"
+    ],
+    "fixes": [],
+    "rating": 75.0,
+    "user_prompt": "Build User API",
+    "timestamp": 1784813487.5700328
+  },
+  {
+    "id": "exp_1784813521848",
+    "project": "API_Project_1",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI",
+    "success": false,
+    "execution_time": 20.0,
+    "errors": [
+      "Missing input validation for payload"
+    ],
+    "fixes": [],
+    "rating": 75.0,
+    "user_prompt": "Build User API",
+    "timestamp": 1784813521.8489873
+  },
+  {
+    "id": "exp_1784813550021",
+    "project": "SaaS Analytics Dashboard",
+    "language": "React/FastAPI",
+    "architecture": "React + FastAPI + PostgreSQL",
+    "success": true,
+    "execution_time": 36.5,
+    "errors": [],
+    "fixes": [],
+    "rating": 99.0,
+    "user_prompt": "Build a SaaS Analytics Dashboard",
+    "timestamp": 1784813550.0211546
+  },
+  {
+    "id": "exp_1784813655400",
+    "project": "Inventory App",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI + PostgreSQL + Docker",
+    "success": true,
+    "execution_time": 32.0,
+    "errors": [],
+    "fixes": [],
+    "rating": 98.0,
+    "user_prompt": "Build an Inventory Management System",
+    "timestamp": 1784813655.4002264
+  },
+  {
+    "id": "exp_1784813682737",
+    "project": "API_Project_0",
+    "language": "React/FastAPI",
+    "architecture": "FastAPI",
+    "success": false,
+    "execution_time": 20.0,
+    "errors": [
+      "Missing input validation for payload"
+    ],
+    "fixes": [],
+    "rating": 75.0,
+    "user_prompt": "Build User API",
+    "timestamp": 1784813682.7377408
   }
 ]
