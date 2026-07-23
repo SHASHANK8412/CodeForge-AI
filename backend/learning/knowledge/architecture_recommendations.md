@@ -10,6 +10,6 @@ Consistent high-scoring stacks in historical builds:
 
 ## 2. Dynamic Stack Selection Suggestion
 Agents should automatically initialize new repositories using the recommended stack configurations below:
-* Framework 'React' appears superior due to repeated adoption in 4 successful project run(s).
-* Framework 'Fastapi' appears superior due to repeated adoption in 4 successful project run(s).
-* Framework 'Postgresql' appears superior due to repeated adoption in 2 successful project run(s).
+* Framework 'React' appears superior due to repeated adoption in 6 successful project run(s).
+* Framework 'Fastapi' appears superior due to repeated adoption in 5 successful project run(s).
+* Framework 'Postgresql' appears superior due to repeated adoption in 3 successful project run(s).

@@ -10,5 +10,11 @@
     "lesson": "Use Docker for containerization to simplify deployment and environment management.",
     "count": 1,
     "last_seen": "2026-07-19"
+  },
+  {
+    "problem": "Dependency Missing",
+    "lesson": "Always include express in Node package.json dependencies",
+    "count": 2,
+    "last_seen": "2026-07-23"
   }
 ]

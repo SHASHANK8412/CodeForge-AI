@@ -1,0 +1,10 @@
+{
+  "pattern": "JWT Authentication",
+  "middleware": "authenticateJWT",
+  "routes": [
+    "/login",
+    "/register",
+    "/refresh"
+  ],
+  "hashing": "bcrypt"
+}

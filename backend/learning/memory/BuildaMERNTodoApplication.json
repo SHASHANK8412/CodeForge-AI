@@ -1,0 +1,21 @@
+{
+  "project_name": "Build a MERN Todo Application",
+  "agent_durations": {
+    "Planner": 4.1,
+    "Architect": 6.5,
+    "Frontend": 18.4,
+    "Backend": 20.1,
+    "Database": 5.3,
+    "Testing": 12.7
+  },
+  "total_time_seconds": 67.1,
+  "status": "Success",
+  "retries": 0,
+  "model_used": "qwen2.5-coder:latest",
+  "technologies": [
+    "MongoDB",
+    "Express",
+    "React",
+    "Node"
+  ]
+}
