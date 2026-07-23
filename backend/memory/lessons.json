@@ -14,7 +14,7 @@
   {
     "problem": "Dependency Missing",
     "lesson": "Always include express in Node package.json dependencies",
-    "count": 2,
+    "count": 5,
     "last_seen": "2026-07-23"
   }
 ]

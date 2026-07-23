@@ -20,7 +20,7 @@
     "root_cause": "PostgreSQL unavailable",
     "strategy": "Restart Backend Process",
     "success": false,
-    "duration_seconds": 0.8006119728088379,
+    "duration_seconds": 0.8006656169891357,
     "confidence": 0.96
   },
   {
@@ -28,7 +28,7 @@
     "root_cause": "PostgreSQL unavailable",
     "strategy": "Restart Database",
     "success": false,
-    "duration_seconds": 1.804816722869873,
+    "duration_seconds": 1.8042325973510742,
     "confidence": 0.96
   },
   {
@@ -36,7 +36,7 @@
     "root_cause": "PostgreSQL unavailable",
     "strategy": "Restart Database",
     "success": false,
-    "duration_seconds": 2.805511474609375,
+    "duration_seconds": 2.8054192066192627,
     "confidence": 0.96
   }
 ]

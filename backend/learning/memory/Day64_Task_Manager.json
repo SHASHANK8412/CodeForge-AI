@@ -1,0 +1,10 @@
+{
+  "project_name": "Day64_Task_Manager",
+  "total_time_seconds": 35.0,
+  "status": "Success",
+  "technologies": [
+    "FastAPI",
+    "React",
+    "Docker"
+  ]
+}

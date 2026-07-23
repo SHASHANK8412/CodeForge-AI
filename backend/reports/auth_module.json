@@ -1,0 +1,13 @@
+{
+  "module_name": "JWT Authentication Module",
+  "version": "1.0.0",
+  "dependencies": [
+    "python-jose",
+    "passlib",
+    "bcrypt"
+  ],
+  "files": [
+    "backend/auth/jwt_handler.py",
+    "backend/routes/auth_routes.py"
+  ]
+}
