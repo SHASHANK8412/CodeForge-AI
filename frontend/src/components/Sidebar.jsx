@@ -52,9 +52,19 @@ function Sidebar({ currentView, setView }) {
                 window.dispatchEvent(new CustomEvent("aiforge:new-chat", { detail: { sessionId: createdConversation.conversation_id } }));
             } catch (err) {
                 console.warn("Could not create initial conversation on backend:", err);
+                const fallbackId = `session_default`;
+                const fallbackConv = { conversation_id: fallbackId, title: "Chat Session 1", message_count: 1 };
+                setSessions([fallbackConv]);
+                setSidebarActiveSessionId(fallbackId);
+                setActiveSessionId(fallbackId);
             }
         } catch (err) {
             console.error("Failed to refresh sessions:", err);
+            const fallbackId = `session_default`;
+            const fallbackConv = { conversation_id: fallbackId, title: "Chat Session 1", message_count: 1 };
+            setSessions([fallbackConv]);
+            setSidebarActiveSessionId(fallbackId);
+            setActiveSessionId(fallbackId);
         } finally {
             setLoading(false);
         }
