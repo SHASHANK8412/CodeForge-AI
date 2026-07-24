@@ -69,15 +69,26 @@ function ChatBox() {
 
     const loadConversation = async (conversationId) => {
         if (!conversationId) {
+            setSessionId("");
+            setConversationTitle("Untitled Conversation");
+            setMessages([]);
             return;
         }
 
-        const response = await getConversationHistory(conversationId);
-        setSessionId(conversationId);
-        setActiveSessionId(conversationId);
-        setConversationTitle(response.conversation?.title || "Untitled Conversation");
-        setMessages(toUiMessages(response.messages || []));
-        window.dispatchEvent(new CustomEvent("aiforge:session-changed", { detail: { sessionId: conversationId } }));
+        try {
+            const response = await getConversationHistory(conversationId);
+            setSessionId(conversationId);
+            setActiveSessionId(conversationId);
+            setConversationTitle(response.conversation?.title || "Untitled Conversation");
+            setMessages(toUiMessages(response.messages || []));
+            window.dispatchEvent(new CustomEvent("aiforge:session-changed", { detail: { sessionId: conversationId } }));
+        } catch (err) {
+            console.warn("Could not fetch conversation history, initializing clean session state:", err);
+            setSessionId(conversationId);
+            setActiveSessionId(conversationId);
+            setConversationTitle("Untitled Conversation");
+            setMessages([]);
+        }
     };
 
     const loadMetricsDashboard = async () => {
@@ -251,13 +262,24 @@ function ChatBox() {
     };
 
     const handleNewConversation = async () => {
-        const conversation = await createConversation();
-        setSessionId(conversation.conversation_id);
-        setConversationTitle(conversation.title || "Untitled Conversation");
-        setActiveSessionId(conversation.conversation_id);
-        setMessages([]);
-        window.dispatchEvent(new CustomEvent("aiforge:new-chat", { detail: { sessionId: conversation.conversation_id } }));
-        window.dispatchEvent(new CustomEvent("aiforge:open-session", { detail: { sessionId: conversation.conversation_id } }));
+        try {
+            const conversation = await createConversation();
+            setSessionId(conversation.conversation_id);
+            setConversationTitle(conversation.title || "Untitled Conversation");
+            setActiveSessionId(conversation.conversation_id);
+            setMessages([]);
+            window.dispatchEvent(new CustomEvent("aiforge:new-chat", { detail: { sessionId: conversation.conversation_id } }));
+            window.dispatchEvent(new CustomEvent("aiforge:open-session", { detail: { sessionId: conversation.conversation_id } }));
+        } catch (err) {
+            console.warn("Could not create conversation via API, using fallback session:", err);
+            const fallbackId = `session_${Date.now()}`;
+            setSessionId(fallbackId);
+            setConversationTitle("Untitled Conversation");
+            setActiveSessionId(fallbackId);
+            setMessages([]);
+            window.dispatchEvent(new CustomEvent("aiforge:new-chat", { detail: { sessionId: fallbackId } }));
+            window.dispatchEvent(new CustomEvent("aiforge:open-session", { detail: { sessionId: fallbackId } }));
+        }
     };
 
     const handleSettingsClick = () => {

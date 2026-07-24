@@ -51,6 +51,20 @@ class ProjectMemoryStore:
                         item["bugs_fixed_count"] = 3
                     if "overall_score" not in item:
                         item["overall_score"] = 95.0
+                    if "completed_tasks" not in item:
+                        item["completed_tasks"] = []
+                    if "generated_files" not in item:
+                        item["generated_files"] = []
+                    if "current_project" not in item:
+                        item["current_project"] = ""
+                    if "latest_plan" not in item:
+                        item["latest_plan"] = ""
+                    if "latest_architecture" not in item:
+                        item["latest_architecture"] = ""
+                    if "last_task" not in item:
+                        item["last_task"] = ""
+                    if "last_agent" not in item:
+                        item["last_agent"] = ""
                 return data
         except Exception:
             return []
@@ -82,6 +96,9 @@ class ProjectMemoryStore:
             "success_status": success_status,
             "deployment_status": deployment_status,
             "reuse_score_pct": reuse_score_pct,
+            "completed_tasks": [],
+            "generated_files": [],
+            "current_project": "",
             "timestamp": time.time()
         }
         projects.append(rec)
@@ -91,6 +108,41 @@ class ProjectMemoryStore:
 
     def get_all_projects(self) -> List[Dict[str, Any]]:
         return self._load_projects()
+
+    def load_project(self, project_id: str) -> Dict[str, Any]:
+        projects = self._load_projects()
+        for p in projects:
+            if p.get("project_id") == project_id or p.get("project_name") == project_id:
+                if "completed_tasks" not in p:
+                    p["completed_tasks"] = []
+                if "generated_files" not in p:
+                    p["generated_files"] = []
+                if "current_project" not in p:
+                    p["current_project"] = ""
+                return p
+        rec = self.store_project(project_name=project_id, tech_stack=["FastAPI", "React"])
+        rec["completed_tasks"] = []
+        rec["generated_files"] = []
+        rec["current_project"] = ""
+        return rec
+
+    def save_project(self, project_id: str, project_data: Dict[str, Any]) -> Dict[str, Any]:
+        projects = self._load_projects()
+        updated = False
+        for i, p in enumerate(projects):
+            if p.get("project_id") == project_id or p.get("project_name") == project_id:
+                projects[i] = project_data
+                updated = True
+                break
+        if not updated:
+            projects.append(project_data)
+        self._save_projects(projects)
+        return project_data
+
+    def clear_project(self, project_id: str) -> None:
+        projects = self._load_projects()
+        filtered = [p for p in projects if p.get("project_id") != project_id and p.get("project_name") != project_id]
+        self._save_projects(filtered)
 
 
 global_project_memory = ProjectMemoryStore()

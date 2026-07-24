@@ -65,6 +65,9 @@ class VectorMemoryStore:
         self._save_vectors(vectors)
         return entry
 
+    def add_text(self, session_id: str, text: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        return self.add_vector(doc_id=session_id, text=text, metadata=metadata or {})
+
     def search_similar(self, query_text: str, top_k: int = 3) -> List[Dict[str, Any]]:
         query_vec = global_embedding_engine.generate_embedding(query_text)
         vectors = self._load_vectors()
@@ -80,6 +83,17 @@ class VectorMemoryStore:
 
         results.sort(key=lambda x: x["similarity_score"], reverse=True)
         return results[:top_k]
+
+    def search(self, session_id: str, query: str, top_k: int = 2) -> List[Dict[str, Any]]:
+        return self.search_similar(query, top_k=top_k)
+
+    def clear(self, session_id: str = None) -> None:
+        vectors = self._load_vectors()
+        if session_id:
+            vectors = [v for v in vectors if v.get("id") != session_id]
+        else:
+            vectors = []
+        self._save_vectors(vectors)
 
 
 global_vector_memory = VectorMemoryStore()

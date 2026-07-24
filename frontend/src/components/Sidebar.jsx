@@ -44,24 +44,42 @@ function Sidebar({ currentView, setView }) {
                 return;
             }
 
-            const createdConversation = await createConversation();
-            setSessions([createdConversation]);
-            setSidebarActiveSessionId(createdConversation.conversation_id);
-            setActiveSessionId(createdConversation.conversation_id);
-            window.dispatchEvent(new CustomEvent("aiforge:new-chat", { detail: { sessionId: createdConversation.conversation_id } }));
+            try {
+                const createdConversation = await createConversation();
+                setSessions([createdConversation]);
+                setSidebarActiveSessionId(createdConversation.conversation_id);
+                setActiveSessionId(createdConversation.conversation_id);
+                window.dispatchEvent(new CustomEvent("aiforge:new-chat", { detail: { sessionId: createdConversation.conversation_id } }));
+            } catch (err) {
+                console.warn("Could not create initial conversation on backend:", err);
+            }
+        } catch (err) {
+            console.error("Failed to refresh sessions:", err);
         } finally {
             setLoading(false);
         }
     };
 
     const handleNewChat = async () => {
-        const conversation = await createConversation();
-        setSidebarActiveSessionId(conversation.conversation_id);
-        setActiveSessionId(conversation.conversation_id);
-        setSessions((current) => [conversation, ...current]);
-        window.dispatchEvent(new CustomEvent("aiforge:new-chat", { detail: { sessionId: conversation.conversation_id } }));
-        window.dispatchEvent(new CustomEvent("aiforge:open-session", { detail: { sessionId: conversation.conversation_id } }));
-        setView("chat");
+        try {
+            const conversation = await createConversation();
+            setSidebarActiveSessionId(conversation.conversation_id);
+            setActiveSessionId(conversation.conversation_id);
+            setSessions((current) => [conversation, ...current.filter(c => c.conversation_id !== conversation.conversation_id)]);
+            window.dispatchEvent(new CustomEvent("aiforge:new-chat", { detail: { sessionId: conversation.conversation_id } }));
+            window.dispatchEvent(new CustomEvent("aiforge:open-session", { detail: { sessionId: conversation.conversation_id } }));
+            setView("chat");
+        } catch (err) {
+            console.error("Failed to create new chat session:", err);
+            const fallbackId = `session_${Date.now()}`;
+            const fallbackConv = { conversation_id: fallbackId, title: "Untitled Conversation" };
+            setSidebarActiveSessionId(fallbackId);
+            setActiveSessionId(fallbackId);
+            setSessions((current) => [fallbackConv, ...current]);
+            window.dispatchEvent(new CustomEvent("aiforge:new-chat", { detail: { sessionId: fallbackId } }));
+            window.dispatchEvent(new CustomEvent("aiforge:open-session", { detail: { sessionId: fallbackId } }));
+            setView("chat");
+        }
     };
 
     const handleOpenSession = (sessionId) => {

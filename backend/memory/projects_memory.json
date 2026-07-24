@@ -13,7 +13,10 @@
     "reuse_score_pct": 95.0,
     "timestamp": 1784382076.6439812,
     "bugs_fixed_count": 3,
-    "overall_score": 95.0
+    "overall_score": 95.0,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_002",
@@ -30,7 +33,10 @@
     "reuse_score_pct": 96.0,
     "timestamp": 1784814128.05445,
     "bugs_fixed_count": 3,
-    "overall_score": 95.0
+    "overall_score": 95.0,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_003",
@@ -48,7 +54,10 @@
     "reuse_score_pct": 95.0,
     "timestamp": 1784814281.0788496,
     "bugs_fixed_count": 3,
-    "overall_score": 95.0
+    "overall_score": 95.0,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_004",
@@ -66,7 +75,10 @@
     "reuse_score_pct": 95.0,
     "timestamp": 1784814294.5263665,
     "bugs_fixed_count": 3,
-    "overall_score": 95.0
+    "overall_score": 95.0,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_005",
@@ -84,7 +96,10 @@
     "reuse_score_pct": 95.0,
     "timestamp": 1784814302.4102714,
     "bugs_fixed_count": 3,
-    "overall_score": 95.0
+    "overall_score": 95.0,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_006",
@@ -102,7 +117,10 @@
     "reuse_score_pct": 95.0,
     "timestamp": 1784814304.8370106,
     "bugs_fixed_count": 3,
-    "overall_score": 95.0
+    "overall_score": 95.0,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_007",
@@ -120,7 +138,10 @@
     "reuse_score_pct": 95.0,
     "timestamp": 1784814314.1133773,
     "bugs_fixed_count": 3,
-    "overall_score": 95.0
+    "overall_score": 95.0,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_008",
@@ -138,7 +159,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784814328.3224924
+    "timestamp": 1784814328.3224924,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_009",
@@ -156,7 +180,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784814341.822482
+    "timestamp": 1784814341.822482,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_010",
@@ -174,7 +201,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784814351.2823062
+    "timestamp": 1784814351.2823062,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_011",
@@ -192,7 +222,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784814361.3995323
+    "timestamp": 1784814361.3995323,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_012",
@@ -210,7 +243,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784814371.4023476
+    "timestamp": 1784814371.4023476,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_013",
@@ -227,7 +263,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784814371.4975424
+    "timestamp": 1784814371.4975424,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_014",
@@ -245,7 +284,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784814382.267777
+    "timestamp": 1784814382.267777,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_015",
@@ -262,7 +304,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784814382.3197422
+    "timestamp": 1784814382.3197422,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_016",
@@ -280,7 +325,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784815904.8199077
+    "timestamp": 1784815904.8199077,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_017",
@@ -298,7 +346,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784815904.853482
+    "timestamp": 1784815904.853482,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_018",
@@ -315,7 +366,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784815904.9203994
+    "timestamp": 1784815904.9203994,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_019",
@@ -332,7 +386,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784815904.9888847
+    "timestamp": 1784815904.9888847,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_020",
@@ -350,7 +407,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784816054.742493
+    "timestamp": 1784816054.742493,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_021",
@@ -367,7 +427,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784816054.8446066
+    "timestamp": 1784816054.8446066,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_022",
@@ -384,7 +447,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 96.0,
-    "timestamp": 1784816066.314396
+    "timestamp": 1784816066.314396,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_023",
@@ -402,7 +468,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784816434.9848037
+    "timestamp": 1784816434.9848037,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_024",
@@ -419,7 +488,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784816435.0843728
+    "timestamp": 1784816435.0843728,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_025",
@@ -436,7 +508,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 96.0,
-    "timestamp": 1784816445.4876482
+    "timestamp": 1784816445.4876482,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_026",
@@ -454,7 +529,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784816522.9315374
+    "timestamp": 1784816522.9315374,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_027",
@@ -471,7 +549,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784816523.0465362
+    "timestamp": 1784816523.0465362,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_028",
@@ -488,7 +569,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 96.0,
-    "timestamp": 1784816531.114582
+    "timestamp": 1784816531.114582,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_029",
@@ -506,7 +590,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784816719.2099345
+    "timestamp": 1784816719.2099345,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_030",
@@ -523,7 +610,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784816719.3198628
+    "timestamp": 1784816719.3198628,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_031",
@@ -540,7 +630,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 96.0,
-    "timestamp": 1784816727.671267
+    "timestamp": 1784816727.671267,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_032",
@@ -558,7 +651,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784816823.8446271
+    "timestamp": 1784816823.8446271,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_033",
@@ -575,7 +671,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784816823.9372816
+    "timestamp": 1784816823.9372816,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_034",
@@ -592,7 +691,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 96.0,
-    "timestamp": 1784816832.39182
+    "timestamp": 1784816832.39182,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_035",
@@ -610,7 +712,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784816882.975353
+    "timestamp": 1784816882.975353,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_036",
@@ -627,7 +732,10 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 95.0,
-    "timestamp": 1784816883.0851035
+    "timestamp": 1784816883.0851035,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
   },
   {
     "project_id": "proj_037",
@@ -644,6 +752,81 @@
     "success_status": "Passed",
     "deployment_status": "Successful",
     "reuse_score_pct": 96.0,
-    "timestamp": 1784816890.8159134
+    "timestamp": 1784816890.8159134,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": ""
+  },
+  {
+    "project_id": "proj_038",
+    "project_name": "session-a",
+    "tech_stack": [
+      "FastAPI",
+      "React"
+    ],
+    "performance_score": 9.5,
+    "overall_score": 95.0,
+    "bugs_fixed_count": 3,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784817058.9516213,
+    "completed_tasks": [
+      "Create login page"
+    ],
+    "generated_files": [
+      "coding:Create login page"
+    ],
+    "last_task": "Create login page",
+    "last_agent": "coding",
+    "latest_plan": "Plan A",
+    "latest_architecture": "Arch A",
+    "current_project": "Create login page"
+  },
+  {
+    "project_id": "proj_040",
+    "project_name": "session-c",
+    "tech_stack": [
+      "FastAPI",
+      "React"
+    ],
+    "performance_score": 9.5,
+    "overall_score": 95.0,
+    "bugs_fixed_count": 3,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "timestamp": 1784817059.251285,
+    "completed_tasks": [
+      "Create login page",
+      "Continue"
+    ],
+    "generated_files": [
+      "explanation:Create login page",
+      "explanation:Continue"
+    ],
+    "last_task": "Continue",
+    "last_agent": "explanation",
+    "latest_plan": "PLAN::Current Prompt\nContinue\n\nRecent History\n",
+    "latest_architecture": "# Project Architecture\n\n# Folder Structure\n- backend/\n- frontend/\n\n# Frontend Files\n- src/App.jsx\n\n# Backend Files\n- main.py\n\n# Database Schema\n- users\n\n# API Routes\n- /chat\n\n# Dependencies\n- FastAPI\n- React\n\n\n## Architecture Quality Check\n\nStatus: Incomplete\n\nMissing Required Sections:\n- High-Level Architecture\n- Api Specifications\n- Development Roadmap\n- Task Breakdown\n- Dependency Graph\n- Risk Analysis\n- Testing Strategy\n- Deployment Strategy\n\nPlease revise the architecture before implementation begins.\n",
+    "current_project": "Create login page"
+  },
+  {
+    "project_id": "proj_040",
+    "project_name": "session-b",
+    "tech_stack": [
+      "FastAPI",
+      "React"
+    ],
+    "performance_score": 9.5,
+    "overall_score": 95.0,
+    "bugs_fixed_count": 3,
+    "success_status": "Passed",
+    "deployment_status": "Successful",
+    "reuse_score_pct": 95.0,
+    "completed_tasks": [],
+    "generated_files": [],
+    "current_project": "",
+    "timestamp": 1784817199.4302645
   }
 ]
