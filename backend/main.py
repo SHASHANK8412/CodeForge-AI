@@ -84,6 +84,9 @@ def register_routers() -> None:
     from backend.routes.product_routes import router as product_manager_router
     app.include_router(product_manager_router)
 
+    from backend.routes.stream import router as stream_router
+    app.include_router(stream_router)
+
 
 register_routers()
 

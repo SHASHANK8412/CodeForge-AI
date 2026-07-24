@@ -1,8 +1,23 @@
+"""
+AIForge Configuration & Performance Tuning
+=========================================
+Tiered model allocations, prompt context window caps, SSE streaming defaults, and Fast Mode.
+"""
+
 OLLAMA_SMALL_MODEL = "qwen2.5-coder:latest"
 OLLAMA_MEDIUM_MODEL = "qwen2.5-coder:latest"
 OLLAMA_LARGE_MODEL = "qwen2.5-coder:latest"
 OLLAMA_CODING_MODEL = "qwen2.5-coder:latest"
 
+# Tiered Model Allocation
+OLLAMA_PLANNER_MODEL = "qwen2.5-coder:latest"
+OLLAMA_ARCHITECT_MODEL = "qwen2.5-coder:latest"
+OLLAMA_FRONTEND_MODEL = "qwen2.5-coder:latest"
+OLLAMA_BACKEND_MODEL = "qwen2.5-coder:latest"
+OLLAMA_DOCS_MODEL = "qwen2.5-coder:latest"
+
+# Fast Mode for live demonstrations & benchmarks
+ENABLE_FAST_MODE = True
 DEFAULT_OLLAMA_MODEL = OLLAMA_SMALL_MODEL
 
 MAX_HISTORY_MESSAGES = 5
@@ -10,19 +25,18 @@ CONVERSATION_HISTORY_TURNS = 10
 MAX_PROMPT_CHARS = 12000
 MAX_CACHE_ITEMS = 128
 
-# ---------------- Ollama Generation Options (performance tuning) ---------------- #
-# Lower temperature/top_p = faster, more deterministic, less "wandering"
-# output. A smaller num_ctx keeps the context window (and therefore the
-# prompt-processing time) small while still fitting plan + architecture +
-# memory context for a single agent call.
+# RAG Context Trimming
+MAX_RAG_CHUNKS = 5
+MAX_RAG_CONTEXT_CHARS = 2000
 
+# Ollama Generation Options
 OLLAMA_BASE_OPTIONS = {
     "temperature": 0.2,
     "top_p": 0.9,
     "num_ctx": 8192,
 }
 
-# Per-task context window sizes (num_ctx). Prevents VRAM bloat and speeds up prefill.
+# Per-task context window sizes (num_ctx).
 TASK_NUM_CTX = {
     "planner": 6144,
     "architect": 8192,
@@ -36,12 +50,7 @@ TASK_NUM_CTX = {
     "github": 4096,
 }
 
-# Per-task output length caps (num_predict). Increased to prevent truncation/incomplete responses.
-# Planner (9 sections) and Architect (11 sections) each produce a full structured report plus a
-# trailing JSON block, so they need a larger budget than a single-section agent reply. Measured
-# on CPU-only local Ollama (~3.4 tok/s): a real 9-section planner report finished at ~1167
-# tokens, well under budget, so these caps are a safety ceiling, not the expected length —
-# kept well below 4000 to bound worst-case latency (a 4000 cap risks 15-20+ min on CPU).
+# Per-task output length caps (num_predict).
 TASK_NUM_PREDICT = {
     "planner": 2200,
     "architect": 2800,
@@ -61,7 +70,7 @@ TASK_NUM_PREDICT = {
 
 DEFAULT_NUM_PREDICT = 2048
 
-# ---------------- Project Generation Options (Day 22) ---------------- #
+# Project Generation Options
 DEFAULT_BACKEND_PORT = 8000
 DEFAULT_FRONTEND_PORT = 80
 DEFAULT_PYTHON_VERSION = "3.13-slim"
@@ -70,7 +79,7 @@ DEFAULT_LICENSE_TYPE = "MIT"
 DEFAULT_ENV_KEYS = ["DATABASE_URL", "JWT_SECRET", "OPENAI_API_KEY", "OLLAMA_MODEL", "PORT"]
 GENERATED_PROJECTS_DIR_NAME = "generated_projects"
 
-# ---------------- Self-Healing & Review Options (Day 23) ---------------- #
+# Self-Healing & Review Options
 MAX_RETRY = 3
 QUALITY_THRESHOLD = 8.0
 MAX_PATCH_SIZE = 100
