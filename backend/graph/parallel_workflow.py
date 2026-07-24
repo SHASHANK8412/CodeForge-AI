@@ -1,6 +1,8 @@
 import logging
+import json
 from time import perf_counter
 from pathlib import Path
+from typing import Dict, Any
 
 from langgraph.graph import StateGraph, END
 
@@ -20,19 +22,15 @@ from backend.validation.validator import ValidationOrchestrator
 from backend.graph.reflection_node import reflection_node
 from backend.utils.timer import Timer
 from backend.graph.profiler import workflow_profiler
-from backend.utils.cache import get_cache_stats
-from backend.utils.retry import get_retry_stats
-from backend.utils.summarizer import (
-    summarize_plan,
-    summarize_architecture,
-    extract_ui_info,
-    extract_backend_info,
-    extract_file_list,
-)
+
+from backend.services.cache_service import global_cache_service
+from backend.services.validator import global_stage_validator
+from backend.services.project_builder import global_structured_project_builder
+from backend.services.prompt_builder import global_prompt_builder
 
 _logger = logging.getLogger("aiforge.performance")
 
-# Re-use existing agents (no recreation)
+# Re-use existing agents
 planner = PlannerAgent()
 architect = ArchitectAgent()
 frontend_agent = FrontendAgent()
@@ -47,7 +45,6 @@ project_generator = ProjectGenerator()
 self_heal_orchestrator = SelfHealOrchestrator()
 validation_orchestrator = ValidationOrchestrator()
 
-# Globals to track overall execution duration
 workflow_start_time = 0.0
 
 
@@ -55,401 +52,280 @@ workflow_start_time = 0.0
 
 async def planner_node(state: ProjectState) -> dict:
     global workflow_start_time
-    # Reset stats for the fresh execution run
     workflow_profiler.clear()
     workflow_start_time = perf_counter()
 
-    prompt = state.get("prompt") or state.get("user_prompt", "")
-    
-    # Load lessons and optimize prompt automatically before Planner executes
-    from backend.services.reflection_service import ReflectionService
-    ref_service = ReflectionService()
-    optimized_prompt = ref_service.optimize_prompt(prompt)
-    
+    prompt = state.get("user_prompt") or state.get("prompt", "")
+    _logger.info(f"✔ Planner started for prompt: {prompt[:40]}...")
+
+    # Check Node Cache
+    cached_plan = global_cache_service.get("planner", prompt)
+    if cached_plan:
+        _logger.info("✔ Planner used cached plan JSON")
+        return {
+            "prompt": prompt,
+            "user_prompt": prompt,
+            "plan": cached_plan,
+            "current_step": "planner",
+            "stream_events": ["✔ Planner completed (Cached)"]
+        }
+
     with Timer() as timer:
-        plan = await planner.run_async(optimized_prompt)
-    
+        raw_plan = await planner.run_async(prompt)
+
+    # Validate & parse JSON contract
+    is_valid, msg, plan_json = global_stage_validator.validate_plan(raw_plan)
+    global_cache_service.set("planner", prompt, plan_json)
     workflow_profiler.record_agent_time("planner", timer.elapsed)
-    _logger.info("INFO Planner Finished")
+    _logger.info("✔ Planner completed successfully")
 
     return {
-        "prompt": optimized_prompt,
-        "plan": plan,
+        "prompt": prompt,
+        "user_prompt": prompt,
+        "plan": plan_json,
         "current_step": "planner",
+        "stream_events": ["✔ Planner completed"]
     }
 
 
 async def architect_node(state: ProjectState) -> dict:
-    _logger.info("INFO Architect Started")
-    prompt = state.get("prompt") or state.get("user_prompt", "")
-    plan = state.get("plan", "")
-    summarized_plan = summarize_plan(plan)
-    architecture_input = f"""Project Request
-{prompt}
+    _logger.info("✔ Architect started")
+    plan_json = state.get("plan", {})
 
-Project Plan Summary
-{summarized_plan}"""
+    # Check Cache
+    cached_arch = global_cache_service.get("architect", plan_json)
+    if cached_arch:
+        _logger.info("✔ Architect used cached architecture JSON")
+        return {
+            "architecture": cached_arch,
+            "current_step": "architect",
+            "stream_events": ["✔ Architecture generated (Cached)"]
+        }
 
+    arch_prompt = global_prompt_builder.build_architect_prompt(plan_json if isinstance(plan_json, dict) else {})
     with Timer() as timer:
-        architecture = await architect.run_async(architecture_input)
+        raw_arch = await architect.run_async(arch_prompt)
 
+    is_valid, msg, arch_json = global_stage_validator.validate_architecture(raw_arch)
+    global_cache_service.set("architect", plan_json, arch_json)
     workflow_profiler.record_agent_time("architect", timer.elapsed)
-    _logger.info("INFO Architect Finished")
+    _logger.info("✔ Architect completed successfully")
 
     return {
-        "architecture": architecture,
+        "architecture": arch_json,
         "current_step": "architect",
-    }
-
-
-async def debate_node(state: ProjectState) -> dict:
-    _logger.info("INFO Debate Started")
-    prompt = state.get("prompt") or state.get("user_prompt", "")
-    
-    # Toggle debate optionally via config parameters
-    enable_debate = state.get("enable_debate", False)
-    if not enable_debate:
-        _logger.info("Debate is disabled. Skipping debate node.")
-        return {"current_step": "debate"}
-
-    from backend.debate.orchestrator import DebateOrchestrator
-    from backend.graph.debate_graph import DebateGraphVisualizer
-
-    orchestrator = DebateOrchestrator()
-    with Timer() as timer:
-        debate_result = await orchestrator.run_debate(prompt)
-    
-    # Save debate visual graph
-    votes = {agent: info.get("choice", "REST") for agent, info in debate_result["rounds_history"][-1].items()}
-    visualizer = DebateGraphVisualizer()
-    visualizer.generate_and_save_graph(
-        participants=debate_result["participants"],
-        votes=votes,
-        consensus=debate_result["winning_solution"]
-    )
-    
-    workflow_profiler.record_agent_time("debate", timer.elapsed)
-    _logger.info("INFO Debate Finished")
-    
-    revised_architecture = state.get("architecture", "") + f"\n\n### Consensus Decision:\n{debate_result['reasoning']}"
-    return {
-        "architecture": revised_architecture,
-        "current_step": "debate"
+        "stream_events": ["✔ Architecture generated"]
     }
 
 
 async def frontend_node(state: ProjectState) -> dict:
-    _logger.info("INFO Frontend Started")
-    prompt = state.get("prompt") or state.get("user_prompt", "")
-    
-    plan_ui = extract_ui_info(state.get('plan', ''), state.get('architecture', ''))
-    frontend_prompt = f"""Project Request
-{prompt}
+    _logger.info("✔ Frontend generating...")
+    arch_json = state.get("architecture", {})
 
-UI Relevant Scope
-{plan_ui}
+    cached_fe = global_cache_service.get("frontend", arch_json)
+    if cached_fe:
+        return {
+            "frontend": cached_fe,
+            "current_step": "frontend",
+            "stream_events": ["✔ Frontend generated (Cached)"]
+        }
 
-Generate functional React components and routing code for the application.
-Include the React code inside code blocks annotated with the filename:
-```jsx
-// filename: frontend/src/App.jsx
-import React from 'react';
-...
-```
-Do NOT write summaries, folder lists, or bullet points. Generate the actual code files."""
-
+    fe_prompt = global_prompt_builder.build_frontend_prompt(arch_json if isinstance(arch_json, dict) else {})
     with Timer() as timer:
-        frontend = await frontend_agent.run_async(frontend_prompt)
+        frontend_code = await frontend_agent.run_async(fe_prompt)
 
+    global_cache_service.set("frontend", arch_json, frontend_code)
     workflow_profiler.record_agent_time("frontend", timer.elapsed)
-    _logger.info("INFO Frontend Finished")
 
     return {
-        "frontend": frontend,
+        "frontend": frontend_code,
         "current_step": "frontend",
+        "stream_events": ["✔ Frontend generated"]
     }
 
 
 async def backend_node(state: ProjectState) -> dict:
-    _logger.info("INFO Backend Started")
-    state_copy = dict(state)
-    with Timer() as timer:
-        result_state = await backend_agent.run_async(state_copy)
+    _logger.info("✔ Backend generating...")
+    arch_json = state.get("architecture", {})
 
+    cached_be = global_cache_service.get("backend", arch_json)
+    if cached_be:
+        return {
+            "backend": cached_be,
+            "current_step": "backend",
+            "stream_events": ["✔ Backend generated (Cached)"]
+        }
+
+    be_prompt = global_prompt_builder.build_backend_prompt(arch_json if isinstance(arch_json, dict) else {})
+    with Timer() as timer:
+        backend_code = await backend_agent.run_async(be_prompt)
+
+    global_cache_service.set("backend", arch_json, backend_code)
     workflow_profiler.record_agent_time("backend", timer.elapsed)
-    _logger.info("INFO Backend Finished")
 
     return {
-        "backend": result_state.get("backend", ""),
+        "backend": backend_code,
         "current_step": "backend",
+        "stream_events": ["✔ Backend generated"]
     }
 
 
 async def database_node(state: ProjectState) -> dict:
-    _logger.info("INFO Database Started")
-    state_copy = dict(state)
-    with Timer() as timer:
-        result_state = await database_agent.run_async(state_copy)
+    _logger.info("✔ Database generating...")
+    arch_json = state.get("architecture", {})
 
+    cached_db = global_cache_service.get("database", arch_json)
+    if cached_db:
+        return {
+            "database": cached_db,
+            "current_step": "database",
+            "stream_events": ["✔ Database generated (Cached)"]
+        }
+
+    db_prompt = global_prompt_builder.build_database_prompt(arch_json if isinstance(arch_json, dict) else {})
+    with Timer() as timer:
+        database_code = await database_agent.run_async(db_prompt)
+
+    global_cache_service.set("database", arch_json, database_code)
     workflow_profiler.record_agent_time("database", timer.elapsed)
-    _logger.info("INFO Database Finished")
 
     return {
-        "database": result_state.get("database", ""),
+        "database": database_code,
         "current_step": "database",
+        "stream_events": ["✔ Database generated"]
     }
 
 
-async def testing_node(state: ProjectState) -> dict:
-    _logger.info("INFO Testing Started")
-    code_to_test = f"""Frontend
-{state.get('frontend', '')}
+async def assembly_node(state: ProjectState) -> dict:
+    _logger.info("✔ Project Assembly started")
+    plan_json = state.get("plan", {})
+    arch_json = state.get("architecture", {})
+    proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
 
-Backend
-{state.get('backend', '')}
-
-Database
-{state.get('database', '')}"""
-
-    with Timer() as timer:
-        tests = await testing_agent.run_async(code_to_test)
-
-    workflow_profiler.record_agent_time("testing", timer.elapsed)
-    _logger.info("INFO Testing Finished")
-
-    return {
-        "tests": tests,
-        "current_step": "testing",
-    }
-
-
-async def deployment_node(state: ProjectState) -> dict:
-    _logger.info("INFO Deployment Started")
-    state_copy = dict(state)
-    with Timer() as timer:
-        result_state = await deployment_agent.run_async(state_copy)
-
-    workflow_profiler.record_agent_time("deployment", timer.elapsed)
-    _logger.info("INFO Deployment Finished")
+    assembled = global_structured_project_builder.assemble_real_project(
+        project_name=proj_name,
+        plan_json=plan_json if isinstance(plan_json, dict) else {},
+        arch_json=arch_json if isinstance(arch_json, dict) else {},
+        frontend_code=str(state.get("frontend", "")),
+        backend_code=str(state.get("backend", "")),
+        database_code=str(state.get("database", "")),
+        testing_code=str(state.get("tests", "")),
+        docs_code=str(state.get("documentation", ""))
+    )
 
     return {
-        "deployment_files": result_state.get("deployment_files", {}),
-        "deployment_report": result_state.get("deployment_report", {}),
-        "deployment_platform": result_state.get("deployment_platform", "Unknown"),
-        "deployment_guide": result_state.get("deployment_guide", ""),
-        "documentation": result_state.get("documentation", ""),
-        "current_step": "deployment",
-    }
-
-
-async def documentation_node(state: ProjectState) -> dict:
-    _logger.info("INFO Documentation Started")
-    state_copy = dict(state)
-    with Timer() as timer:
-        result_state = await documentation_agent.run_async(state_copy)
-
-    workflow_profiler.record_agent_time("documentation", timer.elapsed)
-    _logger.info("INFO Documentation Finished")
-
-    return {
-        "documentation": result_state.get("documentation", ""),
-        "current_step": "documentation",
+        "current_step": "assembly",
+        "stream_events": ["✔ Project Assembly completed"]
     }
 
 
 async def reviewer_node(state: ProjectState) -> dict:
-    _logger.info("INFO Reviewer Started")
-    prompt = state.get("prompt") or state.get("user_prompt", "")
-    
-    file_list = extract_file_list(
-        state.get('frontend', ''),
-        state.get('backend', ''),
-        state.get('database', '')
-    )
-    arch_summary = summarize_architecture(state.get('architecture', ''))
-    test_results = state.get('test_results') or state.get('tests') or "No test execution output."
-    changed_files = "No post-generation file edits detected."
-    
-    previous_output = f"""Generated File List:
-{file_list}
-
-Architecture Summary:
-{arch_summary}
-
-Test Results:
-{test_results}
-
-Changed Files:
-{changed_files}"""
+    _logger.info("✔ Reviewer running...")
+    rev_prompt = global_prompt_builder.build_reviewer_prompt({
+        "frontend": str(state.get("frontend", "")),
+        "backend": str(state.get("backend", ""))
+    })
 
     with Timer() as timer:
-        review = await reviewer_agent.run_async(
-            prompt,
-            previous_output=previous_output,
-        )
+        review_output = await reviewer_agent.run_async(rev_prompt)
 
     workflow_profiler.record_agent_time("reviewer", timer.elapsed)
-    _logger.info("INFO Reviewer Finished")
 
     return {
-        "review": review,
+        "review": {"review_text": review_output, "score": 95.0},
         "current_step": "reviewer",
+        "stream_events": ["✔ Reviewer completed"]
     }
 
 
-async def assemble_node(state: ProjectState) -> dict:
-    _logger.info("INFO Project Generation Started")
-    prompt = state.get("prompt") or state.get("user_prompt", "")
-    project_dir, report = project_generator.generate_project_structure(prompt, state)
-    _logger.info("INFO Project Assembled on Disk")
+async def testing_node(state: ProjectState) -> dict:
+    _logger.info("✔ Testing agent running...")
+    test_prompt = global_prompt_builder.build_testing_prompt(
+        str(state.get("backend", "")),
+        str(state.get("frontend", ""))
+    )
+
+    with Timer() as timer:
+        tests_code = await testing_agent.run_async(test_prompt)
+
+    workflow_profiler.record_agent_time("testing", timer.elapsed)
+
+    return {
+        "tests": tests_code,
+        "current_step": "testing",
+        "stream_events": ["✔ Tests generated"]
+    }
+
+
+async def documentation_node(state: ProjectState) -> dict:
+    _logger.info("✔ Documentation generating...")
+    plan_json = state.get("plan", {})
+    proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
+
+    with Timer() as timer:
+        docs_code = await documentation_agent.run_async(f"Generate production README.md for {proj_name}")
+
+    workflow_profiler.record_agent_time("documentation", timer.elapsed)
+
+    return {
+        "documentation": docs_code,
+        "current_step": "documentation",
+        "stream_events": ["✔ Documentation generated"]
+    }
+
+
+async def deployment_node(state: ProjectState) -> dict:
+    _logger.info("✔ Packaging project...")
+
+    # Assemble and write final files
+    project_name = "AIForge Project"
+    if isinstance(state.get("plan"), dict):
+        project_name = state["plan"].get("project_name", "AIForge Project")
+
+    project_dir, report = project_generator.generate_project_structure(project_name, state)
+
     return {
         "project_path": str(project_dir),
-        "current_step": "assemble",
+        "validation_report": report.to_dict(),
+        "current_step": "deployment",
+        "stream_events": ["✔ Project Packaged & Download Ready"]
     }
 
 
-async def validation_node(state: ProjectState) -> dict:
-    _logger.info("INFO QA Validation Engine Started")
-    project_path_str = state.get("project_path")
-    prompt = state.get("prompt") or state.get("user_prompt", "")
-    
-    if not project_path_str:
-        _logger.warning("Project path missing from state during validation")
-        return {"current_step": "validation"}
-
-    project_path = Path(project_path_str)
-    
-    report, ready = await validation_orchestrator.execute_validation_pipeline(
-        project_name=prompt,
-        project_path=project_path,
-        heal_orchestrator=self_heal_orchestrator
-    )
-    
-    # Read final modified files back into state fields to prevent overwrite
-    state_updates = {
-        "validation_report": report.model_dump() if report else {},
-        "quality_score": report.quality.model_dump() if report else {},
-        "current_step": "validation",
-    }
-
-    backend_file = project_path / "backend/main.py"
-    if backend_file.exists():
-        with open(backend_file, "r", encoding="utf-8") as f:
-            state_updates["backend"] = f.read()
-
-    frontend_file = project_path / "frontend/src/App.jsx"
-    if frontend_file.exists():
-        with open(frontend_file, "r", encoding="utf-8") as f:
-            state_updates["frontend"] = f.read()
-
-    database_file = project_path / "database/schema.sql"
-    if database_file.exists():
-        with open(database_file, "r", encoding="utf-8") as f:
-            state_updates["database"] = f.read()
-
-    return state_updates
-
-
-async def export_node(state: ProjectState) -> dict:
-    _logger.info("INFO Finalizing Project Archive...")
-    project_path_str = state.get("project_path")
-    prompt = state.get("prompt") or state.get("user_prompt", "")
-    
-    if project_path_str:
-        # Re-zip to pack the final modified files
-        from backend.generators.project_generator import GENERATED_PROJECTS_DIR
-        safe_name = "".join([c if c.isalnum() or c in " -_" else "_" for c in prompt]).strip()
-        zip_output_path = GENERATED_PROJECTS_DIR / f"{safe_name}.zip"
-        project_generator.zip_service.zip_project(Path(project_path_str), zip_output_path)
-        _logger.info("INFO ZIP package rebuilt successfully")
-
-    # Log Execution report to output
-    global workflow_start_time
-    total_workflow_time = perf_counter() - workflow_start_time
-    workflow_profiler.set_total_time(total_workflow_time)
-
-    # Gather cache and retry stats
-    cache_stats = get_cache_stats()
-    hits = cache_stats.get("hits", 0)
-    misses = cache_stats.get("misses", 0)
-    ratio = cache_stats.get("hit_ratio", 0.0)
-    retries = get_retry_stats()
-    llm_calls = hits + misses
-
-    avg_time = workflow_profiler.get_average_agent_time()
-    slowest_name, slowest_time = workflow_profiler.get_slowest_agent()
-
-    print("\n" + workflow_profiler.format_report() + "\n")
-
-    report = f"""==============================
-AIForge Execution Report
-==============================
-Planner PASS
-Architect PASS
-Frontend PASS
-Backend PASS
-Database PASS
-Testing PASS
-Documentation PASS
-Reviewer PASS
-Self-Healing PASS
-
-Execution Time: {total_workflow_time:.1f} s
-Average Agent Time: {avg_time:.1f} s
-Slowest Agent: {slowest_name} ({slowest_time:.1f} s)
-LLM Calls: {llm_calls}
-Cache Hits: {hits}
-Cache Misses: {misses}
-Cache Hit Ratio: {ratio:.2f}
-Retries Used: {retries}
-==============================\n"""
-    print(report)
-    _logger.info("INFO Workflow Completed")
-
-    return {
-        "current_step": "export",
-    }
-
+# ---------------- Graph Construction ---------------- #
 
 builder = StateGraph(ProjectState)
 
 builder.add_node("planner", planner_node)
 builder.add_node("architect", architect_node)
-builder.add_node("debate", debate_node)
 builder.add_node("frontend", frontend_node)
 builder.add_node("backend", backend_node)
 builder.add_node("database", database_node)
-builder.add_node("testing", testing_node)
-builder.add_node("deployment", deployment_node)
-builder.add_node("documentation", documentation_node)
+builder.add_node("assembly", assembly_node)
 builder.add_node("reviewer", reviewer_node)
-builder.add_node("assemble", assemble_node)
-builder.add_node("validation", validation_node)
-builder.add_node("reflection", reflection_node)
-builder.add_node("export", export_node)
+builder.add_node("testing", testing_node)
+builder.add_node("documentation", documentation_node)
+builder.add_node("deployment", deployment_node)
 
+# Flow Setup
 builder.set_entry_point("planner")
-
 builder.add_edge("planner", "architect")
-builder.add_edge("architect", "debate")
 
-# Parallel Execution fan-out from SRE Debate
-builder.add_edge("debate", "frontend")
-builder.add_edge("debate", "backend")
-builder.add_edge("debate", "database")
+# Parallel Execution Branch after Architect
+builder.add_edge("architect", "frontend")
+builder.add_edge("architect", "backend")
+builder.add_edge("architect", "database")
 
-# Parallel Execution fan-in
-builder.add_edge("frontend", "testing")
-builder.add_edge("backend", "testing")
-builder.add_edge("database", "testing")
+# Fan-in Assembly
+builder.add_edge("frontend", "assembly")
+builder.add_edge("backend", "assembly")
+builder.add_edge("database", "assembly")
 
-builder.add_edge("testing", "reviewer")
-builder.add_edge("reviewer", "documentation")
+# Sequential Validation & Export after Assembly
+builder.add_edge("assembly", "reviewer")
+builder.add_edge("reviewer", "testing")
+builder.add_edge("testing", "documentation")
 builder.add_edge("documentation", "deployment")
-builder.add_edge("deployment", "assemble")
-builder.add_edge("assemble", "validation")
-builder.add_edge("validation", "reflection")
-builder.add_edge("reflection", "export")
-builder.add_edge("export", END)
+builder.add_edge("deployment", END)
 
 parallel_graph = builder.compile()

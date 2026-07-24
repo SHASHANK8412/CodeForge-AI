@@ -1,14 +1,28 @@
-from typing import Annotated, TypedDict
+"""
+AIForge LangGraph Structured State Definition
+=============================================
+Every node reads whatever fields it needs from this dict and writes
+its structured output back into its own section:
+{
+    "user_prompt": "",
+    "plan": {},
+    "architecture": {},
+    "frontend": {},
+    "backend": {},
+    "database": {},
+    "tests": {},
+    "review": {},
+    "documentation": {},
+    "validation": {},
+    "cached_nodes": [],
+    "stream_events": []
+}
+"""
+
+from typing import Annotated, TypedDict, Dict, Any, List, Optional
 
 
 def _merge_errors(existing: str, new: str) -> str:
-    """
-    Reducer for the `error` field.
-
-    If more than one agent fails at the same time, LangGraph needs a
-    reducer to combine both writes into a single value instead of raising
-    an "Invalid update" conflict for a plain (non-annotated) field.
-    """
     if not existing:
         return new
     if not new:
@@ -17,77 +31,53 @@ def _merge_errors(existing: str, new: str) -> str:
 
 
 def _merge_current_step(existing: str, new: str) -> str:
-    """
-    Reducer for the `current_step` field.
-
-    If multiple parallel nodes write to `current_step` concurrently,
-    this reducer will gracefully select the latest write.
-    """
     return new or existing
+
+
+def _merge_stream_events(existing: List[str], new: List[str]) -> List[str]:
+    return (existing or []) + (new or [])
 
 
 class ProjectState(TypedDict, total=False):
     """
-    Shared state object passed between every node of the end-to-end
-    "Project Generation" pipeline (Planner -> Architect -> Frontend ->
-    Backend -> Database -> Reviewer -> Testing -> Documentation).
-
-    Every agent reads whatever fields it needs from this dict and writes
-    its own output back into it, so the full history of the pipeline is
-    always available to every later stage.
+    Shared structured state object passed between every node of the end-to-end
+    parallel workflow pipeline.
     """
 
     # Prompt inputs
     prompt: str
     user_prompt: str
 
-    # Planner Agent output
-    plan: str
+    # Structured Agent Outputs (JSON / Dict Contracts)
+    plan: Dict[str, Any]
+    architecture: Dict[str, Any]
+    frontend: Any
+    backend: Any
+    database: Any
+    documentation: Any
+    tests: Any
+    review: Dict[str, Any]
+    github: Dict[str, Any]
 
-    # Architect Agent output
-    architecture: str
-
-    # Frontend Agent output (React / Vite / Tailwind source)
-    frontend: str
-
-    # Backend Agent output (FastAPI source)
-    backend: str
-
-    # Database Agent output (SQL schema)
-    database: str
-
-    # Documentation Agent output (README / API docs)
-    documentation: str
-
-    # Testing Agent output (pytest / unit / integration tests)
-    tests: str
-
-    # Reviewer Agent output (code review + suggested fixes)
-    review: str
-
-    # GitHub Agent output (folder structure, commit message, checklist)
-    github: str
-
-    # Populated to keep track of the current active pipeline step
+    # Pipeline tracking & validation
     current_step: Annotated[str, _merge_current_step]
-
-    # Populated if any stage raises an exception, so the pipeline can
-    # fail gracefully instead of crashing the whole request.
     error: Annotated[str, _merge_errors]
+    stream_events: Annotated[List[str], _merge_stream_events]
+    cached_nodes: List[str]
+    validation_status: Dict[str, Any]
 
-    # Day 23 Self-Healing & Quality evaluation fields
+    # Self-Healing & Quality evaluation fields
     project_path: str
-    review_findings: list[dict]
-    test_results: dict
-    quality_score: dict
+    review_findings: List[Dict[str, Any]]
+    test_results: Dict[str, Any]
+    quality_score: Dict[str, Any]
     quality_report: str
     self_heal_attempts: int
-    validation_report: dict
-    reflection_report: dict
+    validation_report: Dict[str, Any]
+    reflection_report: Dict[str, Any]
 
-    # Day 26 DevOps & Deployment fields
-    deployment_files: dict[str, str]
-    deployment_report: dict
+    # DevOps & Deployment fields
+    deployment_files: Dict[str, str]
+    deployment_report: Dict[str, Any]
     deployment_platform: str
     deployment_guide: str
-
