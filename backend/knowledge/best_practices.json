@@ -99,5 +99,12 @@
     "category": "architecture",
     "score": 96,
     "description": "Verified high-rating pattern from Movie Streaming Portal"
+  },
+  {
+    "practice_id": "bp_012",
+    "name": "Movie Streaming Portal Architecture",
+    "category": "architecture",
+    "score": 96,
+    "description": "Verified high-rating pattern from Movie Streaming Portal"
   }
 ]

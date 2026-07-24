@@ -85,7 +85,7 @@ def get_optimized_prompts():
 
 @router.post("/prompt/optimize")
 def optimize_agent_prompt(
-    agent_name: str = Query(..., regex="^(planner|backend|frontend|reviewer)$"),
+    agent_name: str = Query(..., pattern="^(planner|backend|frontend|reviewer)$"),
     feedback: str = Query(..., min_length=5)
 ):
     """

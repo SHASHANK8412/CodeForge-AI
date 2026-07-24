@@ -68,7 +68,7 @@ async def trigger_self_evolution():
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/reports")
-def get_report_contents(report_name: str = Query(..., regex="^(project_summary|analysis_report|architecture_review|security_report|performance_report|database_review|frontend_review|backend_review|testing_report|devops_report|improvement_plan)$")):
+def get_report_contents(report_name: str = Query(..., pattern="^(project_summary|analysis_report|architecture_review|security_report|performance_report|database_review|frontend_review|backend_review|testing_report|devops_report|improvement_plan)$")):
     """
     Returns raw markdown contents of the target SRE report document.
     """
