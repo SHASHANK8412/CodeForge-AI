@@ -211,7 +211,7 @@ def _chat_completion_with_fallback(
                     error_text = str(exc).lower()
                     status_code = getattr(exc, "status_code", None)
 
-                    if status_code == 404 or "not found" in error_text or "model" in error_text:
+                    if status_code == 404 or "not found" in error_text or "model" in error_text or "timeout" in error_text or "timed out" in error_text or "connect" in error_text:
                         _unavailable_models.add(candidate)
                         last_error = exc
                         continue
@@ -321,14 +321,18 @@ def generate_text(
 
     _logger.info("Agent Start task=%s model=%s", task, selected_model)
     llm_started_at = perf_counter()
-    response = _chat_completion_with_fallback(
-        messages=_generate_message_payload(system_prompt, compact_prompt),
-        model=selected_model,
-        options=_generation_options(task),
-    )
-    llm_elapsed_ms = (perf_counter() - llm_started_at) * 1000
+    try:
+        response = _chat_completion_with_fallback(
+            messages=_generate_message_payload(system_prompt, compact_prompt),
+            model=selected_model,
+            options=_generation_options(task),
+        )
+        content = response["message"]["content"]
+    except Exception as exc:
+        _logger.warning("Synchronous LLM call timed out or failed for task '%s': %s. Returning structured fallback.", task, exc)
+        content = _get_structured_task_fallback(task, compact_prompt)
 
-    content = response["message"]["content"]
+    llm_elapsed_ms = (perf_counter() - llm_started_at) * 1000
     _set_cached_response(key, content)
     elapsed_ms = (perf_counter() - started_at) * 1000
     _log_agent_performance(
