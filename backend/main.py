@@ -81,6 +81,9 @@ def register_routers() -> None:
     from backend.routes.analytics import router as day96_analytics_router
     app.include_router(day96_analytics_router)
 
+    from backend.routes.product_routes import router as product_manager_router
+    app.include_router(product_manager_router)
+
 
 register_routers()
 

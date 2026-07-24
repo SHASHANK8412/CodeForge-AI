@@ -3,7 +3,7 @@
     "mistake_id": "err_001",
     "problem": "Missing import in component / route",
     "solution": "Automatically add import",
-    "occurrences": 19,
+    "occurrences": 20,
     "category": "imports"
   },
   {

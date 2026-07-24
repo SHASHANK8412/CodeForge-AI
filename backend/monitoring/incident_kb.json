@@ -94,5 +94,21 @@
     "success": false,
     "duration_seconds": 0.8008213043212891,
     "confidence": 0.96
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "PostgreSQL unavailable",
+    "strategy": "Restart Database",
+    "success": false,
+    "duration_seconds": 1.8016250133514404,
+    "confidence": 0.96
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "PostgreSQL unavailable",
+    "strategy": "Restart Database",
+    "success": false,
+    "duration_seconds": 2.8026061058044434,
+    "confidence": 0.96
   }
 ]
