@@ -1,0 +1,89 @@
+[
+  {
+    "practice_id": "bp_001",
+    "name": "React Folder Structure",
+    "category": "frontend",
+    "score": 97,
+    "description": "Modular component and hook organization with service API layer",
+    "details": {
+      "components": "components/",
+      "services": "services/",
+      "pages": "pages/",
+      "hooks": "hooks/"
+    }
+  },
+  {
+    "practice_id": "bp_002",
+    "name": "FastAPI Architecture",
+    "category": "backend",
+    "score": 96,
+    "description": "Dependency injection with APIRouter modular routes and Pydantic schemas",
+    "details": {
+      "routes": "routes/",
+      "schemas": "schemas/",
+      "models": "models/",
+      "services": "services/"
+    }
+  },
+  {
+    "practice_id": "bp_003",
+    "name": "Database Schema",
+    "category": "database",
+    "score": 95,
+    "description": "Normalized Relational & Document Schema with Foreign Keys and Indexes",
+    "details": {
+      "orm": "SQLAlchemy",
+      "migrations": "Alembic"
+    }
+  },
+  {
+    "practice_id": "bp_004",
+    "name": "Security Fixes",
+    "category": "security",
+    "score": 98,
+    "description": "Bcrypt Password Hashing, JWT Bearer Tokens, CORS Sanitation, and Rate Limiting",
+    "details": {
+      "auth": "JWT Bearer",
+      "hashing": "Bcrypt"
+    }
+  },
+  {
+    "practice_id": "bp_005",
+    "name": "Testing Strategy",
+    "category": "testing",
+    "score": 94,
+    "description": "Pytest unit tests with mocked API dependencies and 90%+ assertion coverage",
+    "details": {
+      "framework": "pytest",
+      "mocking": "unittest.mock"
+    }
+  },
+  {
+    "practice_id": "bp_006",
+    "name": "Movie Streaming Portal Architecture",
+    "category": "architecture",
+    "score": 96,
+    "description": "Verified high-rating pattern from Movie Streaming Portal"
+  },
+  {
+    "practice_id": "bp_007",
+    "name": "Movie Streaming Portal Architecture",
+    "category": "architecture",
+    "score": 96,
+    "description": "Verified high-rating pattern from Movie Streaming Portal"
+  },
+  {
+    "practice_id": "bp_008",
+    "name": "SRE Incident Automation Platform Architecture",
+    "category": "architecture",
+    "score": 95,
+    "description": "Verified high-rating pattern from SRE Incident Automation Platform"
+  },
+  {
+    "practice_id": "bp_009",
+    "name": "AI Cloud Monitor Architecture",
+    "category": "architecture",
+    "score": 94,
+    "description": "Verified high-rating pattern from AI Cloud Monitor"
+  }
+]

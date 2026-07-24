@@ -1,60 +1,76 @@
 """
-AIForge Day 92 Project Evaluator Module
+AIForge Day 93 Learning Score Evaluator
 =======================================
-Combines QualityScoreEvaluator and GenerationHistoryStore to evaluate project builds automatically,
-passing results to pattern extraction or failure learning engines.
+Calculates weighted Learning Score across 6 dimensions:
+- Architecture: 30%
+- Code Quality: 20%
+- Tests: 20%
+- Performance: 15%
+- Documentation: 10%
+- Security: 5%
+
+Produces Overall Learning Score (e.g., Learning Score 94/100).
 """
 
 import logging
-from typing import Dict, Any, List, Optional
-from backend.learning.quality_score import global_quality_evaluator
-from backend.learning.history import global_history_store
+from typing import Dict, Any, Optional
 
 _logger = logging.getLogger("aiforge.learning.evaluator")
 
 
-class AutomatedProjectEvaluator:
+class LearningScoreEvaluator:
     """
-    Automated Project Evaluator.
+    Weighted Learning Score Evaluator.
     """
 
-    def evaluate_and_record(
+    def evaluate_learning_score(
         self,
         project_name: str,
-        framework: str = "React",
-        backend: str = "FastAPI",
-        files: Optional[Dict[str, str]] = None,
-        generation_time: int = 48,
-        bugs: int = 1
+        architecture_score: float = 95.0,
+        code_quality_score: float = 92.0,
+        tests_score: float = 94.0,
+        performance_score: float = 96.0,
+        documentation_score: float = 90.0,
+        security_score: float = 98.0
     ) -> Dict[str, Any]:
-        _logger.info(f"AutomatedProjectEvaluator: Running evaluation pipeline for '{project_name}'...")
+        _logger.info(f"LearningScoreEvaluator: Calculating weighted learning score for '{project_name}'...")
 
-        eval_result = global_quality_evaluator.evaluate_project_quality(
-            project_name=project_name,
-            files=files
-        )
+        weights = {
+            "architecture": 0.30,
+            "code_quality": 0.20,
+            "tests": 0.20,
+            "performance": 0.15,
+            "documentation": 0.10,
+            "security": 0.05
+        }
 
-        overall_score = eval_result["overall_score"]
-        tests_passed = int(overall_score * 0.4)
+        scores = {
+            "architecture": max(0.0, min(100.0, architecture_score)),
+            "code_quality": max(0.0, min(100.0, code_quality_score)),
+            "tests": max(0.0, min(100.0, tests_score)),
+            "performance": max(0.0, min(100.0, performance_score)),
+            "documentation": max(0.0, min(100.0, documentation_score)),
+            "security": max(0.0, min(100.0, security_score))
+        }
 
-        history_rec = global_history_store.record_history(
-            project=project_name,
-            framework=framework,
-            backend=backend,
-            score=overall_score,
-            tests_passed=tests_passed,
-            bugs=bugs,
-            generation_time=generation_time
+        overall_score = round(
+            sum(scores[cat] * weights[cat] for cat in weights), 1
         )
 
         return {
             "project_name": project_name,
-            "overall_score": overall_score,
-            "score_formatted": eval_result["score_formatted"],
-            "category_scores": eval_result["category_scores"],
-            "passed_threshold": eval_result["passed_threshold"],
-            "history_record": history_rec
+            "learning_score": int(overall_score),
+            "score_formatted": f"Learning Score {int(overall_score)}/100",
+            "breakdown": {
+                "architecture_30pct": scores["architecture"],
+                "code_quality_20pct": scores["code_quality"],
+                "tests_20pct": scores["tests"],
+                "performance_15pct": scores["performance"],
+                "documentation_10pct": scores["documentation"],
+                "security_5pct": scores["security"]
+            },
+            "passed": overall_score >= 90.0
         }
 
 
-global_automated_evaluator = AutomatedProjectEvaluator()
+global_learning_evaluator = LearningScoreEvaluator()

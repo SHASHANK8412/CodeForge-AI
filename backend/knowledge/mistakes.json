@@ -1,0 +1,23 @@
+[
+  {
+    "mistake_id": "err_001",
+    "problem": "Missing import in component / route",
+    "solution": "Automatically add import",
+    "occurrences": 18,
+    "category": "imports"
+  },
+  {
+    "mistake_id": "err_002",
+    "problem": "CORS Header wildcard missing in FastAPI middleware",
+    "solution": "Add CORSMiddleware with allow_origins=['*']",
+    "occurrences": 22,
+    "category": "security"
+  },
+  {
+    "mistake_id": "err_003",
+    "problem": "JWT Middleware Missing before protected routes",
+    "solution": "Always generate JWT middleware before routes",
+    "occurrences": 18,
+    "category": "authentication"
+  }
+]
