@@ -18,48 +18,42 @@ Do NOT write bullet points, descriptions, or short summaries. Generate actual SQ
             task_name="database",
         )
 
-    def run(self, state):
-        from backend.utils.summarizer import extract_backend_info
-        architecture = state.get("architecture", "")
-        prompt = state.get("user_prompt", "")
-        plan = state.get("plan", "")
+    def run(self, prompt_or_state, memory_context: str = "", previous_output: str = ""):
+        if isinstance(prompt_or_state, dict):
+            state = prompt_or_state
+            architecture = str(state.get("architecture", ""))
+            prompt = str(state.get("user_prompt", ""))
+            plan = str(state.get("plan", ""))
 
-        db_info = extract_backend_info(plan, architecture)
+            from backend.utils.summarizer import extract_backend_info
+            db_info = extract_backend_info(plan, architecture)
 
-        database_schema = self.generate(
-            f"""
-Project:
-{prompt}
+            database_schema = super().run(
+                f"Project: {prompt}\nDatabase Scope: {db_info}\nGenerate SQL Schema.",
+                memory_context,
+                previous_output
+            )
+            state["database"] = database_schema
+            return state
+        else:
+            return super().run(str(prompt_or_state), memory_context, previous_output)
 
-Database and Table Architecture Scope:
-{db_info}
+    async def run_async(self, prompt_or_state, memory_context: str = "", previous_output: str = ""):
+        if isinstance(prompt_or_state, dict):
+            state = prompt_or_state
+            architecture = str(state.get("architecture", ""))
+            prompt = str(state.get("user_prompt", ""))
+            plan = str(state.get("plan", ""))
 
-Generate the actual SQL Database Schema. Include it in a code block with the filepath annotation.
-"""
-        )
+            from backend.utils.summarizer import extract_backend_info
+            db_info = extract_backend_info(plan, architecture)
 
-        state["database"] = database_schema
-        return state
-
-    async def run_async(self, state):
-        from backend.utils.summarizer import extract_backend_info
-        architecture = state.get("architecture", "")
-        prompt = state.get("user_prompt", "")
-        plan = state.get("plan", "")
-
-        db_info = extract_backend_info(plan, architecture)
-
-        database_schema = await self.generate_async(
-            f"""
-Project:
-{prompt}
-
-Database and Table Architecture Scope:
-{db_info}
-
-Generate the actual SQL Database Schema. Include it in a code block with the filepath annotation.
-"""
-        )
-
-        state["database"] = database_schema
-        return state
+            database_schema = await super().run_async(
+                f"Project: {prompt}\nDatabase Scope: {db_info}\nGenerate SQL Schema.",
+                memory_context,
+                previous_output
+            )
+            state["database"] = database_schema
+            return state
+        else:
+            return await super().run_async(str(prompt_or_state), memory_context, previous_output)
