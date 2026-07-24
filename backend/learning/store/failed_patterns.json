@@ -1,0 +1,6 @@
+[
+  {
+    "pattern": "Synchronous DB queries inside async route",
+    "fix": "Use async session"
+  }
+]
