@@ -215,7 +215,7 @@ def planner_node(state: GraphState):
 # ---------------- Architect ---------------- #
 
 def _summarize_plan_fallback(plan: str) -> str:
-    from backend.graph.parallel_workflow import summarize_plan
+    from backend.utils.summarizer import summarize_plan
     return summarize_plan(plan)
 
 

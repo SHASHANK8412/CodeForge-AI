@@ -27,6 +27,7 @@ from backend.services.cache_service import global_cache_service
 from backend.services.validator import global_stage_validator
 from backend.services.project_builder import global_structured_project_builder
 from backend.services.prompt_builder import global_prompt_builder
+from backend.utils.summarizer import summarize_plan, summarize_architecture, extract_ui_info, extract_backend_info, extract_file_list
 
 _logger = logging.getLogger("aiforge.performance")
 
