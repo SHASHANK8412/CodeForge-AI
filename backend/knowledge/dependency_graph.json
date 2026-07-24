@@ -1,0 +1,71 @@
+{
+  "total_nodes": 7,
+  "total_edges": 0,
+  "frontend_component_tree": {
+    "component": "Home",
+    "children": [
+      "Navbar",
+      "Hero",
+      "Footer",
+      "Dashboard"
+    ]
+  },
+  "backend_flow": {
+    "layer_1": "API",
+    "layer_2": "Service",
+    "layer_3": "Database"
+  },
+  "nodes": [
+    {
+      "file": "frontend/src/theme.js",
+      "language": "javascript",
+      "exports": [],
+      "imports": []
+    },
+    {
+      "file": "frontend/src/components/Navbar.jsx",
+      "language": "javascript",
+      "exports": [
+        "Navbar"
+      ],
+      "imports": []
+    },
+    {
+      "file": "frontend/src/pages/Dashboard.jsx",
+      "language": "javascript",
+      "exports": [
+        "Dashboard"
+      ],
+      "imports": []
+    },
+    {
+      "file": "backend/database.py",
+      "language": "python",
+      "exports": [],
+      "imports": []
+    },
+    {
+      "file": "backend/config.py",
+      "language": "python",
+      "exports": [],
+      "imports": []
+    },
+    {
+      "file": "backend/auth.py",
+      "language": "python",
+      "exports": [
+        "login"
+      ],
+      "imports": []
+    },
+    {
+      "file": "backend/routes/auth_routes.py",
+      "language": "python",
+      "exports": [
+        "login"
+      ],
+      "imports": []
+    }
+  ],
+  "edges": []
+}

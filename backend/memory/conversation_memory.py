@@ -86,3 +86,37 @@ class ConversationMemory:
             "content": last_message.content,
             "metadata": last_message.metadata,
         }
+
+    def record_incremental_step(
+        self,
+        session_id: str,
+        prompt: str,
+        files_modified: list[str],
+        architecture_state: str = "FastAPI + React"
+    ) -> dict[str, Any]:
+        return self.save_message(
+            session_id=session_id,
+            user_prompt=prompt,
+            ai_response=f"Incrementally updated {len(files_modified)} files: {', '.join(files_modified)}",
+            agent_name="PairProgrammerAgent",
+            route="chat",
+            metadata={
+                "files_modified": files_modified,
+                "architecture_state": architecture_state
+            }
+        )
+
+    def get_incremental_context(self, session_id: str) -> dict[str, Any]:
+        history = self.get_history(session_id)
+        modified_files = []
+        for h in history:
+            meta = h.get("metadata") or {}
+            if "files_modified" in meta:
+                modified_files.extend(meta["files_modified"])
+        return {
+            "session_id": session_id,
+            "turn_count": len(history),
+            "modified_files_history": list(set(modified_files)),
+            "last_prompt": history[-1].get("user_prompt") if history else ""
+        }
+
