@@ -1,0 +1,50 @@
+[
+  {
+    "history_id": "hist_001",
+    "project": "Food Delivery App",
+    "framework": "React",
+    "backend": "FastAPI",
+    "score": 91,
+    "tests_passed": 34,
+    "bugs": 2,
+    "generation_time": 54,
+    "date": "2026-07-24",
+    "timestamp": 1784811233.1969762
+  },
+  {
+    "history_id": "hist_002",
+    "project": "E-Commerce Microservice",
+    "framework": "React",
+    "backend": "FastAPI",
+    "score": 94,
+    "tests_passed": 42,
+    "bugs": 1,
+    "generation_time": 46,
+    "date": "2026-07-24",
+    "timestamp": 1784854433.1969779
+  },
+  {
+    "history_id": "hist_003",
+    "project": "Food Delivery App",
+    "framework": "React",
+    "backend": "FastAPI",
+    "score": 91,
+    "tests_passed": 34,
+    "bugs": 2,
+    "generation_time": 54,
+    "date": "2026-07-24",
+    "timestamp": 1784897633.266037
+  },
+  {
+    "history_id": "hist_004",
+    "project": "FinTech Payment Gateway",
+    "framework": "React",
+    "backend": "FastAPI",
+    "score": 93,
+    "tests_passed": 37,
+    "bugs": 1,
+    "generation_time": 48,
+    "date": "2026-07-24",
+    "timestamp": 1784897633.4004982
+  }
+]

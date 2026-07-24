@@ -1,0 +1,92 @@
+{
+  "patterns": [
+    {
+      "pattern_id": "pat_001",
+      "name": "Authentication Pattern",
+      "category": "authentication",
+      "score": 98,
+      "description": "JWT Stateless Authentication Controller & Middleware",
+      "content": "from fastapi import Depends, HTTPException, status\n..."
+    },
+    {
+      "pattern_id": "pat_002",
+      "name": "React Architecture",
+      "category": "frontend",
+      "score": 97,
+      "description": "Modular Component & Service Layer Architecture",
+      "content": "export function Component() { ... }"
+    },
+    {
+      "pattern_id": "pat_003",
+      "name": "Docker Pattern",
+      "category": "devops",
+      "score": 96,
+      "description": "Multi-stage Dockerfile & compose setup",
+      "content": "FROM node:18-alpine AS builder..."
+    },
+    {
+      "pattern_id": "pat_004",
+      "name": "FastAPI Boilerplate",
+      "category": "backend",
+      "score": 95,
+      "description": "Scalable REST API with Dependency Injection",
+      "content": "from fastapi import FastAPI, APIRouter..."
+    },
+    {
+      "pattern_id": "pat_005",
+      "name": "E-Commerce Microservice Architecture",
+      "category": "architecture",
+      "score": 94,
+      "description": "High quality architecture pattern from E-Commerce Microservice",
+      "content": "Clean Architecture + Microservices"
+    },
+    {
+      "pattern_id": "pat_006",
+      "name": "E-Commerce Microservice API Design",
+      "category": "api_design",
+      "score": 93,
+      "description": "RESTful API & JWT Controller design for E-Commerce Microservice",
+      "content": "from fastapi import APIRouter, Depends..."
+    },
+    {
+      "pattern_id": "pat_007",
+      "name": "E-Commerce Microservice Testing Approach",
+      "category": "testing",
+      "score": 92,
+      "description": "Pytest unit & integration testing suite from E-Commerce Microservice",
+      "content": "def test_sample_endpoint(): pass"
+    },
+    {
+      "pattern_id": "pat_008",
+      "name": "FinTech Payment Gateway Architecture",
+      "category": "architecture",
+      "score": 93,
+      "description": "High quality architecture pattern from FinTech Payment Gateway",
+      "content": "Clean Architecture"
+    },
+    {
+      "pattern_id": "pat_009",
+      "name": "FinTech Payment Gateway API Design",
+      "category": "api_design",
+      "score": 92,
+      "description": "RESTful API & JWT Controller design for FinTech Payment Gateway",
+      "content": "from fastapi import APIRouter, Depends..."
+    },
+    {
+      "pattern_id": "pat_010",
+      "name": "FinTech Payment Gateway Testing Approach",
+      "category": "testing",
+      "score": 91,
+      "description": "Pytest unit & integration testing suite from FinTech Payment Gateway",
+      "content": "def test_sample_endpoint(): pass"
+    }
+  ],
+  "prompts": [
+    {
+      "prompt_id": "prm_001",
+      "role": "backend",
+      "score": 96,
+      "text": "Generate a scalable FastAPI backend using dependency injection, JWT authentication, logging, error handling, Swagger, unit tests, Docker, and production-ready architecture."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "failure_id": "fail_001",
+    "problem": "Authentication broken / JWT Middleware Missing",
+    "fix": "Always generate JWT middleware before routes",
+    "category": "authentication",
+    "times_applied": 14
+  },
+  {
+    "failure_id": "fail_002",
+    "problem": "CORS Error on frontend requests",
+    "fix": "Set allow_origins=['*'] and allow_credentials=True in FastAPI CORSMiddleware",
+    "category": "security",
+    "times_applied": 22
+  },
+  {
+    "failure_id": "fail_003",
+    "problem": "Authentication broken / JWT Middleware Missing",
+    "fix": "Always generate JWT middleware before routes",
+    "category": "authentication",
+    "times_applied": 1
+  }
+]
