@@ -3,7 +3,7 @@
     "mistake_id": "err_001",
     "problem": "Missing import in component / route",
     "solution": "Automatically add import",
-    "occurrences": 18,
+    "occurrences": 19,
     "category": "imports"
   },
   {
@@ -19,5 +19,12 @@
     "solution": "Always generate JWT middleware before routes",
     "occurrences": 18,
     "category": "authentication"
+  },
+  {
+    "mistake_id": "err_004",
+    "problem": "Unindexed DB search column",
+    "solution": "Add database index on search column",
+    "occurrences": 1,
+    "category": "general"
   }
 ]

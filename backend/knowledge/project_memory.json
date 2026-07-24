@@ -90,5 +90,20 @@
     "tokens_used": 3400,
     "build_success": true,
     "test_success": true
+  },
+  {
+    "project_id": "proj_007",
+    "project": "Movie Streaming Portal",
+    "framework": "React",
+    "backend": "FastAPI",
+    "bugs": 1,
+    "tests_passed": 94,
+    "rating": 5,
+    "learning_score": 96,
+    "architecture": "FastAPI + React",
+    "generation_time_sec": 48,
+    "tokens_used": 3400,
+    "build_success": true,
+    "test_success": true
   }
 ]

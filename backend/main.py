@@ -72,6 +72,15 @@ def register_routers() -> None:
     from backend.routes.intelligence_routes import router as intelligence_engine_router
     app.include_router(intelligence_engine_router)
 
+    from backend.routes.learning import router as day96_learning_router
+    app.include_router(day96_learning_router)
+
+    from backend.routes.feedback import router as day96_feedback_router
+    app.include_router(day96_feedback_router)
+
+    from backend.routes.analytics import router as day96_analytics_router
+    app.include_router(day96_analytics_router)
+
 
 register_routers()
 

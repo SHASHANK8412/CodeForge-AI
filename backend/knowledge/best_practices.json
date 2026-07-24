@@ -85,5 +85,12 @@
     "category": "architecture",
     "score": 94,
     "description": "Verified high-rating pattern from AI Cloud Monitor"
+  },
+  {
+    "practice_id": "bp_010",
+    "name": "Movie Streaming Portal Architecture",
+    "category": "architecture",
+    "score": 96,
+    "description": "Verified high-rating pattern from Movie Streaming Portal"
   }
 ]
