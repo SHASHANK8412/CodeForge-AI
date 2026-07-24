@@ -22,92 +22,36 @@ Rules:
             task_name="documentation",
         )
 
-    def run(self, state):
+    def run(self, prompt_or_state, memory_context: str = "", previous_output: str = ""):
+        if isinstance(prompt_or_state, dict):
+            state = prompt_or_state
+            prompt = str(state.get("user_prompt", ""))
+            plan = str(state.get("plan", ""))
+            architecture = str(state.get("architecture", ""))
 
-        prompt = state.get("user_prompt", "")
-        plan = state.get("plan", "")
-        architecture = state.get("architecture", "")
-        frontend = state.get("frontend", "")
-        backend = state.get("backend", "")
-        database = state.get("database", "")
+            documentation = super().run(
+                f"Project: {prompt}\nPlan: {plan}\nArchitecture: {architecture}\nGenerate README.md",
+                memory_context,
+                previous_output
+            )
+            state["documentation"] = documentation
+            return state
+        else:
+            return super().run(str(prompt_or_state), memory_context, previous_output)
 
-        documentation = self.generate(
-            f"""
-Generate ONLY a README.md for this project.
+    async def run_async(self, prompt_or_state, memory_context: str = "", previous_output: str = ""):
+        if isinstance(prompt_or_state, dict):
+            state = prompt_or_state
+            prompt = str(state.get("user_prompt", ""))
+            plan = str(state.get("plan", ""))
+            architecture = str(state.get("architecture", ""))
 
-Project:
-
-{prompt}
-
-Plan:
-
-{plan}
-
-Architecture:
-
-{architecture}
-
-Frontend:
-
-{frontend}
-
-Backend:
-
-{backend}
-
-Database:
-
-{database}
-
-Return a professional README.md.
-"""
-        )
-
-        state["documentation"] = documentation
-
-        return state
-
-    async def run_async(self, state):
-
-        prompt = state.get("user_prompt", "")
-        plan = state.get("plan", "")
-        architecture = state.get("architecture", "")
-        frontend = state.get("frontend", "")
-        backend = state.get("backend", "")
-        database = state.get("database", "")
-
-        documentation = await self.generate_async(
-            f"""
-Generate ONLY a README.md for this project.
-
-Project:
-
-{prompt}
-
-Plan:
-
-{plan}
-
-Architecture:
-
-{architecture}
-
-Frontend:
-
-{frontend}
-
-Backend:
-
-{backend}
-
-Database:
-
-{database}
-
-Return a professional README.md.
-"""
-        )
-
-        state["documentation"] = documentation
-
-        return state
+            documentation = await super().run_async(
+                f"Project: {prompt}\nPlan: {plan}\nArchitecture: {architecture}\nGenerate README.md",
+                memory_context,
+                previous_output
+            )
+            state["documentation"] = documentation
+            return state
+        else:
+            return await super().run_async(str(prompt_or_state), memory_context, previous_output)

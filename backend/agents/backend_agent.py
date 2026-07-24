@@ -19,48 +19,42 @@ Do NOT write bullet points, descriptions, or short summaries. Generate actual Fa
             task_name="backend",
         )
 
-    def run(self, state):
-        from backend.utils.summarizer import extract_backend_info
-        architecture = state.get("architecture", "")
-        plan = state.get("plan", "")
-        prompt = state.get("user_prompt", "")
+    def run(self, prompt_or_state, memory_context: str = "", previous_output: str = ""):
+        if isinstance(prompt_or_state, dict):
+            state = prompt_or_state
+            architecture = str(state.get("architecture", ""))
+            plan = str(state.get("plan", ""))
+            prompt = str(state.get("user_prompt", ""))
 
-        backend_info = extract_backend_info(plan, architecture)
+            from backend.utils.summarizer import extract_backend_info
+            backend_info = extract_backend_info(plan, architecture)
 
-        backend_code = self.generate(
-            f"""
-Project:
-{prompt}
+            backend_code = super().run(
+                f"Project: {prompt}\nBackend Scope: {backend_info}\nGenerate FastAPI Backend.",
+                memory_context,
+                previous_output
+            )
+            state["backend"] = backend_code
+            return state
+        else:
+            return super().run(str(prompt_or_state), memory_context, previous_output)
 
-Backend Scope Details:
-{backend_info}
+    async def run_async(self, prompt_or_state, memory_context: str = "", previous_output: str = ""):
+        if isinstance(prompt_or_state, dict):
+            state = prompt_or_state
+            architecture = str(state.get("architecture", ""))
+            plan = str(state.get("plan", ""))
+            prompt = str(state.get("user_prompt", ""))
 
-Generate the actual FastAPI backend implementation. Include it in a code block with the filepath annotation.
-"""
-        )
+            from backend.utils.summarizer import extract_backend_info
+            backend_info = extract_backend_info(plan, architecture)
 
-        state["backend"] = backend_code
-        return state
-
-    async def run_async(self, state):
-        from backend.utils.summarizer import extract_backend_info
-        architecture = state.get("architecture", "")
-        plan = state.get("plan", "")
-        prompt = state.get("user_prompt", "")
-
-        backend_info = extract_backend_info(plan, architecture)
-
-        backend_code = await self.generate_async(
-            f"""
-Project:
-{prompt}
-
-Backend Scope Details:
-{backend_info}
-
-Generate the actual FastAPI backend implementation. Include it in a code block with the filepath annotation.
-"""
-        )
-
-        state["backend"] = backend_code
-        return state
+            backend_code = await super().run_async(
+                f"Project: {prompt}\nBackend Scope: {backend_info}\nGenerate FastAPI Backend.",
+                memory_context,
+                previous_output
+            )
+            state["backend"] = backend_code
+            return state
+        else:
+            return await super().run_async(str(prompt_or_state), memory_context, previous_output)
