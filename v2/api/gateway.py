@@ -151,6 +151,24 @@ async def backend_generate_v2(req: GenerateRequest):
     }
 
 
+@router.post("/database/generate")
+async def database_generate_v2(req: GenerateRequest):
+    from v2.agents.database.agent import global_database_agent_v2
+    report = global_database_agent_v2.generate_database(req.prompt)
+    return {
+        "status": "completed",
+        "database": {
+            "name": report.project_name,
+            "folder_structure": report.folder_structure
+        },
+        "tables": [t.dict() for t in report.tables],
+        "relationships": [r.dict() for r in report.relationships],
+        "indexes": [idx.dict() for idx in report.indexes],
+        "migrations": [m.dict() for m in report.migrations],
+        "seeds": [s.dict() for s in report.seeds]
+    }
+
+
 @router.post("/code")
 async def code_workflow(req: GenerateRequest):
     return {"status": "code_generated", "frontend": "// React Code", "backend": "# FastAPI Code"}

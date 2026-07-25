@@ -222,5 +222,38 @@ class AuthRoleRecord(BaseModel):
     created_at: float = Field(default_factory=time.time)
 
 
+class DatabaseModelRecord(BaseModel):
+    id: str
+    project_id: str
+    model_name: str
+    status: str = "generated"
+    created_at: float = Field(default_factory=time.time)
+
+
+class MigrationRecord(BaseModel):
+    id: str
+    project_id: str
+    version: str
+    status: str = "applied"
+    created_at: float = Field(default_factory=time.time)
+
+
+class IndexRecord(BaseModel):
+    id: str
+    project_id: str
+    index_name: str
+    table_name: str
+    created_at: float = Field(default_factory=time.time)
+
+
+class BackupRecord(BaseModel):
+    id: str
+    project_id: str
+    backup_type: str = "daily"
+    status: str = "success"
+    created_at: float = Field(default_factory=time.time)
+
+
+
 
 
