@@ -285,9 +285,10 @@ async def deployment_node(state: ProjectState) -> dict:
 
     project_dir, report = project_generator.generate_project_structure(project_name, state)
 
+    report_dict = report.dict() if hasattr(report, "dict") else (report.to_dict() if hasattr(report, "to_dict") else str(report))
     return {
         "project_path": str(project_dir),
-        "validation_report": report.to_dict(),
+        "validation_report": report_dict,
         "current_step": "deployment",
         "stream_events": ["✔ Project Packaged & Download Ready"]
     }
