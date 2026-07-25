@@ -47,63 +47,100 @@ class PlannerOutputParser:
             platforms=biz_data.get("platforms", ["Web SPA", "REST API"])
         )
 
-        frs = [
-            FunctionalRequirement(
-                id=item.get("id", f"FR{idx+1}"),
-                title=item.get("title", f"Requirement {idx+1}"),
-                description=item.get("description", "System requirement capability."),
-                priority=RequirementPriority(item.get("priority", "high").lower())
+        fr_raw = data.get("functional_requirements", [])
+        frs_list = []
+        for idx, item in enumerate(fr_raw):
+            if isinstance(item, str):
+                item = {"id": f"FR{idx+1}", "title": item, "description": item, "priority": "high"}
+            elif not isinstance(item, dict):
+                continue
+            p_val = item.get("priority", "high")
+            if not isinstance(p_val, str):
+                p_val = "high"
+            frs_list.append(
+                FunctionalRequirement(
+                    id=str(item.get("id", f"FR{idx+1}")),
+                    title=str(item.get("title", f"Requirement {idx+1}")),
+                    description=str(item.get("description", "System requirement capability.")),
+                    priority=RequirementPriority(p_val.lower() if p_val.lower() in ["critical", "high", "medium", "low"] else "high")
+                )
             )
-            for idx, item in enumerate(data.get("functional_requirements", []))
-        ] or [
+        frs = frs_list or [
             FunctionalRequirement(id="FR1", title="User Authentication", description="Secure JWT authentication", priority=RequirementPriority.CRITICAL),
             FunctionalRequirement(id="FR2", title="Interactive Dashboard", description="Real-time data visualization dashboard", priority=RequirementPriority.HIGH),
             FunctionalRequirement(id="FR3", title="Data Export", description="Export project reports in CSV/PDF format", priority=RequirementPriority.MEDIUM)
         ]
 
-        nfrs = [
-            NonFunctionalRequirement(
-                category=item.get("category", "Performance"),
-                description=item.get("description", "System latency constraint."),
-                target_metric=item.get("target_metric", "<1.0s")
+        nfr_raw = data.get("non_functional_requirements", [])
+        nfrs_list = []
+        for item in nfr_raw:
+            if isinstance(item, str):
+                item = {"category": "Performance", "description": item, "target_metric": "<1.0s"}
+            elif not isinstance(item, dict):
+                continue
+            nfrs_list.append(
+                NonFunctionalRequirement(
+                    category=str(item.get("category", "Performance")),
+                    description=str(item.get("description", "System latency constraint.")),
+                    target_metric=str(item.get("target_metric", "<1.0s"))
+                )
             )
-            for item in data.get("non_functional_requirements", [])
-        ] or [
+        nfrs = nfrs_list or [
             NonFunctionalRequirement(category="Performance", description="API Response Time", target_metric="<500ms"),
             NonFunctionalRequirement(category="Security", description="Data Encryption at Rest & Transit", target_metric="AES-256 / TLS 1.3"),
             NonFunctionalRequirement(category="Availability", description="Uptime Target SLA", target_metric="99.9%")
         ]
 
-        personas = [
-            UserPersona(
-                name=p.get("name", "Standard User"),
-                role=p.get("role", "User"),
-                goals=p.get("goals", ["Accomplish task efficiently"]),
-                pain_points=p.get("pain_points", ["Manual data entry"]),
-                needs=p.get("needs", ["Automation and fast UI"])
+        personas_raw = data.get("user_personas", [])
+        personas_list = []
+        for p in personas_raw:
+            if isinstance(p, str):
+                p = {"name": p, "role": "User", "goals": [p], "pain_points": ["Manual process"], "needs": ["Automation"]}
+            elif not isinstance(p, dict):
+                continue
+            personas_list.append(
+                UserPersona(
+                    name=str(p.get("name", "Standard User")),
+                    role=str(p.get("role", "User")),
+                    goals=p.get("goals") if isinstance(p.get("goals"), list) else ["Accomplish task efficiently"],
+                    pain_points=p.get("pain_points") if isinstance(p.get("pain_points"), list) else ["Manual data entry"],
+                    needs=p.get("needs") if isinstance(p.get("needs"), list) else ["Automation and fast UI"]
+                )
             )
-            for p in data.get("user_personas", [])
-        ] or [
+        personas = personas_list or [
             UserPersona(name="Primary User", role="End User", goals=["Streamline workflow"], pain_points=["Slow legacy apps"], needs=["Real-time AI assistance"])
         ]
 
         stories = []
         for idx, s in enumerate(data.get("user_stories", [])):
-            ac_list = [
-                AcceptanceCriteria(
-                    given=ac.get("given", "System ready"),
-                    when_event=ac.get("when_event", "Action triggered"),
-                    then_outcome=ac.get("then_outcome", "Outcome verified")
+            if isinstance(s, str):
+                s = {"id": f"US{idx+1}", "persona": "User", "i_want_to": s, "so_that": "achieve goal", "priority": "high", "acceptance_criteria": []}
+            elif not isinstance(s, dict):
+                continue
+            ac_raw = s.get("acceptance_criteria", [])
+            ac_list = []
+            for ac in ac_raw if isinstance(ac_raw, list) else []:
+                if isinstance(ac, str):
+                    ac = {"given": "System ready", "when_event": ac, "then_outcome": "Outcome verified"}
+                elif not isinstance(ac, dict):
+                    continue
+                ac_list.append(
+                    AcceptanceCriteria(
+                        given=str(ac.get("given", "System ready")),
+                        when_event=str(ac.get("when_event", "Action triggered")),
+                        then_outcome=str(ac.get("then_outcome", "Outcome verified"))
+                    )
                 )
-                for ac in s.get("acceptance_criteria", [])
-            ]
+            p_val = s.get("priority", "high")
+            if not isinstance(p_val, str):
+                p_val = "high"
             stories.append(
                 UserStory(
-                    id=s.get("id", f"US{idx+1}"),
-                    persona=s.get("persona", "User"),
-                    i_want_to=s.get("i_want_to", "perform key action"),
-                    so_that=s.get("so_that", "achieve specific business outcome"),
-                    priority=RequirementPriority(s.get("priority", "high").lower()),
+                    id=str(s.get("id", f"US{idx+1}")),
+                    persona=str(s.get("persona", "User")),
+                    i_want_to=str(s.get("i_want_to", "perform key action")),
+                    so_that=str(s.get("so_that", "achieve specific business outcome")),
+                    priority=RequirementPriority(p_val.lower() if p_val.lower() in ["critical", "high", "medium", "low"] else "high"),
                     acceptance_criteria=ac_list
                 )
             )
