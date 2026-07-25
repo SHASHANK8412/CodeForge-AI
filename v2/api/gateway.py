@@ -174,6 +174,23 @@ async def code_workflow(req: GenerateRequest):
     return {"status": "code_generated", "frontend": "// React Code", "backend": "# FastAPI Code"}
 
 
+@router.post("/review/generate")
+async def review_generate_v2(req: GenerateRequest):
+    from v2.agents.reviewer.agent import global_reviewer_agent_v2
+    report = global_reviewer_agent_v2.review_project(req.prompt)
+    return {
+        "status": "completed",
+        "quality_score": {
+            "overall_score": report.overall_score,
+            "metrics": report.metrics.dict(),
+            "category_scores": [cs.dict() for cs in report.category_scores]
+        },
+        "issues": [i.dict() for i in report.issues],
+        "suggestions": [cs.dict() for cs in report.category_scores],
+        "refactoring": [r.dict() for r in report.refactorings]
+    }
+
+
 @router.post("/review")
 async def review_workflow(req: GenerateRequest):
     return {"status": "reviewed", "score": 95.6, "security_findings": 0}

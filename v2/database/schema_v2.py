@@ -254,6 +254,33 @@ class BackupRecord(BaseModel):
     created_at: float = Field(default_factory=time.time)
 
 
+class ReviewReportRecord(BaseModel):
+    id: str
+    project_id: str
+    overall_score: float = 95.5
+    created_at: float = Field(default_factory=time.time)
+
+
+class ReviewIssueRecord(BaseModel):
+    id: str
+    project_id: str
+    category: str
+    severity: str = "Medium"
+    description: str
+    resolved: bool = False
+    created_at: float = Field(default_factory=time.time)
+
+
+class RefactorSuggestionRecord(BaseModel):
+    id: str
+    project_id: str
+    file: str
+    description: str
+    priority: str = "Low"
+    created_at: float = Field(default_factory=time.time)
+
+
+
 
 
 

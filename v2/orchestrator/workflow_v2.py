@@ -30,6 +30,7 @@ class ProjectStateV2(TypedDict):
     frontend_output: Optional[str]
     backend_output: Optional[str]
     database_output: Optional[str]
+    reviewer_output: Optional[str]
     messages: Annotated[List[Dict[str, Any]], _merge_list]
 
 
@@ -129,6 +130,19 @@ def database_node(state: ProjectStateV2) -> Dict[str, Any]:
     }
 
 
+def reviewer_node(state: ProjectStateV2) -> Dict[str, Any]:
+    _logger.info("LangGraph Workflow V2: Reviewer Node executing...")
+    prompt = state["user_prompt"]
+    from v2.agents.reviewer.agent import global_reviewer_agent_v2
+
+    report = global_reviewer_agent_v2.review_project(prompt)
+
+    return {
+        "reviewer_output": report.json(),
+        "messages": [{"sender": "reviewer", "event": "PROJECT_CODE_REVIEW_COMPLETED", "payload": {"overall_score": report.overall_score, "issues_count": len(report.issues)}}]
+    }
+
+
 # ---------------- Graph Construction ---------------- #
 
 builder = StateGraph(ProjectStateV2)
@@ -140,6 +154,7 @@ builder.add_node("architect", architect_node)
 builder.add_node("frontend", frontend_node)
 builder.add_node("backend", backend_node)
 builder.add_node("database", database_node)
+builder.add_node("reviewer", reviewer_node)
 
 builder.add_edge(START, "ceo")
 builder.add_edge("ceo", "manager")
@@ -148,6 +163,7 @@ builder.add_edge("planner", "architect")
 builder.add_edge("architect", "frontend")
 builder.add_edge("frontend", "backend")
 builder.add_edge("backend", "database")
-builder.add_edge("database", END)
+builder.add_edge("database", "reviewer")
+builder.add_edge("reviewer", END)
 
 workflow_v2_graph = builder.compile()
