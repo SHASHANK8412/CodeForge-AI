@@ -62,6 +62,21 @@ class ArchitectAgentV2(BaseAgentV2):
         db_schema = global_database_designer.generate_schema(proj_name)
         folders = global_folder_generator.generate_tree(proj_name)
 
+        raw_folder_structure = data.get("folder_structure", folders)
+        if isinstance(raw_folder_structure, dict):
+            folder_list = []
+            for k, val in raw_folder_structure.items():
+                if isinstance(val, list):
+                    for sub in val:
+                        folder_list.append(f"{k}/{sub}")
+                else:
+                    folder_list.append(f"{k}/{val}")
+            folder_structure_sanitized = folder_list
+        elif isinstance(raw_folder_structure, list):
+            folder_structure_sanitized = [str(x) for x in raw_folder_structure]
+        else:
+            folder_structure_sanitized = folders
+
         from v2.agents.architect.models import (
             SecurityStrategy, CacheStrategySpec, VectorStoreSpec, DeploymentArchitecture
         )
@@ -71,7 +86,7 @@ class ArchitectAgentV2(BaseAgentV2):
             project_name=proj_name,
             high_level_architecture=data.get("high_level_architecture", "React Frontend -> FastAPI Gateway -> PostgreSQL DB -> Redis Cache"),
             low_level_architecture=data.get("low_level_architecture", "Decoupled REST microservices with JWT Auth middleware and ChromaDB embeddings"),
-            folder_structure=data.get("folder_structure", folders),
+            folder_structure=folder_structure_sanitized,
             components=components,
             apis=apis,
             database=db_schema,
