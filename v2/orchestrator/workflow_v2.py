@@ -28,6 +28,7 @@ class ProjectStateV2(TypedDict):
     planner_output: Optional[str]
     architect_output: Optional[str]
     frontend_output: Optional[str]
+    backend_output: Optional[str]
     messages: Annotated[List[Dict[str, Any]], _merge_list]
 
 
@@ -101,6 +102,19 @@ def frontend_node(state: ProjectStateV2) -> Dict[str, Any]:
     }
 
 
+def backend_node(state: ProjectStateV2) -> Dict[str, Any]:
+    _logger.info("LangGraph Workflow V2: Backend Node executing...")
+    prompt = state["user_prompt"]
+    from v2.agents.backend.agent import global_backend_agent_v2
+
+    report = global_backend_agent_v2.generate_backend(prompt)
+
+    return {
+        "backend_output": report.json(),
+        "messages": [{"sender": "backend", "event": "BACKEND_APPLICATION_GENERATED", "payload": {"apis_count": len(report.apis), "services_count": len(report.services)}}]
+    }
+
+
 # ---------------- Graph Construction ---------------- #
 
 builder = StateGraph(ProjectStateV2)
@@ -110,12 +124,14 @@ builder.add_node("manager", manager_node)
 builder.add_node("planner", planner_node)
 builder.add_node("architect", architect_node)
 builder.add_node("frontend", frontend_node)
+builder.add_node("backend", backend_node)
 
 builder.add_edge(START, "ceo")
 builder.add_edge("ceo", "manager")
 builder.add_edge("manager", "planner")
 builder.add_edge("planner", "architect")
 builder.add_edge("architect", "frontend")
-builder.add_edge("frontend", END)
+builder.add_edge("frontend", "backend")
+builder.add_edge("backend", END)
 
 workflow_v2_graph = builder.compile()

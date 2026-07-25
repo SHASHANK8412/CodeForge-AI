@@ -133,6 +133,24 @@ async def frontend_generate_v2(req: GenerateRequest):
     }
 
 
+@router.post("/backend/generate")
+async def backend_generate_v2(req: GenerateRequest):
+    from v2.agents.backend.agent import global_backend_agent_v2
+    report = global_backend_agent_v2.generate_backend(req.prompt)
+    return {
+        "status": "completed",
+        "backend": {
+            "name": report.project_name,
+            "folder_structure": report.folder_structure,
+            "dependencies": report.dependencies
+        },
+        "apis": [api.dict() for api in report.apis],
+        "services": [s.dict() for s in report.services],
+        "repositories": [r.dict() for r in report.repositories],
+        "tests": [t.dict() for t in report.tests]
+    }
+
+
 @router.post("/code")
 async def code_workflow(req: GenerateRequest):
     return {"status": "code_generated", "frontend": "// React Code", "backend": "# FastAPI Code"}

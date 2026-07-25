@@ -198,4 +198,29 @@ class FrontendRouteRecord(BaseModel):
     created_at: float = Field(default_factory=time.time)
 
 
+class BackendServiceRecord(BaseModel):
+    id: str
+    project_id: str
+    service_name: str
+    status: str = "generated"
+    created_at: float = Field(default_factory=time.time)
+
+
+class APIRouteRecord(BaseModel):
+    id: str
+    project_id: str
+    method: str = "POST"
+    path: str
+    protected: bool = True
+    created_at: float = Field(default_factory=time.time)
+
+
+class AuthRoleRecord(BaseModel):
+    id: str
+    role: str
+    permissions: List[str] = Field(default_factory=list)
+    created_at: float = Field(default_factory=time.time)
+
+
+
 
