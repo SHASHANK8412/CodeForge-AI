@@ -26,6 +26,7 @@ class ProjectStateV2(TypedDict):
     ceo_evaluation: Optional[Dict[str, Any]]
     tasks: Optional[List[Dict[str, Any]]]
     planner_output: Optional[str]
+    architect_output: Optional[str]
     messages: Annotated[List[Dict[str, Any]], _merge_list]
 
 
@@ -66,11 +67,23 @@ def planner_node(state: ProjectStateV2) -> Dict[str, Any]:
     from v2.agents.planner.planner_service import global_planner_service
 
     report = global_planner_service.analyze_project(prompt)
-    report_dict = report.dict()
 
     return {
         "planner_output": report.json(),
         "messages": [{"sender": "planner", "event": "PLANNING_BLUEPRINT_COMPLETED", "payload": {"fr_count": len(report.functional_requirements), "stories_count": len(report.user_stories)}}]
+    }
+
+
+def architect_node(state: ProjectStateV2) -> Dict[str, Any]:
+    _logger.info("LangGraph Workflow V2: Architect Node executing...")
+    prompt = state["user_prompt"]
+    from v2.agents.architect.agent import global_architect_agent_v2
+
+    report = global_architect_agent_v2.design_architecture(prompt)
+
+    return {
+        "architect_output": report.json(),
+        "messages": [{"sender": "architect", "event": "ARCHITECTURE_DESIGN_COMPLETED", "payload": {"apis_count": len(report.apis), "tables_count": len(report.database.tables)}}]
     }
 
 
@@ -81,10 +94,12 @@ builder = StateGraph(ProjectStateV2)
 builder.add_node("ceo", ceo_node)
 builder.add_node("manager", manager_node)
 builder.add_node("planner", planner_node)
+builder.add_node("architect", architect_node)
 
 builder.add_edge(START, "ceo")
 builder.add_edge("ceo", "manager")
 builder.add_edge("manager", "planner")
-builder.add_edge("planner", END)
+builder.add_edge("planner", "architect")
+builder.add_edge("architect", END)
 
 workflow_v2_graph = builder.compile()

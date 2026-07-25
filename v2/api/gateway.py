@@ -88,6 +88,27 @@ async def plan_workflow(req: GenerateRequest):
     return {"status": "planned", "spec": spec.dict()}
 
 
+@router.post("/architect/design")
+async def architect_design_v2(req: GenerateRequest):
+    from v2.agents.architect.agent import global_architect_agent_v2
+    report = global_architect_agent_v2.design_architecture(req.prompt)
+    return {
+        "status": "completed",
+        "architecture": {
+            "high_level": report.high_level_architecture,
+            "low_level": report.low_level_architecture,
+            "folder_structure": report.folder_structure,
+            "components": [c.dict() for c in report.components]
+        },
+        "database": report.database.dict(),
+        "apis": [api.dict() for api in report.apis],
+        "security": report.security.dict(),
+        "caching": report.caching.dict(),
+        "vector_store": report.vector_store.dict(),
+        "deployment": report.deployment.dict()
+    }
+
+
 @router.post("/architecture")
 async def architecture_workflow(req: GenerateRequest):
     return {"status": "architecture_designed", "components": ["Navbar", "Sidebar", "DashboardCard", "LoginForm"]}

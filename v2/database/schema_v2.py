@@ -144,3 +144,30 @@ class RiskRecord(BaseModel):
     mitigation: str
     created_at: float = Field(default_factory=time.time)
 
+
+class APIDefinitionRecord(BaseModel):
+    id: str
+    project_id: str
+    endpoint: str
+    method: str = "GET"
+    request_schema: Dict[str, Any] = Field(default_factory=dict)
+    response_schema: Dict[str, Any] = Field(default_factory=dict)
+    created_at: float = Field(default_factory=time.time)
+
+
+class ArchitectureRecord(BaseModel):
+    id: str
+    project_id: str
+    type: str = "microservices"
+    description: str
+    created_at: float = Field(default_factory=time.time)
+
+
+class DeploymentV2Record(BaseModel):
+    id: str
+    project_id: str
+    provider: str = "Docker Compose"
+    status: str = "ready"
+    created_at: float = Field(default_factory=time.time)
+
+
