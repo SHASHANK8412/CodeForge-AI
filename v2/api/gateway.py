@@ -12,7 +12,12 @@ from v2.agents.manager.manager_agent import global_manager_agent
 from v2.configs.config import global_v2_config
 from v2.events.event_bus import global_event_bus
 
+from v2.routes.projects import projects_router
+from v2.routes.memory import memory_router
+
 router = APIRouter(prefix="/api/v2", tags=["AIForge V2 Gateway"])
+router.include_router(projects_router)
+router.include_router(memory_router)
 
 
 class GenerateRequest(BaseModel):

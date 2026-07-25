@@ -38,12 +38,22 @@ class ProjectStateV2(TypedDict):
 
 # ---------------- Node Implementations ---------------- #
 
+from v2.services.memory_service import global_memory_service
+from v2.services.project_service import global_project_service
+
+
 def ceo_node(state: ProjectStateV2) -> Dict[str, Any]:
     prompt = state["user_prompt"]
     _logger.info(f"LangGraph Workflow V2: CEO Node executing for prompt '{prompt[:60]}...'")
 
+    # Create active project record in DB if not existing
+    project_info = global_project_service.create_new_project(title=prompt[:40], description=prompt)
+    project_id = project_info["id"]
+
     eval_result = global_ceo_agent_v2.evaluate_project(prompt)
     eval_dict = eval_result.dict()
+
+    global_memory_service.record_agent_output(project_id, "ceo", prompt, str(eval_dict), 12.0)
 
     return {
         "ceo_evaluation": eval_dict,
