@@ -107,3 +107,40 @@ class MetricRecord(BaseModel):
     metric_name: str
     value: float
     timestamp: float = Field(default_factory=time.time)
+
+
+class RequirementRecord(BaseModel):
+    id: str
+    project_id: str
+    type: str  # functional, non_functional
+    description: str
+    priority: str = "high"
+    created_at: float = Field(default_factory=time.time)
+
+
+class UserStoryRecord(BaseModel):
+    id: str
+    project_id: str
+    persona: str
+    story: str
+    status: str = "backlog"
+    created_at: float = Field(default_factory=time.time)
+
+
+class SprintRecord(BaseModel):
+    id: str
+    project_id: str
+    name: str
+    duration_weeks: int = 2
+    status: str = "planned"
+    created_at: float = Field(default_factory=time.time)
+
+
+class RiskRecord(BaseModel):
+    id: str
+    project_id: str
+    risk: str
+    severity: str = "high"
+    mitigation: str
+    created_at: float = Field(default_factory=time.time)
+

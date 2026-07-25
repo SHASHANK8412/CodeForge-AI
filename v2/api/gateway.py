@@ -61,6 +61,27 @@ async def generate_project_v2(req: GenerateRequest):
     }
 
 
+@router.post("/planner/analyze")
+async def planner_analyze_v2(req: GenerateRequest):
+    from v2.agents.planner.planner_service import global_planner_service
+    report = global_planner_service.analyze_project(req.prompt)
+    return {
+        "status": "completed",
+        "requirements": {
+            "functional": [fr.dict() for fr in report.functional_requirements],
+            "non_functional": [nfr.dict() for nfr in report.non_functional_requirements]
+        },
+        "stories": [story.dict() for story in report.user_stories],
+        "features": [feat.dict() for feat in report.prioritized_features],
+        "sprints": [sprint.dict() for sprint in report.sprint_plan],
+        "risks": [risk.dict() for risk in report.risk_analysis],
+        "recommendations": {
+            "tech": [tr.dict() for tr in report.tech_recommendations],
+            "architecture": report.architecture_recommendation
+        }
+    }
+
+
 @router.post("/plan")
 async def plan_workflow(req: GenerateRequest):
     spec = global_ceo_agent.evaluate_request(req.prompt)

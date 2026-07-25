@@ -63,20 +63,14 @@ def manager_node(state: ProjectStateV2) -> Dict[str, Any]:
 def planner_node(state: ProjectStateV2) -> Dict[str, Any]:
     _logger.info("LangGraph Workflow V2: Planner Node executing...")
     prompt = state["user_prompt"]
-    ceo_eval = state.get("ceo_evaluation", {})
+    from v2.agents.planner.planner_service import global_planner_service
 
-    context_prompt = (
-        f"Client Request: {prompt}\n"
-        f"Project Name: {ceo_eval.get('project_name')}\n"
-        f"Complexity Tier: {ceo_eval.get('complexity_tier')}\n"
-        f"Tech Stack: Frontend={ceo_eval.get('frontend_tech')}, Backend={ceo_eval.get('backend_tech')}, DB={ceo_eval.get('database_tech')}"
-    )
-
-    plan_report = planner_agent.run(context_prompt)
+    report = global_planner_service.analyze_project(prompt)
+    report_dict = report.dict()
 
     return {
-        "planner_output": plan_report,
-        "messages": [{"sender": "planner", "event": "PLANNING_COMPLETED", "payload": {"chars": len(plan_report)}}]
+        "planner_output": report.json(),
+        "messages": [{"sender": "planner", "event": "PLANNING_BLUEPRINT_COMPLETED", "payload": {"fr_count": len(report.functional_requirements), "stories_count": len(report.user_stories)}}]
     }
 
 
