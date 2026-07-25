@@ -65,7 +65,7 @@ async def run_v2_day8_verification():
 
     section("2. Security, Performance & Refactoring Engines")
     check("Security vulnerability audit identified & logged security issues", len(report.issues) >= 1)
-    check("Performance checker evaluated N+1 queries & Redis caching", any(cs.category_name == "Performance" for cs.category_name in [c.category_name for c in report.category_scores]))
+    check("Performance checker evaluated N+1 queries & Redis caching", any(cs.category_name == "Performance" for cs in report.category_scores))
     check("Refactoring engine generated priority code improvement suggestions", len(report.refactorings) >= 1)
 
     section("3. Code Quality Metrics & Approval Status")
