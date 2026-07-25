@@ -10,7 +10,7 @@ from v2.database.models_memory import ProjectModelV2, TaskModelV2, ConversationM
 
 def init_database():
     Base.metadata.create_all(bind=engine)
-    print("✓ AIForge V2 Persistent Memory database tables initialized successfully.")
+    print("[OK] AIForge V2 Persistent Memory database tables initialized successfully.")
 
 
 if __name__ == "__main__":
