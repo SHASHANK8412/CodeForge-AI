@@ -1,6 +1,8 @@
 import os
+import json
 import logging
 from pathlib import Path
+from typing import Any
 
 _logger = logging.getLogger("aiforge.performance")
 
@@ -19,13 +21,20 @@ def create_project_directories(base_path: Path, relative_paths: list[str]) -> No
             raise
 
 
-def write_project_file(file_path: Path, content: str) -> None:
+def write_project_file(file_path: Path, content: Any) -> None:
     """
-    Writes content string to the specified file path, creating parent folders if needed.
+    Writes content string to the specified file path, converting dict/list to json string if needed.
     """
     try:
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        file_path.write_text(content, encoding="utf-8")
+        if isinstance(content, (dict, list)):
+            text_data = json.dumps(content, indent=2)
+        elif content is None:
+            text_data = ""
+        else:
+            text_data = str(content)
+
+        file_path.write_text(text_data, encoding="utf-8")
         _logger.info(f"File written successfully: {file_path}")
     except Exception as exc:
         _logger.error(f"Failed to write file {file_path}: {exc}")
