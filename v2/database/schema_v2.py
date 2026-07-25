@@ -280,6 +280,36 @@ class RefactorSuggestionRecord(BaseModel):
     created_at: float = Field(default_factory=time.time)
 
 
+class TestSuiteRecord(BaseModel):
+    id: str
+    project_id: str
+    suite_name: str
+    status: str = "PASSED"
+    coverage: float = 94.5
+    created_at: float = Field(default_factory=time.time)
+
+
+class TestResultRecord(BaseModel):
+    id: str
+    project_id: str
+    test_name: str
+    status: str = "passed"
+    duration: float = 15.0
+    error_message: Optional[str] = None
+    created_at: float = Field(default_factory=time.time)
+
+
+class CoverageReportRecord(BaseModel):
+    id: str
+    project_id: str
+    line_coverage: float = 95.0
+    branch_coverage: float = 92.0
+    function_coverage: float = 96.0
+    overall_coverage: float = 94.5
+    created_at: float = Field(default_factory=time.time)
+
+
+
 
 
 

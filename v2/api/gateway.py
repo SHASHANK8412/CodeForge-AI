@@ -196,6 +196,21 @@ async def review_workflow(req: GenerateRequest):
     return {"status": "reviewed", "score": 95.6, "security_findings": 0}
 
 
+@router.post("/testing/generate")
+async def testing_generate_v2(req: GenerateRequest):
+    from v2.agents.testing.agent import global_testing_agent_v2
+    report = global_testing_agent_v2.generate_tests(req.prompt)
+    return {
+        "status": "completed",
+        "unit_tests": [ut.dict() for ut in report.unit_tests],
+        "integration_tests": [it.dict() for it in report.integration_tests],
+        "api_tests": [api.dict() for api in report.api_tests],
+        "coverage": report.coverage.dict(),
+        "performance": report.performance_metrics.dict(),
+        "overall_status": report.overall_status
+    }
+
+
 @router.post("/test")
 async def test_workflow(req: GenerateRequest):
     return {"status": "tested", "passed": 38, "failed": 0, "coverage_pct": 95.0}

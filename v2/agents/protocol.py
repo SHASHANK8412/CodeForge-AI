@@ -21,6 +21,7 @@ class AgentRole(str, Enum):
     DEVOPS = "devops"
     QA = "qa"
     REVIEWER = "reviewer"
+    TESTING = "testing"
     SECURITY = "security"
     DOCUMENTATION = "documentation"
     DEPLOYMENT = "deployment"
