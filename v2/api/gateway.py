@@ -211,6 +211,21 @@ async def testing_generate_v2(req: GenerateRequest):
     }
 
 
+@router.post("/documentation/generate")
+async def documentation_generate_v2(req: GenerateRequest):
+    from v2.agents.documentation.agent import global_documentation_agent_v2
+    report = global_documentation_agent_v2.generate_documentation(req.prompt)
+    return {
+        "status": "completed",
+        "readme": report.readme_markdown,
+        "developer_docs": report.developer_docs_markdown,
+        "deployment_docs": report.deployment_docs_markdown,
+        "user_manual": report.user_manual_markdown,
+        "diagrams": [d.dict() for d in report.diagrams],
+        "release_notes": report.release_notes.dict()
+    }
+
+
 @router.post("/test")
 async def test_workflow(req: GenerateRequest):
     return {"status": "tested", "passed": 38, "failed": 0, "coverage_pct": 95.0}

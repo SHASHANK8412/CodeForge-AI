@@ -32,6 +32,7 @@ class ProjectStateV2(TypedDict):
     database_output: Optional[str]
     reviewer_output: Optional[str]
     testing_output: Optional[str]
+    documentation_output: Optional[str]
     messages: Annotated[List[Dict[str, Any]], _merge_list]
 
 
@@ -157,6 +158,19 @@ def testing_node(state: ProjectStateV2) -> Dict[str, Any]:
     }
 
 
+def documentation_node(state: ProjectStateV2) -> Dict[str, Any]:
+    _logger.info("LangGraph Workflow V2: Documentation Node executing...")
+    prompt = state["user_prompt"]
+    from v2.agents.documentation.agent import global_documentation_agent_v2
+
+    report = global_documentation_agent_v2.generate_documentation(prompt)
+
+    return {
+        "documentation_output": report.json(),
+        "messages": [{"sender": "documentation", "event": "DOCUMENTATION_PACKAGE_GENERATED", "payload": {"files_count": len(report.files), "diagrams_count": len(report.diagrams)}}]
+    }
+
+
 # ---------------- Graph Construction ---------------- #
 
 builder = StateGraph(ProjectStateV2)
@@ -170,6 +184,7 @@ builder.add_node("backend", backend_node)
 builder.add_node("database", database_node)
 builder.add_node("reviewer", reviewer_node)
 builder.add_node("testing", testing_node)
+builder.add_node("documentation", documentation_node)
 
 builder.add_edge(START, "ceo")
 builder.add_edge("ceo", "manager")
@@ -180,6 +195,7 @@ builder.add_edge("frontend", "backend")
 builder.add_edge("backend", "database")
 builder.add_edge("database", "reviewer")
 builder.add_edge("reviewer", "testing")
-builder.add_edge("testing", END)
+builder.add_edge("testing", "documentation")
+builder.add_edge("documentation", END)
 
 workflow_v2_graph = builder.compile()

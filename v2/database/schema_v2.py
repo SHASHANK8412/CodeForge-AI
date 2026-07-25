@@ -309,6 +309,33 @@ class CoverageReportRecord(BaseModel):
     created_at: float = Field(default_factory=time.time)
 
 
+class DocumentationReportRecord(BaseModel):
+    id: str
+    project_id: str
+    status: str = "success"
+    validation_score: float = 98.0
+    created_at: float = Field(default_factory=time.time)
+
+
+class DocumentationFileRecord(BaseModel):
+    id: str
+    project_id: str
+    file_name: str
+    file_type: str
+    path: str
+    generated: bool = True
+    created_at: float = Field(default_factory=time.time)
+
+
+class ReleaseNotesRecord(BaseModel):
+    id: str
+    project_id: str
+    version: str = "2.0.0"
+    summary: str
+    created_at: float = Field(default_factory=time.time)
+
+
+
 
 
 
