@@ -19,6 +19,33 @@ class GenerateRequest(BaseModel):
     prompt: str
 
 
+@router.post("/project/start")
+async def start_project_v2(req: GenerateRequest):
+    from v2.orchestrator.workflow_v2 import workflow_v2_graph
+
+    initial_state = {
+        "user_prompt": req.prompt,
+        "ceo_evaluation": None,
+        "tasks": None,
+        "planner_output": None,
+        "messages": []
+    }
+
+    final_state = await workflow_v2_graph.ainvoke(initial_state)
+
+    return {
+        "status": "started",
+        "project": final_state.get("ceo_evaluation"),
+        "tasks": final_state.get("tasks", []),
+        "workflow": [
+            {"node": "ceo", "status": "completed"},
+            {"node": "manager", "status": "completed"},
+            {"node": "planner", "status": "completed"}
+        ],
+        "planner_output_preview": (final_state.get("planner_output") or "")[:300]
+    }
+
+
 @router.post("/generate")
 async def generate_project_v2(req: GenerateRequest):
     spec = global_ceo_agent.evaluate_request(req.prompt)
