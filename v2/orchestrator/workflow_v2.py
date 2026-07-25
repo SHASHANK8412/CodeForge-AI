@@ -27,6 +27,7 @@ class ProjectStateV2(TypedDict):
     tasks: Optional[List[Dict[str, Any]]]
     planner_output: Optional[str]
     architect_output: Optional[str]
+    frontend_output: Optional[str]
     messages: Annotated[List[Dict[str, Any]], _merge_list]
 
 
@@ -87,6 +88,19 @@ def architect_node(state: ProjectStateV2) -> Dict[str, Any]:
     }
 
 
+def frontend_node(state: ProjectStateV2) -> Dict[str, Any]:
+    _logger.info("LangGraph Workflow V2: Frontend Node executing...")
+    prompt = state["user_prompt"]
+    from v2.agents.frontend.agent import global_frontend_agent_v2
+
+    report = global_frontend_agent_v2.generate_frontend(prompt)
+
+    return {
+        "frontend_output": report.json(),
+        "messages": [{"sender": "frontend", "event": "FRONTEND_APPLICATION_GENERATED", "payload": {"components_count": len(report.components), "pages_count": len(report.pages)}}]
+    }
+
+
 # ---------------- Graph Construction ---------------- #
 
 builder = StateGraph(ProjectStateV2)
@@ -95,11 +109,13 @@ builder.add_node("ceo", ceo_node)
 builder.add_node("manager", manager_node)
 builder.add_node("planner", planner_node)
 builder.add_node("architect", architect_node)
+builder.add_node("frontend", frontend_node)
 
 builder.add_edge(START, "ceo")
 builder.add_edge("ceo", "manager")
 builder.add_edge("manager", "planner")
 builder.add_edge("planner", "architect")
-builder.add_edge("architect", END)
+builder.add_edge("architect", "frontend")
+builder.add_edge("frontend", END)
 
 workflow_v2_graph = builder.compile()

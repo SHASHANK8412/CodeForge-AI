@@ -171,3 +171,31 @@ class DeploymentV2Record(BaseModel):
     created_at: float = Field(default_factory=time.time)
 
 
+class FrontendComponentRecord(BaseModel):
+    id: str
+    project_id: str
+    component_name: str
+    path: str
+    status: str = "generated"
+    created_at: float = Field(default_factory=time.time)
+
+
+class FrontendPageRecord(BaseModel):
+    id: str
+    project_id: str
+    page_name: str
+    route: str
+    status: str = "generated"
+    created_at: float = Field(default_factory=time.time)
+
+
+class FrontendRouteRecord(BaseModel):
+    id: str
+    project_id: str
+    path: str
+    layout: str = "DashboardLayout"
+    protected: bool = True
+    created_at: float = Field(default_factory=time.time)
+
+
+

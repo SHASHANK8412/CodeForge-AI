@@ -114,6 +114,25 @@ async def architecture_workflow(req: GenerateRequest):
     return {"status": "architecture_designed", "components": ["Navbar", "Sidebar", "DashboardCard", "LoginForm"]}
 
 
+@router.post("/frontend/generate")
+async def frontend_generate_v2(req: GenerateRequest):
+    from v2.agents.frontend.agent import global_frontend_agent_v2
+    report = global_frontend_agent_v2.generate_frontend(req.prompt)
+    return {
+        "status": "completed",
+        "project": {
+            "name": report.project_name,
+            "folder_structure": report.folder_structure,
+            "dependencies": report.dependencies
+        },
+        "components": [c.dict() for c in report.components],
+        "pages": [p.dict() for p in report.pages],
+        "routes": [r.dict() for r in report.routes],
+        "stores": [s.dict() for s in report.stores],
+        "hooks": [h.dict() for h in report.hooks]
+    }
+
+
 @router.post("/code")
 async def code_workflow(req: GenerateRequest):
     return {"status": "code_generated", "frontend": "// React Code", "backend": "# FastAPI Code"}
