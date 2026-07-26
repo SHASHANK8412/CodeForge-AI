@@ -87,6 +87,9 @@ def register_routers() -> None:
     from backend.routes.stream import router as stream_router
     app.include_router(stream_router)
 
+    from backend.routes.upload import router as upload_router
+    app.include_router(upload_router)
+
     from v2.api.gateway import router as v2_gateway_router
     app.include_router(v2_gateway_router)
 
