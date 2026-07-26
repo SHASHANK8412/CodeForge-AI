@@ -156,16 +156,25 @@ def rag_search(query: str, top_k: int = 5):
 @app.post("/api/generate-project")
 async def generate_project(request: PromptRequest):
     from backend.graph.executor import global_workflow_executor
-    final_state = global_workflow_executor.execute_project_workflow(request.prompt, request.session_id)
+    final_state = global_workflow_executor.execute_project_workflow(request.prompt, request.session_id, use_parallel=True)
     return {
-        "status": "success",
-        "prompt": request.prompt,
-        "session_id": final_state.get("session_id"),
+        "status": "completed" if final_state.get("is_complete") else "running",
+        "project_id": final_state.get("session_id"),
+        "progress": final_state.get("progress", 100),
+        "current_agents": final_state.get("active_agents", []),
+        "completed_agents": list(final_state.get("execution_status", {}).keys()),
         "logs": final_state.get("logs", []),
         "project_files": final_state.get("project_files", {}),
-        "errors": final_state.get("errors", []),
-        "is_complete": final_state.get("is_complete", True)
+        "execution_time": final_state.get("execution_time", {}),
+        "errors": final_state.get("errors", [])
     }
+
+
+@app.get("/project-status/{project_id}")
+@app.get("/api/project-status/{project_id}")
+def project_status(project_id: str):
+    from backend.graph.executor import global_workflow_executor
+    return global_workflow_executor.get_project_status(project_id)
 
 
 @app.post("/generate")

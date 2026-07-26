@@ -21,3 +21,8 @@ class WorkflowState(TypedDict, total=False):
     retry_count: Dict[str, int]
     logs: List[str]
     is_complete: bool
+    execution_status: Dict[str, str]
+    execution_time: Dict[str, float]
+    progress: int
+    active_agents: List[str]
+    is_cancelled: bool
