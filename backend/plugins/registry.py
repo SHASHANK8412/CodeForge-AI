@@ -69,6 +69,10 @@ class PluginRegistry:
             for p_id, meta in self.plugins.items()
         ]
 
+    def get_all_registered(self) -> Dict[str, Dict[str, Any]]:
+        """Returns map of all registered plugins."""
+        return self.plugins
+
     def get_plugin(self, plugin_id: str) -> Optional[Dict[str, Any]]:
         return self.plugins.get(plugin_id)
 

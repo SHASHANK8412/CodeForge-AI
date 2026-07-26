@@ -13,6 +13,13 @@ class PluginManager:
     for built-in and third-party SDK plugins.
     """
 
+    def __init__(self):
+        self.registry = global_plugin_registry
+
+    def discover_and_load_plugins(self) -> List[Dict[str, Any]]:
+        """Legacy helper for plugin discovery."""
+        return self.list_all_plugins()
+
     def list_all_plugins(self) -> List[Dict[str, Any]]:
         """Lists all registered plugins and execution metrics."""
         return global_plugin_registry.list_plugins()
