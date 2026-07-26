@@ -99,3 +99,7 @@ class SessionManager:
     def clear_all(self) -> None:
         """Clears all sessions."""
         self._sessions.clear()
+
+
+# Global SessionManager Instance
+global_session_manager = SessionManager()
