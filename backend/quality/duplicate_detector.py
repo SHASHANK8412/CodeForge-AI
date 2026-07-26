@@ -14,13 +14,14 @@ class DuplicateDetector:
     def detect_duplicates(self, project_files: Dict[str, str]) -> Dict[str, Any]:
         block_hashes: Dict[str, List[str]] = {}
 
+        chunk_size = 3
         for filepath, content in project_files.items():
             lines = [line.strip() for line in content.split("\n") if line.strip() and not line.strip().startswith("#")]
-            # Check 5-line chunks
-            for i in range(len(lines) - 5):
-                chunk = "\n".join(lines[i:i+5])
-                h = hashlib.md5(chunk.encode("utf-8")).hexdigest()
-                block_hashes.setdefault(h, []).append(filepath)
+            if len(lines) >= chunk_size:
+                for i in range(len(lines) - chunk_size + 1):
+                    chunk = "\n".join(lines[i:i+chunk_size])
+                    h = hashlib.md5(chunk.encode("utf-8")).hexdigest()
+                    block_hashes.setdefault(h, []).append(filepath)
 
         duplicates = []
         for h, files in block_hashes.items():
