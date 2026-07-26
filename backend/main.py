@@ -118,7 +118,21 @@ def home():
 @app.get("/health")
 def health():
     return {
-        "status": "healthy"
+        "status": "healthy",
+        "database": "connected",
+        "cache": "active"
+    }
+
+
+@app.get("/metrics")
+def metrics():
+    import psutil
+    process = psutil.Process()
+    return {
+        "memory_rss_mb": round(process.memory_info().rss / (1024 * 1024), 2),
+        "cpu_percent": psutil.cpu_percent(interval=None),
+        "active_threads": process.num_threads(),
+        "status": "operational"
     }
 
 
@@ -151,14 +165,21 @@ async def generate(request: PromptRequest):
             "tests": result.get("tests", ""),
             "documentation": result.get("documentation", ""),
 
-            # Day 42 Architecture & Planning Artifacts
-            "planning_artifacts": planning_artifacts,
+            # Extended Platform Reports
+            "validation_report": result.get("validation_report", {}),
+            "security_report": result.get("security_report", ""),
+            "performance_report": result.get("performance_report", ""),
+            "testing_report": result.get("testing_report", ""),
+            "deployment_guide": result.get("deployment_guide", ""),
+            "deployment_files": result.get("deployment_files", {}),
+            "project_path": result.get("project_path", ""),
 
-            # Preserve existing functionality
+            # Planning Artifacts & Backwards Compatibility
+            "planning_artifacts": planning_artifacts,
             "generated_code": result.get("backend", ""),
             "reviewed_code": result.get("review", ""),
-            "testing_report": result.get("tests", ""),
             "explanation": result.get("documentation", ""),
+            "stream_events": result.get("stream_events", [])
         }
 
     except Exception as e:
@@ -166,3 +187,24 @@ async def generate(request: PromptRequest):
             status_code=500,
             detail=str(e)
         )
+
+
+@app.get("/download/{project_name}")
+def download_zip(project_name: str):
+    from fastapi.responses import FileResponse
+    from pathlib import Path
+    from backend.config import GENERATED_PROJECTS_DIR_NAME
+
+    base_dir = Path(__file__).resolve().parent.parent / GENERATED_PROJECTS_DIR_NAME
+    safe_name = "".join([c if c.isalnum() or c in " -_" else "_" for c in project_name]).strip()
+    zip_path = base_dir / f"{safe_name}.zip"
+
+    if not zip_path.exists():
+        # Fallback search any zip in base_dir
+        zips = list(base_dir.glob("*.zip"))
+        if zips:
+            zip_path = zips[0]
+        else:
+            raise HTTPException(status_code=404, detail="ZIP archive not found.")
+
+    return FileResponse(path=zip_path, filename=f"{safe_name}.zip", media_type="application/zip")

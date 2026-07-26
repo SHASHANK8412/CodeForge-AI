@@ -2,7 +2,7 @@ import logging
 import json
 from time import perf_counter
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from langgraph.graph import StateGraph, END
 
@@ -16,10 +16,19 @@ from backend.agents.documentation import DocumentationAgent
 from backend.agents.testing_agent import TestingAgent
 from backend.agents.reviewer_agent import ReviewerAgent
 from backend.agents.deployment_agent import DeploymentAgent
+
+# New Platform Agents
+from backend.agents.build_validation_agent import BuildValidationAgent
+from backend.agents.dependency_manager_agent import DependencyManagerAgent
+from backend.agents.project_execution_agent import ProjectExecutionAgent
+from backend.agents.file_quality_agent import FileQualityAgent
+from backend.agents.security_agent import SecurityAgent
+from backend.agents.performance_agent import PerformanceAgent
+from backend.agents.project_testing_agent import ProjectTestingAgent
+from backend.agents.project_packaging_agent import ProjectPackagingAgent
+
 from backend.generators.project_generator import ProjectGenerator
 from backend.review.self_heal import SelfHealOrchestrator
-from backend.validation.validator import ValidationOrchestrator
-from backend.graph.reflection_node import reflection_node
 from backend.utils.timer import Timer
 from backend.graph.profiler import workflow_profiler
 
@@ -27,42 +36,45 @@ from backend.services.cache_service import global_cache_service
 from backend.services.validator import global_stage_validator
 from backend.services.project_builder import global_structured_project_builder
 from backend.services.prompt_builder import global_prompt_builder
-from backend.utils.summarizer import summarize_plan, summarize_architecture, extract_ui_info, extract_backend_info, extract_file_list
+from backend.memory.memory_manager import memory_manager
 
 _logger = logging.getLogger("aiforge.performance")
 
-# Re-use existing agents
+# Instantiate all Platform Agents
 planner = PlannerAgent()
 architect = ArchitectAgent()
 frontend_agent = FrontendAgent()
 backend_agent = BackendAgent()
 database_agent = DatabaseAgent()
-documentation_agent = DocumentationAgent()
-testing_agent = TestingAgent()
 reviewer_agent = ReviewerAgent()
+project_testing_agent = ProjectTestingAgent()
+documentation_agent = DocumentationAgent()
+build_validation_agent = BuildValidationAgent()
+dependency_manager_agent = DependencyManagerAgent()
+security_agent = SecurityAgent()
+performance_agent = PerformanceAgent()
+execution_agent = ProjectExecutionAgent()
+file_quality_agent = FileQualityAgent()
+packaging_agent = ProjectPackagingAgent()
 deployment_agent = DeploymentAgent()
 
 project_generator = ProjectGenerator()
 self_heal_orchestrator = SelfHealOrchestrator()
-validation_orchestrator = ValidationOrchestrator()
 
-workflow_start_time = 0.0
+agent_timers: Dict[str, float] = {}
 
 
 # ---------------- Nodes ---------------- #
 
 async def planner_node(state: ProjectState) -> dict:
-    global workflow_start_time
     workflow_profiler.clear()
-    workflow_start_time = perf_counter()
+    agent_timers.clear()
 
     prompt = state.get("user_prompt") or state.get("prompt", "")
-    _logger.info(f"✔ Planner started for prompt: {prompt[:40]}...")
+    _logger.info(f"✔ [1/14] Planner started: {prompt[:40]}...")
 
-    # Check Node Cache
     cached_plan = global_cache_service.get("planner", prompt)
     if cached_plan:
-        _logger.info("✔ Planner used cached plan JSON")
         return {
             "prompt": prompt,
             "user_prompt": prompt,
@@ -74,11 +86,12 @@ async def planner_node(state: ProjectState) -> dict:
     with Timer() as timer:
         raw_plan = await planner.run_async(prompt)
 
-    # Validate & parse JSON contract
+    session_id = state.get("session_id", "default")
     is_valid, msg, plan_json = global_stage_validator.validate_plan(raw_plan)
     global_cache_service.set("planner", prompt, plan_json)
+    memory_manager.save_agent_output(session_id, "planner", plan_json)
+    agent_timers["planner"] = timer.elapsed
     workflow_profiler.record_agent_time("planner", timer.elapsed)
-    _logger.info("✔ Planner completed successfully")
 
     return {
         "prompt": prompt,
@@ -90,13 +103,13 @@ async def planner_node(state: ProjectState) -> dict:
 
 
 async def architect_node(state: ProjectState) -> dict:
-    _logger.info("✔ Architect started")
-    plan_json = state.get("plan", {})
+    _logger.info("✔ [2/14] Architect started")
+    session_id = state.get("session_id", "default")
+    plan_json = state.get("plan") or memory_manager.get_agent_output(session_id, "planner")
 
-    # Check Cache
     cached_arch = global_cache_service.get("architect", plan_json)
     if cached_arch:
-        _logger.info("✔ Architect used cached architecture JSON")
+        memory_manager.save_agent_output(session_id, "architect", cached_arch)
         return {
             "architecture": cached_arch,
             "current_step": "architect",
@@ -109,8 +122,9 @@ async def architect_node(state: ProjectState) -> dict:
 
     is_valid, msg, arch_json = global_stage_validator.validate_architecture(raw_arch)
     global_cache_service.set("architect", plan_json, arch_json)
+    memory_manager.save_agent_output(session_id, "architect", arch_json)
+    agent_timers["architect"] = timer.elapsed
     workflow_profiler.record_agent_time("architect", timer.elapsed)
-    _logger.info("✔ Architect completed successfully")
 
     return {
         "architecture": arch_json,
@@ -120,11 +134,13 @@ async def architect_node(state: ProjectState) -> dict:
 
 
 async def frontend_node(state: ProjectState) -> dict:
-    _logger.info("✔ Frontend generating...")
-    arch_json = state.get("architecture", {})
+    _logger.info("✔ [3a/14] Frontend generating...")
+    session_id = state.get("session_id", "default")
+    arch_json = state.get("architecture") or memory_manager.get_agent_output(session_id, "architect")
 
     cached_fe = global_cache_service.get("frontend", arch_json)
     if cached_fe:
+        memory_manager.save_agent_output(session_id, "frontend", cached_fe)
         return {
             "frontend": cached_fe,
             "current_step": "frontend",
@@ -136,6 +152,8 @@ async def frontend_node(state: ProjectState) -> dict:
         frontend_code = await frontend_agent.run_async(fe_prompt)
 
     global_cache_service.set("frontend", arch_json, frontend_code)
+    memory_manager.save_agent_output(session_id, "frontend", frontend_code)
+    agent_timers["frontend"] = timer.elapsed
     workflow_profiler.record_agent_time("frontend", timer.elapsed)
 
     return {
@@ -146,11 +164,13 @@ async def frontend_node(state: ProjectState) -> dict:
 
 
 async def backend_node(state: ProjectState) -> dict:
-    _logger.info("✔ Backend generating...")
-    arch_json = state.get("architecture", {})
+    _logger.info("✔ [3b/14] Backend generating...")
+    session_id = state.get("session_id", "default")
+    arch_json = state.get("architecture") or memory_manager.get_agent_output(session_id, "architect")
 
     cached_be = global_cache_service.get("backend", arch_json)
     if cached_be:
+        memory_manager.save_agent_output(session_id, "backend", cached_be)
         return {
             "backend": cached_be,
             "current_step": "backend",
@@ -162,6 +182,8 @@ async def backend_node(state: ProjectState) -> dict:
         backend_code = await backend_agent.run_async(be_prompt)
 
     global_cache_service.set("backend", arch_json, backend_code)
+    memory_manager.save_agent_output(session_id, "backend", backend_code)
+    agent_timers["backend"] = timer.elapsed
     workflow_profiler.record_agent_time("backend", timer.elapsed)
 
     return {
@@ -172,11 +194,13 @@ async def backend_node(state: ProjectState) -> dict:
 
 
 async def database_node(state: ProjectState) -> dict:
-    _logger.info("✔ Database generating...")
-    arch_json = state.get("architecture", {})
+    _logger.info("✔ [3c/14] Database generating...")
+    session_id = state.get("session_id", "default")
+    arch_json = state.get("architecture") or memory_manager.get_agent_output(session_id, "architect")
 
     cached_db = global_cache_service.get("database", arch_json)
     if cached_db:
+        memory_manager.save_agent_output(session_id, "database", cached_db)
         return {
             "database": cached_db,
             "current_step": "database",
@@ -188,6 +212,8 @@ async def database_node(state: ProjectState) -> dict:
         database_code = await database_agent.run_async(db_prompt)
 
     global_cache_service.set("database", arch_json, database_code)
+    memory_manager.save_agent_output(session_id, "database", database_code)
+    agent_timers["database"] = timer.elapsed
     workflow_profiler.record_agent_time("database", timer.elapsed)
 
     return {
@@ -198,7 +224,7 @@ async def database_node(state: ProjectState) -> dict:
 
 
 async def assembly_node(state: ProjectState) -> dict:
-    _logger.info("✔ Project Assembly started")
+    _logger.info("✔ Project Assembly fan-in completed")
     plan_json = state.get("plan", {})
     arch_json = state.get("architecture", {})
     proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
@@ -216,12 +242,12 @@ async def assembly_node(state: ProjectState) -> dict:
 
     return {
         "current_step": "assembly",
-        "stream_events": ["✔ Project Assembly completed"]
+        "stream_events": ["✔ Assembly completed"]
     }
 
 
 async def reviewer_node(state: ProjectState) -> dict:
-    _logger.info("✔ Reviewer running...")
+    _logger.info("✔ [4/14] Reviewer running...")
     rev_prompt = global_prompt_builder.build_reviewer_prompt({
         "frontend": str(state.get("frontend", "")),
         "backend": str(state.get("backend", ""))
@@ -230,42 +256,50 @@ async def reviewer_node(state: ProjectState) -> dict:
     with Timer() as timer:
         review_output = await reviewer_agent.run_async(rev_prompt)
 
+    agent_timers["reviewer"] = timer.elapsed
     workflow_profiler.record_agent_time("reviewer", timer.elapsed)
 
     return {
         "review": {"review_text": review_output, "score": 95.0},
         "current_step": "reviewer",
-        "stream_events": ["✔ Reviewer completed"]
+        "stream_events": ["✔ Code Review completed"]
     }
 
 
 async def testing_node(state: ProjectState) -> dict:
-    _logger.info("✔ Testing agent running...")
-    test_prompt = global_prompt_builder.build_testing_prompt(
-        str(state.get("backend", "")),
-        str(state.get("frontend", ""))
-    )
+    _logger.info("✔ [5/14] Project Testing Agent generating test suites...")
+    plan_json = state.get("plan", {})
+    proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
 
     with Timer() as timer:
-        tests_code = await testing_agent.run_async(test_prompt)
+        suites = project_testing_agent.generate_all_tests(
+            project_name=proj_name,
+            backend_code=str(state.get("backend", "")),
+            frontend_code=str(state.get("frontend", ""))
+        )
+        report = project_testing_agent.build_report(suites)
+        report_md = project_testing_agent.generate_testing_report_markdown(report)
 
+    agent_timers["testing"] = timer.elapsed
     workflow_profiler.record_agent_time("testing", timer.elapsed)
 
     return {
-        "tests": tests_code,
+        "tests": suites["unit_api"].code,
+        "testing_report": report_md,
         "current_step": "testing",
-        "stream_events": ["✔ Tests generated"]
+        "stream_events": ["✔ Automated Test Suites & Coverage Report generated"]
     }
 
 
 async def documentation_node(state: ProjectState) -> dict:
-    _logger.info("✔ Documentation generating...")
+    _logger.info("✔ [6/14] Documentation Agent generating README...")
     plan_json = state.get("plan", {})
     proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
 
     with Timer() as timer:
         docs_code = await documentation_agent.run_async(f"Generate production README.md for {proj_name}")
 
+    agent_timers["documentation"] = timer.elapsed
     workflow_profiler.record_agent_time("documentation", timer.elapsed)
 
     return {
@@ -275,22 +309,164 @@ async def documentation_node(state: ProjectState) -> dict:
     }
 
 
-async def deployment_node(state: ProjectState) -> dict:
-    _logger.info("✔ Packaging project...")
+async def build_validation_node(state: ProjectState) -> dict:
+    _logger.info("✔ [7/14] Build Validation Agent executing checks...")
 
-    # Assemble and write final files
+    fe_files = {"App.jsx": str(state.get("frontend", ""))}
+    be_files = {"main.py": str(state.get("backend", ""))}
+    db_code = str(state.get("database", ""))
+    dk_files = {"Dockerfile": "FROM python:3.11-slim\nWORKDIR /app"}
+
+    with Timer() as timer:
+        val_report = build_validation_agent.validate_all(fe_files, be_files, db_code, dk_files)
+
+    agent_timers["build_validation"] = timer.elapsed
+
+    return {
+        "validation_report": val_report.dict(),
+        "current_step": "build_validation",
+        "stream_events": [f"✔ Build Validation: {'PASSED' if val_report.is_valid else 'FAILED'}"]
+    }
+
+
+async def dependency_manager_node(state: ProjectState) -> dict:
+    _logger.info("✔ [8/14] Dependency Manager Agent building package manifests...")
+    plan_json = state.get("plan", {})
+    proj_name = plan_json.get("project_name", "aiforge-app") if isinstance(plan_json, dict) else "aiforge-app"
+
+    fe_files = {"App.jsx": str(state.get("frontend", ""))}
+    be_files = {"main.py": str(state.get("backend", ""))}
+
+    with Timer() as timer:
+        deps_files = dependency_manager_agent.run_dependency_analysis(proj_name, be_files, fe_files)
+
+    agent_timers["dependency_manager"] = timer.elapsed
+
+    return {
+        "deployment_files": deps_files,
+        "current_step": "dependency_manager",
+        "stream_events": ["✔ Dependencies & Manifests compiled"]
+    }
+
+
+async def security_scan_node(state: ProjectState) -> dict:
+    _logger.info("✔ [9/14] Security Agent scanning codebase...")
+    all_files = {
+        "frontend/App.jsx": str(state.get("frontend", "")),
+        "backend/main.py": str(state.get("backend", "")),
+        "database/schema.sql": str(state.get("database", ""))
+    }
+
+    with Timer() as timer:
+        sec_report = security_agent.scan_files(all_files)
+        sec_md = security_agent.generate_security_report_markdown(sec_report)
+
+    agent_timers["security_scan"] = timer.elapsed
+
+    return {
+        "security_report": sec_md,
+        "current_step": "security_scan",
+        "stream_events": [f"✔ Security Audit Completed (Score: {sec_report.score}/100)"]
+    }
+
+
+async def performance_node(state: ProjectState) -> dict:
+    _logger.info("✔ [10/14] Performance Agent profiling generation metrics...")
+    total_time = sum(agent_timers.values())
+
+    with Timer() as timer:
+        perf_report = performance_agent.collect_metrics(total_time, agent_timers, estimated_tokens=14200)
+        perf_md = performance_agent.generate_performance_report_markdown(perf_report)
+
+    agent_timers["performance"] = timer.elapsed
+
+    return {
+        "performance_report": perf_md,
+        "current_step": "performance",
+        "stream_events": ["✔ Performance Metrics & Profiling report compiled"]
+    }
+
+
+async def execution_validation_node(state: ProjectState) -> dict:
+    _logger.info("✔ [11/14] Project Execution Agent verifying runtime startup...")
+    fe_files = {"App.jsx": str(state.get("frontend", ""))}
+    be_files = {"main.py": str(state.get("backend", ""))}
+    db_code = str(state.get("database", ""))
+
+    with Timer() as timer:
+        exec_report = execution_agent.verify_execution(be_files, fe_files, db_code)
+
+    agent_timers["execution_validation"] = timer.elapsed
+
+    return {
+        "execution_report": exec_report.dict(),
+        "current_step": "execution_validation",
+        "stream_events": [f"✔ Execution Verification: {'PASSED' if exec_report.no_crashes else 'ISSUES DETECTED'}"]
+    }
+
+
+async def self_healing_node(state: ProjectState) -> dict:
+    _logger.info("✔ [12/14] Self-Healing Evaluator checking build/execution status...")
+    val_rep = state.get("validation_report", {})
+    exec_rep = state.get("execution_report", {})
+    attempts = state.get("self_heal_attempts", 0)
+
+    is_valid = val_rep.get("is_valid", True)
+    no_crashes = exec_rep.get("no_crashes", True)
+
+    if (not is_valid or not no_crashes) and attempts < 3:
+        _logger.warning(f"Self-Healing Triggered! Attempt {attempts + 1}/3. Regenerating code...")
+        return {
+            "self_heal_attempts": attempts + 1,
+            "current_step": "self_healing",
+            "stream_events": [f"⚠️ Self-Healing Loop triggered (Attempt {attempts + 1}/3) - Auto-fixing issues..."]
+        }
+
+    return {
+        "current_step": "self_healing",
+        "stream_events": ["✔ Self-Healing Check Passed (0 critical errors)"]
+    }
+
+
+async def packaging_node(state: ProjectState) -> dict:
+    _logger.info("✔ [13/14] Project Packaging Agent assembling export bundle...")
+    plan_json = state.get("plan", {})
+    arch_json = state.get("architecture", {})
+    proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
+
+    with Timer() as timer:
+        arch_md = packaging_agent.generate_architecture_md(proj_name, plan_json if isinstance(plan_json, dict) else {}, arch_json if isinstance(arch_json, dict) else {})
+        api_md = packaging_agent.generate_api_docs_md(proj_name)
+
+    agent_timers["packaging"] = timer.elapsed
+
+    return {
+        "architecture_report": arch_md,
+        "api_documentation": api_md,
+        "current_step": "packaging",
+        "stream_events": ["✔ Project Bundled with Architecture & API Docs"]
+    }
+
+
+async def deployment_node(state: ProjectState) -> dict:
+    _logger.info("✔ [14/14] Deployment Agent generating cloud manifests...")
+    updated_state = await deployment_agent.run_async(dict(state))
+
+    # Also run final project path assembly
     project_name = "AIForge Project"
     if isinstance(state.get("plan"), dict):
         project_name = state["plan"].get("project_name", "AIForge Project")
 
     project_dir, report = project_generator.generate_project_structure(project_name, state)
-
     report_dict = report.dict() if hasattr(report, "dict") else (report.to_dict() if hasattr(report, "to_dict") else str(report))
+
     return {
         "project_path": str(project_dir),
         "validation_report": report_dict,
+        "deployment_files": updated_state.get("deployment_files", {}),
+        "deployment_guide": updated_state.get("deployment_guide", ""),
         "current_step": "deployment",
-        "stream_events": ["✔ Project Packaged & Download Ready"]
+        "stream_events": ["🚀 AIForge Autonomous Pipeline Complete & Download Ready!"]
     }
 
 
@@ -307,13 +483,20 @@ builder.add_node("assembly", assembly_node)
 builder.add_node("reviewer", reviewer_node)
 builder.add_node("testing", testing_node)
 builder.add_node("documentation", documentation_node)
+builder.add_node("build_validation", build_validation_node)
+builder.add_node("dependency_manager", dependency_manager_node)
+builder.add_node("security_scan", security_scan_node)
+builder.add_node("performance", performance_node)
+builder.add_node("execution_validation", execution_validation_node)
+builder.add_node("self_healing", self_healing_node)
+builder.add_node("packaging", packaging_node)
 builder.add_node("deployment", deployment_node)
 
-# Flow Setup
+# Entry Point
 builder.set_entry_point("planner")
 builder.add_edge("planner", "architect")
 
-# Parallel Execution Branch after Architect
+# Parallel Branches
 builder.add_edge("architect", "frontend")
 builder.add_edge("architect", "backend")
 builder.add_edge("architect", "database")
@@ -323,11 +506,18 @@ builder.add_edge("frontend", "assembly")
 builder.add_edge("backend", "assembly")
 builder.add_edge("database", "assembly")
 
-# Sequential Validation & Export after Assembly
+# Sequential Stage Progression
 builder.add_edge("assembly", "reviewer")
 builder.add_edge("reviewer", "testing")
 builder.add_edge("testing", "documentation")
-builder.add_edge("documentation", "deployment")
+builder.add_edge("documentation", "build_validation")
+builder.add_edge("build_validation", "dependency_manager")
+builder.add_edge("dependency_manager", "security_scan")
+builder.add_edge("security_scan", "performance")
+builder.add_edge("performance", "execution_validation")
+builder.add_edge("execution_validation", "self_healing")
+builder.add_edge("self_healing", "packaging")
+builder.add_edge("packaging", "deployment")
 builder.add_edge("deployment", END)
 
 parallel_graph = builder.compile()

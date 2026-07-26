@@ -109,7 +109,7 @@ class ProjectGenerator:
             env_example = self.env_generator.generate_env_example(deps.database)
             write_project_file(project_dir / ".env.example", env_example)
 
-        # 7. Core project files (.gitignore, LICENSE, plan.md, architecture.md, review.md)
+        # 7. Core project files (.gitignore, LICENSE, plan.md, architecture.md, reports)
         gitignore_content = self.gitignore_generator.generate_gitignore()
         write_project_file(project_dir / ".gitignore", gitignore_content)
 
@@ -117,13 +117,54 @@ class ProjectGenerator:
         write_project_file(project_dir / "LICENSE", license_content)
 
         if state.get("plan"):
-            write_project_file(project_dir / "plan.md", state["plan"])
-            write_project_file(project_dir / "docs/plan.md", state["plan"])
-        if state.get("architecture"):
-            write_project_file(project_dir / "architecture.md", state["architecture"])
-            write_project_file(project_dir / "docs/architecture.md", state["architecture"])
+            plan_str = json.dumps(state["plan"], indent=2) if isinstance(state["plan"], dict) else str(state["plan"])
+            write_project_file(project_dir / "plan.md", plan_str)
+            write_project_file(project_dir / "docs/plan.md", plan_str)
+        if state.get("architecture") or state.get("architecture_report"):
+            arch_str = state.get("architecture_report") or (json.dumps(state["architecture"], indent=2) if isinstance(state.get("architecture"), dict) else str(state.get("architecture", "")))
+            write_project_file(project_dir / "architecture.md", arch_str)
+            write_project_file(project_dir / "docs/architecture.md", arch_str)
         if state.get("review"):
-            write_project_file(project_dir / "review.md", state["review"])
+            rev_str = json.dumps(state["review"], indent=2) if isinstance(state["review"], dict) else str(state["review"])
+            write_project_file(project_dir / "review.md", rev_str)
+        if state.get("testing_report"):
+            write_project_file(project_dir / "testing_report.md", state["testing_report"])
+        if state.get("security_report"):
+            write_project_file(project_dir / "security_report.md", state["security_report"])
+        if state.get("performance_report"):
+            write_project_file(project_dir / "performance_report.md", state["performance_report"])
+        if state.get("deployment_guide"):
+            write_project_file(project_dir / "deployment.md", state["deployment_guide"])
+            write_project_file(project_dir / "docs/deployment.md", state["deployment_guide"])
+
+        # Also populate docker/ directory
+        (project_dir / "docker").mkdir(parents=True, exist_ok=True)
+        if (project_dir / "Dockerfile").exists():
+            write_project_file(project_dir / "docker/Dockerfile", (project_dir / "Dockerfile").read_text(encoding="utf-8"))
+        if (project_dir / "docker-compose.yml").exists():
+            write_project_file(project_dir / "docker/docker-compose.yml", (project_dir / "docker-compose.yml").read_text(encoding="utf-8"))
+
+        # Also populate .github/workflows/
+        (project_dir / ".github/workflows").mkdir(parents=True, exist_ok=True)
+        ci_workflow = """name: AIForge CI/CD Pipeline
+on: [push, pull_request]
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+    - name: Run tests
+      run: |
+        pytest
+"""
+        write_project_file(project_dir / ".github/workflows/ci.yml", ci_workflow)
 
         # 8. Generate README
         readme_md = self.readme_generator.generate_readme(project_name, state)

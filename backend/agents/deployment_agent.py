@@ -150,6 +150,19 @@ Dockerfile, docker-compose, and cloud configuration files.
         deployment_files["huggingface.yml"] = self.hf_gen.generate_config(
             app_name=project_name, port=backend_port
         )
+        # Additional Cloud Platforms (AWS, Azure, GCP)
+        deployment_files["aws-ecs-task.json"] = (
+            f'{{\n  "family": "{project_name}-task",\n  "containerDefinitions": [\n    {{\n'
+            f'      "name": "{project_name}-backend",\n      "image": "python:3.11-slim",\n'
+            f'      "portMappings": [{{"containerPort": {backend_port}, "hostPort": {backend_port}}}]\n'
+            f'    }}\n  ]\n}}'
+        )
+        deployment_files["azure-pipelines.yml"] = (
+            f"trigger:\n- main\npool:\n  vmImage: 'ubuntu-latest'\nsteps:\n- script: |\n    pip install -r requirements.txt\n    pytest\n  displayName: 'Run Tests and Build'\n"
+        )
+        deployment_files["app.yaml"] = (
+            f"runtime: python311\nentrypoint: uvicorn backend.main:app --host 0.0.0.0 --port 8080\nenv_variables:\n  ENVIRONMENT: 'production'\n"
+        )
 
         # Environmental scanner
         combined_code = f"{state.get('frontend', '')}\n{state.get('backend', '')}\n{state.get('database', '')}"
