@@ -39,7 +39,7 @@ class ModelRegistry:
             }
         }
 
-    def list_models() -> List[Dict[str, Any]]:
+    def list_models(self) -> List[Dict[str, Any]]:
         """Returns list of registered models with online/offline status."""
         return [
             {
