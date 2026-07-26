@@ -1,48 +1,40 @@
-"""
-AIForge Experience Retrieval Pipeline
-=====================================
-Retrieves past project experiences, bug fixes, deployment insights, and user preferences
-for injection into multi-agent code generation context.
-"""
-
 import logging
 from typing import Dict, Any, List
 
-from backend.learning.experience import global_experience_db
-from backend.learning.embeddings import global_embedding_engine
+from backend.learning.knowledge_base import global_knowledge_base
+from backend.learning.embeddings import global_learning_embeddings
 
-_logger = logging.getLogger("aiforge.learning")
+logger = logging.getLogger("aiforge.learning.retriever")
 
 
-class ExperienceRetriever:
+class KnowledgeRetriever:
     """
-    Retrieves relevant project experiences for prompt context injection.
+    KnowledgeRetriever performs semantic vector search over the KnowledgeBase,
+    returning top matching architectural patterns and solutions.
     """
 
-    def retrieve_experience_context(self, prompt: str) -> Dict[str, Any]:
-        _logger.info(f"ExperienceRetriever: Searching experience database for prompt '{prompt}'...")
+    def search_knowledge(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
+        query_vec = global_learning_embeddings.generate_embedding(query)
+        entries = global_knowledge_base.list_knowledge()
+        results = []
 
-        all_exp = global_experience_db.get_all_experiences()
-        if not all_exp:
-            return {
-                "has_previous_experience": False,
-                "reused_architecture": None,
-                "known_bug_fixes": [],
-                "user_preferences": ["FastAPI", "Tailwind", "MongoDB", "Docker", "JWT"]
-            }
+        for item in entries:
+            text = f"{item['name']} {item['description']} {' '.join(item.get('tags', []))}"
+            item_vec = global_learning_embeddings.generate_embedding(text)
+            sim_score = global_learning_embeddings.cosine_similarity(query_vec, item_vec)
+            combined_score = round((sim_score * 0.5) + (item.get("confidence_score", 9.0) / 20.0), 3)
 
-        # Select highest scoring matching experience
-        best_match = max(all_exp, key=lambda x: x.get("performance_score", 0))
+            results.append({
+                "knowledge_item": item,
+                "similarity_score": sim_score,
+                "confidence_score": item.get("confidence_score", 9.0),
+                "combined_score": combined_score
+            })
 
-        return {
-            "has_previous_experience": True,
-            "matched_prompt": best_match.get("prompt"),
-            "reused_architecture": best_match.get("architecture"),
-            "known_bug_fixes": best_match.get("bug_fixes", []),
-            "deployment_insights": best_match.get("deployment_insights", {}),
-            "user_preferences": best_match.get("user_preferences", []),
-            "previous_score": best_match.get("performance_score", 93.5)
-        }
+        results.sort(key=lambda r: r["combined_score"], reverse=True)
+        logger.info(f"KnowledgeRetriever found {len(results)} matches for query '{query[:30]}'")
+        return results[:top_k]
 
 
-global_experience_retriever = ExperienceRetriever()
+# Global KnowledgeRetriever Instance
+global_knowledge_retriever = KnowledgeRetriever()
