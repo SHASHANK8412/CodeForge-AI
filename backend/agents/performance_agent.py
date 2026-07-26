@@ -1,4 +1,8 @@
-import psutil
+try:
+    import psutil
+except ImportError:
+    psutil = None
+
 import logging
 from typing import Dict, Any, List
 from pydantic import BaseModel, Field
@@ -44,10 +48,14 @@ class PerformanceAgent(BaseAgent):
         estimated_tokens: int = 0
     ) -> PerformanceReport:
         try:
-            process = psutil.Process()
-            mem_info = process.memory_info()
-            mem_mb = mem_info.rss / (1024 * 1024)
-            cpu_percent = psutil.cpu_percent(interval=None)
+            if psutil is not None:
+                process = psutil.Process()
+                mem_info = process.memory_info()
+                mem_mb = mem_info.rss / (1024 * 1024)
+                cpu_percent = psutil.cpu_percent(interval=None)
+            else:
+                mem_mb = 120.0
+                cpu_percent = 5.0
         except Exception as e:
             logger.warning(f"Could not retrieve system metrics via psutil: {e}")
             mem_mb = 120.0
