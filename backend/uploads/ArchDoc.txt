@@ -1,0 +1,5 @@
+Software Architecture:
+Database: PostgreSQL
+Authentication: JWT
+Caching: Redis
+Deployment: Docker

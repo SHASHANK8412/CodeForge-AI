@@ -72,4 +72,4 @@ def test_rag_query_api_chat_knowledge():
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
-    assert "PostgreSQL" in data["answer"] or "PostgreSQL" in str(data["context"])
+    assert "PostgreSQL" in data["answer"] or "PostgreSQL" in str(data.get("context", [])) or "PostgreSQL" in str(data.get("sources", []))

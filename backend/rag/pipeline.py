@@ -74,6 +74,10 @@ class RAGPipeline:
 
         return f"{rag_context}\n\n### Agent Request\n{base_prompt or user_prompt}"
 
+    def get_stats(self) -> Dict[str, Any]:
+        """Returns stats from persistent vector database."""
+        return self.vectordb.get_stats()
+
 
 # Global RAGPipeline Instance
 global_rag_pipeline = RAGPipeline()
