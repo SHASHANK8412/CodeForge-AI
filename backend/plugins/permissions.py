@@ -1,36 +1,51 @@
 import logging
-from typing import List, Set
+from typing import Dict, Any, List, Set
 
-_logger = logging.getLogger("aiforge.plugins")
+logger = logging.getLogger("aiforge.plugins.permissions")
 
-class PermissionValidator:
+
+class PermissionManager:
     """
-    Enforces sandbox permission gates (verifies filesystem, network, and system access constraints).
+    PermissionManager enforces fine-grained permission control before plugin tools execute.
     """
 
-    VALID_PERMISSIONS = {
-        "filesystem:read",
-        "filesystem:write",
-        "network:outbound",
-        "env:read",
-        "subprocess:run"
+    ALLOWED_PERMISSIONS: Set[str] = {
+        "read_files",
+        "write_files",
+        "execute_commands",
+        "git_ops",
+        "db_ops",
+        "docker_ops",
+        "browser_ops",
+        "python_exec"
     }
 
-    def __init__(self, allowed_permissions: List[str] = None) -> None:
-        if allowed_permissions is None:
-            # Safe defaults (read filesystem only)
-            allowed_permissions = ["filesystem:read"]
-        self.allowed: Set[str] = {p for p in allowed_permissions if p in self.VALID_PERMISSIONS}
+    def __init__(self):
+        self.granted_permissions: Dict[str, Set[str]] = {
+            "filesystem": {"read_files", "write_files"},
+            "terminal": {"execute_commands"},
+            "git": {"git_ops"},
+            "postgres": {"db_ops"},
+            "docker": {"docker_ops"},
+            "browser": {"browser_ops"},
+            "python_runner": {"python_exec"}
+        }
 
-    def verify_permissions(self, requested: List[str]) -> bool:
-        """
-        Validates whether requested permissions fall under the allowed sandbox limits.
-        """
-        for req in requested:
-            if req not in self.allowed:
-                _logger.warning(f"Permission Blocked: Sandbox rejected access to '{req}'")
-                return False
-        return True
+    def check_permission(self, plugin_name: str, required_permission: str) -> bool:
+        """Verifies if plugin has been granted the required permission."""
+        granted = self.granted_permissions.get(plugin_name, set())
+        has_perm = required_permission in granted
+        if not has_perm:
+            logger.warning(f"Permission check failed for '{plugin_name}': Requires '{required_permission}'")
+        return has_perm
 
-    def has_permission(self, permission: str) -> bool:
-        return permission in self.allowed
+    def grant_permission(self, plugin_name: str, permission: str) -> None:
+        self.granted_permissions.setdefault(plugin_name, set()).add(permission)
+
+    def revoke_permission(self, plugin_name: str, permission: str) -> None:
+        if plugin_name in self.granted_permissions:
+            self.granted_permissions[plugin_name].discard(permission)
+
+
+# Global PermissionManager Instance
+global_permission_manager = PermissionManager()
