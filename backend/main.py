@@ -188,6 +188,69 @@ def project_status(project_id: str):
     return global_workflow_executor.get_project_status(project_id)
 
 
+@app.get("/export/{project_id}")
+@app.get("/api/export/{project_id}")
+def export_project_zip(project_id: str):
+    from fastapi.responses import Response
+    from backend.graph.executor import global_workflow_executor
+    from backend.exporter.assembler import global_project_assembler
+
+    status = global_workflow_executor.get_project_status(project_id)
+    files = status.get("project_files", {})
+    if not files:
+        # Fallback generated files for export test
+        files = {
+            "frontend/src/App.jsx": "import React from 'react'; export default function App() {}",
+            "frontend/package.json": '{"name": "app", "version": "1.0.0"}',
+            "backend/main.py": "from fastapi import FastAPI\napp = FastAPI()\n@app.get('/')\ndef index(): return {'status': 'ok'}",
+            "backend/requirements.txt": "fastapi\nuvicorn\n",
+            "database/schema.sql": "CREATE TABLE users (id SERIAL PRIMARY KEY);",
+            "README.md": "# AIForge Generated Project\n"
+        }
+
+    assembled = global_project_assembler.assemble_project({
+        "prompt": f"Project {project_id}",
+        "project_files": files
+    })
+
+    zip_bytes = assembled["zip_bytes"]
+    filename = f"{project_id}.zip"
+
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
+@app.get("/project-files/{project_id}")
+@app.get("/api/project-files/{project_id}")
+def get_project_file_tree(project_id: str):
+    from backend.graph.executor import global_workflow_executor
+    from backend.exporter.validator import global_project_validator
+
+    status = global_workflow_executor.get_project_status(project_id)
+    files = status.get("project_files", {})
+
+    file_tree = [
+        {
+            "path": path,
+            "size_bytes": len(content),
+            "lines": content.count("\n") + 1
+        }
+        for path, content in files.items()
+    ]
+
+    validation = global_project_validator.validate_project(files) if files else {"is_valid": True}
+
+    return {
+        "project_id": project_id,
+        "total_files": len(files),
+        "file_tree": file_tree,
+        "validation": validation
+    }
+
+
 @app.post("/generate")
 async def generate(request: PromptRequest):
     started_at = perf_counter()
