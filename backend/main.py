@@ -136,6 +136,19 @@ def metrics():
     }
 
 
+@app.get("/api/rag/stats")
+def rag_stats():
+    from backend.rag.knowledge_base import global_knowledge_base
+    return global_knowledge_base.get_stats()
+
+
+@app.get("/api/rag/search")
+def rag_search(query: str, top_k: int = 5):
+    from backend.rag.knowledge_base import global_knowledge_base
+    results = global_knowledge_base.search(query, top_k=top_k)
+    return {"query": query, "results": results}
+
+
 @app.post("/generate")
 async def generate(request: PromptRequest):
     started_at = perf_counter()

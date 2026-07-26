@@ -8,6 +8,7 @@ import AgentTimeline from "./AgentTimeline";
 import ObservabilityDashboard from "./ObservabilityDashboard";
 import FileExplorerTree from "./FileExplorerTree";
 import MemoryPanel from "./MemoryPanel";
+import KnowledgeBaseDashboard from "./KnowledgeBaseDashboard";
 import { sendMessage } from "../services/api";
 import { createConversation, getConversationHistory } from "../services/conversationApi";
 import { generatePlan } from "../services/plannerApi";
@@ -416,7 +417,7 @@ function ChatBox() {
                 </button>
             </div>
 
-            {/* Document Grounding Uploader */}
+            {/* Document Grounding Uploader & RAG Dashboard */}
             <RagUploadPanel
                 documentMode={documentMode}
                 selectedFiles={selectedFiles}
@@ -431,6 +432,11 @@ function ChatBox() {
                 error={ragError}
                 inputRef={fileInputRef}
             />
+            {documentMode && (
+                <div className="px-6 pt-3">
+                    <KnowledgeBaseDashboard />
+                </div>
+            )}
 
             {/* Chat Messages Log Wrapper (expanded max-w-6xl for wider view) */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
