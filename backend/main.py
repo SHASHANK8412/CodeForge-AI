@@ -90,6 +90,9 @@ def register_routers() -> None:
     from backend.routes.upload import router as upload_router
     app.include_router(upload_router)
 
+    from backend.routes.memory import router as day18_memory_router
+    app.include_router(day18_memory_router)
+
     from v2.api.gateway import router as v2_gateway_router
     app.include_router(v2_gateway_router)
 
