@@ -152,6 +152,22 @@ def rag_search(query: str, top_k: int = 5):
     return {"query": query, "results": results}
 
 
+@app.post("/generate-project")
+@app.post("/api/generate-project")
+async def generate_project(request: PromptRequest):
+    from backend.graph.executor import global_workflow_executor
+    final_state = global_workflow_executor.execute_project_workflow(request.prompt, request.session_id)
+    return {
+        "status": "success",
+        "prompt": request.prompt,
+        "session_id": final_state.get("session_id"),
+        "logs": final_state.get("logs", []),
+        "project_files": final_state.get("project_files", {}),
+        "errors": final_state.get("errors", []),
+        "is_complete": final_state.get("is_complete", True)
+    }
+
+
 @app.post("/generate")
 async def generate(request: PromptRequest):
     started_at = perf_counter()

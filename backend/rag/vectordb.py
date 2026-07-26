@@ -91,6 +91,16 @@ class ChromaVectorDB:
             except Exception:
                 pass
 
+    def get_stats(self) -> Dict[str, Any]:
+        """Returns stats on stored vectors and collection."""
+        sources = set(item.get("source", "") for item in self._items.values())
+        return {
+            "collection_name": self.collection_name,
+            "total_chunks": len(self._items),
+            "unique_documents": len(sources),
+            "sources": list(sources)
+        }
+
 
 # Global ChromaVectorDB Instance
 global_vectordb = ChromaVectorDB()
