@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { FaCommentAlt, FaBrain, FaFileAlt, FaPlus, FaRobot, FaCog, FaMoon, FaSun } from "react-icons/fa";
+import { FaCommentAlt, FaBrain, FaFileAlt, FaPlus, FaRobot, FaCog, FaMoon, FaSun, FaDownload } from "react-icons/fa";
 import InputBar from "./InputBar";
 import Loading from "./Loading";
 import Message from "./Message";
 import RagUploadPanel from "./RagUploadPanel";
+import AgentTimeline from "./AgentTimeline";
+import ObservabilityDashboard from "./ObservabilityDashboard";
+import FileExplorerTree from "./FileExplorerTree";
+import MemoryPanel from "./MemoryPanel";
+import KnowledgeBaseDashboard from "./KnowledgeBaseDashboard";
 import { sendMessage } from "../services/api";
 import { createConversation, getConversationHistory } from "../services/conversationApi";
 import { generatePlan } from "../services/plannerApi";
@@ -214,11 +219,28 @@ function ChatBox() {
 
             if (plannerMode) {
                 const planResponse = await generatePlan(text, activeConversationId);
+                const filesDict = {
+                    "frontend/App.jsx": planResponse.frontend || "",
+                    "backend/main.py": planResponse.backend || "",
+                    "database/schema.sql": planResponse.database || "",
+                    "tests/test_app.py": planResponse.tests || "",
+                    "README.md": planResponse.documentation || "",
+                    "security_report.md": planResponse.security_report || "",
+                    "performance_report.md": planResponse.performance_report || "",
+                    "testing_report.md": planResponse.testing_report || "",
+                    "deployment.md": planResponse.deployment_guide || ""
+                };
+                if (planResponse.deployment_files) {
+                    Object.assign(filesDict, planResponse.deployment_files);
+                }
+
                 setMessages((current) => [
                     ...current,
                     {
                         sender: "ai",
                         text: formatStructuredResponse(planResponse),
+                        generationResult: planResponse,
+                        filesDict: filesDict
                     },
                 ]);
                 return;
@@ -395,7 +417,7 @@ function ChatBox() {
                 </button>
             </div>
 
-            {/* Document Grounding Uploader */}
+            {/* Document Grounding Uploader & RAG Dashboard */}
             <RagUploadPanel
                 documentMode={documentMode}
                 selectedFiles={selectedFiles}
@@ -410,6 +432,11 @@ function ChatBox() {
                 error={ragError}
                 inputRef={fileInputRef}
             />
+            {documentMode && (
+                <div className="px-6 pt-3">
+                    <KnowledgeBaseDashboard />
+                </div>
+            )}
 
             {/* Chat Messages Log Wrapper (expanded max-w-6xl for wider view) */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -459,20 +486,70 @@ function ChatBox() {
                     )}
 
                     <div className="space-y-6">
+                        {loading && (
+                            <AgentTimeline
+                                currentStep="deployment"
+                                isGenerating={true}
+                                streamEvents={["Executing Autonomous Pipeline...", "Generators active..."]}
+                            />
+                        )}
+
                         {messages.map((msg, index) => (
-                            <Message key={index} sender={msg.sender} text={msg.text} />
+                            <div key={index} className="space-y-4">
+                                <Message sender={msg.sender} text={msg.text} />
+                                {msg.filesDict && (
+                                    <div className="space-y-4">
+                                        <MemoryPanel
+                                            sessionMemory={{
+                                                session_id: sessionId,
+                                                project_name: conversationTitle || "AIForge Application",
+                                                context: {
+                                                    planner: msg.generationResult?.plan,
+                                                    architect: msg.generationResult?.architecture,
+                                                    frontend: msg.generationResult?.frontend,
+                                                    backend: msg.generationResult?.backend,
+                                                    database: msg.generationResult?.database,
+                                                    reviewer: msg.generationResult?.review,
+                                                    testing: msg.generationResult?.tests,
+                                                    documentation: msg.generationResult?.documentation
+                                                },
+                                                generated_files: msg.filesDict,
+                                                shared_stack: {
+                                                    authentication: "JWT",
+                                                    frontend: "React",
+                                                    backend: "FastAPI",
+                                                    database: "PostgreSQL"
+                                                }
+                                            }}
+                                            currentStep="complete"
+                                        />
+                                        <ObservabilityDashboard result={msg.generationResult} isGenerating={false} />
+                                        <div className="flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-800">
+                                            <span className="text-xs font-semibold text-indigo-300">📦 Generated Production Artifacts</span>
+                                            <a
+                                                href={`http://127.0.0.1:8000/download/aiforge_project`}
+                                                download
+                                                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg transition active:scale-95 shadow cursor-pointer"
+                                            >
+                                                <FaDownload size={11} /> Download ZIP Package
+                                            </a>
+                                        </div>
+                                        <FileExplorerTree files={msg.filesDict} />
+                                    </div>
+                                )}
+                            </div>
                         ))}
                         {loading && (
                             <div className="flex w-full justify-start mb-4">
                                 <div className="w-full max-w-4xl rounded-2xl p-6 shadow-xl border bg-[#1E293B] border-gray-800/80">
                                     <div className="flex items-center justify-between pb-3 border-b border-gray-800/40 mb-4">
                                         <span className="text-xs font-bold tracking-wider uppercase text-emerald-400">
-                                            🤖 AIForge Agent
+                                            🤖 AIForge Agent Pipeline
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <Loading />
-                                        <span className="text-xs text-gray-400 animate-pulse">Running compilation heuristics...</span>
+                                        <span className="text-xs text-gray-400 animate-pulse">Running autonomous multi-agent compilation & verification...</span>
                                     </div>
                                 </div>
                             </div>

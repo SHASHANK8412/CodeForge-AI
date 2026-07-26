@@ -21,10 +21,14 @@ class ReadmeGenerator:
         # Extract specifications to include in architecture/overview
         plan = state.get("plan", "No plan specified.")
         architecture = state.get("architecture", "No architecture document specified.")
+
+        import json
+        plan_str = json.dumps(plan, indent=2) if isinstance(plan, (dict, list)) else str(plan)
+        arch_str = json.dumps(architecture, indent=2) if isinstance(architecture, (dict, list)) else str(architecture)
         
         # Read the first few lines of plan and architecture for overview
-        plan_snippet = "\n".join(plan.splitlines()[:15])
-        arch_snippet = "\n".join(architecture.splitlines()[:15])
+        plan_snippet = "\n".join(plan_str.splitlines()[:15])
+        arch_snippet = "\n".join(arch_str.splitlines()[:15])
 
         readme = f"""# {project_name}
 

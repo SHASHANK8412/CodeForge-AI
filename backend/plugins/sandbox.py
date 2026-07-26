@@ -1,50 +1,45 @@
-import time
 import logging
 from typing import Dict, Any, Callable
-from backend.plugins.permissions import PermissionValidator
 
-_logger = logging.getLogger("aiforge.plugins")
+from backend.plugins.permissions import global_permission_manager
 
-class SandboxException(Exception):
-    pass
+logger = logging.getLogger("aiforge.plugins.sandbox")
 
-class PluginSandbox:
+
+class ToolSandbox:
     """
-    Executes plugin execution blocks under restricted execution timers and security constraints.
+    ToolSandbox provides a secure execution container verifying permission tokens
+    and catching unhandled exceptions before tool execution.
     """
 
-    def __init__(self, allowed_permissions: list = None, timeout_seconds: float = 5.0) -> None:
-        self.validator = PermissionValidator(allowed_permissions)
-        self.timeout = timeout_seconds
-
-    def execute_safely(
+    def execute_in_sandbox(
         self,
-        func: Callable[..., Dict[str, Any]],
-        context: Dict[str, Any],
-        required_perms: list
+        plugin_name: str,
+        required_permission: str,
+        action_fn: Callable[[], Dict[str, Any]]
     ) -> Dict[str, Any]:
-        """
-        Validates permission scope and executes within safety timeout constraints.
-        """
-        # 1. Gate permissions
-        if not self.validator.verify_permissions(required_perms):
-            raise SandboxException("Permission Denied: Plugin requested unauthorized resources.")
+        if not global_permission_manager.check_permission(plugin_name, required_permission):
+            return {
+                "status": "error",
+                "message": f"Permission Denied: Plugin '{plugin_name}' lacks required permission '{required_permission}'.",
+                "result": None
+            }
 
-        # 2. Run execution timing constraints
-        start_time = time.perf_counter()
-        
         try:
-            # Under simple sandbox simulation, we run python function directly.
-            # Timeout checks can be validated via simple delta.
-            result = func(context)
-            
-            elapsed = time.perf_counter() - start_time
-            if elapsed > self.timeout:
-                raise SandboxException(f"Execution Timeout: Plugin execution exceeded limit ({self.timeout}s)")
-                
-            return result
-        except SandboxException as se:
-            raise se
+            result = action_fn()
+            return {
+                "status": "success",
+                "message": "Tool executed successfully within sandbox.",
+                "result": result
+            }
         except Exception as e:
-            _logger.error(f"Plugin Sandbox execution crashed: {str(e)}")
-            raise SandboxException(f"Sandbox crash error: {str(e)}")
+            logger.error(f"Sandbox execution error for '{plugin_name}': {e}")
+            return {
+                "status": "error",
+                "message": f"Sandbox Execution Error: {str(e)}",
+                "result": None
+            }
+
+
+# Global ToolSandbox Instance
+global_tool_sandbox = ToolSandbox()
