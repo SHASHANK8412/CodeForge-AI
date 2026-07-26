@@ -114,3 +114,4 @@ class MemoryManager:
 
 # Global Memory Manager Instance
 memory_manager = MemoryManager()
+global_memory_manager = memory_manager
