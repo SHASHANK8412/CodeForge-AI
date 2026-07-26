@@ -158,6 +158,8 @@ def testing_node(state: WorkflowState) -> WorkflowState:
     global_memory_manager.save_agent_output(session_id, "testing", state["tests"])
     return state
 
+testing_node.__test__ = False
+
 
 def documentation_node(state: WorkflowState) -> WorkflowState:
     """DocumentationNode: Generates README.md and API documentation."""

@@ -91,14 +91,26 @@ async def legacy_upload_documents(files: list[UploadFile] = File(...)):
 
 @router.post("/query")
 async def query_documents(request: RAGQueryRequest):
-	result = rag_pipeline.query(request.question)
-	return {
-		"success": True,
-		"question": request.question,
-		"answer": result["answer"],
-		"sources": [source["source"] for source in result["sources"]],
-		"source_details": result["sources"],
-	}
+    from backend.rag.pipeline import global_rag_pipeline
+    results = global_rag_pipeline.retrieve_context(request.question, top_k=5)
+    context_list = [r.get("text", "") for r in results]
+    sources = [r.get("source", "") for r in results]
+
+    answer_prefix = "According to uploaded project documents:\n\n"
+    if context_list:
+        snippets = "\n\n".join([f"- From **{s}**:\n  {t}" for s, t in zip(sources, context_list)])
+        answer = f"{answer_prefix}{snippets}"
+    else:
+        answer = "No relevant uploaded documents found matching your question."
+
+    return {
+        "success": True,
+        "question": request.question,
+        "context": context_list,
+        "sources": sources,
+        "answer": answer,
+        "source_details": results
+    }
 
 
 @legacy_router.post("/query")
