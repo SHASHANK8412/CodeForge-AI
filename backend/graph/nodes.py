@@ -40,6 +40,30 @@ def planner_node(state: WorkflowState) -> WorkflowState:
     return state
 
 
+def project_manager_node(state: WorkflowState) -> WorkflowState:
+    """ProjectManagerNode: Breaks plan into milestones & tasks, assigns agents, tracks progress."""
+    start_time = time.time()
+    prompt = state.get("prompt", "Software Project")
+    session_id = state.get("session_id", "default_session")
+
+    try:
+        from backend.agents.project_manager_agent import global_project_manager_agent
+        pm_output = global_project_manager_agent.execute({"prompt": prompt, "plan": state.get("plan")})
+        state["milestones"] = pm_output.get("milestones", [])
+        state["tasks"] = pm_output.get("tasks", [])
+        state["progress_json"] = pm_output.get("progress_json", {})
+        state["daily_report"] = pm_output.get("daily_report", {})
+    except Exception as e:
+        logger.warning(f"ProjectManagerNode fallback: {e}")
+        state["milestones"] = [{"id": "m1", "title": "Milestone 1: General Setup", "status": "Pending"}]
+        state["tasks"] = [{"task_id": "t1", "title": "Setup App", "required_agent": "Backend Agent", "status": "Assigned"}]
+
+    elapsed = round(time.time() - start_time, 2)
+    state.setdefault("logs", []).append(f"[Project Manager] Completed milestone breakdown ({elapsed}s)")
+    global_memory_manager.save_agent_output(session_id, "project_manager", state.get("progress_json", {}))
+    return state
+
+
 def architect_node(state: WorkflowState) -> WorkflowState:
     """ArchitectNode: Designs system components, APIs, models based on plan and RAG docs."""
     start_time = time.time()

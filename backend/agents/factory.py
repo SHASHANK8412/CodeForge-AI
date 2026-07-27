@@ -45,5 +45,9 @@ class AgentFactory:
         elif agent_type == "frontend":
             return FrontendAgent()
 
+        elif agent_type == "project_manager":
+            from backend.agents.project_manager_agent import ProjectManagerAgent
+            return ProjectManagerAgent()
+
         else:
             raise ValueError(f"Unknown agent type: {agent_type}")

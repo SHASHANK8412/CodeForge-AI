@@ -4,6 +4,7 @@ from langgraph.graph import StateGraph, END, START
 from backend.graph.state import WorkflowState
 from backend.graph.nodes import (
     planner_node,
+    project_manager_node,
     architect_node,
     frontend_node,
     backend_node,
@@ -25,12 +26,13 @@ logger = logging.getLogger("aiforge.graph.workflow")
 def create_workflow_graph():
     """
     Constructs the LangGraph autonomous multi-agent software engineering workflow graph:
-    START -> Planner -> Architect -> Frontend -> Backend -> Database -> Reviewer -> Testing -> Documentation -> Export -> END
+    START -> Planner -> Project Manager -> Architect -> Frontend -> Backend -> Database -> Reviewer -> Testing -> Documentation -> Export -> END
     """
     workflow = StateGraph(WorkflowState)
 
     # 1. Add Agent Nodes
     workflow.add_node("planner", planner_node)
+    workflow.add_node("project_manager", project_manager_node)
     workflow.add_node("architect", architect_node)
     workflow.add_node("frontend", frontend_node)
     workflow.add_node("backend", backend_node)
@@ -48,9 +50,11 @@ def create_workflow_graph():
         should_retry_planner,
         {
             "planner": "planner",
-            "architect": "architect"
+            "architect": "project_manager"
         }
     )
+
+    workflow.add_edge("project_manager", "architect")
 
     workflow.add_edge("architect", "frontend")
     workflow.add_edge("frontend", "backend")
