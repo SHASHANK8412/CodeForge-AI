@@ -80,7 +80,10 @@ class PluginRegistry:
         return results
 
     def get_plugin(self, plugin_id: str) -> Optional[Dict[str, Any]]:
-        return self.plugins.get(plugin_id)
+        return self.plugins.get(plugin_id) or self.plugins.get(plugin_id.lower())
+
+    def get_all_registered(self) -> Dict[str, Dict[str, Any]]:
+        return self.plugins
 
 
 global_plugin_registry = PluginRegistry()

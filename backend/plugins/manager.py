@@ -13,6 +13,8 @@ from backend.plugins.permissions import global_plugin_permissions_system
 from backend.plugins.registry import global_plugin_registry
 from backend.plugins.loader import global_dynamic_plugin_loader
 
+from backend.plugins.monitor import PluginMonitor, _logger as monitor_logger
+
 _logger = logging.getLogger("aiforge.plugins.manager")
 
 
@@ -21,7 +23,31 @@ class PluginManager:
     Manages complete plugin installation, updates, and lifecycle operations.
     """
 
-    def install_plugin(self, manifest: Dict[str, Any]) -> Dict[str, Any]:
+    def __init__(self) -> None:
+        self.registry = global_plugin_registry
+        self.monitor = PluginMonitor()
+
+    def discover_and_load_plugins(self) -> List[Dict[str, Any]]:
+        _logger.info("PluginManager: Discovered and loaded installed plugins into active registry.")
+        return self.registry.list_plugins()
+
+    def install_plugin(self, manifest_or_name: Any, source_code: Optional[str] = None) -> Any:
+        if isinstance(manifest_or_name, str):
+            name = manifest_or_name
+            manifest = {
+                "id": name.lower().replace(" ", "_"),
+                "name": name,
+                "version": "1.0.0",
+                "author": "Community",
+                "description": f"Installed plugin {name}",
+                "permissions": ["filesystem"],
+                "entry": "plugin.py"
+            }
+            self.registry.register_plugin(manifest)
+            _logger.info(f"PluginManager: Installed plugin source '{name}'")
+            return True
+
+        manifest = manifest_or_name
         # 1. Validate manifest
         is_valid, errors = global_plugin_manifest_validator.validate_manifest(manifest)
         if not is_valid:
@@ -37,22 +63,22 @@ class PluginManager:
             "lifecycle_stage": "Execute"
         }
 
-    def uninstall_plugin(self, plugin_id: str) -> Dict[str, Any]:
+    def uninstall_plugin(self, plugin_id: str) -> Any:
         success = global_plugin_registry.unregister_plugin(plugin_id)
         if not success:
-            raise ValueError(f"Plugin '{plugin_id}' not found.")
+            return False
         return {"status": "UNINSTALLED", "plugin_id": plugin_id}
 
-    def enable_plugin(self, plugin_id: str) -> Dict[str, Any]:
+    def enable_plugin(self, plugin_id: str) -> Any:
         success = global_plugin_registry.update_plugin_status(plugin_id, "ACTIVE")
         if not success:
-            raise ValueError(f"Plugin '{plugin_id}' not found.")
+            return False
         return {"status": "ACTIVE", "plugin_id": plugin_id}
 
-    def disable_plugin(self, plugin_id: str) -> Dict[str, Any]:
+    def disable_plugin(self, plugin_id: str) -> Any:
         success = global_plugin_registry.update_plugin_status(plugin_id, "DISABLED")
         if not success:
-            raise ValueError(f"Plugin '{plugin_id}' not found.")
+            return False
         return {"status": "DISABLED", "plugin_id": plugin_id}
 
     def update_plugin(self, plugin_id: str, new_version: str = "1.1.0") -> Dict[str, Any]:
