@@ -123,6 +123,12 @@ def register_routers() -> None:
     from backend.routes.communication_routes import router as day30_communication_router
     app.include_router(day30_communication_router)
 
+    from backend.routes.approval_routes import router as day31_approval_router
+    app.include_router(day31_approval_router)
+
+    from backend.routes.self_healing_routes import router as day32_self_healing_router
+    app.include_router(day32_self_healing_router)
+
     from v2.api.gateway import router as v2_gateway_router
     app.include_router(v2_gateway_router)
 
