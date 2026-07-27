@@ -1,0 +1,13 @@
+{
+    "id": "docker_plugin",
+    "name": "Docker Security Auditor Plugin",
+    "version": "1.1.0",
+    "author": "DevOps Team",
+    "description": "Audits Docker Container Security",
+    "category": "DevOps",
+    "permissions": [
+        "filesystem",
+        "deployment"
+    ],
+    "entry": "plugin.py"
+}

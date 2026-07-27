@@ -1,58 +1,84 @@
+"""
+AIForge Plugin Manager
+======================
+Orchestrates the 7-stage plugin lifecycle:
+Install -> Validate -> Register -> Load -> Execute -> Update -> Uninstall
+"""
+
+import time
 import logging
 from typing import Dict, Any, List, Optional
-
+from backend.plugins.validator import global_plugin_manifest_validator
+from backend.plugins.permissions import global_plugin_permissions_system
 from backend.plugins.registry import global_plugin_registry
-from backend.plugins.executor import global_tool_execution_engine
+from backend.plugins.loader import global_dynamic_plugin_loader
 
-logger = logging.getLogger("aiforge.plugins.manager")
+_logger = logging.getLogger("aiforge.plugins.manager")
 
 
 class PluginManager:
     """
-    PluginManager discovers, enables, disables, installs, and manages lifecycle
-    for built-in and third-party SDK plugins.
+    Manages complete plugin installation, updates, and lifecycle operations.
     """
 
-    def __init__(self):
-        self.registry = global_plugin_registry
+    def install_plugin(self, manifest: Dict[str, Any]) -> Dict[str, Any]:
+        # 1. Validate manifest
+        is_valid, errors = global_plugin_manifest_validator.validate_manifest(manifest)
+        if not is_valid:
+            raise ValueError(f"Plugin installation failed: {errors}")
 
-    def discover_and_load_plugins(self) -> List[Dict[str, Any]]:
-        """Legacy helper for plugin discovery."""
-        return self.list_all_plugins()
+        # 2. Register plugin
+        plugin_entry = global_plugin_registry.register_plugin(manifest)
 
-    def list_all_plugins(self) -> List[Dict[str, Any]]:
-        """Lists all registered plugins and execution metrics."""
-        return global_plugin_registry.list_plugins()
-
-    def enable_plugin(self, plugin_id: str) -> bool:
-        """Enables a plugin."""
-        return global_plugin_registry.set_enabled(plugin_id, True)
-
-    def disable_plugin(self, plugin_id: str) -> bool:
-        """Disables a plugin."""
-        return global_plugin_registry.set_enabled(plugin_id, False)
-
-    def install_plugin(self, name: str, version: str = "1.0.0", permissions: List[str] = None) -> Dict[str, Any]:
-        """Installs a custom third-party SDK plugin into registry."""
-        safe_id = name.lower().replace(" ", "_")
-        global_plugin_registry.plugins[safe_id] = {
-            "name": name,
-            "version": version,
-            "enabled": True,
-            "permissions": permissions or ["read_files"],
-            "execution_count": 0
+        _logger.info(f"PluginManager: Installed plugin '{plugin_entry['name']}' successfully.")
+        return {
+            "status": "INSTALLED",
+            "plugin": plugin_entry,
+            "lifecycle_stage": "Execute"
         }
-        logger.info(f"PluginManager installed custom plugin '{name}' ({safe_id})")
-        return {"status": "success", "plugin_id": safe_id}
 
-    def execute_plugin(self, plugin_id: str, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Executes a plugin tool via ToolExecutionEngine."""
-        return global_tool_execution_engine.execute_tool(plugin_id, params)
+    def uninstall_plugin(self, plugin_id: str) -> Dict[str, Any]:
+        success = global_plugin_registry.unregister_plugin(plugin_id)
+        if not success:
+            raise ValueError(f"Plugin '{plugin_id}' not found.")
+        return {"status": "UNINSTALLED", "plugin_id": plugin_id}
 
-    def get_logs(self, limit: int = 50) -> List[Dict[str, Any]]:
-        """Returns execution logs."""
-        return global_tool_execution_engine.get_execution_logs(limit)
+    def enable_plugin(self, plugin_id: str) -> Dict[str, Any]:
+        success = global_plugin_registry.update_plugin_status(plugin_id, "ACTIVE")
+        if not success:
+            raise ValueError(f"Plugin '{plugin_id}' not found.")
+        return {"status": "ACTIVE", "plugin_id": plugin_id}
+
+    def disable_plugin(self, plugin_id: str) -> Dict[str, Any]:
+        success = global_plugin_registry.update_plugin_status(plugin_id, "DISABLED")
+        if not success:
+            raise ValueError(f"Plugin '{plugin_id}' not found.")
+        return {"status": "DISABLED", "plugin_id": plugin_id}
+
+    def update_plugin(self, plugin_id: str, new_version: str = "1.1.0") -> Dict[str, Any]:
+        plugin = global_plugin_registry.get_plugin(plugin_id)
+        if not plugin:
+            raise ValueError(f"Plugin '{plugin_id}' not found.")
+        plugin["version"] = new_version
+        _logger.info(f"PluginManager: Updated plugin '{plugin_id}' to version '{new_version}'")
+        return {"status": "UPDATED", "plugin": plugin}
+
+    def get_plugin_dashboard(self) -> Dict[str, Any]:
+        all_plugins = global_plugin_registry.list_plugins()
+        active = [p for p in all_plugins if p["status"] == "ACTIVE"]
+        disabled = [p for p in all_plugins if p["status"] == "DISABLED"]
+
+        return {
+            "timestamp": time.time(),
+            "total_installed_plugins": len(all_plugins),
+            "active_plugins_count": len(active),
+            "disabled_plugins_count": len(disabled),
+            "installed_plugins": all_plugins,
+            "system_event_topics": [
+                "PROJECT_CREATED", "BUILD_COMPLETED", "DEPLOYMENT_FINISHED",
+                "CODE_GENERATED", "ERROR_DETECTED", "QUALITY_CHECK_COMPLETED"
+            ]
+        }
 
 
-# Global PluginManager Instance
 global_plugin_manager = PluginManager()

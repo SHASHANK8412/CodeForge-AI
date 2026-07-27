@@ -147,6 +147,12 @@ def register_routers() -> None:
     from backend.routes.enterprise_routes import router as day38_enterprise_router
     app.include_router(day38_enterprise_router)
 
+    from backend.routes.plugin_routes import router as day39_plugin_router
+    app.include_router(day39_plugin_router)
+
+    from backend.routes.distributed_routes import router as day40_distributed_router
+    app.include_router(day40_distributed_router)
+
     from v2.api.gateway import router as v2_gateway_router
     app.include_router(v2_gateway_router)
 

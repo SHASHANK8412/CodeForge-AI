@@ -1,0 +1,13 @@
+{
+    "id": "custom_plugin",
+    "name": "Custom Engineering Tool Plugin",
+    "version": "0.9.0",
+    "author": "Community Developer",
+    "description": "Custom Developer Tool Integration",
+    "category": "AI Agents",
+    "permissions": [
+        "filesystem",
+        "internet"
+    ],
+    "entry": "plugin.py"
+}

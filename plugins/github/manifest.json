@@ -1,0 +1,14 @@
+{
+    "id": "github_plugin",
+    "name": "GitHub Plugin",
+    "version": "1.0.0",
+    "author": "AIForge",
+    "description": "GitHub Integration",
+    "category": "Integrations",
+    "permissions": [
+        "repo.read",
+        "repo.write",
+        "internet"
+    ],
+    "entry": "plugin.py"
+}

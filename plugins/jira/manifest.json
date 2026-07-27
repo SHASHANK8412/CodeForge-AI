@@ -1,0 +1,12 @@
+{
+    "id": "jira_plugin",
+    "name": "Jira Task Sync Plugin",
+    "version": "2.0.1",
+    "author": "Atlassian Partner",
+    "description": "Jira Task Synchronization",
+    "category": "Productivity",
+    "permissions": [
+        "internet"
+    ],
+    "entry": "plugin.py"
+}
