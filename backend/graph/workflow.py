@@ -15,6 +15,8 @@ from backend.graph.nodes import (
     export_node,
     learning_enricher_node,
     learning_updater_node,
+    assembler_node,
+    validator_node,
 )
 from backend.graph.conditions import (
     should_retry_planner,
@@ -28,7 +30,7 @@ logger = logging.getLogger("aiforge.graph.workflow")
 def create_workflow_graph():
     """
     Constructs the LangGraph autonomous multi-agent software engineering workflow graph:
-    START -> Planner -> Project Manager -> Architect -> Frontend -> Backend -> Database -> Reviewer -> Testing -> Documentation -> Export -> END
+    START -> Planner -> Learning Enricher -> Project Manager -> Architect -> Frontend -> Backend -> Database -> Reviewer -> Testing -> Documentation -> Assembler -> Validator -> Learning Updater -> Export -> END
     """
     workflow = StateGraph(WorkflowState)
 
@@ -43,6 +45,8 @@ def create_workflow_graph():
     workflow.add_node("reviewer", reviewer_node)
     workflow.add_node("testing", testing_node)
     workflow.add_node("documentation", documentation_node)
+    workflow.add_node("assembler", assembler_node)
+    workflow.add_node("validator", validator_node)
     workflow.add_node("learning_updater", learning_updater_node)
     workflow.add_node("export", export_node)
 
@@ -84,12 +88,14 @@ def create_workflow_graph():
         }
     )
 
-    workflow.add_edge("documentation", "learning_updater")
+    workflow.add_edge("documentation", "assembler")
+    workflow.add_edge("assembler", "validator")
+    workflow.add_edge("validator", "learning_updater")
     workflow.add_edge("learning_updater", "export")
     workflow.add_edge("export", END)
 
     compiled_graph = workflow.compile()
-    logger.info("Compiled LangGraph Day 16 Autonomous Workflow Graph successfully.")
+    logger.info("Compiled LangGraph Autonomous Software Engineering Company Workflow Graph successfully.")
     return compiled_graph
 
 

@@ -1,3 +1,4 @@
+from typing import Dict, Any, List, Optional
 from backend.agents.base_agent import BaseAgent
 
 
@@ -88,3 +89,39 @@ Rules:
 
     async def run_async(self, plan: str, memory_context: str = "", previous_output: str = ""):
         return await super().run_async(plan, memory_context, previous_output)
+
+    def generate_architecture_blueprint(self, plan: Dict[str, Any]) -> Dict[str, Any]:
+        proj_name = plan.get("project_name", "AIForge Application")
+        return {
+            "project_name": proj_name,
+            "architecture_style": "Modular Monolith with Microservice Readiness",
+            "technology_stack": {
+                "frontend": "React 18, TailwindCSS, React Router v6, Axios",
+                "backend": "FastAPI, Python 3.11, Pydantic v2, SQLAlchemy",
+                "database": "PostgreSQL 15, Redis 7",
+                "devops": "Docker, Docker Compose, GitHub Actions CI/CD"
+            },
+            "folder_structure": {
+                "frontend/": ["src/pages", "src/components", "src/layouts", "src/hooks", "src/context", "src/services"],
+                "backend/": ["app/routers", "app/services", "app/models", "app/schemas", "app/middleware"],
+                "database/": ["migrations/", "schema.sql", "seed.sql"]
+            },
+            "component_hierarchy": [
+                "App -> MainLayout -> (Navbar, Sidebar, PageView, Footer)",
+                "Pages: Home, Dashboard, Login, Settings",
+                "State: AuthContext, ProjectContext"
+            ],
+            "api_flow": "Client -> Auth Middleware -> Router -> Service Layer -> ORM / DB Pool -> JSON Response",
+            "execution_plan": [
+                "Phase 1: DB Schema & Migration setup",
+                "Phase 2: FastAPI Core Routers & Auth Services",
+                "Phase 3: React Layouts, Auth Context & Page Components",
+                "Phase 4: Review, Testing & Packaging Assembly"
+            ],
+            "dependency_graph": {
+                "backend": ["database"],
+                "frontend": ["backend"],
+                "testing": ["frontend", "backend"],
+                "assembler": ["frontend", "backend", "database", "testing"]
+            }
+        }
