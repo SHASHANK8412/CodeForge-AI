@@ -26,3 +26,6 @@ class ProjectDependencyGraph:
 
 # Global ProjectDependencyGraph Instance
 global_project_dependency_graph = ProjectDependencyGraph()
+
+# Backward compatibility alias
+DependencyGraph = ProjectDependencyGraph

@@ -10,3 +10,5 @@ backend/rag/chroma_db/
 backend/rag/documents/
 generated_projects/
 *.db
+workspace/
+*.sqlite3
