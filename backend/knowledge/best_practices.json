@@ -106,5 +106,26 @@
     "category": "architecture",
     "score": 96,
     "description": "Verified high-rating pattern from Movie Streaming Portal"
+  },
+  {
+    "practice_id": "bp_013",
+    "name": "MERN E-Commerce App Architecture",
+    "category": "architecture",
+    "score": 94,
+    "description": "Verified high-rating pattern from MERN E-Commerce App"
+  },
+  {
+    "practice_id": "bp_014",
+    "name": "SRE Incident Automation Platform Architecture",
+    "category": "architecture",
+    "score": 95,
+    "description": "Verified high-rating pattern from SRE Incident Automation Platform"
+  },
+  {
+    "practice_id": "bp_015",
+    "name": "AI Cloud Monitor Architecture",
+    "category": "architecture",
+    "score": 94,
+    "description": "Verified high-rating pattern from AI Cloud Monitor"
   }
 ]

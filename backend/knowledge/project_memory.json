@@ -135,5 +135,50 @@
     "tokens_used": 3400,
     "build_success": true,
     "test_success": true
+  },
+  {
+    "project_id": "proj_010",
+    "project": "MERN E-Commerce App",
+    "framework": "React",
+    "backend": "Express",
+    "bugs": 1,
+    "tests_passed": 94,
+    "rating": 5,
+    "learning_score": 94,
+    "architecture": "Express + React",
+    "generation_time_sec": 48,
+    "tokens_used": 3400,
+    "build_success": true,
+    "test_success": true
+  },
+  {
+    "project_id": "proj_011",
+    "project": "SRE Incident Automation Platform",
+    "framework": "React",
+    "backend": "FastAPI",
+    "bugs": 1,
+    "tests_passed": 94,
+    "rating": 5,
+    "learning_score": 95,
+    "architecture": "FastAPI + React",
+    "generation_time_sec": 48,
+    "tokens_used": 3400,
+    "build_success": true,
+    "test_success": true
+  },
+  {
+    "project_id": "proj_012",
+    "project": "AI Cloud Monitor",
+    "framework": "React",
+    "backend": "FastAPI",
+    "bugs": 1,
+    "tests_passed": 94,
+    "rating": 5,
+    "learning_score": 94,
+    "architecture": "FastAPI + React",
+    "generation_time_sec": 48,
+    "tokens_used": 3400,
+    "build_success": true,
+    "test_success": true
   }
 ]
