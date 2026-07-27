@@ -86,3 +86,5 @@ class ProductionProjectMemory:
 
 
 global_production_project_memory = ProductionProjectMemory()
+ProjectMemoryStore = ProductionProjectMemory
+global_project_memory_store = global_production_project_memory
