@@ -132,6 +132,12 @@ def register_routers() -> None:
     from backend.routes.deployment_routes import router as day33_cicd_router
     app.include_router(day33_cicd_router)
 
+    from backend.routes.llm_routes import router as day34_llm_router
+    app.include_router(day34_llm_router)
+
+    from backend.routes.knowledge_routes import router as day35_knowledge_router
+    app.include_router(day35_knowledge_router)
+
     from v2.api.gateway import router as v2_gateway_router
     app.include_router(v2_gateway_router)
 
