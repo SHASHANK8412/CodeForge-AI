@@ -138,6 +138,9 @@ def register_routers() -> None:
     from backend.routes.knowledge_routes import router as day35_knowledge_router
     app.include_router(day35_knowledge_router)
 
+    from backend.routes.quality_routes import router as day36_quality_router
+    app.include_router(day36_quality_router)
+
     from v2.api.gateway import router as v2_gateway_router
     app.include_router(v2_gateway_router)
 
