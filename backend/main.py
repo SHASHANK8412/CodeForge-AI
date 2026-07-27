@@ -153,6 +153,9 @@ def register_routers() -> None:
     from backend.routes.distributed_routes import router as day40_distributed_router
     app.include_router(day40_distributed_router)
 
+    from backend.routes.learning_routes import router as day41_learning_router
+    app.include_router(day41_learning_router)
+
     from v2.api.gateway import router as v2_gateway_router
     app.include_router(v2_gateway_router)
 

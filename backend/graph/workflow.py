@@ -13,6 +13,8 @@ from backend.graph.nodes import (
     testing_node,
     documentation_node,
     export_node,
+    learning_enricher_node,
+    learning_updater_node,
 )
 from backend.graph.conditions import (
     should_retry_planner,
@@ -32,6 +34,7 @@ def create_workflow_graph():
 
     # 1. Add Agent Nodes
     workflow.add_node("planner", planner_node)
+    workflow.add_node("learning_enricher", learning_enricher_node)
     workflow.add_node("project_manager", project_manager_node)
     workflow.add_node("architect", architect_node)
     workflow.add_node("frontend", frontend_node)
@@ -40,6 +43,7 @@ def create_workflow_graph():
     workflow.add_node("reviewer", reviewer_node)
     workflow.add_node("testing", testing_node)
     workflow.add_node("documentation", documentation_node)
+    workflow.add_node("learning_updater", learning_updater_node)
     workflow.add_node("export", export_node)
 
     # 2. Add Sequential Edges
@@ -50,10 +54,11 @@ def create_workflow_graph():
         should_retry_planner,
         {
             "planner": "planner",
-            "architect": "project_manager"
+            "architect": "learning_enricher"
         }
     )
 
+    workflow.add_edge("learning_enricher", "project_manager")
     workflow.add_edge("project_manager", "architect")
 
     workflow.add_edge("architect", "frontend")
@@ -79,7 +84,8 @@ def create_workflow_graph():
         }
     )
 
-    workflow.add_edge("documentation", "export")
+    workflow.add_edge("documentation", "learning_updater")
+    workflow.add_edge("learning_updater", "export")
     workflow.add_edge("export", END)
 
     compiled_graph = workflow.compile()

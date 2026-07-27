@@ -232,3 +232,41 @@ def export_node(state: WorkflowState) -> WorkflowState:
     state.setdefault("logs", []).append(f"[Export] Completed ({elapsed}s)")
     state.setdefault("logs", []).append("Workflow Completed")
     return state
+
+
+def learning_enricher_node(state: WorkflowState) -> WorkflowState:
+    """LearningEnricherNode: Enriches project plan with historical learning context before code generation."""
+    start_time = time.time()
+    prompt = state.get("prompt", "Software Project")
+    try:
+        from backend.learning.learning_engine import global_production_learning_engine
+        enrichment = global_production_learning_engine.enrich_planning_context(prompt)
+        state["learning_enrichment"] = enrichment
+    except Exception as e:
+        logger.warning(f"LearningEnricherNode fallback: {e}")
+        state["learning_enrichment"] = {"status": "bypassed"}
+
+    elapsed = round(time.time() - start_time, 2)
+    state.setdefault("logs", []).append(f"[Learning Enricher] Completed ({elapsed}s)")
+    return state
+
+
+def learning_updater_node(state: WorkflowState) -> WorkflowState:
+    """LearningUpdaterNode: Records generated project artifacts, bug fixes, and performance metrics into Learning Engine."""
+    start_time = time.time()
+    try:
+        from backend.learning.learning_engine import global_production_learning_engine
+        update_summary = global_production_learning_engine.update_learning_knowledge({
+            "user_prompt": state.get("prompt", "Generated App"),
+            "architecture": state.get("plan", {}).get("project_name", "App"),
+            "generated_files": list(state.get("project_files", {}).keys()),
+            "start_time": state.get("start_time", time.time() - 15)
+        })
+        state["learning_update"] = update_summary
+    except Exception as e:
+        logger.warning(f"LearningUpdaterNode fallback: {e}")
+        state["learning_update"] = {"status": "bypassed"}
+
+    elapsed = round(time.time() - start_time, 2)
+    state.setdefault("logs", []).append(f"[Learning Updater] Completed ({elapsed}s)")
+    return state
