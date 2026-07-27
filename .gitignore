@@ -12,3 +12,4 @@ generated_projects/
 *.db
 workspace/
 *.sqlite3
+logs/*.log

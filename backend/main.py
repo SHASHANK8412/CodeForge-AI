@@ -120,6 +120,9 @@ def register_routers() -> None:
     from backend.routes.project_manager_routes import router as day29_pm_agent_router
     app.include_router(day29_pm_agent_router)
 
+    from backend.routes.communication_routes import router as day30_communication_router
+    app.include_router(day30_communication_router)
+
     from v2.api.gateway import router as v2_gateway_router
     app.include_router(v2_gateway_router)
 
