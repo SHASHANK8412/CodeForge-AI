@@ -1,0 +1,68 @@
+{
+  "project_id": "proj_day44_01",
+  "prompt": "Create a social media management dashboard with React and FastAPI",
+  "framework": "FullStack",
+  "quality_score": 97.5,
+  "tags": [
+    "fastapi",
+    "fullstack",
+    "create",
+    "react",
+    "media",
+    "and",
+    "management",
+    "social",
+    "a",
+    "dashboard",
+    "with"
+  ],
+  "knowledge": {
+    "api_patterns": [
+      {
+        "file": "backend/main.py",
+        "category": "API_PATTERN",
+        "summary": "FastAPI REST Endpoint Handler",
+        "snippet": "from fastapi import FastAPI\napp = FastAPI()"
+      }
+    ],
+    "database_schemas": [
+      {
+        "file": "database/schema.sql",
+        "category": "DATABASE_SCHEMA",
+        "summary": "Database Schema Definition",
+        "snippet": "CREATE TABLE posts (id SERIAL PRIMARY KEY, content TEXT);"
+      }
+    ],
+    "ui_components": [
+      {
+        "file": "frontend/src/App.jsx",
+        "category": "UI_COMPONENT",
+        "summary": "React Component (App.jsx)",
+        "snippet": "import React from 'react'; export default function App() {}"
+      },
+      {
+        "file": "frontend/src/components/Card.jsx",
+        "category": "UI_COMPONENT",
+        "summary": "React Component (Card.jsx)",
+        "snippet": "export default function Card() {}"
+      }
+    ],
+    "folder_structures": [
+      "frontend",
+      "backend",
+      "database"
+    ],
+    "reusable_prompts": [
+      "Create a social media management dashboard with React and FastAPI"
+    ],
+    "error_resolution_pairs": [
+      {
+        "error": "ModuleNotFoundError: No module named 'fastapi'",
+        "solution": "Added fastapi to requirements.txt",
+        "success": true
+      }
+    ],
+    "testing_strategies": []
+  },
+  "indexed_at": "2026-07-31T12:41:47Z"
+}

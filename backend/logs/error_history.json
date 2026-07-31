@@ -1,0 +1,56 @@
+[
+  {
+    "time": "2026-07-31T12:41:55Z",
+    "project": "proj_scenario_8",
+    "error": "Unclassified totally obscure hardware failure 0x88127391823",
+    "solution": "Self-healing halted due to low confidence score (45% < 60%). Human-readable report generated.",
+    "success": false,
+    "confidence": 45,
+    "retry_count": 1
+  },
+  {
+    "time": "2026-07-31T12:38:26Z",
+    "project": "proj_scenario_8",
+    "error": "Unclassified totally obscure hardware failure 0x88127391823",
+    "solution": "Self-healing halted due to low confidence score (45% < 60%). Human-readable report generated.",
+    "success": false,
+    "confidence": 45,
+    "retry_count": 1
+  },
+  {
+    "time": "2026-07-31T12:38:22Z",
+    "project": "test_proj_01",
+    "error": "No module named 'fastapi'",
+    "solution": "Added missing package 'fastapi' to requirements.txt and updated virtual environment",
+    "success": true,
+    "confidence": 94,
+    "retry_count": 1
+  },
+  {
+    "time": "2026-07-31T12:38:22Z",
+    "project": "test_proj_02",
+    "error": "Unclassified random strange crash error 9821379",
+    "solution": "Self-healing halted due to low confidence score (45% < 60%). Human-readable report generated.",
+    "success": false,
+    "confidence": 45,
+    "retry_count": 1
+  },
+  {
+    "time": "2026-07-31T12:38:01Z",
+    "project": "proj_scenario_8",
+    "error": "Unclassified totally obscure hardware failure 0x88127391823",
+    "solution": "Self-healing halted due to low confidence score (45% < 60%). Human-readable report generated.",
+    "success": false,
+    "confidence": 45,
+    "retry_count": 1
+  },
+  {
+    "time": "2026-07-31T12:37:37Z",
+    "project": "proj_scenario_8",
+    "error": "Unclassified totally obscure hardware failure 0x88127391823",
+    "solution": "Self-healing halted due to low confidence score (45% < 60%). Human-readable report generated.",
+    "success": false,
+    "confidence": 45,
+    "retry_count": 1
+  }
+]

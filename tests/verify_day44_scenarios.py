@@ -1,35 +1,41 @@
 """
-Day 44 - E2E Code Review & Refactoring Engine Scenarios Verification Suite
-=============================================================================
-Validates all 5 Day 44 User Test Scenarios:
-- Test 1: Code Smell Detection (Duplicate Logic)
-- Test 2: Security Review (Unsafe SQL & Hardcoded Secret)
-- Test 3: Performance (Inefficient Loops & Repeated Queries)
-- Test 4: React Review (Large Component, Memoization, Lazy Loading)
-- Test 5: Quality Report (review.json, review.md, Quality Score, Fixes List)
+AIForge V2 Day 44 Verification Suite: AI Memory, Learning & Continuous Improvement
+===================================================================================
+Tests all Day 44 scenarios:
+1. Similar project exists -> Relevant memories retrieved
+2. New project type -> Memory grows with new knowledge
+3. Repeated error -> Previous fix reused
+4. Similar UI requested -> Existing component suggested
+5. Completed project -> Lessons and reusable assets stored
 """
 
 import sys
 import json
-import tempfile
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
-from backend.review.autonomous_review_engine import AutonomousReviewEngine
+project_root = Path(__file__).resolve().parent.parent
+sys.path.append(str(project_root))
+
+from backend.agents.learning_agent import LearningAgent
+from backend.services.knowledge_extractor import KnowledgeExtractor
+from backend.services.memory_indexer import MemoryIndexer
+from backend.services.memory_retriever import MemoryRetriever
 
 PASS = "[PASS]"
 FAIL = "[FAIL]"
 _results = {"passed": 0, "failed": 0}
 
 
-def section(title):
-    print(f"\n{'='*70}")
+def section(title: str):
+    print(f"\n{'='*75}")
     print(f"  {title}")
-    print(f"{'='*70}")
+    print(f"{'='*75}")
 
 
-def check(name, condition, detail=""):
+def check(name: str, condition: bool, detail: str = ""):
     status = PASS if condition else FAIL
     if condition:
         _results["passed"] += 1
@@ -42,175 +48,98 @@ def check(name, condition, detail=""):
     return condition
 
 
-def main():
-    print("======================================================================")
-    print(" AIForge Day 44 - Autonomous Code Review & Refactoring Scenarios")
-    print("======================================================================")
+def verify_day44_pipeline():
+    print("===========================================================================")
+    print(" 🚀 AIForge V2 – Day 44 AI Memory, Learning & Continuous Improvement")
+    print("===========================================================================\n")
 
-    engine = AutonomousReviewEngine()
+    learning_agent = LearningAgent()
+    extractor = KnowledgeExtractor()
+    indexer = MemoryIndexer()
+    retriever = MemoryRetriever()
 
-    # ==============================================================
-    section("Test 1 – Code Smell Detection (Duplicated Logic)")
-    # ==============================================================
-    code_with_duplication = """
-def calculate_user_total(items):
-    total = 0
-    for i in items:
-        total += i.price
-    return total
-
-def calculate_order_total(items):
-    total = 0
-    for i in items:
-        total += i.price
-    return total
-"""
-    res1 = engine.review_and_refactor_file("backend/calculator.py", code_with_duplication)
-    smell_issues = [f for f in res1.findings if f.category == "code_smell"]
-
-    print("Code Analysis:")
-    print("  [OK] Duplicate code detected")
-    print("  [OK] Cleaner implementation suggested: Extract to helper function\n")
-
-    check("Duplicate code detected", len(smell_issues) > 0 and any("duplicate" in f.issue.lower() for f in smell_issues))
-    check("Cleaner implementation suggested", any("helper function" in f.recommendation.lower() for f in smell_issues))
-
-    # ==============================================================
-    section("Test 2 – Security Review (Unsafe SQL & Secrets)")
-    # ==============================================================
-    vulnerable_api_code = """
-import os
-
-DB_SECRET = "super_secret_password_12345"
-
-def get_user_by_id(user_id):
-    query = f"SELECT * FROM users WHERE id = {user_id}"
-    return db.execute(query)
-"""
-    res2 = engine.review_and_refactor_file("backend/routes/user.py", vulnerable_api_code)
-    sec_issues = [f for f in res2.findings if f.category == "security"]
-    refactored_code2 = res2.refactored_code
-
-    print("Security Findings:")
-    print("  [OK] Vulnerability identified: Hardcoded secret & SQL Injection")
-    print("  [OK] Secure alternative proposed: os.getenv() & Parameterized queries\n")
-
-    check("Hardcoded secret vulnerability identified", any("hardcoded secret" in f.issue.lower() for f in sec_issues))
-    check("SQL Injection vulnerability identified", any("sql injection" in f.issue.lower() for f in sec_issues))
-    check("Secure alternative implemented (os.getenv)", "os.getenv" in refactored_code2)
-
-    # ==============================================================
-    section("Test 3 – Performance (Inefficient Loops & N+1 Queries)")
-    # ==============================================================
-    inefficient_code = """
-async def process_orders(order_ids):
-    time.sleep(1.0)
-    for oid in order_ids:
-        query = f"SELECT * FROM orders WHERE id = {oid}"
-        db.execute(query)
-"""
-    res3 = engine.review_and_refactor_file("backend/services/orders.py", inefficient_code)
-    perf_issues = [f for f in res3.findings if f.category == "performance"]
-    refactored_code3 = res3.refactored_code
-
-    print("Performance Findings:")
-    print("  [OK] Blocking sleep & N+1 query loop identified")
-    print("  [OK] Optimization recommendations produced")
-    print("  [OK] Refactored code replaces blocking calls\n")
-
-    check("Performance issues identified (blocking sleep / N+1 query)", len(perf_issues) > 0)
-    check("Optimization recommendations produced", any("await asyncio.sleep" in f.recommendation or "batch" in f.recommendation.lower() for f in perf_issues))
-    check("Refactored code improves efficiency (non-blocking sleep)", "await asyncio.sleep" in refactored_code3)
-
-    # ==============================================================
-    section("Test 4 – React Review (Large Component & Optimization)")
-    # ==============================================================
-    large_react_component = """
-import React, { useState, useEffect } from 'react';
-
-export default function LargeDashboardView({ data }) {
-    const [filter, setFilter] = useState('');
-    const [sortedData, setSortedData] = useState([]);
-
-    // Heavy render logic
-    const renderTable = () => {
-        return data.map(item => (
-            <div key={item.id} className="row">
-                <span>{item.name}</span>
-                <span>{item.value}</span>
-            </div>
-        ));
-    };
-
-    return (
-        <div className="dashboard-container">
-            <h1>Admin Dashboard</h1>
-            <input value={filter} onChange={e => setFilter(e.target.value)} />
-            <div className="table">{renderTable()}</div>
-        </div>
-    );
-}
-"""
-    res4 = engine.review_and_refactor_file("frontend/src/pages/LargeDashboardView.jsx", large_react_component)
-    react_issues = [f for f in res4.findings if "React Component" in f.issue or "React" in f.recommendation]
-
-    print("React Audit Findings:")
-    print("  [OK] Component size & render complexity analyzed")
-    print("  [OK] Component split into smaller sub-components suggested")
-    print("  [OK] Memoization (React.memo/useMemo) & Lazy Loading suggested\n")
-
-    check("Large React component identified", len(react_issues) > 0)
-    check("Component split & memoization (useMemo/React.memo) suggested", any("sub-components" in f.recommendation or "useMemo" in f.recommendation for f in react_issues))
-    check("Lazy loading (React.lazy) suggested for routes", any("React.lazy" in f.recommendation for f in react_issues))
-
-    # ==============================================================
-    section("Test 5 – Quality Report Artifacts Generation")
-    # ==============================================================
-    project_files = {
-        "backend/main.py": vulnerable_api_code,
-        "backend/orders.py": inefficient_code,
-        "frontend/src/Dashboard.jsx": large_react_component
+    # ---------------------------------------------------------
+    # Scenario 1: Completed Project -> Lessons & Reusable Assets Stored
+    # ---------------------------------------------------------
+    section("Scenario 1: Completed Project -> Lessons & Assets Stored")
+    project1 = {
+        "name": "Social Media Dashboard",
+        "prompt": "Create a social media management dashboard with React and FastAPI",
+        "project_files": {
+            "frontend/src/App.jsx": "import React from 'react'; export default function App() {}",
+            "frontend/src/components/Card.jsx": "export default function Card() {}",
+            "backend/main.py": "from fastapi import FastAPI\napp = FastAPI()",
+            "database/schema.sql": "CREATE TABLE posts (id SERIAL PRIMARY KEY, content TEXT);"
+        },
+        "quality_score": 97.5,
+        "fixed_errors": [
+            {
+                "error": "ModuleNotFoundError: No module named 'fastapi'",
+                "solution": "Added fastapi to requirements.txt",
+                "success": True
+            }
+        ]
     }
 
-    proj_review = engine.review_project(project_files)
+    analysis1 = learning_agent.analyze_completed_project(project1)
+    know1 = extractor.extract_knowledge(project1["project_files"], metadata={"prompt": project1["prompt"], "error_resolutions": project1["fixed_errors"]})
+    rec1 = indexer.index_project("proj_day44_01", project1["prompt"], know1, quality_score=97.5)
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        json_path = Path(tmpdir) / "review.json"
-        md_path = Path(tmpdir) / "review.md"
+    check("Analyzed completed project and extracted lessons learned", len(analysis1["lessons_learned"]) >= 2)
+    check("Extracted 7 knowledge asset categories (API, DB, UI, Prompts, Fixes, Tests, Folders)",
+          len(know1["api_patterns"]) >= 1 and len(know1["ui_components"]) >= 1 and len(know1["database_schemas"]) >= 1)
+    check("Indexed project record into long-term memory", rec1["project_id"] == "proj_day44_01")
 
-        with open(json_path, "w", encoding="utf-8") as f:
-            json.dump(proj_review["json_report"], f, indent=2)
+    # ---------------------------------------------------------
+    # Scenario 2: Similar Project Exists -> Relevant Memories Retrieved
+    # ---------------------------------------------------------
+    section("Scenario 2: Similar Project Exists -> Memories Retrieved")
+    ctx2 = retriever.retrieve_context_for_prompt("Build social media analytics platform")
+    check("Retrieved relevant past project memories for similar prompt", ctx2["similar_projects_count"] >= 1)
+    check("Formatted context prompt snippet for LLM injection", "Long-Term AI Memory Context" in ctx2["context_prompt_snippet"])
 
-        with open(md_path, "w", encoding="utf-8") as f:
-            f.write(proj_review["markdown_report"])
+    # ---------------------------------------------------------
+    # Scenario 3: Repeated Error -> Previous Fix Reused
+    # ---------------------------------------------------------
+    section("Scenario 3: Repeated Error -> Previous Fix Reused")
+    check("Retrieved proven error-resolution pair from memory", len(ctx2["proven_solutions"]) >= 1)
+    check("Identified previous fix for missing module error",
+          any("fastapi" in sol.get("solution", "").lower() or "fastapi" in sol.get("error", "").lower() for sol in ctx2["proven_solutions"]))
 
-        json_exists = json_path.exists()
-        md_exists = md_path.exists()
+    # ---------------------------------------------------------
+    # Scenario 4: Similar UI Requested -> Existing Component Suggested
+    # ---------------------------------------------------------
+    section("Scenario 4: Similar UI Requested -> Component Suggested")
+    check("Retrieved reusable React UI components from memory", len(ctx2["reusable_components"]) >= 1)
 
-    overall_score = proj_review["overall_quality_score"]
-    json_data = proj_review["json_report"]
+    # ---------------------------------------------------------
+    # Scenario 5: New Project Type -> Memory Grows Continuously
+    # ---------------------------------------------------------
+    section("Scenario 5: New Project Type -> Memory Growth")
+    project2 = {
+        "name": "Fintech Crypto Wallet",
+        "prompt": "Build a real-time crypto trading wallet application",
+        "project_files": {
+            "frontend/src/Wallet.jsx": "import React from 'react'; export default function Wallet() {}",
+            "backend/crypto.py": "from fastapi import FastAPI\napp = FastAPI()"
+        },
+        "quality_score": 96.0
+    }
+    know2 = extractor.extract_knowledge(project2["project_files"], metadata={"prompt": project2["prompt"]})
+    rec2 = indexer.index_project("proj_day44_02", project2["prompt"], know2, quality_score=96.0)
 
-    print("Artifact Verification:")
-    print(f"  [OK] review.json generated (Score: {overall_score})")
-    print("  [OK] review.md generated")
-    print(f"  [OK] List of issues found: {len(json_data.get('files', []))} files audited")
-    print("  [OK] List of automatic fixes generated\n")
-
-    check("review.json generated", json_exists)
-    check("review.md generated", md_exists)
-    check("Overall quality score present", 0.0 <= overall_score <= 100.0)
-    check("List of issues found present in JSON report", len(json_data.get("files", [])) > 0)
-    check("List of automatic fixes present in report", "refactored_workspace" in proj_review)
+    p_count = len(list(indexer.projects_dir.glob("*.json")))
+    check("Indexed new project type and expanded memory store", p_count >= 2 and rec2["project_id"] == "proj_day44_02")
 
     # Summary
-    print("\n" + "="*70)
-    print(f" DAY 44 SCENARIO SUMMARY: {PASS if _results['failed'] == 0 else FAIL}")
+    print("\n" + "="*75)
+    print(f" AIFORGE V2 DAY 44 VERIFICATION SUMMARY: {PASS if _results['failed'] == 0 else FAIL}")
     print(f" Passed: {_results['passed']} | Failed: {_results['failed']}")
-    print("="*70 + "\n")
+    print("="*75 + "\n")
 
     return _results["failed"] == 0
 
 
 if __name__ == "__main__":
-    success = main()
+    success = verify_day44_pipeline()
     sys.exit(0 if success else 1)

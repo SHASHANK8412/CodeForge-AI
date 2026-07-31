@@ -5,6 +5,7 @@ from backend.tools.postgres import PostgresTool, global_postgres_tool
 from backend.tools.docker import DockerTool, global_docker_tool
 from backend.tools.browser import BrowserTool, global_browser_tool
 from backend.tools.python_runner import PythonRunnerTool, global_python_runner_tool
+from backend.tools.mcp_server import MCPServer, global_mcp_server
 
 __all__ = [
     "FilesystemTool",
@@ -21,4 +22,6 @@ __all__ = [
     "global_browser_tool",
     "PythonRunnerTool",
     "global_python_runner_tool",
+    "MCPServer",
+    "global_mcp_server",
 ]

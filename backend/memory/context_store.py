@@ -96,3 +96,40 @@ class ContextStore:
                 shared["architecture_style"] = arch_data["architecture"]
 
         return shared
+
+    def get_non_duplicated_context(self, requesting_agent: str) -> Dict[str, Any]:
+        """
+        Returns upstream context filtered for the requesting agent,
+        omitting redundant keys so the agent references rather than regenerates existing output.
+        """
+        order = ["planner", "architect", "frontend", "backend", "database", "reviewer", "testing", "documentation"]
+        req_key = requesting_agent.lower().strip()
+        idx = order.index(req_key) if req_key in order else len(order)
+
+        upstream_context = {}
+        for agent_key in order[:idx]:
+            output = self.get_agent_output(agent_key)
+            if output:
+                upstream_context[agent_key] = output
+
+        return upstream_context
+
+    def build_agent_reference_prompt(self, requesting_agent: str) -> str:
+        """
+        Builds a directive string instructing the requesting agent to consume prior artifacts
+        and avoid regenerating already established architecture or code.
+        """
+        upstream = self.get_non_duplicated_context(requesting_agent)
+        if not upstream:
+            return ""
+
+        refs = [f"- {agent.upper()}: Already generated. Refer to existing specifications." for agent in upstream.keys()]
+        directive = (
+            "\n\n--- SHARED MEMORY NON-DUPLICATION DIRECTIVE ---\n"
+            "The following upstream artifacts are already finalized and MUST NOT be regenerated or repeated:\n"
+            + "\n".join(refs) +
+            "\nBuild directly on top of these specs without redefining baseline choices.\n"
+            "-----------------------------------------------\n"
+        )
+        return directive
+

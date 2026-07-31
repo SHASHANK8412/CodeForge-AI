@@ -1,60 +1,38 @@
 """
-AIForge Day 102 Test Suite: Continuous Benchmarking & Knowledge Graph
-======================================================================
+Unit tests for Day 43 BenchmarkTracker
 """
 
 import sys
-import unittest
 from pathlib import Path
-
-if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8")
-
 project_root = Path(__file__).resolve().parent.parent.parent
-sys.path.append(str(project_root))
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
-from backend.learning.benchmark import global_benchmark_engine
-from backend.learning.knowledge_graph import global_knowledge_graph_engine
-from backend.learning.evolution_engine import global_evolution_engine
-
-
-class TestDay102BenchmarkAndEvolution(unittest.TestCase):
-
-    def test_01_benchmark_project_metrics(self):
-        res = global_benchmark_engine.benchmark_project("E-Commerce Portal")
-        self.assertTrue(res["benchmark_passed"])
-        self.assertIn("improvement_pct", res)
-        self.assertEqual(res["complexity_reduction"], "18 → 7")
-        print("✓ Benchmark project metrics test passed")
-
-    def test_02_system_knowledge_graph(self):
-        graph = global_knowledge_graph_engine.build_system_knowledge_graph()
-        self.assertEqual(graph["total_nodes"], 6)
-        self.assertEqual(graph["total_edges"], 5)
-        print("✓ System knowledge graph test passed")
-
-    def test_03_autonomous_refactoring_suggestions(self):
-        loop = global_evolution_engine.generate_evolution_loop("SaaS Platform")
-        self.assertEqual(loop["evolution_cycle_status"], "COMPLETED")
-        self.assertGreater(len(loop["autonomous_refactoring_suggestions"]), 0)
-        print("✓ Autonomous refactoring suggestions test passed")
+import unittest
+from backend.services.benchmark import BenchmarkTracker
 
 
-def main():
-    print("\n" + "="*60)
-    print(" Running Day 102 Benchmark & Evolution Tests...")
-    print("="*60 + "\n")
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestDay102BenchmarkAndEvolution)
-    runner = unittest.TextTestRunner(verbosity=1)
-    result = runner.run(suite)
-    if result.wasSuccessful():
-        print("\n" + "="*60)
-        print(" ALL TESTS PASSED")
-        print("="*60 + "\n")
-        return True
-    return False
+class TestBenchmarkTracker(unittest.TestCase):
+
+    def setUp(self):
+        self.tracker = BenchmarkTracker()
+
+    def test_record_run_and_summary(self):
+        rec = self.tracker.record_run(
+            model_name="qwen2.5-coder",
+            latency=2.1,
+            tokens_used=150,
+            quality_score=95.0,
+            is_winner=True,
+            is_error=False
+        )
+        self.assertIn("total_runs", rec)
+
+        summary = self.tracker.get_dashboard_summary()
+        self.assertIn("total_runs", summary)
+        self.assertIn("overall_success_rate", summary)
+        self.assertIn("model_statistics", summary)
 
 
 if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+    unittest.main()

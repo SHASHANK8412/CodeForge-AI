@@ -80,7 +80,7 @@ async def chat_message(request: ChatMessageRequest):
     return {
         "success": True,
         "conversation": _conversation_payload(updated_conversation),
-        "response": result["response"],
+        "response": result.get("response", result.get("documentation", "Project generation complete.")),
         "plan": result.get("plan", ""),
         "architecture": result.get("architecture", ""),
         "messages": [_message_payload(message) for message in messages],

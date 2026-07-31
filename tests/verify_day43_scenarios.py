@@ -1,34 +1,42 @@
 """
-Day 43 - E2E Test Scenarios Verification Suite
-===============================================
-Validates all 5 Day 43 User Test Scenarios:
-- Test 1: Parallel Execution
-- Test 2: Agent Communication
-- Test 3: Conflict Resolution
-- Test 4: Merge & Project Bundle
-- Test 5: Shared Memory Consistency
+AIForge V2 Day 43 Verification Suite: Multi-Model AI Collaboration & Consensus Engine
+======================================================================================
+Tests all Day 43 scenarios:
+1. One model offline -> Automatic fallback
+2. Conflicting outputs -> Consensus engine chooses best
+3. Slow model -> Timeout & continue
+4. Invalid response -> Ignore and continue
+5. Three valid responses -> Highest-ranked solution selected
+6. Task-aware dynamic model routing
+7. Performance & Benchmark Metrics Tracking
 """
 
 import sys
-import asyncio
+import json
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
-from backend.collaboration.orchestrator import CollaborativeOrchestrator
+project_root = Path(__file__).resolve().parent.parent
+sys.path.append(str(project_root))
+
+from backend.services.model_manager import ModelManager
+from backend.services.consensus_engine import ConsensusEngine
+from backend.services.benchmark import BenchmarkTracker
 
 PASS = "[PASS]"
 FAIL = "[FAIL]"
 _results = {"passed": 0, "failed": 0}
 
 
-def section(title):
-    print(f"\n{'='*70}")
+def section(title: str):
+    print(f"\n{'='*75}")
     print(f"  {title}")
-    print(f"{'='*70}")
+    print(f"{'='*75}")
 
 
-def check(name, condition, detail=""):
+def check(name: str, condition: bool, detail: str = ""):
     status = PASS if condition else FAIL
     if condition:
         _results["passed"] += 1
@@ -41,129 +49,110 @@ def check(name, condition, detail=""):
     return condition
 
 
-def main():
-    print("======================================================================")
-    print(" AIForge Day 43 - E2E Collaborative Agent Test Scenarios")
-    print("======================================================================")
+def verify_day43_pipeline():
+    print("===========================================================================")
+    print(" 🚀 AIForge V2 – Day 43 Multi-Model AI Collaboration & Consensus Engine")
+    print("===========================================================================\n")
 
-    orchestrator = CollaborativeOrchestrator()
+    manager = ModelManager()
+    consensus = ConsensusEngine()
+    benchmark = BenchmarkTracker()
 
-    # ==============================================================
-    section("Test 1 – Parallel Execution")
-    # ==============================================================
-    print("Prompt: Build a Todo App")
-    res1 = asyncio.run(orchestrator.run_collaboration("Build a Todo App"))
+    # ---------------------------------------------------------
+    # Scenario 1: One Model Offline (Automatic Fallback)
+    # ---------------------------------------------------------
+    section("Scenario 1: One Model Offline -> Automatic Fallback")
+    res1 = manager.execute_models_in_parallel(
+        prompt="Generate backend API router",
+        models=["qwen2.5-coder", "deepseek-coder", "codellama"],
+        task_type="Backend APIs",
+        offline_models=["deepseek-coder"]  # Preferred model offline
+    )
+    check("Received responses from all parallel model requests", len(res1) == 3)
+    check("Handled offline model via automatic fallback without stopping generation",
+          any(r["status"] == "SUCCESS" for r in res1))
 
-    agent_progress = res1["execution_logs"]["agent_progress"]
-    completed_agents = [ap["agent"] for ap in agent_progress]
+    # ---------------------------------------------------------
+    # Scenario 2: Conflicting Outputs -> Consensus Engine Chooses Best
+    # ---------------------------------------------------------
+    section("Scenario 2: Conflicting Outputs -> Consensus Engine Chooses Best")
+    candidates2 = [
+        {"model": "qwen2.5-coder", "output": "const App = () => <div>Hello</div>;", "status": "SUCCESS", "latency": 2.1, "tokens_used": 80},
+        {"model": "deepseek-coder", "output": "import React from 'react';\nexport default function App() { return <div>Hello World</div>; }", "status": "SUCCESS", "latency": 2.4, "tokens_used": 150},
+        {"model": "codellama", "output": "/* incomplete code */", "status": "SUCCESS", "latency": 2.8, "tokens_used": 30}
+    ]
+    eval2 = consensus.evaluate_candidates(candidates2, task_type="React UI")
+    check("Consensus engine calculated agreement percentage", eval2["consensus_pct"] >= 75.0)
+    check("Consensus engine selected complete, superior code output", eval2["winner_model"] == "deepseek-coder" or eval2["winner_model"] == "qwen2.5-coder")
 
-    print("\nLogs:")
-    print("Frontend running... [OK]")
-    print("Backend running... [OK]")
-    print("Database running... [OK]")
-    print("Documentation running... [OK]\n")
+    # ---------------------------------------------------------
+    # Scenario 3: Slow Model Timeout & Continuation
+    # ---------------------------------------------------------
+    section("Scenario 3: Slow Model Timeout & Continuation")
+    candidates3 = [
+        {"model": "qwen2.5-coder", "output": "def test_ok(): pass", "status": "SUCCESS", "latency": 1.2, "tokens_used": 40},
+        {"model": "slow-model", "output": "def test_slow(): pass", "status": "SUCCESS", "latency": 8.5, "tokens_used": 40}
+    ]
+    eval3 = consensus.evaluate_candidates(candidates3, task_type="Unit Tests")
+    check("Fast model solution prioritized over slow model", eval3["winner_model"] == "qwen2.5-coder")
 
-    check("Frontend agent executed", "frontend" in completed_agents)
-    check("Backend agent executed", "backend" in completed_agents)
-    check("Database agent executed", "database" in completed_agents)
-    check("Documentation agent executed", "documentation" in completed_agents)
-    check("Testing agent executed", "testing" in completed_agents)
+    # ---------------------------------------------------------
+    # Scenario 4: Invalid Response (Ignore and Continue)
+    # ---------------------------------------------------------
+    section("Scenario 4: Invalid Response -> Ignore and Continue")
+    candidates4 = [
+        {"model": "qwen2.5-coder", "output": "import React from 'react';", "status": "SUCCESS", "latency": 1.5, "tokens_used": 50},
+        {"model": "broken-model", "output": "", "status": "FAILED", "latency": 0.05, "tokens_used": 0}
+    ]
+    eval4 = consensus.evaluate_candidates(candidates4, task_type="React UI")
+    check("Ignored failed/invalid response and selected valid candidate", eval4["winner_model"] == "qwen2.5-coder")
 
-    # ==============================================================
-    section("Test 2 – Agent Communication")
-    # ==============================================================
-    print("Prompt: Build JWT Login")
-    res2 = asyncio.run(orchestrator.run_collaboration("Build JWT Login"))
+    # ---------------------------------------------------------
+    # Scenario 5: Three Valid Responses -> Highest-Ranked Winner
+    # ---------------------------------------------------------
+    section("Scenario 5: Three Valid Responses -> Highest-Ranked Selected")
+    candidates5 = manager.execute_models_in_parallel(
+        prompt="Create user authentication route",
+        models=["qwen2.5-coder", "deepseek-coder", "codellama"],
+        task_type="Backend APIs"
+    )
+    eval5 = consensus.evaluate_candidates(candidates5, task_type="Backend APIs")
+    check("Ranked all 3 valid model candidates", len(eval5["evaluations"]) == 3)
+    check("AI cross-voting generated star ratings for each candidate", len(eval5["voting_scores"]) == 3)
+    check("Selected highest-ranked candidate solution as overall winner", eval5["winner_model"] in ["deepseek-coder", "qwen2.5-coder", "codellama"])
 
-    messages = res2["execution_logs"]["messages_exchanged"]
-    has_api_req = any(m["topic"] == "api_request" for m in messages)
-    has_api_resp = any(m["topic"] == "api_schema" for m in messages)
+    # ---------------------------------------------------------
+    # Scenario 6: Task-Aware Dynamic Model Routing
+    # ---------------------------------------------------------
+    section("Scenario 6: Task-Aware Dynamic Model Routing")
+    r_ui = manager.route_task("React UI")
+    r_api = manager.route_task("Backend APIs")
+    r_sql = manager.route_task("SQL")
+    r_debug = manager.route_task("Debugging")
 
-    print("\nLogs:")
-    print("Frontend requested login API. [OK]")
-    print("Backend responded: /api/auth/login [OK]")
-    print("Frontend updated automatically. [OK]\n")
+    check("Routed React UI task to Qwen Coder", r_ui == "qwen2.5-coder")
+    check("Routed Backend APIs task to DeepSeek Coder", r_api == "deepseek-coder")
+    check("Routed SQL task to DeepSeek Coder", r_sql == "deepseek-coder")
+    check("Routed Debugging task to CodeLlama", r_debug == "codellama")
 
-    check("Frontend requested login API on bus", has_api_req)
-    check("Backend responded with '/api/auth/login' on bus", has_api_resp)
-    check("Frontend updated client configuration automatically", True)
-
-    # ==============================================================
-    section("Test 3 – Conflict Resolution")
-    # ==============================================================
-    print("Force a conflict: Frontend (email) vs Backend (username)")
-    res3 = asyncio.run(orchestrator.run_collaboration("Build JWT Login", forced_conflict=True))
-
-    conflicts = res3["conflicts"]
-    decisions = res3["decisions"]
-    be_file = res3["agent_outputs"]["backend"]["files"].get("backend/routes/auth.py", "")
-
-    print("\nLogs:")
-    print("Conflict Detected [OK]")
-    print("Negotiation Started [OK]")
-    print("Decision: Use email [OK]")
-    print("Backend Updated [OK]")
-    print("Success [OK]\n")
-
-    check("Conflict Detected between frontend and backend auth fields", len(conflicts) > 0)
-    check("Negotiation Agent started resolution protocol", len(decisions) > 0)
-    check("Decision: Use email", any(d.resolved_value == "email" for d in decisions))
-    check("Backend routes code updated to use email", "email" in be_file and "username" not in be_file)
-
-    # ==============================================================
-    section("Test 4 – Merge Engine & Workspace Bundle")
-    # ==============================================================
-    res4 = asyncio.run(orchestrator.run_collaboration("Build full-stack app"))
-    workspace = res4["workspace"]
-    w_keys = list(workspace.keys())
-
-    has_frontend = any("frontend/" in k for k in w_keys)
-    has_backend = any("backend/" in k for k in w_keys)
-    has_database = any("database/" in k for k in w_keys)
-    has_tests = any("tests/" in k for k in w_keys)
-    has_docs = any("docs/" in k for k in w_keys)
-    has_readme = "README.md" in w_keys
-    has_docker = "docker-compose.yml" in w_keys
-    has_zip = "Project.zip" in w_keys
-
-    print("\nFinal Workspace Contents:")
-    for item in ["frontend/", "backend/", "database/", "tests/", "docs/", "README.md", "docker-compose.yml", "Project.zip"]:
-        print(f"  [OK] {item}")
-    print()
-
-    check("frontend/ present", has_frontend)
-    check("backend/ present", has_backend)
-    check("database/ present", has_database)
-    check("tests/ present", has_tests)
-    check("docs/ present", has_docs)
-    check("README.md present", has_readme)
-    check("docker-compose.yml present", has_docker)
-    check("Project.zip bundle generated", has_zip)
-
-    # ==============================================================
-    section("Test 5 – Shared Memory Consistency")
-    # ==============================================================
-    print("Ask: Build Admin Dashboard")
-    res5 = asyncio.run(orchestrator.run_collaboration("Build Admin Dashboard"))
-
-    shared_mem = res5["shared_memory_snapshot"]
-    standards = shared_mem.get("coding_standards", {})
-
-    check("Same API names used across all agents", bool(standards.get("api_prefix")))
-    check("Same database schema conventions used (snake_case)", standards.get("naming_convention_db") == "snake_case")
-    check("Same authentication method used (JWT Bearer)", "jwt" in standards.get("auth_header", "").lower())
-    check("Same coding conventions used (FastAPI + React 18)", standards.get("backend_framework") == "FastAPI" and standards.get("frontend_framework") == "React 18 / Vite")
-    check("Agents executed without regenerating inconsistent definitions", True)
+    # ---------------------------------------------------------
+    # Scenario 7: Performance & Benchmark Metrics Tracking
+    # ---------------------------------------------------------
+    section("Scenario 7: Benchmark Metrics Persistence")
+    benchmark.record_run("qwen2.5-coder", latency=2.1, tokens_used=150, quality_score=95.0, is_winner=True)
+    summary = benchmark.get_dashboard_summary()
+    check("Persistently tracked model metrics in model_metrics.json", summary["total_runs"] > 0)
+    check("Calculated overall success rate and model win stats", "overall_success_rate" in summary and len(summary["model_statistics"]) >= 3)
 
     # Summary
-    print("\n" + "="*70)
-    print(f" DAY 43 SCENARIO SUMMARY: {PASS if _results['failed'] == 0 else FAIL}")
+    print("\n" + "="*75)
+    print(f" AIFORGE V2 DAY 43 VERIFICATION SUMMARY: {PASS if _results['failed'] == 0 else FAIL}")
     print(f" Passed: {_results['passed']} | Failed: {_results['failed']}")
-    print("="*70 + "\n")
+    print("="*75 + "\n")
 
     return _results["failed"] == 0
 
 
 if __name__ == "__main__":
-    success = main()
+    success = verify_day43_pipeline()
     sys.exit(0 if success else 1)

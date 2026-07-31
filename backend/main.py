@@ -156,6 +156,21 @@ def register_routers() -> None:
     from backend.routes.learning_routes import router as day41_learning_router
     app.include_router(day41_learning_router)
 
+    from backend.routes.consensus_routes import router as day43_consensus_router
+    app.include_router(day43_consensus_router)
+
+    from backend.routes.day44_learning_routes import router as day44_learning_router
+    app.include_router(day44_learning_router)
+
+    from backend.routes.production_grade_routes import router as production_grade_router
+    app.include_router(production_grade_router)
+
+    from backend.routes.mcp_routes import router as day45_mcp_router
+    app.include_router(day45_mcp_router)
+
+    from backend.routes.monitoring_routes import router as day46_monitoring_router
+    app.include_router(day46_monitoring_router)
+
     from v2.api.gateway import router as v2_gateway_router
     app.include_router(v2_gateway_router)
 

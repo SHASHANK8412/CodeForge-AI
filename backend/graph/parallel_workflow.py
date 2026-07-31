@@ -1,5 +1,6 @@
 import logging
 import json
+import re
 from time import perf_counter
 from pathlib import Path
 from typing import Dict, Any, List
@@ -24,7 +25,6 @@ from backend.agents.project_execution_agent import ProjectExecutionAgent
 from backend.agents.file_quality_agent import FileQualityAgent
 from backend.agents.security_agent import SecurityAgent
 from backend.agents.performance_agent import PerformanceAgent
-from backend.agents.project_testing_agent import ProjectTestingAgent
 from backend.agents.project_packaging_agent import ProjectPackagingAgent
 
 from backend.generators.project_generator import ProjectGenerator
@@ -36,6 +36,7 @@ from backend.services.cache_service import global_cache_service
 from backend.services.validator import global_stage_validator
 from backend.services.project_builder import global_structured_project_builder
 from backend.services.prompt_builder import global_prompt_builder
+from backend.quality.duplicate_detector import global_duplicate_detector
 from backend.memory.memory_manager import memory_manager
 
 _logger = logging.getLogger("aiforge.performance")
@@ -47,7 +48,7 @@ frontend_agent = FrontendAgent()
 backend_agent = BackendAgent()
 database_agent = DatabaseAgent()
 reviewer_agent = ReviewerAgent()
-project_testing_agent = ProjectTestingAgent()
+testing_agent = TestingAgent()
 documentation_agent = DocumentationAgent()
 build_validation_agent = BuildValidationAgent()
 dependency_manager_agent = DependencyManagerAgent()
@@ -240,18 +241,28 @@ async def assembly_node(state: ProjectState) -> dict:
         docs_code=str(state.get("documentation", ""))
     )
 
+    duplicate_report = global_duplicate_detector.detect_duplicates(assembled.get("manifest", {}))
+
     return {
+        "assembly_manifest": assembled,
+        "duplicate_report": duplicate_report,
         "current_step": "assembly",
-        "stream_events": ["✔ Assembly completed"]
+        "stream_events": [
+            "✔ Assembly completed",
+            f"✔ Duplicate scan: {duplicate_report['duplicate_count']} duplicate block(s) found",
+        ]
     }
 
 
 async def reviewer_node(state: ProjectState) -> dict:
     _logger.info("✔ [4/14] Reviewer running...")
-    rev_prompt = global_prompt_builder.build_reviewer_prompt({
-        "frontend": str(state.get("frontend", "")),
-        "backend": str(state.get("backend", ""))
-    })
+    duplicate_report = state.get("duplicate_report", {}) or {}
+    rev_prompt = global_prompt_builder.build_reviewer_prompt(
+        frontend_code=str(state.get("frontend", "")),
+        backend_code=str(state.get("backend", "")),
+        database_code=str(state.get("database", "")),
+        duplicate_report=duplicate_report,
+    )
 
     with Timer() as timer:
         review_output = await reviewer_agent.run_async(rev_prompt)
@@ -259,35 +270,80 @@ async def reviewer_node(state: ProjectState) -> dict:
     agent_timers["reviewer"] = timer.elapsed
     workflow_profiler.record_agent_time("reviewer", timer.elapsed)
 
+    # Real, if simple, computed score: start at 100 and deduct for actually-detected
+    # duplicates and for severity tags the reviewer itself raised in its findings.
+    # This is a heuristic, not a precise metric — it replaces a flat hardcoded 95.0.
+    score = 100.0
+    score -= duplicate_report.get("duplicate_count", 0) * 5
+    score -= review_output.count("[Critical]") * 10
+    score -= review_output.count("[Major]") * 5
+    score -= review_output.count("[Minor]") * 2
+    score = max(0.0, min(100.0, score))
+
     return {
-        "review": {"review_text": review_output, "score": 95.0},
+        "review": {"review_text": review_output, "score": round(score, 1)},
         "current_step": "reviewer",
         "stream_events": ["✔ Code Review completed"]
     }
 
 
+TEST_SECTION_HEADERS = ["Unit Tests", "Integration Tests", "API Tests", "End-to-End Tests"]
+
+
+def _count_tests_by_section(raw_text: str) -> Dict[str, int]:
+    """Counts real `def test_...` functions per labeled section in the LLM's response.
+
+    This is intentionally a plain count of what was actually generated, not a fabricated
+    pass/fail/coverage statistic — no sandboxed execution happens here.
+    """
+    counts: Dict[str, int] = {}
+    pattern = re.compile(r"##\s*(" + "|".join(TEST_SECTION_HEADERS) + r")", re.IGNORECASE)
+    matches = list(pattern.finditer(raw_text))
+    for i, match in enumerate(matches):
+        section_name = match.group(1)
+        start = match.end()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(raw_text)
+        counts[section_name] = len(re.findall(r"def\s+test_\w+", raw_text[start:end]))
+    return counts
+
+
 async def testing_node(state: ProjectState) -> dict:
-    _logger.info("✔ [5/14] Project Testing Agent generating test suites...")
-    plan_json = state.get("plan", {})
-    proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
+    _logger.info("✔ [5/14] Testing Agent generating test suites...")
+    testing_prompt = global_prompt_builder.build_testing_prompt(
+        backend_code=str(state.get("backend", "")),
+        frontend_code=str(state.get("frontend", "")),
+    )
 
     with Timer() as timer:
-        suites = project_testing_agent.generate_all_tests(
-            project_name=proj_name,
-            backend_code=str(state.get("backend", "")),
-            frontend_code=str(state.get("frontend", ""))
-        )
-        report = project_testing_agent.build_report(suites)
-        report_md = project_testing_agent.generate_testing_report_markdown(report)
+        raw_tests = await testing_agent.run_async(testing_prompt)
 
     agent_timers["testing"] = timer.elapsed
     workflow_profiler.record_agent_time("testing", timer.elapsed)
 
+    section_counts = _count_tests_by_section(raw_tests)
+    total_tests = sum(section_counts.values())
+
+    report_lines = [
+        "# Automated Test Suite Report",
+        "",
+        "**Status**: Static generation only — not executed. No pass/fail or coverage data "
+        "exists until these tests are actually run.",
+        f"**Total test functions generated**: `{total_tests}`",
+        "",
+        "## Test Suite Breakdown",
+        "",
+        "| Test Suite Type | Test Functions Generated |",
+        "|---|---|",
+    ]
+    for section in TEST_SECTION_HEADERS:
+        report_lines.append(f"| {section} | {section_counts.get(section, 0)} |")
+    report_md = "\n".join(report_lines) + "\n"
+
     return {
-        "tests": suites["unit_api"].code,
+        "tests": raw_tests,
         "testing_report": report_md,
         "current_step": "testing",
-        "stream_events": ["✔ Automated Test Suites & Coverage Report generated"]
+        "stream_events": [f"✔ Generated {total_tests} real test function(s) across 4 suites"]
     }
 
 

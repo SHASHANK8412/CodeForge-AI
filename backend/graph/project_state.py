@@ -58,6 +58,8 @@ class ProjectState(TypedDict, total=False):
     tests: Any
     review: Dict[str, Any]
     github: Dict[str, Any]
+    assembly_manifest: Dict[str, Any]
+    duplicate_report: Dict[str, Any]
 
     # Pipeline tracking & validation
     current_step: Annotated[str, _merge_current_step]
