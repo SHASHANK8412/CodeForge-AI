@@ -1,0 +1,255 @@
+2026-07-31 18:27:00,499 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-07-31 18:27:00,916 | WARNING | huggingface_hub.utils._http | Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-07-31 18:27:01,161 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-07-31 18:27:04,287 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-07-31 18:27:05,020 | WARNING | huggingface_hub.utils._http | Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-07-31 18:27:05,034 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-07-31 18:27:05,513 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-07-31 18:27:06,068 | INFO | aiforge.rag.vector_store | Initialized ChromaDB collection: 'aiforge_knowledge'
+2026-07-31 18:27:06,069 | INFO | aiforge.rag.loader | Loaded 5 document(s) from 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\data\docs'
+2026-07-31 18:27:06,069 | INFO | aiforge.rag.splitter | Split 5 document(s) into 5 chunk(s)
+2026-07-31 18:27:06,240 | INFO | aiforge.rag.vector_store | VectorStore added 5 chunk(s) to 'aiforge_knowledge'
+2026-07-31 18:27:06,240 | INFO | aiforge.rag.knowledge_base | KnowledgeBase successfully indexed 5 docs (5 chunks)
+2026-07-31 18:27:06,267 | INFO | aiforge.rag.vectordb | Initialized persistent ChromaDB collection 'project_documents' at 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\vector_store'
+2026-07-31 18:27:06,269 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-07-31 18:27:06,735 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-07-31 18:27:09,722 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-07-31 18:27:10,411 | INFO | aiforge.rag.vector_store | Initialized ChromaDB collection: 'aiforge_knowledge'
+2026-07-31 18:27:10,413 | INFO | aiforge.rag.loader | Loaded 5 document(s) from 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\data\docs'
+2026-07-31 18:27:10,413 | INFO | aiforge.rag.splitter | Split 5 document(s) into 5 chunk(s)
+2026-07-31 18:27:10,674 | INFO | aiforge.rag.vector_store | VectorStore added 5 chunk(s) to 'aiforge_knowledge'
+2026-07-31 18:27:10,674 | INFO | aiforge.rag.knowledge_base | KnowledgeBase successfully indexed 5 docs (5 chunks)
+2026-07-31 18:27:10,697 | INFO | aiforge.rag.vectordb | Initialized persistent ChromaDB collection 'project_documents' at 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\vector_store'
+2026-07-31 18:27:10,699 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-07-31 18:27:11,124 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-07-31 18:27:11,158 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-07-31 18:27:11,190 | INFO | aiforge.graph.workflow | Compiled LangGraph Autonomous Software Engineering Company Workflow Graph successfully.
+2026-07-31 18:27:13,732 | INFO | aiforge.plugins.manager | PluginManager: Discovered and loaded installed plugins into active registry.
+2026-07-31 18:27:14,497 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:27:14,573 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:27:14,645 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:27:14,677 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:27:14,716 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:27:14,742 | INFO | aiforge.workspace | WorkspaceStateManager: Active project set to 'proj_ecommerce'
+2026-07-31 18:27:14,770 | WARNING | aiforge.project_manager | Logged backlog bug: 'CORS wildcard config' (Severity: High)
+2026-07-31 18:27:14,770 | INFO | aiforge.project_manager | Recorded SRE ADR decision: 'Auth Mechanism' -> JWT Stateless Tokens (Accepted)
+2026-07-31 18:27:14,883 | INFO | aiforge.communication.events | EventDispatcher: [TASK_ASSIGNED] Published by 'Planner Agent'
+2026-07-31 18:27:14,884 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502634883_d23a' from 'Planner Agent' to 'Architect Agent'
+2026-07-31 18:27:14,884 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Architect Agent'
+2026-07-31 18:27:14,884 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502634883_98df' from 'Architect Agent' to 'Frontend Agent'
+2026-07-31 18:27:14,885 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Backend Agent'
+2026-07-31 18:27:14,885 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502634883_0a44' from 'Backend Agent' to 'Database Agent'
+2026-07-31 18:27:14,885 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Testing Agent'
+2026-07-31 18:27:14,885 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502634883_6b80' from 'Testing Agent' to 'Backend Agent'
+2026-07-31 18:27:14,886 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Reviewer Agent'
+2026-07-31 18:27:14,886 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502634883_5be8' from 'Reviewer Agent' to 'Frontend Agent'
+2026-07-31 18:27:15,573 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-07-31 18:27:15,611 | INFO | aiforge.graph.workflow | Compiled LangGraph Autonomous Software Engineering Company Workflow Graph successfully.
+2026-07-31 18:27:15,673 | INFO | aiforge.sre | SRE background task scheduler started successfully.
+2026-07-31 18:27:15,707 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:27:17,852 | INFO | aiforge.plugins.manager | PluginManager: Discovered and loaded installed plugins into active registry.
+2026-07-31 18:27:18,386 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:27:18,440 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:27:18,506 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:27:18,544 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:27:18,596 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:27:18,641 | INFO | aiforge.workspace | WorkspaceStateManager: Active project set to 'proj_ecommerce'
+2026-07-31 18:27:18,693 | WARNING | aiforge.project_manager | Logged backlog bug: 'CORS wildcard config' (Severity: High)
+2026-07-31 18:27:18,693 | INFO | aiforge.project_manager | Recorded SRE ADR decision: 'Auth Mechanism' -> JWT Stateless Tokens (Accepted)
+2026-07-31 18:27:18,862 | INFO | aiforge.communication.events | EventDispatcher: [TASK_ASSIGNED] Published by 'Planner Agent'
+2026-07-31 18:27:18,862 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502638861_05ca' from 'Planner Agent' to 'Architect Agent'
+2026-07-31 18:27:18,863 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Architect Agent'
+2026-07-31 18:27:18,863 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502638861_1710' from 'Architect Agent' to 'Frontend Agent'
+2026-07-31 18:27:18,863 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Backend Agent'
+2026-07-31 18:27:18,864 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502638862_4910' from 'Backend Agent' to 'Database Agent'
+2026-07-31 18:27:18,864 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Testing Agent'
+2026-07-31 18:27:18,864 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502638862_80be' from 'Testing Agent' to 'Backend Agent'
+2026-07-31 18:27:18,865 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Reviewer Agent'
+2026-07-31 18:27:18,865 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502638862_4e77' from 'Reviewer Agent' to 'Frontend Agent'
+2026-07-31 18:27:20,761 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:27:25,812 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:27:30,863 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:27:35,907 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:27:40,950 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:27:46,002 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:27:51,088 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:27:56,138 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:28:01,185 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:28:06,237 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:28:11,285 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:28:16,354 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:28:21,411 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:28:26,469 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:28:31,528 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:28:36,583 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:28:41,644 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-07-31 18:28:58,698 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-07-31 18:28:59,091 | WARNING | huggingface_hub.utils._http | Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-07-31 18:28:59,340 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-07-31 18:29:03,718 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-07-31 18:29:04,580 | INFO | aiforge.rag.vector_store | Initialized ChromaDB collection: 'aiforge_knowledge'
+2026-07-31 18:29:04,583 | INFO | aiforge.rag.loader | Loaded 5 document(s) from 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\data\docs'
+2026-07-31 18:29:04,583 | INFO | aiforge.rag.splitter | Split 5 document(s) into 5 chunk(s)
+2026-07-31 18:29:04,843 | INFO | aiforge.rag.vector_store | VectorStore added 5 chunk(s) to 'aiforge_knowledge'
+2026-07-31 18:29:04,843 | INFO | aiforge.rag.knowledge_base | KnowledgeBase successfully indexed 5 docs (5 chunks)
+2026-07-31 18:29:04,867 | INFO | aiforge.rag.vectordb | Initialized persistent ChromaDB collection 'project_documents' at 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\vector_store'
+2026-07-31 18:29:04,870 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-07-31 18:29:05,679 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-07-31 18:29:12,389 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-07-31 18:29:12,421 | INFO | aiforge.graph.workflow | Compiled LangGraph Autonomous Software Engineering Company Workflow Graph successfully.
+2026-07-31 18:29:14,737 | INFO | aiforge.plugins.manager | PluginManager: Discovered and loaded installed plugins into active registry.
+2026-07-31 18:29:15,282 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:29:15,359 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:29:15,438 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:29:15,509 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:29:15,578 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:29:15,600 | INFO | aiforge.workspace | WorkspaceStateManager: Active project set to 'proj_ecommerce'
+2026-07-31 18:29:15,626 | WARNING | aiforge.project_manager | Logged backlog bug: 'CORS wildcard config' (Severity: High)
+2026-07-31 18:29:15,626 | INFO | aiforge.project_manager | Recorded SRE ADR decision: 'Auth Mechanism' -> JWT Stateless Tokens (Accepted)
+2026-07-31 18:29:15,852 | INFO | aiforge.communication.events | EventDispatcher: [TASK_ASSIGNED] Published by 'Planner Agent'
+2026-07-31 18:29:15,852 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502755851_8c44' from 'Planner Agent' to 'Architect Agent'
+2026-07-31 18:29:15,853 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Architect Agent'
+2026-07-31 18:29:15,854 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502755851_24c5' from 'Architect Agent' to 'Frontend Agent'
+2026-07-31 18:29:15,854 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Backend Agent'
+2026-07-31 18:29:15,855 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502755851_7f07' from 'Backend Agent' to 'Database Agent'
+2026-07-31 18:29:15,856 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Testing Agent'
+2026-07-31 18:29:15,856 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502755851_e0ad' from 'Testing Agent' to 'Backend Agent'
+2026-07-31 18:29:15,857 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Reviewer Agent'
+2026-07-31 18:29:15,857 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502755851_dfd9' from 'Reviewer Agent' to 'Frontend Agent'
+2026-07-31 18:29:16,536 | INFO | aiforge.sre | SRE background task scheduler started successfully.
+2026-07-31 18:29:29,262 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-07-31 18:29:29,807 | WARNING | huggingface_hub.utils._http | Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-07-31 18:29:30,067 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-07-31 18:29:34,558 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-07-31 18:29:35,241 | INFO | aiforge.rag.vector_store | Initialized ChromaDB collection: 'aiforge_knowledge'
+2026-07-31 18:29:35,243 | INFO | aiforge.rag.loader | Loaded 5 document(s) from 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\data\docs'
+2026-07-31 18:29:35,243 | INFO | aiforge.rag.splitter | Split 5 document(s) into 5 chunk(s)
+2026-07-31 18:29:35,543 | INFO | aiforge.rag.vector_store | VectorStore added 5 chunk(s) to 'aiforge_knowledge'
+2026-07-31 18:29:35,543 | INFO | aiforge.rag.knowledge_base | KnowledgeBase successfully indexed 5 docs (5 chunks)
+2026-07-31 18:29:35,570 | INFO | aiforge.rag.vectordb | Initialized persistent ChromaDB collection 'project_documents' at 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\vector_store'
+2026-07-31 18:29:35,572 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-07-31 18:29:36,062 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-07-31 18:29:40,522 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-07-31 18:29:40,596 | INFO | aiforge.graph.workflow | Compiled LangGraph Autonomous Software Engineering Company Workflow Graph successfully.
+2026-07-31 18:29:43,256 | INFO | aiforge.plugins.manager | PluginManager: Discovered and loaded installed plugins into active registry.
+2026-07-31 18:29:43,727 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:29:43,758 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:29:43,795 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:29:43,828 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:29:43,861 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:29:43,876 | INFO | aiforge.workspace | WorkspaceStateManager: Active project set to 'proj_ecommerce'
+2026-07-31 18:29:43,895 | WARNING | aiforge.project_manager | Logged backlog bug: 'CORS wildcard config' (Severity: High)
+2026-07-31 18:29:43,895 | INFO | aiforge.project_manager | Recorded SRE ADR decision: 'Auth Mechanism' -> JWT Stateless Tokens (Accepted)
+2026-07-31 18:29:44,001 | INFO | aiforge.communication.events | EventDispatcher: [TASK_ASSIGNED] Published by 'Planner Agent'
+2026-07-31 18:29:44,001 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502784000_c92f' from 'Planner Agent' to 'Architect Agent'
+2026-07-31 18:29:44,001 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Architect Agent'
+2026-07-31 18:29:44,002 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502784000_484b' from 'Architect Agent' to 'Frontend Agent'
+2026-07-31 18:29:44,003 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Backend Agent'
+2026-07-31 18:29:44,004 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502784000_62a9' from 'Backend Agent' to 'Database Agent'
+2026-07-31 18:29:44,005 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Testing Agent'
+2026-07-31 18:29:44,005 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502784000_9dd0' from 'Testing Agent' to 'Backend Agent'
+2026-07-31 18:29:44,006 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Reviewer Agent'
+2026-07-31 18:29:44,006 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502784000_7072' from 'Reviewer Agent' to 'Frontend Agent'
+2026-07-31 18:29:45,178 | INFO | aiforge.sre | SRE background task scheduler started successfully.
+2026-07-31 18:29:57,485 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-07-31 18:29:58,183 | WARNING | huggingface_hub.utils._http | Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-07-31 18:29:58,199 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-07-31 18:30:02,672 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-07-31 18:30:03,276 | INFO | aiforge.rag.vector_store | Initialized ChromaDB collection: 'aiforge_knowledge'
+2026-07-31 18:30:03,278 | INFO | aiforge.rag.loader | Loaded 5 document(s) from 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\data\docs'
+2026-07-31 18:30:03,278 | INFO | aiforge.rag.splitter | Split 5 document(s) into 5 chunk(s)
+2026-07-31 18:30:03,557 | INFO | aiforge.rag.vector_store | VectorStore added 5 chunk(s) to 'aiforge_knowledge'
+2026-07-31 18:30:03,558 | INFO | aiforge.rag.knowledge_base | KnowledgeBase successfully indexed 5 docs (5 chunks)
+2026-07-31 18:30:03,582 | INFO | aiforge.rag.vectordb | Initialized persistent ChromaDB collection 'project_documents' at 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\vector_store'
+2026-07-31 18:30:03,583 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-07-31 18:30:04,064 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-07-31 18:30:08,494 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-07-31 18:30:08,548 | INFO | aiforge.graph.workflow | Compiled LangGraph Autonomous Software Engineering Company Workflow Graph successfully.
+2026-07-31 18:30:10,799 | INFO | aiforge.plugins.manager | PluginManager: Discovered and loaded installed plugins into active registry.
+2026-07-31 18:30:11,371 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:30:11,442 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:30:11,538 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:30:11,600 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:30:11,668 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:30:11,687 | INFO | aiforge.workspace | WorkspaceStateManager: Active project set to 'proj_ecommerce'
+2026-07-31 18:30:11,725 | WARNING | aiforge.project_manager | Logged backlog bug: 'CORS wildcard config' (Severity: High)
+2026-07-31 18:30:11,725 | INFO | aiforge.project_manager | Recorded SRE ADR decision: 'Auth Mechanism' -> JWT Stateless Tokens (Accepted)
+2026-07-31 18:30:11,966 | INFO | aiforge.communication.events | EventDispatcher: [TASK_ASSIGNED] Published by 'Planner Agent'
+2026-07-31 18:30:11,967 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502811965_46ba' from 'Planner Agent' to 'Architect Agent'
+2026-07-31 18:30:11,968 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Architect Agent'
+2026-07-31 18:30:11,968 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502811965_d3e6' from 'Architect Agent' to 'Frontend Agent'
+2026-07-31 18:30:11,970 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Backend Agent'
+2026-07-31 18:30:11,970 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502811965_5cde' from 'Backend Agent' to 'Database Agent'
+2026-07-31 18:30:11,971 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Testing Agent'
+2026-07-31 18:30:11,971 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502811965_5715' from 'Testing Agent' to 'Backend Agent'
+2026-07-31 18:30:11,973 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Reviewer Agent'
+2026-07-31 18:30:11,973 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502811965_4176' from 'Reviewer Agent' to 'Frontend Agent'
+2026-07-31 18:30:12,455 | INFO | aiforge.sre | SRE background task scheduler started successfully.
+2026-07-31 18:30:24,925 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-07-31 18:30:25,755 | WARNING | huggingface_hub.utils._http | Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-07-31 18:30:25,782 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-07-31 18:30:33,329 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-07-31 18:30:33,964 | INFO | aiforge.rag.vector_store | Initialized ChromaDB collection: 'aiforge_knowledge'
+2026-07-31 18:30:33,967 | INFO | aiforge.rag.loader | Loaded 5 document(s) from 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\data\docs'
+2026-07-31 18:30:33,968 | INFO | aiforge.rag.splitter | Split 5 document(s) into 5 chunk(s)
+2026-07-31 18:30:34,243 | INFO | aiforge.rag.vector_store | VectorStore added 5 chunk(s) to 'aiforge_knowledge'
+2026-07-31 18:30:34,243 | INFO | aiforge.rag.knowledge_base | KnowledgeBase successfully indexed 5 docs (5 chunks)
+2026-07-31 18:30:34,269 | INFO | aiforge.rag.vectordb | Initialized persistent ChromaDB collection 'project_documents' at 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\vector_store'
+2026-07-31 18:30:34,271 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-07-31 18:30:34,751 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-07-31 18:30:39,261 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-07-31 18:30:39,327 | INFO | aiforge.graph.workflow | Compiled LangGraph Autonomous Software Engineering Company Workflow Graph successfully.
+2026-07-31 18:30:42,137 | INFO | aiforge.plugins.manager | PluginManager: Discovered and loaded installed plugins into active registry.
+2026-07-31 18:30:42,829 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:30:42,908 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:30:42,972 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:30:43,010 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:30:43,048 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:30:43,078 | INFO | aiforge.workspace | WorkspaceStateManager: Active project set to 'proj_ecommerce'
+2026-07-31 18:30:43,127 | WARNING | aiforge.project_manager | Logged backlog bug: 'CORS wildcard config' (Severity: High)
+2026-07-31 18:30:43,127 | INFO | aiforge.project_manager | Recorded SRE ADR decision: 'Auth Mechanism' -> JWT Stateless Tokens (Accepted)
+2026-07-31 18:30:43,276 | INFO | aiforge.communication.events | EventDispatcher: [TASK_ASSIGNED] Published by 'Planner Agent'
+2026-07-31 18:30:43,276 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502843275_f67b' from 'Planner Agent' to 'Architect Agent'
+2026-07-31 18:30:43,277 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Architect Agent'
+2026-07-31 18:30:43,277 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502843275_4e8e' from 'Architect Agent' to 'Frontend Agent'
+2026-07-31 18:30:43,277 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Backend Agent'
+2026-07-31 18:30:43,278 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502843275_ea15' from 'Backend Agent' to 'Database Agent'
+2026-07-31 18:30:43,278 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Testing Agent'
+2026-07-31 18:30:43,278 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502843275_eec7' from 'Testing Agent' to 'Backend Agent'
+2026-07-31 18:30:43,279 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Reviewer Agent'
+2026-07-31 18:30:43,279 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502843275_4694' from 'Reviewer Agent' to 'Frontend Agent'
+2026-07-31 18:30:44,143 | INFO | aiforge.sre | SRE background task scheduler started successfully.
+2026-07-31 18:30:56,646 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-07-31 18:30:57,428 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-07-31 18:30:57,650 | WARNING | huggingface_hub.utils._http | Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-07-31 18:31:01,778 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-07-31 18:31:02,437 | INFO | aiforge.rag.vector_store | Initialized ChromaDB collection: 'aiforge_knowledge'
+2026-07-31 18:31:02,438 | INFO | aiforge.rag.loader | Loaded 5 document(s) from 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\data\docs'
+2026-07-31 18:31:02,438 | INFO | aiforge.rag.splitter | Split 5 document(s) into 5 chunk(s)
+2026-07-31 18:31:02,683 | INFO | aiforge.rag.vector_store | VectorStore added 5 chunk(s) to 'aiforge_knowledge'
+2026-07-31 18:31:02,684 | INFO | aiforge.rag.knowledge_base | KnowledgeBase successfully indexed 5 docs (5 chunks)
+2026-07-31 18:31:02,706 | INFO | aiforge.rag.vectordb | Initialized persistent ChromaDB collection 'project_documents' at 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\vector_store'
+2026-07-31 18:31:02,709 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-07-31 18:31:03,184 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-07-31 18:31:07,627 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-07-31 18:31:07,695 | INFO | aiforge.graph.workflow | Compiled LangGraph Autonomous Software Engineering Company Workflow Graph successfully.
+2026-07-31 18:31:09,830 | INFO | aiforge.plugins.manager | PluginManager: Discovered and loaded installed plugins into active registry.
+2026-07-31 18:31:10,494 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:31:10,527 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:31:10,565 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:31:10,596 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:31:10,636 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-07-31 18:31:10,660 | INFO | aiforge.workspace | WorkspaceStateManager: Active project set to 'proj_ecommerce'
+2026-07-31 18:31:10,696 | WARNING | aiforge.project_manager | Logged backlog bug: 'CORS wildcard config' (Severity: High)
+2026-07-31 18:31:10,696 | INFO | aiforge.project_manager | Recorded SRE ADR decision: 'Auth Mechanism' -> JWT Stateless Tokens (Accepted)
+2026-07-31 18:31:10,872 | INFO | aiforge.communication.events | EventDispatcher: [TASK_ASSIGNED] Published by 'Planner Agent'
+2026-07-31 18:31:10,873 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502870871_4dc1' from 'Planner Agent' to 'Architect Agent'
+2026-07-31 18:31:10,874 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Architect Agent'
+2026-07-31 18:31:10,874 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502870871_5c53' from 'Architect Agent' to 'Frontend Agent'
+2026-07-31 18:31:10,875 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Backend Agent'
+2026-07-31 18:31:10,875 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502870871_963c' from 'Backend Agent' to 'Database Agent'
+2026-07-31 18:31:10,876 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Testing Agent'
+2026-07-31 18:31:10,876 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502870871_bf0a' from 'Testing Agent' to 'Backend Agent'
+2026-07-31 18:31:10,877 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Reviewer Agent'
+2026-07-31 18:31:10,877 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785502870871_0259' from 'Reviewer Agent' to 'Frontend Agent'
+2026-07-31 18:31:11,573 | INFO | aiforge.sre | SRE background task scheduler started successfully.

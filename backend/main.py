@@ -7,6 +7,26 @@ _repo_root = Path(__file__).resolve().parent.parent
 if str(_repo_root) not in sys.path:
     sys.path.insert(0, str(_repo_root))
 
+import logging
+
+# Centralized Logging Configuration: silence repetitive terminal polling logs & write to file
+_log_dir = _repo_root / "backend" / "logs"
+_log_dir.mkdir(parents=True, exist_ok=True)
+_log_file = _log_dir / "aiforge.log"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    handlers=[
+        logging.FileHandler(_log_file, encoding="utf-8"),
+        logging.StreamHandler()
+    ]
+)
+
+# Mute repetitive terminal logs for uvicorn access, httpx, httpcore, and SRE health checks
+logging.getLogger("uvicorn.access").disabled = True
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from time import perf_counter
@@ -170,6 +190,9 @@ def register_routers() -> None:
 
     from backend.routes.monitoring_routes import router as day46_monitoring_router
     app.include_router(day46_monitoring_router)
+
+    from backend.routes.days47_50_routes import router as days47_50_router
+    app.include_router(days47_50_router)
 
     from v2.api.gateway import router as v2_gateway_router
     app.include_router(v2_gateway_router)
