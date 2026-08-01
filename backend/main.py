@@ -72,7 +72,9 @@ def register_routers() -> None:
     app.include_router(learning_router)
     app.include_router(evolution_router)
     from backend.api.plugins import router as plugins_router
+    from backend.routes.export import router as export_router
     app.include_router(plugins_router)
+    app.include_router(export_router)
 
     from backend.routes.learning_routes import router as learning_engine_router
     app.include_router(learning_engine_router)

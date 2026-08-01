@@ -713,21 +713,27 @@ testing_node.__test__ = False
 
 
 def documentation_node(state: WorkflowState) -> WorkflowState:
-    """DocumentationNode: Auto-generates full 11-part documentation suite."""
+    """DocumentationNode: Auto-generates full 11-part documentation suite based on user prompt."""
     start_time = time.time()
     session_id = state.get("session_id", "default_session")
+    prompt = state.get("prompt", "Software Project")
+    project_title = prompt.strip().rstrip(".").title()
 
     state["documentation"] = (
-        "# AIForge Generated Full-Stack Platform\n\n"
-        "## Overview\n"
-        "Production-grade web application with React 18 frontend, FastAPI backend, and 3NF PostgreSQL schema.\n\n"
-        "## Quick Start\n"
-        "```bash\n"
-        "# Backend\n"
-        "cd backend && uvicorn main:app --reload\n\n"
-        "# Frontend\n"
-        "cd frontend && npm install && npm run dev\n"
-        "```\n"
+        f"# {project_title} - Technical Documentation\n\n"
+        f"## Overview\n"
+        f"Comprehensive production architecture and design specification for **{prompt}**.\n\n"
+        f"## System Architecture\n"
+        f"- **Frontend**: Modern React Application with responsive modular UI components.\n"
+        f"- **Backend**: High-performance FastAPI service layer with asynchronous endpoints.\n"
+        f"- **Database**: Relational PostgreSQL schema with normalized entities and performance indexing.\n\n"
+        f"## Quick Start\n"
+        f"```bash\n"
+        f"# Start Backend API Server\n"
+        f"cd backend && uvicorn main:app --reload\n\n"
+        f"# Start Frontend Web Application\n"
+        f"cd frontend && npm install && npm run dev\n"
+        f"```\n"
     )
 
     state["documentation_files"] = {

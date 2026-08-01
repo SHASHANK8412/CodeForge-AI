@@ -1,193 +1,90 @@
-from backend.agents.factory import AgentFactory
+"""
+AIForge Precision Intent Router Agent
+======================================
+Classifies incoming user prompts into precise intent categories (CODING, DEBUGGING, EXPLANATION, RESUME, PROJECT_GENERATION, RAG)
+to guarantee that project prompts like 'Develop Formula 1 Website' route to the multi-agent project pipeline instead of CodingAgent.
+"""
+
+import re
+import logging
+from typing import Dict, Any
+
+_logger = logging.getLogger("aiforge.agents.router_agent")
+
+
+class IntentCategory:
+    CODING = "CODING"
+    DEBUGGING = "DEBUGGING"
+    EXPLANATION = "EXPLANATION"
+    RESUME = "RESUME"
+    PROJECT_GENERATION = "PROJECT_GENERATION"
+    RAG = "RAG"
 
 
 class RouterAgent:
+    """
+    Precision prompt classification agent routing requests to specialized handlers.
+    """
 
-    def route(self, user_prompt: str, memory_context: str = ""):
+    def classify_intent(self, prompt: str) -> Dict[str, Any]:
+        """
+        Analyzes user prompt text and determines the optimal agent intent category.
+        """
+        p_lower = prompt.lower().strip()
+        words = p_lower.split()
 
-        prompt = user_prompt.lower()
-        memory_hint = memory_context.lower()
+        # 1. Resume Keywords -> Resume Agent
+        resume_keywords = ["resume", "cv", "resume review", "resume analyzer", "career summary"]
+        if any(kw in p_lower for kw in resume_keywords):
+            _logger.info(f"RouterAgent: Prompt '{prompt[:30]}...' -> Classified as RESUME")
+            return {"intent": IntentCategory.RESUME, "confidence": 0.98, "target_agent": "ResumeAgent"}
 
-        # Continue previous conversation
-        if any(
-            phrase in prompt
-            for phrase in [
-                "continue",
-                "proceed",
-                "next",
-                "resume where we left off",
-            ]
-        ):
-            if "resume" in memory_hint:
-                return "resume"
+        # 2. RAG Document Grounding Keywords -> RAG Agent
+        rag_keywords = ["summarize document", "query pdf", "rag search", "grounded search", "from uploaded file"]
+        if any(kw in p_lower for kw in rag_keywords):
+            _logger.info(f"RouterAgent: Prompt '{prompt[:30]}...' -> Classified as RAG")
+            return {"intent": IntentCategory.RAG, "confidence": 0.96, "target_agent": "RAGAgent"}
 
-            if "debug" in memory_hint or "error" in memory_hint:
-                return "debug"
+        # 3. Debugging Keywords -> Debug Agent
+        debugging_keywords = ["debug", "fix error", "fix python code", "why fails", "syntaxerror", "typeerror", "traceback", "fix this error"]
+        if any(kw in p_lower for kw in debugging_keywords):
+            _logger.info(f"RouterAgent: Prompt '{prompt[:30]}...' -> Classified as DEBUGGING")
+            return {"intent": IntentCategory.DEBUGGING, "confidence": 0.96, "target_agent": "DebugAgent"}
 
-            if "explain" in memory_hint or "architecture" in memory_hint:
-                return "explanation"
+        # 4. Code Explanation Keywords -> Explanation Agent
+        if any(p_lower.startswith(kw) for kw in ["explain", "what is", "how does", "why is", "tell me about"]) or "explain code" in p_lower:
+            _logger.info(f"RouterAgent: Prompt '{prompt[:30]}...' -> Classified as EXPLANATION")
+            return {"intent": IntentCategory.EXPLANATION, "confidence": 0.95, "target_agent": "ExplanationAgent"}
 
-            if "rag" in memory_hint or "document" in memory_hint:
-                return "rag"
-
-            if "frontend" in memory_hint or "react" in memory_hint:
-                return "frontend"
-
-            return "coding"
-
-        debug_keywords = [
-            "bug",
-            "error",
-            "fix",
-            "issue",
-            "exception",
-            "traceback",
-            "crash",
-            "not working",
+        # 5. Explicit Coding / DSA / Algorithm Keywords -> Coding Agent
+        coding_keywords = [
+            "binary search", "linked list", "insertion", "linked list insertion", "reverse linked list",
+            "merge sort", "quick sort", "quicksort", "bubble sort", "heap sort", "dsa", "leetcode",
+            "algorithm", "code for", "write code", "function to", "dfs", "bfs", "dijkstra", "two sum",
+            "fibonacci", "array reversal", "stack implementation", "queue implementation"
         ]
+        has_coding_keyword = any(kw in p_lower for kw in coding_keywords)
 
-        resume_keywords = [
-            "resume",
-            "cv",
-            "linkedin",
-            "cover letter",
-        ]
+        # 6. Project Generation Verbs & Nouns -> Project Pipeline
+        project_verbs = ["develop", "build", "create", "design", "make", "generate", "construct"]
+        project_nouns = ["website", "app", "application", "platform", "system", "portal", "dashboard", "clone", "saas", "crm", "ecommerce", "e-commerce", "full-stack", "fullstack", "service", "tool"]
 
-        explanation_keywords = [
-            "explain",
-            "what is",
-            "how",
-            "why",
-            "difference",
-            "compare",
-            "teach",
-        ]
+        has_project_verb = any(v in words or f"{v} " in p_lower for v in project_verbs)
+        has_project_noun = any(n in p_lower for n in project_nouns)
 
-        rag_keywords = [
-            "pdf",
-            "document",
-            "documents",
-            "knowledge",
-            "rag",
-            "search document",
-            "search pdf",
-            "find in document",
-            "skills",
-            "programming languages",
-            "technologies",
-            "frameworks",
-            "certifications",
-            "projects",
-            "experience",
-            "education",
-            "database",
-        ]
+        if (has_project_verb and has_project_noun) or (has_project_noun and not has_coding_keyword) or any(phrase in p_lower for phrase in ["food delivery", "netflix clone", "todo app", "spotify clone", "formula 1 website", "f1 website"]):
+            _logger.info(f"RouterAgent: Prompt '{prompt[:30]}...' -> Classified as PROJECT_GENERATION")
+            return {"intent": IntentCategory.PROJECT_GENERATION, "confidence": 0.98, "target_agent": "LangGraph_MultiAgent_Pipeline"}
 
-        frontend_keywords = [
-            "frontend",
-            "react",
-            "vite",
-            "tailwind",
-            "css",
-            "html",
-            "javascript",
-            "jsx",
-            "tsx",
-            "navbar",
-            "sidebar",
-            "footer",
-            "dashboard",
-            "landing page",
-            "login page",
-            "signup page",
-            "portfolio",
-            "ui",
-            "ux",
-            "component",
-            "page",
-            "responsive",
-            "hero section",
-            "card",
-            "form",
-            "modal",
-            "button",
-        ]
+        if has_coding_keyword:
+            _logger.info(f"RouterAgent: Prompt '{prompt[:30]}...' -> Classified as CODING")
+            return {"intent": IntentCategory.CODING, "confidence": 0.97, "target_agent": "CodingAgent"}
 
-        planner_keywords = [
-            "plan",
-            "roadmap",
-            "project plan",
-            "schedule",
-            "steps",
-            "workflow",
-        ]
+        # Default fallback: If project nouns/verbs present, default to PROJECT_GENERATION; else CODING
+        if has_project_verb or has_project_noun:
+            return {"intent": IntentCategory.PROJECT_GENERATION, "confidence": 0.85, "target_agent": "LangGraph_MultiAgent_Pipeline"}
 
-        architect_keywords = [
-            "architecture",
-            "system design",
-            "design architecture",
-            "microservices",
-            "database design",
-            "erd",
-            "uml",
-        ]
+        return {"intent": IntentCategory.CODING, "confidence": 0.75, "target_agent": "CodingAgent"}
 
-        reviewer_keywords = [
-            "review",
-            "code review",
-            "optimize",
-            "improve code",
-            "best practices",
-            "refactor",
-        ]
 
-        testing_keywords = [
-            "test",
-            "testing",
-            "pytest",
-            "unit test",
-            "integration test",
-            "test case",
-            "coverage",
-        ]
-
-        # Routing Priority
-
-        if any(word in prompt for word in debug_keywords):
-            return "debug"
-
-        if any(word in prompt for word in resume_keywords):
-            return "resume"
-
-        if any(word in prompt for word in rag_keywords):
-            return "rag"
-
-        if any(word in prompt for word in planner_keywords):
-            return "planner"
-
-        if any(word in prompt for word in architect_keywords):
-            return "architect"
-
-        if any(word in prompt for word in reviewer_keywords):
-            return "reviewer"
-
-        if any(word in prompt for word in testing_keywords):
-            return "testing"
-
-        if any(word in prompt for word in frontend_keywords):
-            return "frontend"
-
-        if any(word in prompt for word in explanation_keywords):
-            return "explanation"
-
-        return "coding"
-
-    def run(self, user_prompt: str, memory_context: str = ""):
-
-        agent_type = self.route(user_prompt, memory_context)
-
-        print(f"[Router] Selected Agent: {agent_type}")
-
-        agent = AgentFactory.create_agent(agent_type)
-
-        return agent.run(user_prompt, memory_context)
+global_router_agent = RouterAgent()

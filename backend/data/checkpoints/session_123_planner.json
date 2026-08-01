@@ -1,0 +1,10 @@
+{
+  "session_id": "session_123",
+  "stage": "planner",
+  "state": {
+    "stage": "planner",
+    "plan": {
+      "name": "Test"
+    }
+  }
+}

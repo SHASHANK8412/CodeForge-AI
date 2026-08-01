@@ -8,6 +8,7 @@ import MainLayout from "./layouts/MainLayout";
 import Dashboard from "./pages/Dashboard";
 import PluginsDashboard from "./pages/PluginsDashboard";
 import LearningDashboard from "./pages/LearningDashboard";
+import F1Website from "./components/F1Website";
 
 function App() {
     const [view, setView] = useState("dashboard");
@@ -45,6 +46,7 @@ function App() {
                 {view === "metrics" && <MetricsDashboard />}
                 {view === "plugins" && <PluginsDashboard />}
                 {view === "learning" && <LearningDashboard />}
+                {view === "f1" && <F1Website />}
             </div>
         </MainLayout>
     );

@@ -470,28 +470,49 @@ function ChatBox() {
                     </div>
 
                     {messages.length === 0 && (
-                        <div className="flex flex-col items-center justify-center min-h-[250px] text-center space-y-4 py-8 max-w-md mx-auto">
+                        <div className="flex flex-col items-center justify-center min-h-[300px] text-center space-y-4 py-8 max-w-2xl mx-auto">
                             <div className="bg-indigo-500/10 p-4 rounded-full text-[#6366F1]">
                                 <FaRobot size={36} />
                             </div>
-                            <h2 className="text-lg font-bold">Workspace ready</h2>
-                            <p className="text-xs text-gray-500">
+                            <h2 className="text-base font-bold text-white">AIForge AI Software Engineer Workspace</h2>
+                            <p className="text-xs text-slate-400 max-w-md">
                                 {documentMode
                                     ? "Drop and index custom documents, then ask questions grounded in their references."
                                     : plannerMode
                                     ? "Describe your software concept. The planning engine will compile modular blueprints, architectures, and database layouts."
-                                    : "Ask me to formulate backend systems, write complex components, perform safety validations, or write project scripts."}
+                                    : "Ask AIForge to write DSA algorithms, design backend microservices, or build complete full-stack applications."}
                             </p>
+
+                            {/* Suggested Starter Cards */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full pt-4 font-mono text-xs">
+                                {[
+                                    { label: "⚡ Binary Search Algorithm", prompt: "BINARY SEARCH CODE" },
+                                    { label: "🚀 Build a Food Delivery App", prompt: "Build a Food Delivery App with FastAPI and React" },
+                                    { label: "🧠 Explain Graph BFS vs DFS", prompt: "Explain Graph BFS vs DFS with code example" },
+                                    { label: "🌐 SaaS Subscription Dashboard", prompt: "Build a SaaS Dashboard with Stripe and PostgreSQL" },
+                                    { label: "📱 Flutter Chat App Architecture", prompt: "Design architecture for a Flutter Chat App" },
+                                    { label: "📊 Enterprise CRM System", prompt: "Build an Enterprise CRM System" }
+                                ].map((starter, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => handleSend(starter.prompt)}
+                                        className="p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-indigo-500/60 rounded-xl text-left transition cursor-pointer group"
+                                    >
+                                        <span className="font-bold text-slate-200 group-hover:text-indigo-400 block text-[11px]">
+                                            {starter.label}
+                                        </span>
+                                        <span className="text-[10px] text-slate-500 block truncate mt-0.5">
+                                            {starter.prompt}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     )}
 
                     <div className="space-y-6">
                         {loading && (
-                            <AgentTimeline
-                                currentStep="deployment"
-                                isGenerating={true}
-                                streamEvents={["Executing Autonomous Pipeline...", "Generators active..."]}
-                            />
+                            <AgentTimeline activeIntent="PROJECT_GENERATION" />
                         )}
 
                         {messages.map((msg, index) => (

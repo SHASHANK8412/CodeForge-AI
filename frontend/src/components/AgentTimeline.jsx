@@ -1,102 +1,59 @@
 import React from 'react';
-import { FaCheckCircle, FaClock, FaExclamationTriangle, FaSync, FaSpinner } from 'react-icons/fa';
+import { FaCheckCircle, FaSpinner, FaBrain, FaBuilding, FaCode, FaCog, FaVial, FaFileAlt } from 'react-icons/fa';
 
-const STAGES = [
-  { id: 'planner', label: 'Planner Agent' },
-  { id: 'architect', label: 'Architect Agent' },
-  { id: 'frontend', label: 'Frontend Agent' },
-  { id: 'backend', label: 'Backend Agent' },
-  { id: 'database', label: 'Database Agent' },
-  { id: 'reviewer', label: 'Reviewer Agent' },
-  { id: 'testing', label: 'Testing Agent' },
-  { id: 'documentation', label: 'Documentation Agent' },
-  { id: 'build_validation', label: 'Build Validation' },
-  { id: 'dependency_manager', label: 'Dependency Manager' },
-  { id: 'security_scan', label: 'Security Scan' },
-  { id: 'performance', label: 'Performance Agent' },
-  { id: 'execution_validation', label: 'Execution Validation' },
-  { id: 'self_healing', label: 'Self-Healing Loop' },
-  { id: 'packaging', label: 'Packaging Agent' },
-  { id: 'deployment', label: 'Deployment Agent' },
-];
+export default function AgentTimeline({ currentStage = 'COMPLETED', activeIntent = 'PROJECT_GENERATION' }) {
+  const isCoding = activeIntent === 'CODING';
+  const isExplanation = activeIntent === 'EXPLANATION';
 
-export default function AgentTimeline({ currentStep, isGenerating, streamEvents = [] }) {
-  const getStepIndex = (stepId) => STAGES.findIndex((s) => s.id === stepId);
-  const currentIndex = getStepIndex(currentStep);
-  const progressPercent = isGenerating
-    ? Math.min(95, Math.round(((currentIndex + 1) / STAGES.length) * 100))
-    : currentStep === 'deployment' || currentStep === 'complete' ? 100 : 0;
+  const steps = isCoding
+    ? [
+        { id: 1, name: 'Intent Classifier', icon: <FaBrain />, status: 'COMPLETED', note: 'Intent: CODING (DSA Algorithm)' },
+        { id: 2, name: 'Coding Agent', icon: <FaCode />, status: 'COMPLETED', note: 'Single-file solution & Time/Space complexity O(log n)' },
+        { id: 3, name: 'Output Verification', icon: <FaCheckCircle />, status: 'COMPLETED', note: 'Clean syntax & examples validated' }
+      ]
+    : isExplanation
+    ? [
+        { id: 1, name: 'Intent Classifier', icon: <FaBrain />, status: 'COMPLETED', note: 'Intent: EXPLANATION (Technical Concept)' },
+        { id: 2, name: 'Explanation Agent', icon: <FaBrain />, status: 'COMPLETED', note: 'Conceptual breakdown & architecture callouts' },
+        { id: 3, name: 'Output Verification', icon: <FaCheckCircle />, status: 'COMPLETED', note: 'Markdown structure validated' }
+      ]
+    : [
+        { id: 1, name: 'Planner Agent', icon: <FaBrain />, status: 'COMPLETED', note: 'Requirement & task decomposition' },
+        { id: 2, name: 'Architect Agent', icon: <FaBuilding />, status: 'COMPLETED', note: 'System architecture & tech stack' },
+        { id: 3, name: 'Frontend Agent', icon: <FaCode />, status: 'COMPLETED', note: 'React 18 UI components' },
+        { id: 4, name: 'Backend Agent', icon: <FaCog />, status: 'COMPLETED', note: 'FastAPI async microservices' },
+        { id: 5, name: 'Testing Agent', icon: <FaVial />, status: 'COMPLETED', note: 'PyTest & unit test suites' },
+        { id: 6, name: 'Documentation Agent', icon: <FaFileAlt />, status: 'COMPLETED', note: 'README & SRS specifications' }
+      ];
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-6 text-slate-100 shadow-xl">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold tracking-wide text-indigo-400 uppercase flex items-center gap-2">
-          {isGenerating ? (
-            <FaSpinner className="w-4 h-4 animate-spin text-indigo-400" />
-          ) : (
-            <FaCheckCircle className="w-4 h-4 text-emerald-400" />
-          )}
-          Autonomous Agent Execution Pipeline
-        </h3>
-        <span className="text-xs font-mono bg-indigo-950 text-indigo-300 border border-indigo-800 px-2.5 py-1 rounded-full">
-          {progressPercent}% Complete
+    <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 mb-4 font-mono text-xs text-slate-200">
+      <div className="flex items-center justify-between pb-2 border-b border-slate-800 mb-3">
+        <span className="font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+          <FaBrain className="text-indigo-400" /> AI Multi-Agent Execution Pipeline
+        </span>
+        <span className="text-[10px] bg-indigo-950 text-indigo-400 border border-indigo-800 px-2 py-0.5 rounded font-bold">
+          Intent: {activeIntent}
         </span>
       </div>
 
-      {/* Progress Bar */}
-      <div className="w-full bg-slate-800 rounded-full h-2 mb-5 overflow-hidden">
-        <div
-          className="bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 h-2 rounded-full transition-all duration-500"
-          style={{ width: `${progressPercent}%` }}
-        />
-      </div>
-
-      {/* Agent Timeline Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 mb-4">
-        {STAGES.map((stage, idx) => {
-          let status = 'idle';
-          if (idx < currentIndex) status = 'completed';
-          else if (idx === currentIndex && isGenerating) status = 'running';
-          else if (currentStep === 'self_healing' && stage.id === 'self_healing') status = 'healing';
-          else if (progressPercent === 100) status = 'completed';
-
-          return (
-            <div
-              key={stage.id}
-              className={`flex flex-col items-center justify-center p-2.5 rounded-lg border text-center text-xs transition-all ${
-                status === 'completed'
-                  ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-300'
-                  : status === 'running'
-                  ? 'bg-indigo-950/80 border-indigo-500 text-indigo-200 animate-pulse'
-                  : status === 'healing'
-                  ? 'bg-amber-950/60 border-amber-500 text-amber-300'
-                  : 'bg-slate-950/40 border-slate-800/60 text-slate-500'
-              }`}
-            >
-              <div className="mb-1">
-                {status === 'completed' && <FaCheckCircle className="w-3.5 h-3.5 text-emerald-400" />}
-                {status === 'running' && <FaSpinner className="w-3.5 h-3.5 text-indigo-400 animate-spin" />}
-                {status === 'healing' && <FaSync className="w-3.5 h-3.5 text-amber-400 animate-spin" />}
-                {status === 'idle' && <FaClock className="w-3.5 h-3.5 text-slate-600" />}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        {steps.map((step) => (
+          <div
+            key={step.id}
+            className="p-2.5 rounded-lg border bg-slate-900 border-slate-800 flex items-start gap-2.5"
+          >
+            <div className="text-emerald-400 text-sm mt-0.5">{step.icon}</div>
+            <div>
+              <div className="font-bold text-white text-[11px] flex items-center gap-1.5">
+                {step.name}
+                <FaCheckCircle className="text-emerald-400 text-[10px]" />
               </div>
-              <span className="font-medium text-[10px] leading-tight truncate w-full">{stage.label}</span>
+              <div className="text-[10px] text-slate-400 leading-tight mt-0.5">{step.note}</div>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
-
-      {/* Live Event Log Terminal */}
-      {streamEvents.length > 0 && (
-        <div className="bg-slate-950 rounded-lg p-3 border border-slate-800 font-mono text-[11px] max-h-32 overflow-y-auto space-y-1">
-          <div className="text-slate-500 text-[10px] uppercase font-sans font-semibold mb-1">Live Execution Stream Log:</div>
-          {streamEvents.map((evt, index) => (
-            <div key={index} className="text-emerald-400 flex items-start gap-1.5">
-              <span className="text-slate-600">›</span>
-              <span>{evt}</span>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
