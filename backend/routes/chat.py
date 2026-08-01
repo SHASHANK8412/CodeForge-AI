@@ -78,7 +78,25 @@ async def chat_message(request: ChatMessageRequest):
     validation_passed = True
     retry_count = 0
 
-    if intent == "CODING":
+    if intent == "AMBIGUOUS":
+        agent_name = "ClarificationAgent"
+        model_name = "qwen2.5-coder:latest"
+        validation_passed = True
+        retry_count = 0
+        plan_text = ""
+        arch_text = ""
+        q_score = 100.0
+        files_map = {}
+        response_text = (
+            f"### ❓ Clarification Needed for '{request.message}'\n\n"
+            f"Your request **'{request.message}'** is ambiguous. Please specify your goal:\n\n"
+            f"1. 🚀 **Generate a Web Project**: *'Develop a {request.message} website'* or *'Build a {request.message} app'*\n"
+            f"2. 🧮 **Solve a Coding / DSA Algorithm**: *'Solve Two Sum'* or *'Implement binary search in Python'*\n"
+            f"3. 📖 **Explain a Concept**: *'Explain {request.message}'* or *'How does {request.message} work?'*\n"
+            f"4. 🐛 **Debug Code**: *'Why is my code crashing with error ...'* \n\n"
+            f"Please clarify your request to proceed!"
+        )
+    elif intent in ["CODING", "DSA_PROBLEM", "CODE_GENERATION", "DEBUGGING"]:
         agent_out = global_coding_agent.process_coding_request(request.message)
         response_text = agent_out["response"]
         agent_name = agent_out.get("agent", "CodingAgent")
@@ -87,6 +105,8 @@ async def chat_message(request: ChatMessageRequest):
         retry_count = agent_out.get("retry_count", 0)
         plan_text = ""
         arch_text = ""
+        q_score = 100.0
+        files_map = {}
     elif intent == "EXPLANATION":
         agent_out = global_explanation_agent.process_explanation_request(request.message)
         response_text = agent_out["response"]
@@ -96,6 +116,8 @@ async def chat_message(request: ChatMessageRequest):
         retry_count = agent_out.get("retry_count", 0)
         plan_text = ""
         arch_text = ""
+        q_score = 100.0
+        files_map = {}
     else:
         # Full-stack project generation via Autonomous Software Engineer Pipeline
         from backend.orchestrator.autonomous_engineer import global_autonomous_engineer
