@@ -64,6 +64,32 @@ class ProjectContext:
             ]
             self.pages = ["Home", "Drivers", "Teams", "Circuits", "Standings", "LiveRace", "Telemetry"]
 
+        # Cricket / Sports Domain
+        elif any(k in p for k in ["cricket", "ipl", "t20", "test match", "icc"]):
+            self.domain = "Sports / Cricket"
+            self.industry = "Cricket Tournament & Live Scores"
+            self.users = ["Cricket Fans", "Teams & Franchises", "Players", "Commentators", "Admins"]
+            self.features = [
+                "Live Ball-by-Ball Scorecard & Commentary",
+                "Player Stats & ICC Rankings",
+                "Match Fixtures & Tournament Schedules",
+                "Team Standings & Net Run Rate (NRR)",
+                "Fantasy Cricket Squad Selector"
+            ]
+            self.db_tables = [
+                {"name": "players", "cols": ["id UUID PRIMARY KEY", "name VARCHAR(255)", "role VARCHAR(100)", "runs INT", "wickets INT"]},
+                {"name": "teams", "cols": ["id UUID PRIMARY KEY", "team_name VARCHAR(255)", "captain VARCHAR(255)", "matches_won INT"]},
+                {"name": "matches", "cols": ["id SERIAL PRIMARY KEY", "venue VARCHAR(255)", "match_type VARCHAR(50)", "match_date DATE"]},
+                {"name": "scorecards", "cols": ["id SERIAL PRIMARY KEY", "match_id INT", "runs_scored INT", "wickets_lost INT", "overs_bowled FLOAT"]}
+            ]
+            self.routers = [
+                {"file": "match_router.py", "prefix": "/api/matches", "tag": "Matches"},
+                {"file": "player_router.py", "prefix": "/api/players", "tag": "Players"},
+                {"file": "team_router.py", "prefix": "/api/teams", "tag": "Teams"},
+                {"file": "scorecard_router.py", "prefix": "/api/scorecards", "tag": "Scorecards"}
+            ]
+            self.pages = ["Home", "Matches", "Players", "Teams", "Scorecard", "Rankings", "LiveScore"]
+
         # 2. Food Delivery Domain
         elif any(k in p for k in ["food", "delivery", "restaurant", "swiggy", "zomato", "uber eats"]):
             self.domain = "FoodTech & Logistics"

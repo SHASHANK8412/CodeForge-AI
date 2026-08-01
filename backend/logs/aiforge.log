@@ -3652,3 +3652,110 @@
 2026-08-01 10:29:27,809 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Reviewer Agent'
 2026-08-01 10:29:27,809 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785560367806_3805' from 'Reviewer Agent' to 'Frontend Agent'
 2026-08-01 10:29:28,955 | INFO | aiforge.sre | SRE background task scheduler started successfully.
+2026-08-01 10:29:48,032 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-08-01 10:29:48,620 | WARNING | huggingface_hub.utils._http | Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-01 10:29:48,881 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-08-01 10:29:53,488 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-08-01 10:29:54,670 | INFO | aiforge.rag.vector_store | Initialized ChromaDB collection: 'aiforge_knowledge'
+2026-08-01 10:29:54,675 | INFO | aiforge.rag.loader | Loaded 5 document(s) from 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\data\docs'
+2026-08-01 10:29:54,676 | INFO | aiforge.rag.splitter | Split 5 document(s) into 5 chunk(s)
+2026-08-01 10:29:55,102 | INFO | aiforge.rag.vector_store | VectorStore added 5 chunk(s) to 'aiforge_knowledge'
+2026-08-01 10:29:55,103 | INFO | aiforge.rag.knowledge_base | KnowledgeBase successfully indexed 5 docs (5 chunks)
+2026-08-01 10:29:55,132 | INFO | aiforge.rag.vectordb | Initialized persistent ChromaDB collection 'project_documents' at 'C:\Users\Shashank\OneDrive\Documents\CODEFORGE AI\backend\vector_store'
+2026-08-01 10:29:55,135 | INFO | sentence_transformers.base.model | No device provided, using cpu
+2026-08-01 10:29:55,647 | INFO | sentence_transformers.base.model | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-08-01 10:30:00,126 | INFO | aiforge.rag.embeddings | Initialized SentenceTransformer embedding model: 'all-MiniLM-L6-v2'
+2026-08-01 10:30:00,193 | INFO | aiforge.graph.workflow | Compiled LangGraph Autonomous Software Engineering Company Workflow Graph successfully.
+2026-08-01 10:30:03,887 | INFO | aiforge.plugins.manager | PluginManager: Discovered and loaded installed plugins into active registry.
+2026-08-01 10:30:05,190 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-08-01 10:30:05,275 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-08-01 10:30:05,393 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-08-01 10:30:05,507 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-08-01 10:30:05,601 | INFO | aiforge.graph | GraphMemory: Loaded graph with 5593 nodes, 10170 edges.
+2026-08-01 10:30:05,665 | INFO | aiforge.workspace | WorkspaceStateManager: Active project set to 'proj_ecommerce'
+2026-08-01 10:30:05,741 | WARNING | aiforge.project_manager | Logged backlog bug: 'CORS wildcard config' (Severity: High)
+2026-08-01 10:30:05,742 | INFO | aiforge.project_manager | Recorded SRE ADR decision: 'Auth Mechanism' -> JWT Stateless Tokens (Accepted)
+2026-08-01 10:30:06,117 | INFO | aiforge.communication.events | EventDispatcher: [TASK_ASSIGNED] Published by 'Planner Agent'
+2026-08-01 10:30:06,117 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785560406115_e67e' from 'Planner Agent' to 'Architect Agent'
+2026-08-01 10:30:06,119 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Architect Agent'
+2026-08-01 10:30:06,120 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785560406115_5c7d' from 'Architect Agent' to 'Frontend Agent'
+2026-08-01 10:30:06,121 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Backend Agent'
+2026-08-01 10:30:06,121 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785560406115_37bd' from 'Backend Agent' to 'Database Agent'
+2026-08-01 10:30:06,122 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Testing Agent'
+2026-08-01 10:30:06,122 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785560406115_6f14' from 'Testing Agent' to 'Backend Agent'
+2026-08-01 10:30:06,123 | INFO | aiforge.communication.events | EventDispatcher: [TASK_COMPLETED] Published by 'Reviewer Agent'
+2026-08-01 10:30:06,124 | INFO | aiforge.communication.bus | MessageBus: Routed message 'msg_1785560406115_064f' from 'Reviewer Agent' to 'Frontend Agent'
+2026-08-01 10:30:07,643 | INFO | aiforge.sre | SRE background task scheduler started successfully.
+2026-08-01 10:30:07,705 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:30:12,746 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:30:17,792 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:30:22,832 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:30:27,885 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:30:32,925 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:30:37,969 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:30:43,021 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:30:48,066 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:30:53,109 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:30:58,150 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:31:03,211 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:31:08,262 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:31:13,301 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:31:18,353 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:31:23,409 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:31:28,455 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:31:33,498 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:31:38,549 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:31:43,613 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:31:48,655 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:31:53,697 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:31:58,751 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:32:03,796 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:32:08,850 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:32:10,399 | INFO | aiforge.performance | Loading lessons...
+2026-08-01 10:32:10,401 | INFO | aiforge.performance | Loading lessons...
+2026-08-01 10:32:10,402 | INFO | aiforge.performance | Found 3 lessons
+2026-08-01 10:32:10,404 | INFO | aiforge.performance | Found 3 lessons
+2026-08-01 10:32:10,422 | INFO | aiforge.performance | Loading lessons...
+2026-08-01 10:32:10,423 | INFO | aiforge.performance | Loading lessons...
+2026-08-01 10:32:10,427 | INFO | aiforge.performance | Found 3 lessons
+2026-08-01 10:32:10,428 | INFO | aiforge.performance | Found 3 lessons
+2026-08-01 10:32:13,909 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:32:15,459 | INFO | aiforge.performance | Loading lessons...
+2026-08-01 10:32:15,461 | INFO | aiforge.performance | Found 3 lessons
+2026-08-01 10:32:15,475 | INFO | aiforge.performance | Loading lessons...
+2026-08-01 10:32:15,477 | INFO | aiforge.performance | Found 3 lessons
+2026-08-01 10:32:18,958 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:32:24,015 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:32:29,061 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:32:34,109 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:32:39,159 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:32:44,212 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:32:49,263 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:32:54,312 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:32:59,357 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:33:04,410 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:33:09,455 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:33:14,513 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:33:19,569 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:33:24,624 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:33:29,671 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:33:34,715 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:33:39,764 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:33:44,821 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:33:49,870 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:33:54,923 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:33:59,975 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:34:05,028 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:34:10,086 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:34:15,127 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:34:20,181 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:34:25,228 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:34:30,279 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:34:35,306 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:34:40,333 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:34:45,380 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:34:50,417 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:34:55,468 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:35:00,519 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:35:05,548 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100
+2026-08-01 10:35:10,597 | INFO | aiforge.sre | SRE loop step completed. Health score: 100/100

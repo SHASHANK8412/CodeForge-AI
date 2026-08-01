@@ -33,7 +33,7 @@ export default function ProjectSummaryDashboard({ metadata, filesMap = {} }) {
     setCollapsedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const projectTitle = metadata?.project_name || "Develop Formula 1 Website";
+  const projectTitle = metadata?.project_name || "Software Project";
   const qualityScore = metadata?.quality_score || 100.0;
   const executionTime = metadata?.execution_time_seconds || 1.16;
 

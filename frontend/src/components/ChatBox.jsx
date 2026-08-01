@@ -70,6 +70,7 @@ function ChatBox() {
         historyMessages.map((message) => ({
             sender: message.role === "assistant" ? "ai" : "user",
             text: message.content,
+            metadata: message.metadata || {},
         }));
 
     const loadConversation = async (conversationId) => {
