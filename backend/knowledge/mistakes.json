@@ -24,7 +24,7 @@
     "mistake_id": "err_004",
     "problem": "Unindexed DB search column",
     "solution": "Add database index on search column",
-    "occurrences": 1,
+    "occurrences": 4,
     "category": "general"
   }
 ]

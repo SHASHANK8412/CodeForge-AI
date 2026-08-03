@@ -2,11 +2,11 @@
   "qwen2.5-coder": {
     "model": "qwen2.5-coder",
     "avg_latency": 2.1,
-    "wins": 156,
+    "wins": 159,
     "quality": 95.2,
     "errors": 2,
-    "total_tokens": 128750,
-    "total_runs": 162
+    "total_tokens": 129200,
+    "total_runs": 165
   },
   "deepseek-coder": {
     "model": "deepseek-coder",

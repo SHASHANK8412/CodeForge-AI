@@ -89,6 +89,9 @@ def _log_agent_performance(
     )
 
 
+from backend.models.model_router import global_model_router, ModelSelection, PROFILES
+
+
 def _normalize_prompt(prompt: str) -> str:
     compact = prompt.strip()
     if len(compact) > MAX_PROMPT_CHARS:
@@ -96,8 +99,8 @@ def _normalize_prompt(prompt: str) -> str:
     return compact
 
 
-def _cache_key(model: str, system_prompt: str, user_prompt: str) -> str:
-    raw = f"{model}\n{system_prompt}\n{user_prompt}"
+def _cache_key(model: str, profile_name: str, system_prompt: str, user_prompt: str, temperature: float = 0.0) -> str:
+    raw = f"{model}:{profile_name}:{temperature}\n{system_prompt}\n{user_prompt}"
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
@@ -115,49 +118,25 @@ def _set_cached_response(key: str, value: str) -> None:
 
 
 def select_model(task: str, prompt: str = "") -> str:
-    task = (task or "").lower()
-    prompt = (prompt or "").lower()
-
-    # Medium model: Planner, Architect, Reviewer
-    if task in {"planner", "architect", "reviewer"}:
-        return OLLAMA_MEDIUM_MODEL
-
-    # Coding model: Frontend, Backend, Database
-    if task in {"frontend", "backend", "database"}:
-        return OLLAMA_CODING_MODEL
-
-    if task in {"debug", "coding"}:
-        if any(keyword in prompt for keyword in ["full stack", "microservice", "architecture", "system", "multi tenant"]):
-            return OLLAMA_MEDIUM_MODEL
-        return OLLAMA_CODING_MODEL
-
-    # Small model: Explanation, Resume, Documentation, Testing, Github
-    if task in {"explanation", "resume", "documentation", "testing", "github"}:
-        return OLLAMA_SMALL_MODEL
-
-    if len(prompt) > 2000:
-        return OLLAMA_MEDIUM_MODEL
-
-    return DEFAULT_OLLAMA_MODEL
+    selection = global_model_router.select(intent_or_task=task, agent_name=task, prompt=prompt)
+    return selection.selected_model
 
 
-def _generation_options(task: str) -> dict:
+def _generation_options(task: str, model_selection: Optional[ModelSelection] = None) -> dict:
     """
-    Builds the Ollama `options` payload for a given task: a shared base
-    (low temperature/top_p, bounded context window) plus a per-task
-    num_predict cap so agents stop generating once their (now much shorter)
-    required sections are done instead of producing far more text than
-    necessary. Uses lower temperature/top_p values for coding tasks.
+    Builds the Ollama `options` payload from the task's generation profile.
     """
-    task_lower = (task or "").lower()
-    is_coding_task = task_lower in {"frontend", "backend", "database", "coding", "debug"}
-    options = {
-        "temperature": 0.1 if is_coding_task else 0.2,
+    if model_selection and hasattr(model_selection, "profile"):
+        profile = model_selection.profile
+    else:
+        profile = global_model_router.select(intent_or_task=task, agent_name=task).profile
+
+    return {
+        "temperature": profile.temperature,
         "top_p": 0.9,
-        "num_predict": TASK_NUM_PREDICT.get(task_lower, DEFAULT_NUM_PREDICT),
-        "num_ctx": TASK_NUM_CTX.get(task_lower, 8192)
+        "num_predict": profile.num_predict,
+        "num_ctx": profile.num_ctx,
     }
-    return options
 
 
 def _chat_completion(model: str, messages: list[dict[str, str]], stream: bool = False, options: dict | None = None):
@@ -299,12 +278,19 @@ def generate_text(
     model: str | None = None,
     task: str = "general",
 ) -> str:
+    started_at = perf_counter()
     optimized = optimize_prompt(prompt)
     compact_prompt = _normalize_prompt(optimized)
-    selected_model = model or select_model(task, compact_prompt)
-    key = _cache_key(selected_model, system_prompt, compact_prompt)
 
-    started_at = perf_counter()
+    selection_start = perf_counter()
+    selection = global_model_router.select(intent_or_task=task, agent_name=task, prompt=compact_prompt, user_override=model)
+    selected_model = selection.selected_model
+    profile_name = selection.profile.name
+    options = _generation_options(task, model_selection=selection)
+    selection_elapsed = perf_counter() - selection_start
+
+    key = _cache_key(selected_model, profile_name, system_prompt, compact_prompt, options["temperature"])
+
     cached = _get_cached_response(key)
     if cached is not None:
         elapsed_ms = (perf_counter() - started_at) * 1000
@@ -319,13 +305,12 @@ def generate_text(
         )
         return cached
 
-    _logger.info("Agent Start task=%s model=%s", task, selected_model)
     llm_started_at = perf_counter()
     try:
         response = _chat_completion_with_fallback(
             messages=_generate_message_payload(system_prompt, compact_prompt),
             model=selected_model,
-            options=_generation_options(task),
+            options=options,
         )
         content = response["message"]["content"]
     except Exception as exc:
@@ -333,14 +318,21 @@ def generate_text(
         content = _get_structured_task_fallback(task, compact_prompt)
 
     llm_elapsed_ms = (perf_counter() - llm_started_at) * 1000
+    total_elapsed = perf_counter() - started_at
+    _logger.info(
+        "[AIForge Performance] Model Selection: %.3fs | Generation: %.2fs | Total LLM: %.2fs",
+        selection_elapsed,
+        llm_elapsed_ms / 1000.0,
+        total_elapsed
+    )
+
     _set_cached_response(key, content)
-    elapsed_ms = (perf_counter() - started_at) * 1000
     _log_agent_performance(
         task=task,
         model=selected_model,
         prompt_chars=len(compact_prompt),
         output_chars=len(content),
-        execution_time_ms=elapsed_ms,
+        execution_time_ms=total_elapsed * 1000,
         llm_time_ms=llm_elapsed_ms,
         cache_status="MISS",
     )
@@ -353,12 +345,19 @@ async def generate_text_async(
     model: str | None = None,
     task: str = "general",
 ) -> str:
+    started_at = perf_counter()
     optimized = optimize_prompt(prompt)
     compact_prompt = _normalize_prompt(optimized)
-    selected_model = model or select_model(task, compact_prompt)
-    key = _cache_key(selected_model, system_prompt, compact_prompt)
 
-    started_at = perf_counter()
+    selection_start = perf_counter()
+    selection = global_model_router.select(intent_or_task=task, agent_name=task, prompt=compact_prompt, user_override=model)
+    selected_model = selection.selected_model
+    profile_name = selection.profile.name
+    options = _generation_options(task, model_selection=selection)
+    selection_elapsed = perf_counter() - selection_start
+
+    key = _cache_key(selected_model, profile_name, system_prompt, compact_prompt, options["temperature"])
+
     cached = _get_cached_response(key)
     if cached is not None:
         elapsed_ms = (perf_counter() - started_at) * 1000
@@ -379,14 +378,14 @@ async def generate_text_async(
     llm_started_at = perf_counter()
     queue = stream_queue_var.get()
     if queue is not None:
-        _logger.info("Agent Start (stream_async) task=%s model=%s", task, selected_model)
+        _logger.info("Agent Start (stream_async) task=%s model=%s profile=%s", task, selected_model, profile_name)
         chunks: list[str] = []
         try:
             stream_response = await _chat_completion_with_fallback_async(
                 messages=_generate_message_payload(system_prompt, compact_prompt),
                 model=selected_model,
                 stream=True,
-                options=_generation_options(task),
+                options=options,
             )
             async for chunk in stream_response:
                 content = chunk.get("message", {}).get("content")
@@ -399,13 +398,13 @@ async def generate_text_async(
 
         content = "".join(chunks)
     else:
-        _logger.info("Agent Start task=%s model=%s", task, selected_model)
+        _logger.info("Agent Start task=%s model=%s profile=%s", task, selected_model, profile_name)
         try:
             response = await _chat_completion_with_fallback_async(
                 messages=_generate_message_payload(system_prompt, compact_prompt),
                 model=selected_model,
                 stream=False,
-                options=_generation_options(task),
+                options=options,
             )
             content = response["message"]["content"]
         except Exception as exc:
@@ -413,14 +412,21 @@ async def generate_text_async(
             content = _get_structured_task_fallback(task, compact_prompt)
 
     llm_elapsed_ms = (perf_counter() - llm_started_at) * 1000
+    total_elapsed = perf_counter() - started_at
+    _logger.info(
+        "[AIForge Performance] Model Selection: %.3fs | Generation: %.2fs | Total LLM: %.2fs",
+        selection_elapsed,
+        llm_elapsed_ms / 1000.0,
+        total_elapsed
+    )
+
     _set_cached_response(key, content)
-    elapsed_ms = (perf_counter() - started_at) * 1000
     _log_agent_performance(
         task=task,
         model=selected_model,
         prompt_chars=len(compact_prompt),
         output_chars=len(content),
-        execution_time_ms=elapsed_ms,
+        execution_time_ms=total_elapsed * 1000,
         llm_time_ms=llm_elapsed_ms,
         cache_status="MISS",
     )

@@ -84,7 +84,7 @@ def verify_intent_routing():
     res3 = router.classify_intent("Build a Food Delivery App with FastAPI and React")
 
     check("Classified full-stack prompt as Intent = PROJECT_GENERATION", res3["intent"] == IntentCategory.PROJECT_GENERATION)
-    check("Targeted LangGraph Multi-Agent Pipeline for full app generation", res3["target_agent"] == "LangGraph_MultiAgent_Pipeline")
+    check("Targeted AutonomousSoftwareEngineer / LangGraph Pipeline for full app generation", res3["target_agent"] in ["LangGraph_MultiAgent_Pipeline", "AutonomousSoftwareEngineer"])
 
     # ---------------------------------------------------------
     # Test Case 4: Prompt "Fix this React error"

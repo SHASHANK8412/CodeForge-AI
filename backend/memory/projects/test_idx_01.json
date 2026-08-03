@@ -4,10 +4,10 @@
   "framework": "FullStack",
   "quality_score": 95.0,
   "tags": [
-    "app",
+    "fullstack",
     "build",
     "blog",
-    "fullstack"
+    "app"
   ],
   "knowledge": {
     "ui_components": [
@@ -23,5 +23,5 @@
       }
     ]
   },
-  "indexed_at": "2026-07-31T12:41:52Z"
+  "indexed_at": "2026-08-01T12:36:29Z"
 }

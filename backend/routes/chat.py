@@ -50,15 +50,12 @@ def create_conversation(request: ConversationCreateRequest | None = None):
     }
 
 
-from backend.agents.router_agent import global_router_agent
-from backend.agents.coding_agent import global_coding_agent
-from backend.agents.explanation_agent import global_explanation_agent
+from backend.services.generation_service import global_generation_pipeline
+from backend.config import DEBUG_ROUTING
 
 
 @router.post("/message")
 async def chat_message(request: ChatMessageRequest):
-    started_at = perf_counter()
-
     if request.conversation_id:
         conversation = conversation_manager.get_conversation(request.conversation_id)
         if conversation is None:
@@ -68,130 +65,65 @@ async def chat_message(request: ChatMessageRequest):
         conversation = conversation_manager.create_conversation(title=generate_conversation_title(request.message))
         conversation_id = conversation.conversation_id
 
-    # 1. Classify Intent via RouterAgent
-    routing_info = global_router_agent.classify_intent(request.message)
-    intent = routing_info["intent"]
+    # Execute Canonical Generation Pipeline
+    gen_result = await global_generation_pipeline.generate(
+        user_prompt=request.message,
+        conversation_id=conversation_id
+    )
 
-    # 2. Dispatch to Specialized Agent or LangGraph Pipeline
-    agent_name = "LangGraph_MultiAgent_Pipeline"
-    model_name = "Gemini 3.5 Flash"
-    validation_passed = True
-    retry_count = 0
-
-    if intent == "AMBIGUOUS":
-        agent_name = "ClarificationAgent"
-        model_name = "qwen2.5-coder:latest"
-        validation_passed = True
-        retry_count = 0
-        plan_text = ""
-        arch_text = ""
-        q_score = 100.0
-        files_map = {}
-        response_text = (
-            f"### ❓ Clarification Needed for '{request.message}'\n\n"
-            f"Your request **'{request.message}'** is ambiguous. Please specify your goal:\n\n"
-            f"1. 🚀 **Generate a Web Project**: *'Develop a {request.message} website'* or *'Build a {request.message} app'*\n"
-            f"2. 🧮 **Solve a Coding / DSA Algorithm**: *'Solve Two Sum'* or *'Implement binary search in Python'*\n"
-            f"3. 📖 **Explain a Concept**: *'Explain {request.message}'* or *'How does {request.message} work?'*\n"
-            f"4. 🐛 **Debug Code**: *'Why is my code crashing with error ...'* \n\n"
-            f"Please clarify your request to proceed!"
-        )
-    elif intent in ["CODING", "DSA_PROBLEM", "CODE_GENERATION", "DEBUGGING"]:
-        agent_out = global_coding_agent.process_coding_request(request.message)
-        response_text = agent_out["response"]
-        agent_name = agent_out.get("agent", "CodingAgent")
-        model_name = agent_out.get("model", "Gemini 3.5 Flash")
-        validation_passed = agent_out.get("validation_passed", True)
-        retry_count = agent_out.get("retry_count", 0)
-        plan_text = ""
-        arch_text = ""
-        q_score = 100.0
-        files_map = {}
-    elif intent == "EXPLANATION":
-        agent_out = global_explanation_agent.process_explanation_request(request.message)
-        response_text = agent_out["response"]
-        agent_name = agent_out.get("agent", "ExplanationAgent")
-        model_name = agent_out.get("model", "Gemini 3.5 Flash")
-        validation_passed = agent_out.get("validation_passed", True)
-        retry_count = agent_out.get("retry_count", 0)
-        plan_text = ""
-        arch_text = ""
-        q_score = 100.0
-        files_map = {}
-    else:
-        # Full-stack project generation via Autonomous Software Engineer Pipeline
-        from backend.orchestrator.autonomous_engineer import global_autonomous_engineer
-        pipeline_res = global_autonomous_engineer.run_autonomous_pipeline(request.message)
-
-        project_title = pipeline_res.get("project_name", request.message)
-        q_score = pipeline_res.get("quality_score", 100.0)
-        files_map = pipeline_res.get("files", {})
-
-        # Build Rich Markdown Response for UI
-        file_tree_md = "\n".join([f"- `{p}`" for p in files_map.keys()])
-        response_text = (
-            f"# 🚀 Production Software Generated: **{project_title}**\n\n"
-            f"### 📊 Quality Scorecard & Audit Status\n"
-            f"- **Overall Quality Score**: **{q_score:.1f} / 100** (Target >= 95/100)\n"
-            f"- **15-Check Quality Gates**: **15 / 15 PASSED**\n"
-            f"- **Security Audit**: **CLEAN (Zero Vulnerabilities)**\n"
-            f"- **Performance**: **OPTIMIZED (< 45ms Endpoint Latency)**\n\n"
-            f"---\n\n"
-            f"### 📂 Generated Production Files ({len(files_map)} Files Assembled)\n"
-            f"{file_tree_md}\n\n"
-            f"---\n\n"
-            f"### 🚀 Quick Start Instructions\n\n"
-            f"```bash\n"
-            f"# 1. Start FastAPI Backend Server\n"
-            f"cd backend && uvicorn main:app --reload\n\n"
-            f"# 2. Start React SPA Frontend\n"
-            f"cd frontend && npm install && npm run dev\n"
-            f"```\n"
-        )
-        plan_text = json.dumps(pipeline_res.get("atomic_tasks", []), indent=2)
-        arch_text = f"Decoupled React 18 SPA + FastAPI Async REST Backend + PostgreSQL 3NF Schema + Pytest Suite"
-
-    elapsed_sec = round((perf_counter() - started_at), 2)
-
-    # Save user prompt and assistant response into conversation memory
+    # Save ONLY clean accepted response into conversation memory
     msg_metadata = {
-        "intent": intent,
-        "agent": agent_name,
-        "model": model_name,
-        "project_name": project_title if intent == "PROJECT_GENERATION" else request.message,
-        "quality_score": q_score if intent == "PROJECT_GENERATION" else 100.0,
-        "execution_time_seconds": elapsed_sec,
-        "files": files_map if intent == "PROJECT_GENERATION" else {}
+        "intent": gen_result.intent,
+        "agent": gen_result.agent,
+        "model": gen_result.model,
+        "project_name": request.message,
+        "quality_score": gen_result.quality_score,
+        "execution_time_seconds": gen_result.execution_time_seconds,
+        "files": gen_result.files_map,
+        "retry_count": gen_result.attempts - 1,
+        "validated": gen_result.validation_passed
     }
 
     conversation_manager.record_turn(
         conversation_id=conversation_id,
         user_prompt=request.message,
-        assistant_response=response_text,
+        assistant_response=gen_result.response,
         metadata=msg_metadata
     )
 
     updated_conversation = conversation_manager.get_conversation(conversation_id)
     messages = conversation_manager.get_messages(conversation_id)
 
-    print(f"/chat/message [{intent}] completed in {elapsed_sec}s")
-
-    return {
+    resp_payload = {
         "success": True,
         "conversation": _conversation_payload(updated_conversation),
-        "response": response_text,
-        "plan": plan_text,
-        "architecture": arch_text,
-        "files": files_map if intent == "PROJECT_GENERATION" else {},
-        "quality_score": pipeline_res.get("quality_score", 100.0) if intent == "PROJECT_GENERATION" else 100.0,
-        "intent": intent,
-        "agent": agent_name,
-        "model": model_name,
-        "execution_time_seconds": elapsed_sec,
-        "validation_passed": validation_passed,
-        "retry_count": retry_count,
+        "response": gen_result.response,
+        "plan": gen_result.plan_text,
+        "architecture": gen_result.arch_text,
+        "files": gen_result.files_map,
+        "quality_score": gen_result.quality_score,
+        "intent": gen_result.intent,
+        "agent": gen_result.agent,
+        "model": gen_result.model,
+        "execution_time_seconds": gen_result.execution_time_seconds,
+        "validation_passed": gen_result.validation_passed,
+        "contract_check": "PASS" if gen_result.validation_passed else "WARNING",
+        "retry_count": gen_result.attempts - 1,
+        "quality": gen_result.quality_metadata,
         "messages": [_message_payload(message) for message in messages],
     }
+
+    if DEBUG_ROUTING:
+        resp_payload["routing"] = {
+            "intent": gen_result.intent,
+            "agent": gen_result.agent,
+            "confidence": 1.0,
+            "source": "rule",
+            "reason": "",
+            "contract": "PASS" if gen_result.validation_passed else "WARNING"
+        }
+
+    return resp_payload
 
 
 @router.post("")

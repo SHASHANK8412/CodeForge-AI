@@ -1,0 +1,9 @@
+{
+  "synthetic_resumes": [
+    {
+      "id": "resume_01",
+      "title": "Senior Software Engineer Resume",
+      "text": "Alex Dev - Senior Software Engineer\nSummary: 5+ years experience building scalable backend microservices in Python, FastAPI, and PostgreSQL.\nExperience:\n- Built REST APIs handling 10k QPS.\n- Managed Kubernetes clusters on AWS.\nSkills: Python, FastAPI, PostgreSQL, Docker, AWS, React."
+    }
+  ]
+}

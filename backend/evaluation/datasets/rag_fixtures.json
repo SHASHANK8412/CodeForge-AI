@@ -1,0 +1,14 @@
+{
+  "documents": [
+    {
+      "id": "policy_doc_01",
+      "filename": "ai_forge_project_policy.txt",
+      "content": "AIForge Project Policy Document:\n1. Maximum project size allowed: 50 MB.\n2. Project exports are retained in the download cache for 24 hours.\n3. Default database engine for enterprise exports is PostgreSQL 15.\n4. Maximum API rate limit per client is 100 requests per minute."
+    },
+    {
+      "id": "tech_manual_01",
+      "filename": "technical_manual.txt",
+      "content": "AIForge Architecture Technical Manual:\n- The orchestrator uses LangGraph with PyDantic state validation.\n- Default local LLM runtime engine is Ollama 0.6.2.\n- Maximum generation memory threshold per agent container is 512 MB."
+    }
+  ]
+}
