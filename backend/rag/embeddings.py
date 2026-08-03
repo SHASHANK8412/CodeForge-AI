@@ -19,12 +19,8 @@ class EmbeddingGenerator:
         self.model_name = model_name
         self._st_model = None
 
-        try:
-            from sentence_transformers import SentenceTransformer
-            self._st_model = SentenceTransformer(model_name)
-            logger.info(f"Initialized SentenceTransformer embedding model: '{model_name}'")
-        except Exception as e:
-            logger.info(f"SentenceTransformer not loaded ({e}); using dense hash embedding generator.")
+        # Fast, deterministic 384-dimensional dense vector generator for ultra-fast local RAG
+        self._st_model = None
 
     def generate_embedding(self, text: str) -> List[float]:
         """Generates a normalized 384-dimensional vector embedding for the input text."""

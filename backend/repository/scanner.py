@@ -1,158 +1,221 @@
 """
-AIForge Repository Intelligence Scanner
-========================================
-Scans full repositories across Python, JavaScript, TypeScript, React, HTML, CSS, JSON, Markdown, and YAML files.
-Extracts metadata: filename, language, imports, exports, functions, classes, routes, models, components, dependencies, size, last_modified.
+AIForge Repository Scanner
+==========================
+Walks approved workspace root directories, enforces path traversal security,
+applies ignore rules, redacts secret credentials, and extracts metadata.
 """
 
 import os
-import ast
 import re
-import time
+import hashlib
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import List, Dict, Any, Tuple, Optional
 
-_logger = logging.getLogger("aiforge.repository")
+from backend.repository.models import RepositoryInfo, FileRecord
+
+_logger = logging.getLogger("aiforge.repository.scanner")
+
+MAX_INDEXABLE_FILE_SIZE = 500 * 1024  # 500 KB limit for inline file indexing
 
 
 class RepositoryScanner:
     """
-    Scans repository files and extracts language-specific AST & symbol metadata.
+    Scans and indexes approved repository root directories safely.
     """
 
-    def scan_repository(self, workspace_root: str) -> Dict[str, Any]:
-        root = Path(workspace_root)
-        if not root.exists():
-            return {"error": "Workspace path does not exist", "files": []}
+    IGNORE_DIRS = {
+        ".git", "node_modules", "venv", ".venv", "__pycache__",
+        "dist", "build", "coverage", ".next", "target", "vendor", ".idea", ".vscode",
+        ".worktrees", ".claude", "workspace", "workspace_test_env", "generated_projects", "logs"
+    }
 
-        _logger.info(f"RepositoryScanner scanning workspace: '{workspace_root}'")
-        file_metadata_list = []
-        supported_exts = {".py", ".js", ".jsx", ".ts", ".tsx", ".html", ".css", ".json", ".md", ".yaml", ".yml"}
+    BINARY_EXTENSIONS = {
+        ".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg", ".zip", ".tar", ".gz",
+        ".pdf", ".exe", ".dll", ".so", ".dylib", ".pyc", ".db", ".sqlite"
+    }
 
-        scanned_count = 0
-        language_counts = {}
+    SECRET_PATTERNS = [
+        (r"(?i)(api[_-]?key|secret|password|auth[_-]?token|private[_-]?key)\s*[:=]\s*['\"]([^'\"]+)['\"]", r"\1: '[REDACTED]'"),
+        (r"AKIA[0-9A-Z]{16}", "[REDACTED_AWS_KEY]"),
+        (r"bearer\s+[A-Za-z0-9\-\._~\+\/]+=*", "Bearer [REDACTED_TOKEN]"),
+        (r"postgres://[^:]+:[^@]+@", "postgres://[REDACTED]:[REDACTED]@"),
+        (r"mongodb(?:\+srv)?://[^:]+:[^@]+@", "mongodb://[REDACTED]:[REDACTED]@")
+    ]
 
-        for current_root, dirs, files in os.walk(root):
-            dirs[:] = [d for d in dirs if not d.startswith(".") and d not in ["__pycache__", "node_modules", "dist", "build", ".venv", "venv", "brain", ".system_generated"]]
-            for file_name in files:
-                file_path = Path(current_root) / file_name
-                ext = file_path.suffix.lower()
+    def validate_path_safety(self, root_path: str, target_path: str) -> str:
+        """
+        Validates that target_path resides strictly inside root_path (Prevents path traversal).
+        """
+        abs_root = os.path.abspath(root_path)
+        abs_target = os.path.abspath(os.path.join(abs_root, target_path))
 
-                if ext in supported_exts or file_name in ["Dockerfile", "docker-compose.yml"]:
-                    scanned_count += 1
-                    meta = self.extract_file_metadata(file_path, root)
-                    file_metadata_list.append(meta)
-                    lang = meta["language"]
-                    language_counts[lang] = language_counts.get(lang, 0) + 1
+        if not abs_target.startswith(abs_root):
+            _logger.error(f"[SecurityError] Path traversal attempt blocked: '{target_path}' outside root '{root_path}'")
+            raise PermissionError(f"Security Error: Access to path outside workspace root is blocked: '{target_path}'")
 
-        _logger.info(f"RepositoryScanner completed: Scanned {scanned_count} files across {len(language_counts)} languages.")
-        return {
-            "workspace_root": str(root),
-            "scanned_files_count": scanned_count,
-            "language_breakdown": language_counts,
-            "file_metadata": file_metadata_list
-        }
+        return abs_target
 
-    def extract_file_metadata(self, file_path: Path, workspace_root: Path) -> Dict[str, Any]:
-        rel_path = str(file_path.relative_to(workspace_root)).replace("\\", "/")
-        file_ext = file_path.suffix.lower()
-        stat = file_path.stat()
+    def scan_repository(self, root_path: str) -> Tuple[RepositoryInfo, List[FileRecord]]:
+        abs_root = os.path.abspath(root_path)
+        if not os.path.exists(abs_root):
+            raise FileNotFoundError(f"Repository root directory does not exist: {abs_root}")
 
-        lang_map = {
-            ".py": "Python", ".js": "JavaScript", ".jsx": "React JS",
-            ".ts": "TypeScript", ".tsx": "React TS", ".html": "HTML",
-            ".css": "CSS", ".json": "JSON", ".md": "Markdown",
-            ".yaml": "YAML", ".yml": "YAML"
-        }
-        language = lang_map.get(file_ext, "Config")
+        repo_name = os.path.basename(abs_root) or "repository"
+        repo_id = hashlib.md5(abs_root.encode("utf-8")).hexdigest()[:10]
 
-        meta = {
-            "filename": rel_path,
-            "language": language,
-            "ext": file_ext,
-            "imports": [],
-            "exports": [],
-            "functions": [],
-            "classes": [],
-            "routes": [],
-            "models": [],
-            "components": [],
-            "dependencies": [],
-            "size_bytes": stat.st_size,
-            "last_modified": stat.st_mtime
-        }
+        file_records: List[FileRecord] = []
+        languages = set()
+        frameworks = set()
+        package_managers = set()
+        test_frameworks = set()
 
-        try:
-            content = file_path.read_text(encoding="utf-8", errors="ignore")
-        except Exception:
-            return meta
+        total_files = 0
+        source_files = 0
+        total_lines = 0
 
-        if file_ext == ".py":
-            self._scan_python(content, rel_path, meta)
-        elif file_ext in [".js", ".jsx", ".ts", ".tsx"]:
-            self._scan_javascript(content, rel_path, meta)
-        elif file_ext in [".json", ".yaml", ".yml", ".md"]:
-            self._scan_config_or_doc(content, file_path.name, meta)
+        for dirpath, dirnames, filenames in os.walk(abs_root):
+            # Exclude ignored and hidden directories
+            dirnames[:] = [d for d in dirnames if d not in self.IGNORE_DIRS and not d.startswith(".")]
 
-        return meta
+            for fname in filenames:
+                total_files += 1
+                full_path = os.path.join(dirpath, fname)
+                rel_path = os.path.relpath(full_path, abs_root).replace("\\", "/")
 
-    def _scan_python(self, content: str, rel_path: str, meta: Dict[str, Any]) -> None:
-        for line in content.splitlines():
-            line_str = line.strip()
-            # Routes
-            r_match = re.search(r'@(?:app|router)\.(get|post|put|delete|patch)\(\s*["\']([^"\']+)["\']', line_str)
-            if r_match:
-                meta["routes"].append(f"{r_match.group(1).upper()} {r_match.group(2)}")
+                ext = os.path.splitext(fname)[1].lower()
 
-        try:
-            tree = ast.parse(content, filename=rel_path)
-            for node in ast.walk(tree):
-                if isinstance(node, ast.ClassDef):
-                    meta["classes"].append(node.name)
-                    meta["exports"].append(node.name)
-                    # Check ORM model
-                    if any(b.id in ["Base", "Model"] for b in node.bases if isinstance(b, ast.Name)):
-                        meta["models"].append(node.name)
-                elif isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef):
-                    meta["functions"].append(node.name)
-                    meta["exports"].append(node.name)
-                elif isinstance(node, ast.Import):
-                    for alias in node.names:
-                        meta["imports"].append(alias.name)
-                elif isinstance(node, ast.ImportFrom):
-                    mod = node.module or ""
-                    for alias in node.names:
-                        meta["imports"].append(f"{mod}.{alias.name}" if mod else alias.name)
-        except Exception:
-            funcs = re.findall(r'def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', content)
-            classes = re.findall(r'class\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*', content)
-            meta["functions"].extend(funcs)
-            meta["classes"].extend(classes)
+                # Binary detection
+                is_binary = ext in self.BINARY_EXTENSIONS
+                file_size = os.path.getsize(full_path)
 
-    def _scan_javascript(self, content: str, rel_path: str, meta: Dict[str, Any]) -> None:
-        funcs = re.findall(r'(?:function|const|let)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(?:function|\([^)]*\)\s*=>)', content)
-        named_funcs = re.findall(r'function\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', content)
-        all_funcs = list(set(funcs + named_funcs))
-        meta["functions"].extend(all_funcs)
+                lang = self._detect_language(fname, ext)
+                purpose = self._detect_purpose(rel_path, fname, ext)
 
-        components = [f for f in all_funcs if f[0].isupper()]
-        meta["components"].extend(components)
+                if lang != "unknown":
+                    languages.add(lang)
 
-        imports = re.findall(r'(?:import|require)\s*\(?[\s\S]*?from\s*["\']([^"\']+)["\']', content)
-        meta["imports"].extend(imports)
+                if purpose in ["SOURCE", "TEST"]:
+                    source_files += 1
 
-        exports = re.findall(r'export\s+(?:default\s+)?(?:function|class|const|var|let)\s+([a-zA-Z_][a-zA-Z0-9_]*)', content)
-        meta["exports"].extend(exports)
+                # Detect frameworks and managers from config files
+                self._detect_manifest_metadata(fname, full_path, frameworks, package_managers, test_frameworks)
 
-    def _scan_config_or_doc(self, content: str, filename: str, meta: Dict[str, Any]) -> None:
-        if filename == "requirements.txt":
-            deps = [line.strip().split("==")[0].split(">=")[0] for line in content.splitlines() if line.strip() and not line.startswith("#")]
-            meta["dependencies"].extend(deps)
-        elif filename == "package.json":
+                # Compute SHA-256 content hash
+                content_hash = ""
+                if not is_binary and purpose == "SOURCE" and file_size <= 100 * 1024:
+                    try:
+                        with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+                            raw_content = f.read()
+                            total_lines += raw_content.count("\n") + 1
+                            content_hash = hashlib.sha256(raw_content.encode("utf-8")).hexdigest()
+                    except Exception:
+                        pass
+
+                rec = FileRecord(
+                    path=rel_path,
+                    language=lang,
+                    size_bytes=file_size,
+                    purpose=purpose,
+                    hash=content_hash,
+                    is_binary=is_binary
+                )
+                file_records.append(rec)
+
+        repo_info = RepositoryInfo(
+            repository_id=repo_id,
+            root_path=abs_root,
+            name=repo_name,
+            languages=sorted(list(languages)),
+            frameworks=sorted(list(frameworks)),
+            package_managers=sorted(list(package_managers)),
+            test_frameworks=sorted(list(test_frameworks)),
+            file_count=total_files,
+            source_file_count=source_files,
+            estimated_lines=total_lines
+        )
+
+        return repo_info, file_records
+
+    def redact_secrets(self, content: str) -> str:
+        """Redacts secret API keys, tokens, and credentials from text before LLM context entry."""
+        if not content:
+            return content
+        clean_text = content
+        for pattern, replacement in self.SECRET_PATTERNS:
+            clean_text = re.sub(pattern, replacement, clean_text)
+        return clean_text
+
+    def _detect_language(self, fname: str, ext: str) -> str:
+        if ext in [".py"]:
+            return "python"
+        elif ext in [".js", ".jsx"]:
+            return "javascript"
+        elif ext in [".ts", ".tsx"]:
+            return "typescript"
+        elif ext in [".java"]:
+            return "java"
+        elif ext in [".json"]:
+            return "json"
+        elif ext in [".yaml", ".yml"]:
+            return "yaml"
+        elif ext in [".sql"]:
+            return "sql"
+        elif ext in [".html", ".css"]:
+            return "html"
+        return "unknown"
+
+    def _detect_purpose(self, rel_path: str, fname: str, ext: str) -> str:
+        rel_lower = rel_path.lower()
+        if "test" in rel_lower or fname.startswith("test_") or fname.endswith("_test.py") or fname.endswith(".spec.js"):
+            return "TEST"
+        if fname in ["package.json", "requirements.txt", "pyproject.toml", "pom.xml", "build.gradle", "vite.config.js"]:
+            return "CONFIG"
+        if ext in [".md", ".rst", ".txt"]:
+            return "DOCUMENTATION"
+        if ext in [".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".sql"]:
+            return "SOURCE"
+        return "UNKNOWN"
+
+    def _detect_manifest_metadata(self, fname: str, full_path: str, frameworks: set, pkg_managers: set, test_fw: set):
+        if fname == "package.json":
+            pkg_managers.add("npm")
             try:
-                import json
-                data = json.loads(content)
-                meta["dependencies"].extend(list(data.get("dependencies", {}).keys()) + list(data.get("devDependencies", {}).keys()))
+                with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+                    txt = f.read()
+                    if "react" in txt:
+                        frameworks.add("React")
+                    if "vite" in txt:
+                        frameworks.add("Vite")
+                    if "express" in txt:
+                        frameworks.add("Express")
+                    if "next" in txt:
+                        frameworks.add("Next.js")
+                    if "vitest" in txt:
+                        test_fw.add("vitest")
+                    if "jest" in txt:
+                        test_fw.add("jest")
             except Exception:
                 pass
+        elif fname in ["requirements.txt", "pyproject.toml"]:
+            pkg_managers.add("pip")
+            try:
+                with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+                    txt = f.read()
+                    if "fastapi" in txt:
+                        frameworks.add("FastAPI")
+                    if "django" in txt:
+                        frameworks.add("Django")
+                    if "flask" in txt:
+                        frameworks.add("Flask")
+                    if "pytest" in txt:
+                        test_fw.add("pytest")
+            except Exception:
+                pass
+        elif fname == "pom.xml":
+            pkg_managers.add("maven")
+            frameworks.add("Spring Boot")
+            test_fw.add("JUnit")
+
+
+global_repository_scanner = RepositoryScanner()

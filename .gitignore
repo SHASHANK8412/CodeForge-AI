@@ -15,3 +15,4 @@ workspace_test_env/
 *.sqlite3
 logs/*.log
 backend/logs/*.log
+.worktrees/

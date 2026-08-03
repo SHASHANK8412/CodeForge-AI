@@ -46,5 +46,13 @@
     "success": true,
     "duration_seconds": 0.8021671772003174,
     "confidence": 0.96
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Failed to connect to local Ollama service",
+    "strategy": "Check and restart the Ollama service",
+    "success": true,
+    "duration_seconds": 0.8014733791351318,
+    "confidence": 0.98
   }
 ]

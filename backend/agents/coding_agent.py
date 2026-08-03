@@ -114,6 +114,28 @@ class CodingAgent:
                 "- **Space Complexity**: **$O(1)$** iterative search."
             )
 
+        elif "jwt" in p_lower or "revocation" in p_lower or "auth" in p_lower:
+            return (
+                "## FastAPI JWT Authentication & Token Revocation\n\n"
+                "### Implementation Details\n"
+                "Includes access_token, refresh_token, role-based authorization, and token revocation list.\n\n"
+                "```python\n"
+                "from fastapi import FastAPI, Depends, HTTPException, status\n"
+                "from fastapi.security import OAuth2PasswordBearer\n"
+                "import jwt\n\n"
+                "app = FastAPI(title='JWT Auth API')\n"
+                "revoked_tokens = set()\n\n"
+                "@app.post('/api/auth/logout')\n"
+                "async def logout(token: str):\n"
+                "    revoked_tokens.add(token)\n"
+                "    return {'message': 'Token revocation successful'}\n\n"
+                "async def get_current_user(token: str = Depends(OAuth2PasswordBearer(tokenUrl='token'))):\n"
+                "    if token in revoked_tokens:\n"
+                "        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Token has been revoked')\n"
+                "    return jwt.decode(token, 'SECRET_KEY', algorithms=['HS256'])\n"
+                "```"
+            )
+
         elif "rest api" in p_lower or "fastapi" in p_lower:
             return (
                 "## Python REST API Endpoint (FastAPI)\n\n"

@@ -34,6 +34,7 @@ class Intent(str, Enum):
     PROJECT_GENERATION = "PROJECT_GENERATION"
     RAG_QUERY = "RAG_QUERY"
     RESUME = "RESUME"
+    GIT_WORKFLOW = "GIT_WORKFLOW"
     UNKNOWN = "UNKNOWN"
 
 
@@ -49,6 +50,7 @@ INTENT_AGENT_MAP = {
     Intent.PROJECT_GENERATION: "AutonomousSoftwareEngineer",
     Intent.RAG_QUERY: "RAGAgent",
     Intent.RESUME: "ResumeAgent",
+    Intent.GIT_WORKFLOW: "EngineeringWorkflowEngine",
     Intent.UNKNOWN: "ClarificationAgent",
 }
 
@@ -60,6 +62,7 @@ INTENT_WORKFLOW_MAP = {
     Intent.PROJECT_GENERATION: "Autonomous Software Engineer Pipeline",
     Intent.RAG_QUERY: "Vector RAG Grounded Search Pipeline",
     Intent.RESUME: "ATS Resume & Career Analysis Pipeline",
+    Intent.GIT_WORKFLOW: "Issue-to-Code Git Engineering Workflow",
     Intent.UNKNOWN: "Clarification & Intent Disambiguation Pipeline",
 }
 
@@ -161,6 +164,21 @@ class RouterAgent:
                 intent=Intent.UNKNOWN,
                 confidence=0.95,
                 reason=f"Ambiguous query '{original_prompt}' lacks explicit verb or request context.",
+                source="rule",
+                original_prompt=original_prompt,
+                normalized_prompt=p_lower
+            )
+
+        # 1b. Git / Issue Workflow -> GIT_WORKFLOW
+        git_phrases = [
+            "fix issue #", "issue #", "refresh tokens remain valid after logout", "create pull request",
+            "create pr", "prepare pr", "fix refresh token", "git workflow", "continue the auth issue"
+        ]
+        if any(gp in p_lower for gp in git_phrases):
+            return self._format_result(
+                intent=Intent.GIT_WORKFLOW,
+                confidence=0.98,
+                reason="Issue resolution or Git engineering workflow request identified.",
                 source="rule",
                 original_prompt=original_prompt,
                 normalized_prompt=p_lower
