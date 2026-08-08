@@ -219,3 +219,5 @@ class RepositoryScanner:
 
 
 global_repository_scanner = RepositoryScanner()
+global_secret_scanner = global_repository_scanner
+

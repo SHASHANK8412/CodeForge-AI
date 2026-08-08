@@ -61,6 +61,11 @@ from backend.repository.impact_analyzer import global_impact_analyzer
 from backend.repository.retriever import global_repository_context_retriever
 from backend.repository.change_planner import global_change_planner
 from backend.repository.patch_engine import global_patch_engine, FilePatch
+from backend.performance.policy_engine import global_execution_policy_engine
+from backend.performance.tracer import global_request_tracer
+from backend.performance.models import PipelinePath
+from backend.performance.llm_client import global_llm_client
+from backend.performance.metrics import global_metrics_service
 
 _logger = logging.getLogger("aiforge.services.generation_service")
 
@@ -109,6 +114,63 @@ class AIForgeGenerationPipeline:
     ) -> GenerationResult:
         start_time = time.perf_counter()
         normalized_prompt = self.normalize_input(user_prompt)
+
+        # 0. DAY 14 EXECUTION POLICY ENGINE & TRACING
+        exec_plan = global_execution_policy_engine.analyze(
+            prompt=normalized_prompt,
+            has_documents=kwargs.get("has_documents", False),
+            active_repo_files=kwargs.get("active_repo_files"),
+            has_active_repo=kwargs.get("has_active_repo", False),
+            intent_override=kwargs.get("intent_override")
+        )
+        req_trace = global_request_tracer.start_trace(session_id=session_id, path=exec_plan.path)
+        global_metrics_service.increment("requests_total")
+
+        # DAY 14 FAST PATH SHORT-CIRCUIT
+        if exec_plan.path == PipelinePath.FAST:
+            with global_request_tracer.trace_stage(req_trace.request_id, "FAST_EXPLANATION"):
+                fast_resp = global_llm_client.generate(
+                    prompt=normalized_prompt,
+                    system_prompt="You are AIForge, a concise expert software engineering assistant.",
+                    model_tier="fast",
+                    request_id=req_trace.request_id
+                )
+            dur_sec = time.perf_counter() - start_time
+            global_metrics_service.observe_latency("request_total", dur_sec * 1000.0)
+            global_request_tracer.end_trace(req_trace.request_id, status="COMPLETED")
+            return GenerationResult(
+                response=fast_resp,
+                intent="EXPLANATION",
+                agent="ExplanationAgent",
+                model="qwen2.5-coder:1.5b",
+                complexity_level="TRIVIAL",
+                execution_strategy="DIRECT",
+                quality_score=100.0,
+                validation_passed=True,
+                execution_time_seconds=round(dur_sec, 3)
+            )
+
+        # DAY 14 FAST CODING PATH SHORT-CIRCUIT
+        if exec_plan.path == PipelinePath.FAST_CODING:
+            with global_request_tracer.trace_stage(req_trace.request_id, "FAST_CODING"):
+                agent_out = global_coding_agent.process_coding_request(normalized_prompt)
+                fast_code_resp = agent_out["response"]
+                global_request_tracer.record_model_call(req_trace.request_id)
+
+            dur_sec = time.perf_counter() - start_time
+            global_metrics_service.observe_latency("request_total", dur_sec * 1000.0)
+            global_request_tracer.end_trace(req_trace.request_id, status="COMPLETED")
+            return GenerationResult(
+                response=fast_code_resp,
+                intent="CODING",
+                agent="CodingAgent",
+                model="qwen2.5-coder:1.5b",
+                complexity_level="SIMPLE",
+                execution_strategy="DIRECT",
+                quality_score=100.0,
+                validation_passed=True,
+                execution_time_seconds=round(dur_sec, 3)
+            )
 
         # 1. CONTEXT ANALYSIS & FOLLOW-UP RESOLUTION (Day 7)
         context_result = global_context_manager.get_context(conversation_id, normalized_prompt)

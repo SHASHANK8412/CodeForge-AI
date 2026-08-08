@@ -74,3 +74,5 @@ class LearningScoreEvaluator:
 
 
 global_learning_evaluator = LearningScoreEvaluator()
+global_automated_evaluator = global_learning_evaluator
+

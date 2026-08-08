@@ -15,6 +15,7 @@ import sys
 import asyncio
 import unittest
 from pathlib import Path
+from typing import List, Dict, Any, Optional
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")

@@ -140,6 +140,9 @@ def verify_day44_pipeline():
     return _results["failed"] == 0
 
 
+main = verify_day44_pipeline
+
 if __name__ == "__main__":
     success = verify_day44_pipeline()
     sys.exit(0 if success else 1)
+

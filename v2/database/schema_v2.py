@@ -8,7 +8,7 @@ Models for:
 """
 
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, field
 from pydantic import BaseModel, Field
 

@@ -38,3 +38,5 @@ class KnowledgeRetriever:
 
 # Global KnowledgeRetriever Instance
 global_knowledge_retriever = KnowledgeRetriever()
+global_experience_retriever = global_knowledge_retriever
+
