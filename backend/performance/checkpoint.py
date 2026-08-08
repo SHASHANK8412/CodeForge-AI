@@ -8,7 +8,7 @@ across crashes. Safely cleans temporary sandboxes/worktrees without deleting use
 import time
 import hashlib
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 
 from backend.performance.models import WorkflowCheckpoint
 

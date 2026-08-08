@@ -587,4 +587,20 @@ def _get_structured_task_fallback(task: str, prompt: str) -> str:
     elif "reviewer" in task_lower:
         return "Code review completed successfully with zero critical flaws."
     else:
-        return "Task completed successfully."
+        return "Task completed successfully."
+
+
+class LLMService:
+    def generate_completion(
+        self,
+        prompt: str,
+        system_prompt: str | None = None,
+        model_name: str | None = None,
+        timeout: float | None = None,
+        task: str = "general",
+    ) -> str:
+        return generate_text(system_prompt=system_prompt or "", prompt=prompt, model=model_name, task=task)
+
+
+global_llm_service = LLMService()
+
