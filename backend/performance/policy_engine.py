@@ -140,41 +140,15 @@ class ExecutionPolicyEngine:
                 reasoning="FAST path selected for standalone conceptual explanation."
             )
 
-        # 5. Check FAST Coding Path
-        is_simple_coding = bool(re.search(r"^(?:write|create|implement|code|generate)\s+(?:a\s+)?(?:python|javascript|java|c\+\+|ts|script|function|program|algorithm|binary search|palindrome|factorial|fibonacci|reverse|sort)", p_lower))
-        if is_simple_coding and not has_documents and not has_active_repo:
-            return ExecutionPlan(
-                path=PipelinePath.FAST_CODING,
-                use_planner=False,
-                use_rag=False,
-                use_repository=False,
-                use_review=False,
-                use_execution=True,  # Lightweight execution for validation
-                use_tests=False,
-                use_grounding=False,
-                use_git=False,
-                allow_parallel=False,
-                model_tier="standard",
-                budgets=RequestBudget(
-                    max_total_ms=20000.0,
-                    max_model_calls=global_performance_config.MAX_MODEL_CALLS_FAST,
-                    max_tool_calls=1,
-                    max_retries=1,
-                    max_review_cycles=0,
-                    max_debug_cycles=0
-                ),
-                reasoning="FAST_CODING path selected for simple standalone algorithm."
-            )
-
-        # 6. Default Standard Path
+        # 5. Full Multi-Agent Pipeline for Coding Requests
         return ExecutionPlan(
             path=PipelinePath.STANDARD,
-            use_planner=False,
+            use_planner=True,
             use_rag=False,
             use_repository=False,
             use_review=True,
             use_execution=True,
-            use_tests=False,
+            use_tests=True,
             use_grounding=False,
             use_git=False,
             allow_parallel=True,
@@ -187,7 +161,7 @@ class ExecutionPolicyEngine:
                 max_review_cycles=1,
                 max_debug_cycles=1
             ),
-            reasoning="Standard execution path selected."
+            reasoning="Multi-agent standard pipeline selected for coding request."
         )
 
 
