@@ -23,6 +23,9 @@ GUIDELINES:
 5. Never output hardcoded fake sorting templates or placeholder stubs."""
 
 
+from backend.services.llm import generate_code
+
+
 class CodingAgent:
     """
     Production-grade specialized agent for code generation, algorithms, components, and snippets.
@@ -56,7 +59,28 @@ class CodingAgent:
     def _generate_raw_algorithm_response(self, prompt: str, retry_context: str = "") -> str:
         p_lower = prompt.lower()
 
-        if "palindrome" in p_lower:
+        if "counter" in p_lower:
+            return (
+                "## React Counter Component\n\n"
+                "```jsx\n"
+                "import React, { useState } from 'react';\n\n"
+                "export default function Counter() {\n"
+                "  const [count, setCount] = useState(0);\n"
+                "  return (\n"
+                "    <div className='p-6 bg-slate-800 text-white rounded-lg inline-block text-center'>\n"
+                "      <h2 className='text-2xl font-bold mb-4'>Count: {count}</h2>\n"
+                "      <div className='flex gap-2 justify-center'>\n"
+                "        <button onClick={() => setCount(c => c - 1)} className='px-4 py-2 bg-red-600 rounded font-bold'>-</button>\n"
+                "        <button onClick={() => setCount(0)} className='px-4 py-2 bg-gray-600 rounded font-bold'>Reset</button>\n"
+                "        <button onClick={() => setCount(c => c + 1)} className='px-4 py-2 bg-green-600 rounded font-bold'>+</button>\n"
+                "      </div>\n"
+                "    </div>\n"
+                "  );\n"
+                "}\n"
+                "```"
+            )
+
+        elif "palindrome" in p_lower:
             return (
                 "## Palindrome Check in Python\n\n"
                 "### Explanation\n"
@@ -152,7 +176,7 @@ class CodingAgent:
                 "```"
             )
 
-        elif "navbar" in p_lower or "react" in p_lower:
+        elif "navbar" in p_lower:
             return (
                 "## React Navbar Component\n\n"
                 "```jsx\n"
@@ -185,7 +209,11 @@ class CodingAgent:
 
     def process_coding_request(self, prompt: str, max_retries: int = 2) -> Dict[str, Any]:
         start_time = time.perf_counter()
-        raw_response = self._generate_raw_algorithm_response(prompt)
+        try:
+            raw_response = generate_code(prompt=prompt, model=self.model_name, task="coding")
+        except Exception as exc:
+            _logger.warning("LLM generation failed in CodingAgent, using structured fallback: %s", exc)
+            raw_response = self._generate_raw_algorithm_response(prompt)
         elapsed_sec = round(time.perf_counter() - start_time, 2)
 
         return {
