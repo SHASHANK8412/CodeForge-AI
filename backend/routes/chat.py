@@ -59,7 +59,10 @@ async def chat_message(request: ChatMessageRequest):
     if request.conversation_id:
         conversation = conversation_manager.get_conversation(request.conversation_id)
         if conversation is None:
-            raise HTTPException(status_code=404, detail="Conversation not found.")
+            conversation = conversation_manager.create_conversation(
+                conversation_id=request.conversation_id,
+                title=generate_conversation_title(request.message)
+            )
         conversation_id = conversation.conversation_id
     else:
         conversation = conversation_manager.create_conversation(title=generate_conversation_title(request.message))
@@ -149,7 +152,7 @@ def list_conversations(
 def get_conversation_history(conversation_id: str, limit: int = Query(default=100, ge=1, le=500)):
     conversation = conversation_manager.get_conversation(conversation_id)
     if conversation is None:
-        raise HTTPException(status_code=404, detail="Conversation not found.")
+        conversation = conversation_manager.create_conversation(conversation_id=conversation_id)
 
     messages = conversation_manager.get_messages(conversation_id, limit=limit)
     return {
@@ -161,10 +164,11 @@ def get_conversation_history(conversation_id: str, limit: int = Query(default=10
 
 @router.put("/title/{conversation_id}")
 def rename_conversation(conversation_id: str, request: ConversationRenameRequest):
-    try:
+    conversation = conversation_manager.get_conversation(conversation_id)
+    if conversation is None:
+        conversation = conversation_manager.create_conversation(conversation_id=conversation_id, title=request.title)
+    else:
         conversation = conversation_manager.rename_conversation(conversation_id, request.title)
-    except KeyError as exc:
-        raise HTTPException(status_code=404, detail="Conversation not found.") from exc
 
     return {
         "success": True,
@@ -175,10 +179,9 @@ def rename_conversation(conversation_id: str, request: ConversationRenameRequest
 @router.delete("/{conversation_id}")
 def delete_conversation(conversation_id: str):
     conversation = conversation_manager.get_conversation(conversation_id)
-    if conversation is None:
-        raise HTTPException(status_code=404, detail="Conversation not found.")
+    if conversation is not None:
+        conversation_manager.delete_conversation(conversation_id)
 
-    conversation_manager.delete_conversation(conversation_id)
     return {
         "success": True,
         "conversation_id": conversation_id,
