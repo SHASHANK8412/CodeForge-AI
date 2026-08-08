@@ -17,10 +17,10 @@ Your job is to generate clean, production-ready, accurate code snippets and impl
 
 GUIDELINES:
 1. Understand the user's coding requirements precisely.
-2. Provide correct, working code in the requested programming language or framework.
-3. For algorithms and DSA problems: include a brief explanation, clean code, and time/space complexity analysis.
-4. For UI components, scripts, or REST endpoints: provide clean code and concise usage instructions without forcing algorithm complexity headings.
-5. Never output hardcoded fake sorting templates or placeholder stubs."""
+2. Provide complete, working code in the requested programming language or framework.
+3. For UI components: include full feature sets (e.g. increment, decrement, reset), functional state updates (`setCount(c => c + 1)`), accessibility (ARIA attributes), and responsive styling.
+4. For algorithms and DSA problems: include a brief explanation, clean code, and time/space complexity analysis.
+5. Never output hardcoded fake sorting templates or incomplete placeholder stubs."""
 
 
 from backend.services.llm import generate_code
@@ -61,18 +61,32 @@ class CodingAgent:
 
         if "counter" in p_lower:
             return (
-                "## React Counter Component\n\n"
+                "## Production React Counter Component\n\n"
                 "```jsx\n"
                 "import React, { useState } from 'react';\n\n"
                 "export default function Counter() {\n"
-                "  const [count, setCount] = useState(0);\n"
+                "  const [count, setCount] = useState(0);\n\n"
+                "  const increment = () => setCount((current) => current + 1);\n"
+                "  const decrement = () => setCount((current) => current - 1);\n"
+                "  const reset = () => setCount(0);\n\n"
                 "  return (\n"
-                "    <div className='p-6 bg-slate-800 text-white rounded-lg inline-block text-center'>\n"
-                "      <h2 className='text-2xl font-bold mb-4'>Count: {count}</h2>\n"
-                "      <div className='flex gap-2 justify-center'>\n"
-                "        <button onClick={() => setCount(c => c - 1)} className='px-4 py-2 bg-red-600 rounded font-bold'>-</button>\n"
-                "        <button onClick={() => setCount(0)} className='px-4 py-2 bg-gray-600 rounded font-bold'>Reset</button>\n"
-                "        <button onClick={() => setCount(c => c + 1)} className='px-4 py-2 bg-green-600 rounded font-bold'>+</button>\n"
+                "    <div className='min-h-screen flex items-center justify-center bg-slate-900 text-white'>\n"
+                "      <div className='bg-slate-800 p-8 rounded-xl shadow-xl text-center border border-slate-700 max-w-sm w-full'>\n"
+                "        <h1 className='text-3xl font-bold mb-4 text-indigo-400'>Counter</h1>\n"
+                "        <p className='text-6xl font-bold mb-8 font-mono text-cyan-400' aria-live='polite'>\n"
+                "          {count}\n"
+                "        </p>\n"
+                "        <div className='flex gap-3 justify-center'>\n"
+                "          <button onClick={decrement} className='px-5 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 font-bold transition' aria-label='Decrease counter'>\n"
+                "            −\n"
+                "          </button>\n"
+                "          <button onClick={reset} className='px-5 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 font-bold transition'>\n"
+                "            Reset\n"
+                "          </button>\n"
+                "          <button onClick={increment} className='px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-bold transition' aria-label='Increase counter'>\n"
+                "            +\n"
+                "          </button>\n"
+                "        </div>\n"
                 "      </div>\n"
                 "    </div>\n"
                 "  );\n"
