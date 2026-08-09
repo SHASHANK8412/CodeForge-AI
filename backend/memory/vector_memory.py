@@ -8,7 +8,8 @@ import json
 import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional
-from backend.learning.embeddings import global_embedding_engine
+from backend.learning.embeddings import global_learning_embeddings as global_embedding_engine
+
 
 _logger = logging.getLogger("aiforge.memory")
 

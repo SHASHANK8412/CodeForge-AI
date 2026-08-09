@@ -6,9 +6,11 @@ Test Plans, Test Results, Failure Analysis, and Verification Status.
 """
 
 import uuid
+from datetime import datetime, timezone
 from enum import Enum
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
+
 
 
 class ExecutionType(str, Enum):
@@ -90,9 +92,7 @@ class ExecutionResult(BaseModel):
 
 
 class TestPlan(BaseModel):
-    """
-    Structured test plan.
-    """
+    __test__ = False
     test_type: str = Field(default="UNIT", description="Test suite type")
     language: str = Field(default="python", description="Language under test")
     test_cases: List[Dict[str, Any]] = Field(default_factory=list, description="List of test case dictionaries")
@@ -100,16 +100,29 @@ class TestPlan(BaseModel):
     timeout_seconds: float = Field(default=10.0, description="Test execution timeout")
 
 
+class TestFailureDetail(BaseModel):
+    __test__ = False
+    test_name: str = Field(default="unknown_test", description="Failed test function or case name")
+    error: str = Field(default="", description="Error/exception message")
+    file: str = Field(default="", description="Path to file where failure occurred")
+    line: Optional[int] = Field(default=None, description="Line number of failure")
+    requirement: str = Field(default="", description="Affected functional requirement if known")
+
+
 class TestResult(BaseModel):
-    """
-    Structured test suite execution outcome.
-    """
+    __test__ = False
+    success: bool = Field(default=True, description="True if test suite passed completely")
+
     passed: int = Field(default=0, description="Count of passed tests")
     failed: int = Field(default=0, description="Count of failed tests")
     total: int = Field(default=0, description="Total count of evaluated tests")
+    failures: List[TestFailureDetail] = Field(default_factory=list, description="Structured list of failure details")
     errors: List[str] = Field(default_factory=list, description="List of failure messages")
+    coverage: Optional[float] = Field(default=None, description="Test coverage percentage")
+    summary: str = Field(default="", description="Human-readable verification summary")
     duration_ms: float = Field(default=0.0, description="Test run duration in ms")
     execution_result: Optional[ExecutionResult] = Field(default=None, description="Raw execution result")
+
 
 
 class FailureAnalysis(BaseModel):
@@ -130,3 +143,55 @@ class PatchResult(BaseModel):
     summary: str = Field(description="Brief patch summary")
     code: str = Field(description="Patched code content")
     improved: bool = Field(default=False, description="True if patch changed code")
+
+
+class DebugResult(BaseModel):
+    __test__ = False
+    success: bool = Field(default=True, description="True if diagnosis and targeted fix was identified")
+    diagnosis: str = Field(default="", description="High-level diagnosis summary")
+    root_cause: str = Field(default="", description="Exact technical root cause explanation")
+    error_type: str = Field(default="UNKNOWN", description="Category: SYNTAX_ERROR, IMPORT_ERROR, ASSERTION_FAILURE, API_MISMATCH, etc.")
+    files_to_modify: List[str] = Field(default_factory=list, description="List of relative file paths needing modification")
+    changes: Dict[str, str] = Field(default_factory=dict, description="Mapping of relative file path -> proposed updated content")
+    confidence: float = Field(default=1.0, description="Confidence score between 0.0 and 1.0")
+    explanation: str = Field(default="", description="Detailed fix explanation")
+
+
+class MemoryRecord(BaseModel):
+    __test__ = False
+    memory_id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Unique memory record ID")
+    project_id: str = Field(default="default_project", description="Associated project ID")
+    session_id: str = Field(default="", description="Session ID")
+    memory_type: str = Field(default="FAILURE", description="Category: PROJECT, FAILURE, PATTERN")
+    content: str = Field(default="", description="Text representation for search and display")
+    error_type: str = Field(default="", description="Category: SYNTAX_ERROR, IMPORT_ERROR, ASSERTION_FAILURE, etc.")
+    technology: str = Field(default="", description="Tech stack tags e.g. FastAPI, PostgreSQL, React, Node")
+    files: List[str] = Field(default_factory=list, description="Associated file paths")
+    root_cause: str = Field(default="", description="Extracted root cause")
+    fix: str = Field(default="", description="Fix content or description")
+    result: str = Field(default="PASS", description="Execution/test result: PASS or FAIL")
+    confidence: float = Field(default=1.0, description="Confidence score between 0.0 and 1.0")
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="ISO timestamp")
+
+
+class ExportValidationResult(BaseModel):
+    __test__ = False
+    allowed: bool = Field(default=False, description="True if project is verified and allowed to export")
+    reason: str = Field(default="", description="Human-readable reason for export permission or denial")
+    checks: Dict[str, bool] = Field(default_factory=dict, description="Detailed dictionary of individual verification checks")
+    verification_hash: str = Field(default="", description="MD5 hash of project files at verification time")
+    verified_at: Optional[str] = Field(default=None, description="ISO timestamp when verification passed")
+
+
+class ExportResult(BaseModel):
+    __test__ = False
+    success: bool = Field(default=False, description="True if export completed successfully")
+    export_type: str = Field(default="ZIP", description="ZIP, GITHUB, DOCS")
+    project_name: str = Field(default="", description="Project name")
+    path: Optional[str] = Field(default=None, description="Output zip path or repository URL")
+    reason: str = Field(default="", description="Status or denial reason")
+
+
+
+
+

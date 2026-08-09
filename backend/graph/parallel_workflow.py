@@ -38,6 +38,10 @@ from backend.services.project_builder import global_structured_project_builder
 from backend.services.prompt_builder import global_prompt_builder
 from backend.quality.duplicate_detector import global_duplicate_detector
 from backend.memory.memory_manager import memory_manager
+from backend.execution.project_runner import global_project_runner
+from backend.agents.debug_agent import global_debug_agent
+
+
 
 _logger = logging.getLogger("aiforge.performance")
 
@@ -88,7 +92,7 @@ async def planner_node(state: ProjectState) -> dict:
         raw_plan = await planner.run_async(prompt)
 
     session_id = state.get("session_id", "default")
-    is_valid, msg, plan_json = global_stage_validator.validate_plan(raw_plan)
+    plan_json = planner.parse_plan_json(raw_plan, allow_fallback=True)
     global_cache_service.set("planner", prompt, plan_json)
     memory_manager.save_agent_output(session_id, "planner", plan_json)
     agent_timers["planner"] = timer.elapsed
@@ -97,10 +101,15 @@ async def planner_node(state: ProjectState) -> dict:
     return {
         "prompt": prompt,
         "user_prompt": prompt,
+        "user_request": prompt,
+        "project_name": plan_json.get("project_name", "AIForgeApp"),
+        "requirements": plan_json.get("functional_requirements") or plan_json.get("requirements", []),
+        "project_spec": plan_json,
         "plan": plan_json,
         "current_step": "planner",
         "stream_events": ["✔ Planner completed"]
     }
+
 
 
 async def architect_node(state: ProjectState) -> dict:
@@ -242,16 +251,22 @@ async def assembly_node(state: ProjectState) -> dict:
     )
 
     duplicate_report = global_duplicate_detector.detect_duplicates(assembled.get("manifest", {}))
+    files_manifest = assembled.get("manifest", {})
+    written_path = global_structured_project_builder.write_project_to_disk(proj_name, files_manifest)
 
     return {
+        "project_path": str(written_path),
+        "files": files_manifest,
         "assembly_manifest": assembled,
         "duplicate_report": duplicate_report,
         "current_step": "assembly",
         "stream_events": [
             "✔ Assembly completed",
+            f"✔ Files written to disk at {written_path}",
             f"✔ Duplicate scan: {duplicate_report['duplicate_count']} duplicate block(s) found",
         ]
     }
+
 
 
 async def reviewer_node(state: ProjectState) -> dict:
@@ -339,12 +354,28 @@ async def testing_node(state: ProjectState) -> dict:
         report_lines.append(f"| {section} | {section_counts.get(section, 0)} |")
     report_md = "\n".join(report_lines) + "\n"
 
+    exec_results = state.get("execution_results", {})
+    project_spec = state.get("project_spec", {})
+    architecture = state.get("architecture", {})
+
+    test_res = testing_agent.evaluate_execution_results(
+        exec_results=exec_results if isinstance(exec_results, dict) else {},
+        project_spec=project_spec if isinstance(project_spec, dict) else {},
+        architecture=architecture if isinstance(architecture, dict) else {}
+    )
+
     return {
         "tests": raw_tests,
+        "test_results": test_res.model_dump(),
         "testing_report": report_md,
         "current_step": "testing",
-        "stream_events": [f"✔ Generated {total_tests} real test function(s) across 4 suites"]
+        "stream_events": [f"✔ Generated {total_tests} real test function(s) across 4 suites (Verification: {'PASS' if test_res.success else 'FAIL'})"]
     }
+
+
+testing_node.__test__ = False
+
+
 
 
 async def documentation_node(state: ProjectState) -> dict:
@@ -445,43 +476,173 @@ async def performance_node(state: ProjectState) -> dict:
 
 async def execution_validation_node(state: ProjectState) -> dict:
     _logger.info("✔ [11/14] Project Execution Agent verifying runtime startup...")
-    fe_files = {"App.jsx": str(state.get("frontend", ""))}
-    be_files = {"main.py": str(state.get("backend", ""))}
-    db_code = str(state.get("database", ""))
+    project_path = state.get("project_path", "")
+    existing_commands = state.get("commands", []) or []
 
     with Timer() as timer:
-        exec_report = execution_agent.verify_execution(be_files, fe_files, db_code)
+        exec_res = global_project_runner.run_project(project_path)
 
     agent_timers["execution_validation"] = timer.elapsed
+    exec_dict = exec_res.model_dump()
+    cmd_str = exec_dict.get("command", "compileall")
+    new_status = "PASS" if exec_res.exit_code == 0 else "FAIL"
 
     return {
-        "execution_report": exec_report.dict(),
+        "execution_results": exec_dict,
+        "commands": existing_commands + [cmd_str],
+        "status": new_status,
+        "error": exec_res.stderr if exec_res.exit_code != 0 else "",
         "current_step": "execution_validation",
-        "stream_events": [f"✔ Execution Verification: {'PASSED' if exec_report.no_crashes else 'ISSUES DETECTED'}"]
+        "stream_events": [f"✔ Execution Verification: {'PASS' if exec_res.exit_code == 0 else 'FAIL'} (Exit code: {exec_res.exit_code})"]
     }
 
 
-async def self_healing_node(state: ProjectState) -> dict:
-    _logger.info("✔ [12/14] Self-Healing Evaluator checking build/execution status...")
-    val_rep = state.get("validation_report", {})
-    exec_rep = state.get("execution_report", {})
-    attempts = state.get("self_heal_attempts", 0)
 
-    is_valid = val_rep.get("is_valid", True)
-    no_crashes = exec_rep.get("no_crashes", True)
+from backend.memory.project_memory_service import global_project_memory_service
+from backend.execution.models import MemoryRecord
 
-    if (not is_valid or not no_crashes) and attempts < 3:
-        _logger.warning(f"Self-Healing Triggered! Attempt {attempts + 1}/3. Regenerating code...")
-        return {
-            "self_heal_attempts": attempts + 1,
-            "current_step": "self_healing",
-            "stream_events": [f"⚠️ Self-Healing Loop triggered (Attempt {attempts + 1}/3) - Auto-fixing issues..."]
-        }
+
+async def debug_node(state: ProjectState) -> dict:
+    _logger.info("✔ [12/14] DebugAgent analyzing failure evidence...")
+    iteration = state.get("iteration", 0) + 1
+    max_iterations = state.get("max_iterations", 3)
+
+    debug_res = global_debug_agent.diagnose_and_repair(dict(state))
+
+    existing_fixes = state.get("fixes", []) or []
+    existing_errors = state.get("errors", []) or []
+
+    try:
+        global_project_memory_service.store_memory(MemoryRecord(
+            project_id=str(state.get("project_name", state.get("project_id", "default_project"))),
+            memory_type="FAILURE",
+            content=debug_res.diagnosis,
+            error_type=debug_res.error_type,
+            technology=str(state.get("technology_stack", "python")),
+            files=debug_res.files_to_modify,
+            root_cause=debug_res.root_cause,
+            fix=json.dumps(debug_res.changes),
+            result="FAIL",
+            confidence=debug_res.confidence
+        ))
+    except Exception as e:
+        _logger.warning(f"Memory store failed safely in debug_node: {e}")
 
     return {
-        "current_step": "self_healing",
-        "stream_events": ["✔ Self-Healing Check Passed (0 critical errors)"]
+        "iteration": iteration,
+        "max_iterations": max_iterations,
+        "fixes": existing_fixes + [debug_res.model_dump()],
+        "errors": existing_errors + [debug_res.diagnosis],
+        "current_step": "debug",
+        "stream_events": [f"⚠️ Debugger diagnosed failure (Attempt {iteration}/{max_iterations}): {debug_res.diagnosis}"]
     }
+
+
+
+async def patch_node(state: ProjectState) -> dict:
+    _logger.info("✔ Applying targeted patch to generated project on disk...")
+    fixes = state.get("fixes", []) or []
+    files_map = dict(state.get("files", {}) or {})
+    proj_path_str = state.get("project_path", "")
+
+    if not fixes or not proj_path_str:
+        return {"current_step": "patch"}
+
+    latest_fix = fixes[-1]
+    changes = latest_fix.get("changes", {})
+    target_dir = Path(proj_path_str).resolve()
+
+    modified_files = []
+    file_backups = dict(state.get("file_backups", {}) or {})
+
+    for rel_path, new_content in changes.items():
+        clean_rel = rel_path.replace("\\", "/").lstrip("/")
+        if clean_rel.startswith("/") or clean_rel.startswith("\\"):
+            _logger.warning(f"Path traversal rejected in patch_node: {rel_path}")
+            continue
+
+        dest_path = (target_dir / clean_rel).resolve()
+        if not str(dest_path).startswith(str(target_dir)):
+            _logger.warning(f"Path traversal rejected in patch_node: {rel_path}")
+            continue
+
+        # Backup previous file content before patching
+        if dest_path.exists():
+            file_backups[clean_rel] = dest_path.read_text(encoding="utf-8")
+
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        dest_path.write_text(new_content, encoding="utf-8")
+        files_map[clean_rel] = new_content
+        modified_files.append(clean_rel)
+
+    return {
+        "files": files_map,
+        "file_backups": file_backups,
+        "current_step": "patch",
+        "stream_events": [f"✔ Applied targeted patch to {len(modified_files)} file(s): {modified_files}"]
+    }
+
+
+def restore_file_backups(state: ProjectState) -> dict:
+    """
+    Restores modified files on disk and in ProjectState["files"] from ProjectState["file_backups"].
+    """
+    file_backups = state.get("file_backups", {}) or {}
+    proj_path_str = state.get("project_path", "")
+    if not file_backups or not proj_path_str:
+        return {}
+
+    target_dir = Path(proj_path_str).resolve()
+    restored_files = []
+    files_map = dict(state.get("files", {}) or {})
+
+    for rel_path, old_content in file_backups.items():
+        clean_rel = rel_path.replace("\\", "/").lstrip("/")
+        if clean_rel.startswith("/") or clean_rel.startswith("\\"):
+            continue
+        dest_path = (target_dir / clean_rel).resolve()
+        if not str(dest_path).startswith(str(target_dir)):
+            continue
+
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        dest_path.write_text(old_content, encoding="utf-8")
+        files_map[clean_rel] = old_content
+        restored_files.append(clean_rel)
+
+    return {
+        "files": files_map,
+        "current_step": "rollback",
+        "stream_events": [f"✔ Restored {len(restored_files)} file(s) from backup: {restored_files}"]
+    }
+
+
+from backend.exporter.gate import global_export_gate
+
+
+def route_after_testing(state: ProjectState) -> str:
+    exec_res = state.get("execution_results", {}) or {}
+    test_res = state.get("test_results", {}) or {}
+    status = state.get("status", "")
+
+    exit_code = exec_res.get("exit_code", -1)
+    is_test_success = test_res.get("success", False)
+
+    if exit_code == 0 and is_test_success:
+        global_export_gate.mark_verified(state)
+        return "packaging"
+
+
+    if status in ["UNSUPPORTED", "SECURITY_ERROR"]:
+        return END
+
+    iteration = state.get("iteration", 0)
+    max_iterations = state.get("max_iterations", 3)
+
+    if iteration >= max_iterations:
+        state["status"] = "FAILED_MAX_ITERATIONS"
+        return END
+
+    return "debug"
 
 
 async def packaging_node(state: ProjectState) -> dict:
@@ -544,7 +705,8 @@ builder.add_node("dependency_manager", dependency_manager_node)
 builder.add_node("security_scan", security_scan_node)
 builder.add_node("performance", performance_node)
 builder.add_node("execution_validation", execution_validation_node)
-builder.add_node("self_healing", self_healing_node)
+builder.add_node("debug", debug_node)
+builder.add_node("patch", patch_node)
 builder.add_node("packaging", packaging_node)
 builder.add_node("deployment", deployment_node)
 
@@ -564,16 +726,22 @@ builder.add_edge("database", "assembly")
 
 # Sequential Stage Progression
 builder.add_edge("assembly", "reviewer")
-builder.add_edge("reviewer", "testing")
-builder.add_edge("testing", "documentation")
+builder.add_edge("reviewer", "documentation")
 builder.add_edge("documentation", "build_validation")
 builder.add_edge("build_validation", "dependency_manager")
 builder.add_edge("dependency_manager", "security_scan")
 builder.add_edge("security_scan", "performance")
 builder.add_edge("performance", "execution_validation")
-builder.add_edge("execution_validation", "self_healing")
-builder.add_edge("self_healing", "packaging")
+builder.add_edge("execution_validation", "testing")
+
+# Self-Correction Loop Routing
+builder.add_conditional_edges("testing", route_after_testing, {"packaging": "packaging", "debug": "debug", END: END})
+builder.add_edge("debug", "patch")
+builder.add_edge("patch", "execution_validation")
+
 builder.add_edge("packaging", "deployment")
 builder.add_edge("deployment", END)
 
 parallel_graph = builder.compile()
+
+

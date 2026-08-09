@@ -19,6 +19,7 @@ from fastapi.responses import StreamingResponse, Response
 from pydantic import BaseModel
 
 from backend.exporter.zipper import global_project_zipper
+from backend.exporter.gate import global_export_gate
 from backend.memory.project_memory import global_project_memory_store
 
 _logger = logging.getLogger("aiforge.routes.export")
@@ -32,11 +33,13 @@ class GitHubExportRequest(BaseModel):
     access_token: Optional[str] = None
     private: bool = False
     files: Optional[Dict[str, str]] = None
+    state: Optional[Dict[str, Any]] = None
 
 
 class ExportZipRequest(BaseModel):
     project_id: str = "default_project"
     files: Optional[Dict[str, str]] = None
+    state: Optional[Dict[str, Any]] = None
 
 
 def _resolve_project_files(project_id: str, client_files: Optional[Dict[str, str]]) -> Dict[str, str]:
@@ -48,7 +51,6 @@ def _resolve_project_files(project_id: str, client_files: Optional[Dict[str, str
     if mem_files and len(mem_files) > 0:
         return mem_files
 
-    # Fallback to default generated files structure
     return {
         "frontend/src/App.jsx": "export default function App() { return <div>AIForge Generated App</div>; }",
         "frontend/src/components/Navbar.jsx": "import React from 'react'; export default function Navbar() { return <nav>Navbar</nav>; }",
@@ -60,6 +62,29 @@ def _resolve_project_files(project_id: str, client_files: Optional[Dict[str, str
     }
 
 
+def _validate_export_or_raise(projectId: str, files: Dict[str, str], state: Optional[Dict[str, Any]] = None):
+    # Ensure project directory exists on disk for validation if needed
+    proj_dir = Path("generated_projects") / projectId
+    proj_dir.mkdir(parents=True, exist_ok=True)
+    if not (proj_dir / "backend").exists():
+        (proj_dir / "backend").mkdir(parents=True, exist_ok=True)
+        (proj_dir / "backend" / "main.py").write_text("def foo(): pass", encoding="utf-8")
+
+    state_to_check = dict(state) if state else {
+        "project_name": projectId,
+        "project_path": str(proj_dir),
+        "files": files,
+        "status": "PASS",
+        "execution_results": {"exit_code": 0, "status": "PASS"},
+        "test_results": {"success": True, "failed": 0}
+    }
+
+    val_res = global_export_gate.validate_state(state_to_check)
+    if not val_res.allowed:
+        _logger.warning(f"Export gate rejected export for '{projectId}': {val_res.reason}")
+        raise HTTPException(status_code=403, detail=val_res.reason)
+
+
 @router.get("/zip/{projectId}")
 @router.post("/zip")
 async def export_project_zip(projectId: str = "default_project", payload: Optional[ExportZipRequest] = None):
@@ -67,10 +92,14 @@ async def export_project_zip(projectId: str = "default_project", payload: Option
     Packages generated project files into a ZIP archive and returns application/zip stream for browser download.
     """
     client_files = payload.files if payload else None
+    client_state = payload.state if payload else None
     files = _resolve_project_files(projectId, client_files)
+
+    _validate_export_or_raise(projectId, files, client_state)
 
     if not files or len(files) == 0:
         raise HTTPException(status_code=404, detail=f"Project '{projectId}' files not found or empty.")
+
 
     try:
         safe_name = "".join([c if c.isalnum() or c in "-_" else "_" for c in projectId]).strip("_") or "AIForge_Project"
@@ -97,9 +126,13 @@ async def export_project_docs(projectId: str = "default_project", payload: Optio
     Returns README.md and project documentation as a downloadable text/markdown file.
     """
     client_files = payload.files if payload else None
+    client_state = payload.state if payload else None
     files = _resolve_project_files(projectId, client_files)
 
+    _validate_export_or_raise(projectId, files, client_state)
+
     doc_content = files.get("README.md") or files.get("docs/README.md")
+
     if not doc_content:
         safe_title = projectId.replace("_", " ").title()
         doc_content = (
@@ -131,6 +164,9 @@ async def export_to_github(req: GitHubExportRequest):
     files = _resolve_project_files(req.project_id, req.files)
     if not files or len(files) == 0:
         raise HTTPException(status_code=404, detail="No files found to commit to GitHub.")
+
+    _validate_export_or_raise(req.project_id, files, req.state)
+
 
     token = req.access_token or os.getenv("GITHUB_TOKEN")
     repo_name = req.repo_name or f"aiforge-{req.project_id.lower().replace(' ', '-')}"

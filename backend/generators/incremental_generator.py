@@ -94,6 +94,19 @@ class RequirementAnalyzerAgent:
                 {"name": "students", "fields": [{"name": "id", "type": "UUID"}, {"name": "name", "type": "VARCHAR"}]},
                 {"name": "jobs", "fields": [{"name": "id", "type": "SERIAL"}, {"name": "title", "type": "VARCHAR"}]}
             ]
+        elif any(kw in p_lower for kw in ["todo", "task", "checklist", "kanban", "productivity", "reminder", "notes"]):
+            domain = "Productivity & Task Management"
+            users = ["Individual Users", "Team Members", "Workspace Admins"]
+            pages = ["Home", "Tasks", "Categories", "Completed", "Analytics", "Settings"]
+            routers = [
+                {"name": "task_router", "prefix": "/api/tasks", "tag": "Tasks"},
+                {"name": "category_router", "prefix": "/api/categories", "tag": "Categories"},
+                {"name": "user_router", "prefix": "/api/users", "tag": "Users"}
+            ]
+            entities = [
+                {"name": "tasks", "fields": [{"name": "id", "type": "UUID"}, {"name": "title", "type": "VARCHAR"}, {"name": "completed", "type": "BOOLEAN"}]},
+                {"name": "categories", "fields": [{"name": "id", "type": "SERIAL"}, {"name": "name", "type": "VARCHAR"}]}
+            ]
         elif "expense" in p_lower or "finance" in p_lower or "budget" in p_lower:
             domain = "Personal Finance"
             users = ["Account Holder", "Financial Advisor", "Admin"]
@@ -107,6 +120,7 @@ class RequirementAnalyzerAgent:
                 {"name": "transactions", "fields": [{"name": "id", "type": "SERIAL"}, {"name": "amount", "type": "DECIMAL"}]},
                 {"name": "categories", "fields": [{"name": "id", "type": "SERIAL"}, {"name": "name", "type": "VARCHAR"}]}
             ]
+
         else:
             domain = f"{primary_noun} Platform"
             users = [f"{primary_noun} User", "System Manager", "Admin"]

@@ -72,7 +72,8 @@ class AutonomousSoftwareEngineer:
         # ---------------------------------------------------------
         from backend.agents.architect_agent import ArchitectAgent
         architect = ArchitectAgent()
-        arch_blueprint = architect.generate_architecture_blueprint({"project_name": project_title})
+        arch_blueprint = architect.generate_architecture_from_spec({"project_name": project_title})
+
 
         tech_stack = {
             "frontend": "React 18, Vite, TailwindCSS, Axios",
@@ -125,19 +126,34 @@ class AutonomousSoftwareEngineer:
         static_report = global_static_analysis_engine.run_static_analysis(opt_files)
 
         # ---------------------------------------------------------
-        # STAGE 14, 15, 16, 17: Self-Reflection & 15 Quality Gates Audit
+        # STAGE 13 & 14: Requirement Fidelity & Quality Gates Audit
         # ---------------------------------------------------------
-        q_result = global_quality_gates_engine.evaluate_project(opt_files, sec_report, perf_report)
+        from backend.agents.requirement_fidelity_agent import global_requirement_fidelity_agent
+        from backend.generators.incremental_generator import ProjectContext
+        ctx = ProjectContext(user_prompt)
 
+        fidelity_res = global_requirement_fidelity_agent.evaluate_fidelity(
+            user_prompt=user_prompt,
+            project_spec={"project_name": project_title, "domain": ctx.domain, "requirements": ctx.features},
+            architecture_spec=arch_blueprint,
+            files=opt_files
+        )
+
+        q_result = global_quality_gates_engine.evaluate_project(opt_files, sec_report, perf_report)
+        
+        # Recalculate score with Requirement Fidelity weight
+        from backend.validation.quality_score import QualityScoreCalculator
+        q_calc = QualityScoreCalculator()
+        q_score_obj = q_calc.compute_score([], has_docs=True, requirement_fidelity=fidelity_res)
+        final_score = q_score_obj.overall_score if fidelity_res["status"] == "PASS" else min(q_result.score, fidelity_res["fidelity_score"])
+
+        pipeline_success = (q_score_obj.ready_for_export and fidelity_res["status"] == "PASS")
         elapsed_sec = round(time.perf_counter() - pipeline_start, 2)
 
-        _logger.info(f"✅ Autonomous Pipeline Completed in {elapsed_sec}s | Quality Score: {q_result.score:.1f}/100 | Quality Gates: PASSED")
-
-        from backend.generators.incremental_generator import ProjectContext
-        ctx = ProjectContext(project_title)
+        _logger.info(f"✅ Autonomous Pipeline Completed in {elapsed_sec}s | Quality Score: {final_score:.1f}/100 | Requirement Fidelity: {fidelity_res['status']}")
 
         return {
-            "success": True,
+            "success": pipeline_success,
             "project_name": project_title,
             "domain": ctx.domain,
             "industry": ctx.industry,
@@ -146,7 +162,8 @@ class AutonomousSoftwareEngineer:
             "db_tables": [t["name"] for t in ctx.db_tables],
             "api_endpoints": [r["prefix"] for r in ctx.routers],
             "pages": ctx.pages,
-            "quality_score": q_result.score,
+            "quality_score": final_score,
+            "requirement_fidelity": fidelity_res,
             "quality_gates": q_result.to_dict(),
             "security_report": sec_report,
             "performance_report": perf_report,
@@ -155,6 +172,7 @@ class AutonomousSoftwareEngineer:
             "execution_time_seconds": elapsed_sec,
             "pipeline_stages_completed": 18
         }
+
 
 
 global_autonomous_engineer = AutonomousSoftwareEngineer()

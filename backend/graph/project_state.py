@@ -44,18 +44,38 @@ class ProjectState(TypedDict, total=False):
     parallel workflow pipeline.
     """
 
-    # Prompt inputs
+    # Prompt & Core Request inputs
     prompt: str
     user_prompt: str
+    user_request: str
 
-    # Structured Agent Outputs (JSON / Dict Contracts)
-    plan: Dict[str, Any]
+    # Autonomous Engineering Project Metadata & Specs (Incremental Additions)
+    project_name: str
+    requirements: List[Any]
+    project_spec: Dict[str, Any]
     architecture: Dict[str, Any]
+    plan: Dict[str, Any]
+
+    # File System & Code Representations
+    files: Dict[str, str]
     frontend: Any
     backend: Any
     database: Any
     documentation: Any
     tests: Any
+    dependencies: List[str]
+    commands: List[str]
+
+    # Structured Execution, Verification & Repair Tracking
+    execution_results: Dict[str, Any]
+    test_results: Dict[str, Any]
+    errors_list: List[Dict[str, Any]]
+    fixes: List[Dict[str, Any]]
+    iteration: int
+    max_iterations: int
+    status: str
+
+    # Review, GitHub & Assembly Metadata
     review: Dict[str, Any]
     github: Dict[str, Any]
     assembly_manifest: Dict[str, Any]
@@ -71,7 +91,6 @@ class ProjectState(TypedDict, total=False):
     # Self-Healing & Quality evaluation fields
     project_path: str
     review_findings: List[Dict[str, Any]]
-    test_results: Dict[str, Any]
     quality_score: Dict[str, Any]
     quality_report: str
     self_heal_attempts: int
@@ -83,3 +102,4 @@ class ProjectState(TypedDict, total=False):
     deployment_report: Dict[str, Any]
     deployment_platform: str
     deployment_guide: str
+

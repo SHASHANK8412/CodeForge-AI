@@ -1,4 +1,11 @@
+import json
+import re
+import logging
+from typing import Dict, Any, Tuple
 from backend.agents.base_agent import BaseAgent
+from backend.schemas.agent_contract import ProjectSpec
+
+_logger = logging.getLogger("aiforge.planner_agent")
 
 
 class PlannerAgent(BaseAgent):
@@ -78,3 +85,93 @@ Rules:
 
     async def run_async(self, prompt: str, memory_context: str = "", previous_output: str = ""):
         return await super().run_async(prompt, memory_context, previous_output)
+
+    def parse_plan_json(self, raw_output: str, allow_fallback: bool = False) -> Dict[str, Any]:
+        """
+        Parses LLM output into a validated ProjectSpec dictionary.
+        Extracts JSON code block, parses with json.loads, and validates via Pydantic ProjectSpec.
+        Raises ValueError on malformed/invalid JSON unless allow_fallback=True.
+        """
+        if not raw_output or not isinstance(raw_output, str):
+            if not allow_fallback:
+                raise ValueError("Empty or non-string output received from PlannerAgent.")
+            _logger.warning("Empty or non-string output passed to parse_plan_json. Returning default spec.")
+            return ProjectSpec().model_dump()
+
+        extracted_json_str = ""
+        # 1. Regex search used ONLY to locate fenced JSON block ```json ... ```
+        json_match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", raw_output, re.IGNORECASE)
+        if json_match:
+            extracted_json_str = json_match.group(1).strip()
+        else:
+            # 2. Substring search fallback for first { and last }
+            first_brace = raw_output.find("{")
+            last_brace = raw_output.rfind("}")
+            if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+                extracted_json_str = raw_output[first_brace:last_brace + 1].strip()
+
+        if not extracted_json_str:
+            if not allow_fallback:
+                raise ValueError("Planner output did not contain a valid JSON block.")
+            _logger.warning("No JSON block found in planner output. Returning fallback spec.")
+
+        parsed_data = {}
+        if extracted_json_str:
+            try:
+                parsed_data = json.loads(extracted_json_str, strict=False)
+            except Exception as e:
+                if not allow_fallback:
+                    raise ValueError(f"Planner output JSON parsing failed: {e}")
+                _logger.warning(f"Failed to parse JSON from planner output: {e}. Attempting fallback.")
+
+        # 3. Coerce tech_stack picks if provided as dict
+        tech_stack = parsed_data.get("tech_stack", {}) if isinstance(parsed_data.get("tech_stack"), dict) else {}
+        frontend_pick = tech_stack.get("frontend") or parsed_data.get("frontend", "React")
+        backend_pick = tech_stack.get("backend") or parsed_data.get("backend", "FastAPI")
+        database_pick = tech_stack.get("database") or parsed_data.get("database", "PostgreSQL")
+
+        func_reqs = parsed_data.get("functional_requirements", [])
+        if not isinstance(func_reqs, list):
+            func_reqs = [str(func_reqs)]
+
+        all_reqs = parsed_data.get("requirements", func_reqs)
+        if not isinstance(all_reqs, list):
+            all_reqs = [str(all_reqs)]
+
+        # 4. Construct Pydantic ProjectSpec model with schema validation
+        spec_kwargs = {
+            "project_name": parsed_data.get("project_name") or "AIForge Application",
+            "domain": parsed_data.get("domain") or "Web Application",
+            "type": parsed_data.get("type") or "Full Stack Web App",
+            "executive_summary": parsed_data.get("executive_summary") or "",
+            "requirements": all_reqs,
+            "functional_requirements": func_reqs,
+            "non_functional_requirements": parsed_data.get("non_functional_requirements", []),
+            "user_stories": parsed_data.get("user_stories", []),
+            "assumptions": parsed_data.get("assumptions", []),
+            "constraints": parsed_data.get("constraints", []),
+            "pages": parsed_data.get("pages") or ["Home", "Dashboard"],
+            "features": parsed_data.get("features") or func_reqs or ["Authentication", "CRUD API"],
+            "frontend": str(frontend_pick),
+            "backend": str(backend_pick),
+            "database": str(database_pick),
+            "dependencies": parsed_data.get("dependencies", []),
+            "api_requirements": parsed_data.get("api_requirements", []),
+            "important_constraints": parsed_data.get("important_constraints") or parsed_data.get("constraints", []),
+            "tech_stack": tech_stack
+        }
+
+        validated_spec = ProjectSpec(**spec_kwargs)
+        plan_dict = validated_spec.model_dump()
+
+        return plan_dict
+
+
+    def generate_structured_spec(self, raw_output: str) -> Tuple[Dict[str, Any], ProjectSpec]:
+        """
+        Returns both legacy plan dictionary and validated Pydantic ProjectSpec model.
+        """
+        plan_dict = self.parse_plan_json(raw_output)
+        spec_model = ProjectSpec(**plan_dict)
+        return plan_dict, spec_model
+

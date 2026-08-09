@@ -1,174 +1,170 @@
+"""
+Unit and Integration Tests for AIForge StructuredProjectBuilder & Disk Writing (Phase 5)
+"""
+
 import shutil
 import pytest
 from pathlib import Path
-from unittest.mock import AsyncMock
-from fastapi.testclient import TestClient
-
-from backend.main import app
-from backend.workflow.project_builder import build_project, GENERATED_PROJECTS_DIR
-from backend.graph import parallel_workflow
+from backend.services.project_builder import global_structured_project_builder
+from backend.schemas.agent_contract import ProjectSpec, ArchitectureSpec
+from backend.graph.project_state import ProjectState
+from backend.graph.parallel_workflow import assembly_node
 
 
-class MockAgent:
-    def __init__(self, name: str, key: str | None = None):
-        self.name = name
-        self.key = key
-
-    async def run_async(self, *args, **kwargs) -> str | dict[str, str]:
-        # Generate some mock file structures in backend output
-        if self.key == "backend":
-            return {
-                "backend": """
-# filepath: backend/main.py
-from fastapi import FastAPI
-app = FastAPI()
-"""
-            }
-        elif self.key == "frontend":
-            return {
-                "frontend": """
-// filepath: frontend/src/App.jsx
-export default function App() { return <div>AIForge Application</div> }
-"""
-            }
-        elif self.key:
-            return {self.key: f"{self.name} output"}
-        return f"{self.name} output"
+@pytest.fixture
+def tmp_output_dir(tmp_path):
+    out = tmp_path / "generated_projects"
+    out.mkdir(parents=True, exist_ok=True)
+    yield out
+    if out.exists():
+        shutil.rmtree(out, ignore_errors=True)
 
 
-def test_project_assembly_and_zip():
-    # Setup mock data state
-    mock_state = {
-        "plan": "Planner plan",
-        "architecture": "Architect design",
-        "frontend": "```jsx\n// filepath: frontend/src/App.jsx\nexport default function App() {}\n```",
-        "backend": "```python\n# filepath: backend/main.py\nprint('hello')\n```",
-        "database": "CREATE TABLE users (id INT);",
-        "tests": "def test_something(): pass",
-        "documentation": "README docs content",
+def test_basic_project_generation(tmp_output_dir):
+    manifest = {
+        "frontend/src/App.jsx": "export default function App() { return <div>TodoApp</div>; }",
+        "backend/main.py": "from fastapi import FastAPI\napp = FastAPI()",
+        "README.md": "# TodoApp"
     }
 
-    project_name = "Test-Dummy-Project"
-    safe_name = "Test-Dummy-Project"
-    project_dir = GENERATED_PROJECTS_DIR / safe_name
-    zip_path = GENERATED_PROJECTS_DIR / f"{safe_name}.zip"
+    target_dir = global_structured_project_builder.write_project_to_disk("TodoApp", manifest, base_dir=str(tmp_output_dir))
 
-    # Clean up first
-    if project_dir.exists():
-        shutil.rmtree(project_dir)
-    if zip_path.exists():
-        zip_path.unlink()
-
-    # Build
-    build_project(project_name, mock_state)
-
-    # Verify directory and files
-    assert project_dir.exists()
-    assert (project_dir / "frontend/src/App.jsx").exists()
-    assert (project_dir / "backend/main.py").exists()
-    assert (project_dir / "database/schema.sql").exists()
-    assert (project_dir / "tests/test_app.py").exists()
-    assert (project_dir / "README.md").exists()
-    assert (project_dir / "project.json").exists()
-
-    # Verify ZIP file exists
-    assert zip_path.exists()
-
-    # Verify metadata JSON contents
-    with open(project_dir / "project.json", "r") as f:
-        metadata = json.load(f)
-    assert metadata["project_name"] == project_name
-    assert metadata["framework"] == "React + FastAPI"
-
-    # Clean up
-    shutil.rmtree(project_dir)
-    zip_path.unlink()
+    assert target_dir.exists()
+    assert (target_dir / "frontend" / "src" / "App.jsx").exists()
+    assert (target_dir / "backend" / "main.py").exists()
+    assert (target_dir / "README.md").exists()
 
 
-def test_api_generation_and_download():
-    # Mock pipeline agents so it is instant
-    parallel_workflow.planner = MockAgent("Planner")
-    parallel_workflow.architect = MockAgent("Architect")
-    parallel_workflow.frontend_agent = MockAgent("Frontend")
-    parallel_workflow.backend_agent = MockAgent("Backend", "backend")
-    parallel_workflow.database_agent = MockAgent("Database", "database")
-    parallel_workflow.reviewer_agent = MockAgent("Reviewer")
-    parallel_workflow.testing_agent = MockAgent("Testing")
-    parallel_workflow.documentation_agent = MockAgent("Documentation", "documentation")
+def test_nested_directory_creation(tmp_output_dir):
+    manifest = {
+        "frontend/src/components/layout/Navbar/Navbar.jsx": "// Navbar Component",
+        "backend/app/routers/api/v1/auth.py": "# Auth router"
+    }
 
-    orig_healer = parallel_workflow.self_heal_orchestrator
+    target_dir = global_structured_project_builder.write_project_to_disk("NestedApp", manifest, base_dir=str(tmp_output_dir))
 
-    from backend.validation.models import ValidationReport, QualityScore
-    parallel_workflow.validation_orchestrator.execute_validation_pipeline = AsyncMock(return_value=(
-        ValidationReport(
-            timestamp="2026-07-19T13:00:00Z",
-            project_name="HMS-System",
-            results=[],
-            quality=QualityScore(overall_score=95.0, grade="A", ready_for_export=True),
-            summary={}
-        ),
-        True
-    ))
+    assert (target_dir / "frontend" / "src" / "components" / "layout" / "Navbar" / "Navbar.jsx").exists()
+    assert (target_dir / "backend" / "app" / "routers" / "api" / "v1" / "auth.py").exists()
 
-    from backend.graph.reflection_node import reflection_agent
-    reflection_agent.reflect_on_project = AsyncMock(return_value={
-        "strengths": ["Clean structure"],
-        "weaknesses": ["None"],
-        "recommendations": [],
-        "lessons": [],
-        "reflection_score": 95
-    })
 
-    # Save original validation and reflection methods
-    orig_val = parallel_workflow.validation_orchestrator.execute_validation_pipeline
-    orig_ref = reflection_agent.reflect_on_project
+def test_file_writing_to_disk(tmp_output_dir):
+    content = "SELECT * FROM users;"
+    manifest = {"database/schema.sql": content}
 
-    # Mock self-healing to return immediately
-    parallel_workflow.self_heal_orchestrator = AsyncMock()
-    parallel_workflow.self_heal_orchestrator.execute_self_heal_pipeline.return_value = (
-        [], {"passed": 2, "failed": 0}, {"overall": 9.5}, "Mock report content"
+    target_dir = global_structured_project_builder.write_project_to_disk("DBSpec", manifest, base_dir=str(tmp_output_dir))
+
+    sql_file = target_dir / "database" / "schema.sql"
+    assert sql_file.read_text(encoding="utf-8") == content
+
+
+def test_path_traversal_prevention(tmp_output_dir):
+    manifest = {
+        "../../outside.py": "malicious code"
+    }
+
+    with pytest.raises(ValueError, match="Path traversal detected"):
+        global_structured_project_builder.write_project_to_disk("MaliciousApp", manifest, base_dir=str(tmp_output_dir))
+
+
+def test_absolute_path_rejection(tmp_output_dir):
+    manifest = {
+        "/etc/passwd": "malicious"
+    }
+
+    with pytest.raises(ValueError, match="Absolute path rejected"):
+        global_structured_project_builder.write_project_to_disk("AbsPathApp", manifest, base_dir=str(tmp_output_dir))
+
+
+def test_existing_project_builder_compatibility():
+    assembled = global_structured_project_builder.assemble_real_project(
+        project_name="LegacyApp",
+        plan_json={"project_name": "LegacyApp"},
+        arch_json={"components": ["Navbar"]},
+        frontend_code="// Frontend",
+        backend_code="# Backend",
+        database_code="-- DB",
+        testing_code="# Test",
+        docs_code="# Docs"
     )
 
-    project_name = "HMS-System"
-    safe_name = "HMS-System"
-    project_dir = GENERATED_PROJECTS_DIR / safe_name
-    zip_path = GENERATED_PROJECTS_DIR / f"{safe_name}.zip"
-
-    # Clean up
-    if project_dir.exists():
-        shutil.rmtree(project_dir)
-    if zip_path.exists():
-        zip_path.unlink()
-
-    try:
-        client = TestClient(app)
-
-        # Generate Project API
-        response = client.post("/generate-project", json={"prompt": project_name})
-        assert response.status_code == 200
-        data = response.json()
-
-        assert data["success"] is True
-        assert data["project_name"] == project_name
-        assert "location" in data
-
-        # Verify files created on disk
-        assert project_dir.exists()
-        assert zip_path.exists()
-
-        # Download Project ZIP API
-        download_response = client.get(f"/download-project/{project_name}")
-        assert download_response.status_code == 200
-        assert download_response.headers["content-type"] == "application/zip"
-    finally:
-        parallel_workflow.self_heal_orchestrator = orig_healer
-        parallel_workflow.validation_orchestrator.execute_validation_pipeline = orig_val
-        reflection_agent.reflect_on_project = orig_ref
-        # Clean up
-        if project_dir.exists():
-            shutil.rmtree(project_dir)
-        if zip_path.exists():
-            zip_path.unlink()
+    assert assembled["project_name"] == "LegacyApp"
+    assert "manifest" in assembled
+    assert len(assembled["manifest"]) > 0
 
 
-import json
+def test_assembly_manifest_generation():
+    assembled = global_structured_project_builder.assemble_real_project(
+        project_name="ManifestApp",
+        plan_json={},
+        arch_json={},
+        frontend_code="app",
+        backend_code="main",
+        database_code="sql",
+        testing_code="test",
+        docs_code="readme"
+    )
+
+    assert "manifest" in assembled
+    assert "frontend/src/App.jsx" in assembled["manifest"]
+    assert "backend/main.py" in assembled["manifest"]
+
+
+def test_repeated_generation_idempotency(tmp_output_dir):
+    manifest1 = {"main.py": "print('v1')"}
+    manifest2 = {"main.py": "print('v2')"}
+
+    dir1 = global_structured_project_builder.write_project_to_disk("IdempotentApp", manifest1, base_dir=str(tmp_output_dir))
+    assert (dir1 / "main.py").read_text() == "print('v1')"
+
+    dir2 = global_structured_project_builder.write_project_to_disk("IdempotentApp", manifest2, base_dir=str(tmp_output_dir))
+    assert dir1 == dir2
+    assert (dir2 / "main.py").read_text() == "print('v2')"
+
+
+@pytest.mark.anyio
+async def test_planner_architect_builder_integration(tmp_output_dir, monkeypatch):
+    # Integration test simulating Planner -> Architect -> Assembly Node -> Disk Writing
+    spec = ProjectSpec(
+        project_name="E2ETodoApp",
+        frontend="React",
+        backend="FastAPI",
+        database="PostgreSQL"
+    )
+
+    arch = ArchitectureSpec(
+        project_name="E2ETodoApp",
+        components=["TodoList", "Navbar"],
+        routes=["GET /api/todos", "POST /api/todos"],
+        models=["User", "Todo"]
+    )
+
+    state: ProjectState = {
+        "prompt": "Build a Todo application",
+        "project_name": "E2ETodoApp",
+        "project_spec": spec.model_dump(),
+        "architecture": arch.model_dump(),
+        "frontend": "// React Todo Component",
+        "backend": "# FastAPI Todo Backend",
+        "database": "-- PostgreSQL Todo Schema",
+        "tests": "# Pytest Todos",
+        "documentation": "# E2ETodoApp Readme"
+    }
+
+    # Redirect output to tmp_output_dir for clean test isolation
+    orig_write = global_structured_project_builder.write_project_to_disk
+    def mock_write(proj_name, manifest, base_dir="generated_projects"):
+        return orig_write(proj_name, manifest, base_dir=str(tmp_output_dir))
+
+    monkeypatch.setattr(global_structured_project_builder, "write_project_to_disk", mock_write)
+
+    state_update = await assembly_node(state)
+
+    assert "project_path" in state_update
+    assert "files" in state_update
+    assert "assembly_manifest" in state_update
+
+    written_path = Path(state_update["project_path"])
+    assert written_path.exists()
+    assert (written_path / "frontend" / "src" / "App.jsx").exists()
+    assert (written_path / "backend" / "main.py").exists()
+    assert (written_path / "database" / "schema.sql").exists()

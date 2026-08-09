@@ -129,6 +129,18 @@ class RAGPipeline(RetrievalAwareAgentMixin):
         raw_answer = f"According to indexed sources:\n\n" + "\n\n".join(snippets)
         return self.validate_and_format_response(raw_answer, grounding_ctx)
 
+    def get_context_string_for_agent(self, agent_name: str, query: str = "") -> str:
+        """Retrieves and formats RAG context string for a specific agent step."""
+        try:
+            chunks = self.retrieve_context(query or f"Best practices for {agent_name}", top_k=3)
+            if not chunks:
+                return f"[RAG Context for {agent_name}]: No domain documentation indexed."
+            snippets = [f"- {c['source']}: {c['text'][:250]}" for c in chunks]
+            return f"[RAG Context for {agent_name}]:\n" + "\n".join(snippets)
+        except Exception as e:
+            logger.warning(f"get_context_string_for_agent failed safely: {e}")
+            return f"[RAG Context for {agent_name}]: N/A"
+
     def get_stats(self) -> Dict[str, Any]:
         """Returns statistics on ingested sources and chunks."""
         return {
@@ -140,3 +152,4 @@ class RAGPipeline(RetrievalAwareAgentMixin):
 
 # Global RAG Pipeline Instance
 global_rag_pipeline = RAGPipeline()
+

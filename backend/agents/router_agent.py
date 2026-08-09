@@ -218,19 +218,19 @@ class RouterAgent:
             "build a complete", "generate full project", "generate a full",
             "create frontend, backend and database", "build a food delivery app",
             "food delivery app", "netflix clone", "spotify clone", "instagram clone",
-            "ecommerce application", "ecommerce website", "expense tracker using react", "build a full"
+            "ecommerce application", "ecommerce website", "expense tracker using react", "build a full",
+            "todo list app", "todo app", "todo application", "task tracker", "task manager", "blog api", "auth dashboard"
         ]
         has_proj_phrase = any(phrase in p_lower for phrase in proj_phrases)
 
         proj_verbs = ["build", "create", "develop", "generate", "construct"]
-        proj_nouns = ["application", "app", "website", "platform", "system", "clone", "saas", "crm", "ecommerce", "e-commerce", "tracker", "store"]
+        proj_nouns = ["application", "app", "website", "platform", "system", "clone", "saas", "crm", "ecommerce", "e-commerce", "tracker", "store", "api"]
         has_proj_verb = any(v in p_lower for v in proj_verbs)
         has_proj_noun = any(n in p_lower for n in proj_nouns)
-        has_fullstack = any(fs in p_lower for fs in ["complete", "full", "fullstack", "full stack", "react and fastapi", "react, fastapi", "fastapi and react", "frontend, backend"])
 
         is_explanation_phrase = any(exp in p_lower for exp in ["explain how", "explain why", "how does", "what is"])
 
-        if (has_proj_phrase or (has_proj_verb and has_proj_noun and (has_fullstack or "clone" in p_lower or "food delivery app" in p_lower))) and not is_explanation_phrase:
+        if (has_proj_phrase or (has_proj_verb and has_proj_noun)) and not is_explanation_phrase:
             return self._format_result(
                 intent=Intent.PROJECT_GENERATION,
                 confidence=0.98,
@@ -239,6 +239,7 @@ class RouterAgent:
                 original_prompt=original_prompt,
                 normalized_prompt=p_lower
             )
+
 
         # 5. General Knowledge QA -> GENERAL_QA
         general_qa_triggers = [

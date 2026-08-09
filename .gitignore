@@ -16,3 +16,9 @@ workspace_test_env/
 logs/*.log
 backend/logs/*.log
 .worktrees/
+backend/vector_store/
+backend/memory/vector_store.json
+v2/logs/
+*.log
+
+
