@@ -1,9 +1,10 @@
 import logging
 import json
 import re
+import contextvars
 from time import perf_counter
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Callable, Dict, List, Optional
 
 from langgraph.graph import StateGraph, END
 
@@ -45,6 +46,38 @@ from backend.agents.debug_agent import global_debug_agent
 
 _logger = logging.getLogger("aiforge.performance")
 
+# ---------------------------------------------------------------------------
+# ContextVar: generation lifecycle callback
+# ---------------------------------------------------------------------------
+# GenerationManager sets this ContextVar on its asyncio.Task before calling
+# parallel_graph.ainvoke(). Every node calls _fire_lifecycle() which reads the
+# ContextVar and, if set, notifies the manager about agent start/complete/fail.
+# Zero impact on nodes that run without a callback (CLI, tests, etc.).
+generation_event_callback_var: contextvars.ContextVar[Optional[Callable]] = (
+    contextvars.ContextVar("generation_event_callback_var", default=None)
+)
+
+
+def _fire_lifecycle(
+    event_type: str,
+    agent_name: str,
+    *,
+    duration: float = 0.0,
+    error: str = "",
+) -> None:
+    """
+    Invoke the registered generation lifecycle callback (if any).
+    Safe to call from any node — silently no-ops if no callback is set.
+    """
+    cb = generation_event_callback_var.get()
+    if cb is None:
+        return
+    try:
+        cb(event_type, agent_name, duration=duration, error=error)
+    except Exception as exc:  # noqa: BLE001
+        _logger.warning("_fire_lifecycle error [%s/%s]: %s", event_type, agent_name, exc)
+
+
 # Instantiate all Platform Agents
 planner = PlannerAgent()
 architect = ArchitectAgent()
@@ -77,9 +110,11 @@ async def planner_node(state: ProjectState) -> dict:
 
     prompt = state.get("user_prompt") or state.get("prompt", "")
     _logger.info(f"✔ [1/14] Planner started: {prompt[:40]}...")
+    _fire_lifecycle("agent_started", "planner")
 
     cached_plan = global_cache_service.get("planner", prompt)
     if cached_plan:
+        _fire_lifecycle("agent_completed", "planner", duration=0.0)
         return {
             "prompt": prompt,
             "user_prompt": prompt,
@@ -97,6 +132,7 @@ async def planner_node(state: ProjectState) -> dict:
     memory_manager.save_agent_output(session_id, "planner", plan_json)
     agent_timers["planner"] = timer.elapsed
     workflow_profiler.record_agent_time("planner", timer.elapsed)
+    _fire_lifecycle("agent_completed", "planner", duration=timer.elapsed)
 
     return {
         "prompt": prompt,
@@ -114,12 +150,14 @@ async def planner_node(state: ProjectState) -> dict:
 
 async def architect_node(state: ProjectState) -> dict:
     _logger.info("✔ [2/14] Architect started")
+    _fire_lifecycle("agent_started", "architect")
     session_id = state.get("session_id", "default")
     plan_json = state.get("plan") or memory_manager.get_agent_output(session_id, "planner")
 
     cached_arch = global_cache_service.get("architect", plan_json)
     if cached_arch:
         memory_manager.save_agent_output(session_id, "architect", cached_arch)
+        _fire_lifecycle("agent_completed", "architect", duration=0.0)
         return {
             "architecture": cached_arch,
             "current_step": "architect",
@@ -135,6 +173,7 @@ async def architect_node(state: ProjectState) -> dict:
     memory_manager.save_agent_output(session_id, "architect", arch_json)
     agent_timers["architect"] = timer.elapsed
     workflow_profiler.record_agent_time("architect", timer.elapsed)
+    _fire_lifecycle("agent_completed", "architect", duration=timer.elapsed)
 
     return {
         "architecture": arch_json,
@@ -145,12 +184,14 @@ async def architect_node(state: ProjectState) -> dict:
 
 async def frontend_node(state: ProjectState) -> dict:
     _logger.info("✔ [3a/14] Frontend generating...")
+    _fire_lifecycle("agent_started", "frontend")
     session_id = state.get("session_id", "default")
     arch_json = state.get("architecture") or memory_manager.get_agent_output(session_id, "architect")
 
     cached_fe = global_cache_service.get("frontend", arch_json)
     if cached_fe:
         memory_manager.save_agent_output(session_id, "frontend", cached_fe)
+        _fire_lifecycle("agent_completed", "frontend", duration=0.0)
         return {
             "frontend": cached_fe,
             "current_step": "frontend",
@@ -165,6 +206,7 @@ async def frontend_node(state: ProjectState) -> dict:
     memory_manager.save_agent_output(session_id, "frontend", frontend_code)
     agent_timers["frontend"] = timer.elapsed
     workflow_profiler.record_agent_time("frontend", timer.elapsed)
+    _fire_lifecycle("agent_completed", "frontend", duration=timer.elapsed)
 
     return {
         "frontend": frontend_code,
@@ -175,6 +217,7 @@ async def frontend_node(state: ProjectState) -> dict:
 
 async def backend_node(state: ProjectState) -> dict:
     _logger.info("✔ [3b/14] Backend generating...")
+    _fire_lifecycle("agent_started", "backend")
     session_id = state.get("session_id", "default")
     arch_json = state.get("architecture") or memory_manager.get_agent_output(session_id, "architect")
 
@@ -195,6 +238,7 @@ async def backend_node(state: ProjectState) -> dict:
     memory_manager.save_agent_output(session_id, "backend", backend_code)
     agent_timers["backend"] = timer.elapsed
     workflow_profiler.record_agent_time("backend", timer.elapsed)
+    _fire_lifecycle("agent_completed", "backend", duration=timer.elapsed)
 
     return {
         "backend": backend_code,
@@ -205,6 +249,7 @@ async def backend_node(state: ProjectState) -> dict:
 
 async def database_node(state: ProjectState) -> dict:
     _logger.info("✔ [3c/14] Database generating...")
+    _fire_lifecycle("agent_started", "database")
     session_id = state.get("session_id", "default")
     arch_json = state.get("architecture") or memory_manager.get_agent_output(session_id, "architect")
 
@@ -225,6 +270,7 @@ async def database_node(state: ProjectState) -> dict:
     memory_manager.save_agent_output(session_id, "database", database_code)
     agent_timers["database"] = timer.elapsed
     workflow_profiler.record_agent_time("database", timer.elapsed)
+    _fire_lifecycle("agent_completed", "database", duration=timer.elapsed)
 
     return {
         "database": database_code,
@@ -235,6 +281,7 @@ async def database_node(state: ProjectState) -> dict:
 
 async def assembly_node(state: ProjectState) -> dict:
     _logger.info("✔ Project Assembly fan-in completed")
+    _fire_lifecycle("agent_started", "assembly")
     plan_json = state.get("plan", {})
     arch_json = state.get("architecture", {})
     proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
@@ -254,6 +301,7 @@ async def assembly_node(state: ProjectState) -> dict:
     files_manifest = assembled.get("manifest", {})
     written_path = global_structured_project_builder.write_project_to_disk(proj_name, files_manifest)
 
+    _fire_lifecycle("agent_completed", "assembly")
     return {
         "project_path": str(written_path),
         "files": files_manifest,
@@ -271,6 +319,7 @@ async def assembly_node(state: ProjectState) -> dict:
 
 async def reviewer_node(state: ProjectState) -> dict:
     _logger.info("✔ [4/14] Reviewer running...")
+    _fire_lifecycle("agent_started", "reviewer")
     duplicate_report = state.get("duplicate_report", {}) or {}
     rev_prompt = global_prompt_builder.build_reviewer_prompt(
         frontend_code=str(state.get("frontend", "")),
@@ -295,6 +344,7 @@ async def reviewer_node(state: ProjectState) -> dict:
     score -= review_output.count("[Minor]") * 2
     score = max(0.0, min(100.0, score))
 
+    _fire_lifecycle("agent_completed", "reviewer", duration=timer.elapsed)
     return {
         "review": {"review_text": review_output, "score": round(score, 1)},
         "current_step": "reviewer",
@@ -324,6 +374,7 @@ def _count_tests_by_section(raw_text: str) -> Dict[str, int]:
 
 async def testing_node(state: ProjectState) -> dict:
     _logger.info("✔ [5/14] Testing Agent generating test suites...")
+    _fire_lifecycle("agent_started", "testing")
     testing_prompt = global_prompt_builder.build_testing_prompt(
         backend_code=str(state.get("backend", "")),
         frontend_code=str(state.get("frontend", "")),
@@ -364,6 +415,7 @@ async def testing_node(state: ProjectState) -> dict:
         architecture=architecture if isinstance(architecture, dict) else {}
     )
 
+    _fire_lifecycle("agent_completed", "testing", duration=timer.elapsed)
     return {
         "tests": raw_tests,
         "test_results": test_res.model_dump(),
@@ -380,6 +432,7 @@ testing_node.__test__ = False
 
 async def documentation_node(state: ProjectState) -> dict:
     _logger.info("✔ [6/14] Documentation Agent generating README...")
+    _fire_lifecycle("agent_started", "documentation")
     plan_json = state.get("plan", {})
     proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
 
@@ -389,6 +442,7 @@ async def documentation_node(state: ProjectState) -> dict:
     agent_timers["documentation"] = timer.elapsed
     workflow_profiler.record_agent_time("documentation", timer.elapsed)
 
+    _fire_lifecycle("agent_completed", "documentation", duration=timer.elapsed)
     return {
         "documentation": docs_code,
         "current_step": "documentation",
@@ -398,6 +452,7 @@ async def documentation_node(state: ProjectState) -> dict:
 
 async def build_validation_node(state: ProjectState) -> dict:
     _logger.info("✔ [7/14] Build Validation Agent executing checks...")
+    _fire_lifecycle("agent_started", "build_validation")
 
     fe_files = {"App.jsx": str(state.get("frontend", ""))}
     be_files = {"main.py": str(state.get("backend", ""))}
@@ -409,6 +464,7 @@ async def build_validation_node(state: ProjectState) -> dict:
 
     agent_timers["build_validation"] = timer.elapsed
 
+    _fire_lifecycle("agent_completed", "build_validation", duration=timer.elapsed)
     return {
         "validation_report": val_report.dict(),
         "current_step": "build_validation",
@@ -418,6 +474,7 @@ async def build_validation_node(state: ProjectState) -> dict:
 
 async def dependency_manager_node(state: ProjectState) -> dict:
     _logger.info("✔ [8/14] Dependency Manager Agent building package manifests...")
+    _fire_lifecycle("agent_started", "dependency_manager")
     plan_json = state.get("plan", {})
     proj_name = plan_json.get("project_name", "aiforge-app") if isinstance(plan_json, dict) else "aiforge-app"
 
@@ -429,6 +486,7 @@ async def dependency_manager_node(state: ProjectState) -> dict:
 
     agent_timers["dependency_manager"] = timer.elapsed
 
+    _fire_lifecycle("agent_completed", "dependency_manager", duration=timer.elapsed)
     return {
         "deployment_files": deps_files,
         "current_step": "dependency_manager",
@@ -438,6 +496,7 @@ async def dependency_manager_node(state: ProjectState) -> dict:
 
 async def security_scan_node(state: ProjectState) -> dict:
     _logger.info("✔ [9/14] Security Agent scanning codebase...")
+    _fire_lifecycle("agent_started", "security_scan")
     all_files = {
         "frontend/App.jsx": str(state.get("frontend", "")),
         "backend/main.py": str(state.get("backend", "")),
@@ -450,6 +509,7 @@ async def security_scan_node(state: ProjectState) -> dict:
 
     agent_timers["security_scan"] = timer.elapsed
 
+    _fire_lifecycle("agent_completed", "security_scan", duration=timer.elapsed)
     return {
         "security_report": sec_md,
         "current_step": "security_scan",
@@ -459,6 +519,7 @@ async def security_scan_node(state: ProjectState) -> dict:
 
 async def performance_node(state: ProjectState) -> dict:
     _logger.info("✔ [10/14] Performance Agent profiling generation metrics...")
+    _fire_lifecycle("agent_started", "performance")
     total_time = sum(agent_timers.values())
 
     with Timer() as timer:
@@ -467,6 +528,7 @@ async def performance_node(state: ProjectState) -> dict:
 
     agent_timers["performance"] = timer.elapsed
 
+    _fire_lifecycle("agent_completed", "performance", duration=timer.elapsed)
     return {
         "performance_report": perf_md,
         "current_step": "performance",
@@ -476,6 +538,7 @@ async def performance_node(state: ProjectState) -> dict:
 
 async def execution_validation_node(state: ProjectState) -> dict:
     _logger.info("✔ [11/14] Project Execution Agent verifying runtime startup...")
+    _fire_lifecycle("agent_started", "execution_validation")
     project_path = state.get("project_path", "")
     existing_commands = state.get("commands", []) or []
 
@@ -487,6 +550,7 @@ async def execution_validation_node(state: ProjectState) -> dict:
     cmd_str = exec_dict.get("command", "compileall")
     new_status = "PASS" if exec_res.exit_code == 0 else "FAIL"
 
+    _fire_lifecycle("agent_completed", "execution_validation", duration=timer.elapsed)
     return {
         "execution_results": exec_dict,
         "commands": existing_commands + [cmd_str],
@@ -504,6 +568,7 @@ from backend.execution.models import MemoryRecord
 
 async def debug_node(state: ProjectState) -> dict:
     _logger.info("✔ [12/14] DebugAgent analyzing failure evidence...")
+    _fire_lifecycle("agent_started", "debug")
     iteration = state.get("iteration", 0) + 1
     max_iterations = state.get("max_iterations", 3)
 
@@ -528,6 +593,7 @@ async def debug_node(state: ProjectState) -> dict:
     except Exception as e:
         _logger.warning(f"Memory store failed safely in debug_node: {e}")
 
+    _fire_lifecycle("agent_completed", "debug")
     return {
         "iteration": iteration,
         "max_iterations": max_iterations,
@@ -541,11 +607,13 @@ async def debug_node(state: ProjectState) -> dict:
 
 async def patch_node(state: ProjectState) -> dict:
     _logger.info("✔ Applying targeted patch to generated project on disk...")
+    _fire_lifecycle("agent_started", "patch")
     fixes = state.get("fixes", []) or []
     files_map = dict(state.get("files", {}) or {})
     proj_path_str = state.get("project_path", "")
 
     if not fixes or not proj_path_str:
+        _fire_lifecycle("agent_completed", "patch")
         return {"current_step": "patch"}
 
     latest_fix = fixes[-1]
@@ -575,6 +643,7 @@ async def patch_node(state: ProjectState) -> dict:
         files_map[clean_rel] = new_content
         modified_files.append(clean_rel)
 
+    _fire_lifecycle("agent_completed", "patch")
     return {
         "files": files_map,
         "file_backups": file_backups,
@@ -647,6 +716,7 @@ def route_after_testing(state: ProjectState) -> str:
 
 async def packaging_node(state: ProjectState) -> dict:
     _logger.info("✔ [13/14] Project Packaging Agent assembling export bundle...")
+    _fire_lifecycle("agent_started", "packaging")
     plan_json = state.get("plan", {})
     arch_json = state.get("architecture", {})
     proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
@@ -656,6 +726,7 @@ async def packaging_node(state: ProjectState) -> dict:
         api_md = packaging_agent.generate_api_docs_md(proj_name)
 
     agent_timers["packaging"] = timer.elapsed
+    _fire_lifecycle("agent_completed", "packaging", duration=timer.elapsed)
 
     return {
         "architecture_report": arch_md,
@@ -667,6 +738,7 @@ async def packaging_node(state: ProjectState) -> dict:
 
 async def deployment_node(state: ProjectState) -> dict:
     _logger.info("✔ [14/14] Deployment Agent generating cloud manifests...")
+    _fire_lifecycle("agent_started", "deployment")
     updated_state = await deployment_agent.run_async(dict(state))
 
     # Also run final project path assembly
@@ -677,6 +749,7 @@ async def deployment_node(state: ProjectState) -> dict:
     project_dir, report = project_generator.generate_project_structure(project_name, state)
     report_dict = report.dict() if hasattr(report, "dict") else (report.to_dict() if hasattr(report, "to_dict") else str(report))
 
+    _fire_lifecycle("agent_completed", "deployment")
     return {
         "project_path": str(project_dir),
         "validation_report": report_dict,
