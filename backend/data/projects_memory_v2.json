@@ -12,7 +12,7 @@
         "source_agent": "planner",
         "importance": "MEDIUM",
         "created_at": "2026-08-09T08:27:56.409864+00:00",
-        "updated_at": "2026-08-09T08:29:11.442361+00:00"
+        "updated_at": "2026-08-09T08:34:50.130488+00:00"
       }
     },
     "decisions": {
@@ -45,12 +45,22 @@
         "agent": "architect",
         "timestamp": "2026-08-09T08:29:11.443224+00:00",
         "importance": "HIGH"
+      },
+      "dec_v8FL6rUdBwQ": {
+        "id": "dec_v8FL6rUdBwQ",
+        "project_id": "proj_api",
+        "generation_id": null,
+        "decision": "Use FastAPI",
+        "reason": "High async performance",
+        "agent": "architect",
+        "timestamp": "2026-08-09T08:34:50.131004+00:00",
+        "importance": "HIGH"
       }
     },
     "meta": {
       "project_id": "proj_api",
       "created_at": "2026-08-09T08:27:56.409835+00:00",
-      "updated_at": "2026-08-09T08:29:11.443224+00:00"
+      "updated_at": "2026-08-09T08:34:50.131004+00:00"
     }
   }
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ProjectActivity from '../components/dashboard/ProjectActivity';
 import ProjectVersions from '../components/dashboard/ProjectVersions';
 import ProjectMemoryDashboard from '../components/memory/ProjectMemoryDashboard';
+import RAGKnowledgeDashboard from '../components/rag/RAGKnowledgeDashboard';
 import { fetchProjectDetails } from '../services/projects';
 import { FaArrowLeft, FaCheckCircle, FaCode, FaShieldAlt, FaRocket, FaSpinner } from 'react-icons/fa';
 
@@ -129,6 +130,9 @@ export default function ProjectDetails({ generationId = 'aiforge-fooddelivery-ai
 
         {/* Project Memory & Decisions Dashboard */}
         <ProjectMemoryDashboard projectId={generationId} />
+
+        {/* Project RAG Knowledge Engine */}
+        <RAGKnowledgeDashboard projectId={generationId} />
       </div>
     </div>
   );

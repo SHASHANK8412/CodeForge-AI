@@ -38,7 +38,8 @@ class HybridRetriever:
         self,
         query: str,
         decision: RetrievalDecision,
-        top_k: int = 20
+        top_k: int = 20,
+        project_id: str = "default_project"
     ) -> List[RetrievalCandidate]:
         if not decision.required or not decision.domains:
             return []
@@ -46,16 +47,42 @@ class HybridRetriever:
         # 1. Check Deterministic Fast-Paths
         fast_path_candidates = self._check_fast_paths(query, decision)
         if fast_path_candidates:
-            logger.info(f"HybridRetriever: Resolved query via Fast-Path ({len(fast_path_candidates)} candidate(s))")
-            return fast_path_candidates
+            # Filter by project_id
+            filtered_fast = [c for c in fast_path_candidates if c.project_id == project_id or c.metadata.get("project_id") == project_id]
+            if filtered_fast:
+                logger.info(f"HybridRetriever: Resolved query via Fast-Path ({len(filtered_fast)} candidate(s))")
+                return filtered_fast
+
+        all_chunks = [
+            c for c in self.ingestion_pipeline.chunks.values()
+            if getattr(c, "project_id", "default_project") == project_id or c.metadata.get("project_id") == project_id
+        ]
 
         all_candidates: List[RetrievalCandidate] = []
-        all_chunks = list(self.ingestion_pipeline.chunks.values())
+
+        # Also pull from vector_store items matching project_id
+        from backend.rag.vector_store import global_vector_store
+        vec_items = global_vector_store.search(
+            query_embedding=self.embedding_service.embed_query(query),
+            project_id=project_id,
+            top_k=top_k
+        )
+        for item in vec_items:
+            all_candidates.append(RetrievalCandidate(
+                chunk_id=item["id"],
+                source_id=item.get("metadata", {}).get("source", item["id"]),
+                project_id=project_id,
+                domain=RetrievalDomain.DOCUMENT,
+                score=item["score"],
+                retrieval_method="vector",
+                text=item["text"],
+                metadata=item["metadata"]
+            ))
 
         domain_chunks = all_chunks
 
-        if not domain_chunks:
-            logger.info("HybridRetriever: No ingested chunks available for search.")
+        if not domain_chunks and not all_candidates:
+            logger.info(f"HybridRetriever: No ingested chunks available for project '{project_id}'.")
             return []
 
         # 2. Channel 1: Vector Search (Semantic)

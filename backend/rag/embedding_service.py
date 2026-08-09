@@ -2,12 +2,15 @@
 AIForge V2 — Day 13 Centralized Embedding Service
 Handles text-to-vector embeddings with batching, hash caching, and fallback support.
 """
+import os
 import math
 import hashlib
 import logging
 from typing import List, Dict, Any, Optional
 
 logger = logging.getLogger("aiforge.rag.embedding_service")
+
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
 
 
 def cosine_similarity(v1: List[float], v2: List[float]) -> float:
@@ -30,7 +33,7 @@ class EmbeddingService:
     """
 
     DIMENSION = 384
-    MODEL_NAME = "all-MiniLM-L6-v2"
+    MODEL_NAME = EMBEDDING_MODEL
     MODEL_VERSION = "v1.0"
 
     def __init__(self, model_name: str = MODEL_NAME):
@@ -38,8 +41,17 @@ class EmbeddingService:
         self._st_model = None
         self._cache: Dict[str, List[float]] = {}
 
-        # Fast, deterministic 384-dimensional dense vector generator for ultra-fast local RAG
-        self._st_model = None
+    def embed_document(self, text: str, content_hash: Optional[str] = None) -> List[float]:
+        """Generates or retrieves vector embedding for a document chunk."""
+        return self.get_embedding(text, content_hash=content_hash)
+
+    def embed_query(self, query: str) -> List[float]:
+        """Generates vector embedding for a search query string."""
+        return self.get_embedding(query)
+
+    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+        """Generates embeddings for a batch of text strings."""
+        return [self.embed_document(t) for t in texts]
 
     def get_embedding(self, text: str, content_hash: Optional[str] = None) -> List[float]:
         """Generates or retrieves cached vector embedding for text."""
@@ -78,8 +90,7 @@ class EmbeddingService:
         return vector
 
     def get_batch_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """Generates embeddings for a batch of text strings."""
-        return [self.get_embedding(t) for t in texts]
+        return self.embed_batch(texts)
 
     def clear_cache(self) -> None:
         """Clears in-memory embedding cache."""
