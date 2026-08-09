@@ -204,6 +204,9 @@ def register_routers() -> None:
     from backend.security.routes import security_router
     app.include_router(security_router)
 
+    from backend.dna.routes import dna_router as day15_dna_router
+    app.include_router(day15_dna_router)
+
     from backend.routes.deployment_routes import router as day33_cicd_router
     app.include_router(day33_cicd_router)
 
