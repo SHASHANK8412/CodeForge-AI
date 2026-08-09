@@ -140,7 +140,21 @@ export function isTerminalStatus(status) {
  *
  * @returns {{ disconnect: () => void }}
  */
-export const subscribeToGenerationEvents = connectGenerationStream;
+export function subscribeToGenerationEvents(generationId, callbacksOrOnEvent, onError) {
+  const cb = (typeof callbacksOrOnEvent === 'object' && callbacksOrOnEvent !== null)
+    ? callbacksOrOnEvent
+    : { onEvent: callbacksOrOnEvent, onError };
+
+  const handle = connectGenerationStream(generationId, cb);
+
+  const unsubscribeFn = () => {
+    if (handle && typeof handle.disconnect === 'function') {
+      handle.disconnect();
+    }
+  };
+  unsubscribeFn.disconnect = unsubscribeFn;
+  return unsubscribeFn;
+}
 
 export function connectGenerationStream(generationId, callbacks = {}) {
   const {

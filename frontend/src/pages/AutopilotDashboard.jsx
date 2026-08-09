@@ -51,7 +51,10 @@ export default function AutopilotDashboard({ generationId = 'aiforge-demo', setV
 
     return () => {
       clearInterval(interval);
-      if (unsubscribeSSE) unsubscribeSSE();
+      if (unsubscribeSSE) {
+        if (typeof unsubscribeSSE === 'function') unsubscribeSSE();
+        else if (typeof unsubscribeSSE.disconnect === 'function') unsubscribeSSE.disconnect();
+      }
     };
   }, [activeGenId]);
 
