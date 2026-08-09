@@ -1,84 +1,86 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
-export async function submitProjectGeneration(payload) {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/api/generate`, payload, {
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 60000
-    });
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 15000,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+});
 
-    if (response.data && response.data.success) {
-      return {
-        success: true,
-        generation_id: response.data.generation_id || `aiforge-${Date.now()}`,
-        data: response.data
-      };
-    } else if (response.data) {
-      return {
-        success: true,
-        generation_id: response.data.generation_id || `aiforge-${Date.now()}`,
-        data: response.data
-      };
-    } else {
-      throw new Error('Empty response received from AIForge engine.');
+// Request Interceptor: Attach JWT Token if available
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('aiforge_jwt');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
-  } catch (error) {
-    console.error('API Error during project generation:', error);
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-    let message = 'AIForge could not start the project generation.';
-    if (error.code === 'ECONNABORTED') {
-      message = 'Generation request timed out while waiting for server response.';
-    } else if (error.response) {
-      message = error.response.data?.detail || `Server returned HTTP ${error.response.status}.`;
-    } else if (error.request) {
-      message = 'Backend server is currently unavailable. Please verify FastAPI server is running on port 8000.';
+// Response Interceptor: Consistent Error Formatting & 401 Session Expiration
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || error.response?.data?.message;
+
+    let errorMessage = 'An unexpected error occurred. Please try again.';
+
+    if (status === 401) {
+      errorMessage = 'Session expired. Please sign in again.';
+      localStorage.removeItem('aiforge_jwt');
+      window.dispatchEvent(new CustomEvent('aiforge:unauthorized'));
+    } else if (status === 403) {
+      errorMessage = 'Access denied. You do not have permission for this project.';
+    } else if (status === 404) {
+      errorMessage = 'The requested project or resource was not found.';
+    } else if (status === 422) {
+      errorMessage = 'Invalid input parameters.';
+    } else if (status >= 500) {
+      errorMessage = 'Server error. The AIForge service encountered an issue.';
+    } else if (detail) {
+      errorMessage = typeof detail === 'string' ? detail : JSON.stringify(detail);
     } else if (error.message) {
-      message = error.message;
+      errorMessage = error.message;
     }
 
-    return {
+    return Promise.reject({
       success: false,
-      error: message
-    };
+      status: status || 500,
+      error: errorMessage,
+      raw: error
+    });
   }
-}
+);
 
-export async function enhancePromptApi(description) {
-  if (!description || description.trim().length === 0) {
-    return 'Build a full-stack food delivery application. Users can log in, browse menus, add items to cart, place orders with real-time tracking, and restaurant admins can manage inventory and orders.';
+export const api = {
+  get: async (url, config = {}) => {
+    const res = await apiClient.get(url, config);
+    return res.data;
+  },
+  post: async (url, data = {}, config = {}) => {
+    const res = await apiClient.post(url, data, config);
+    return res.data;
+  },
+  put: async (url, data = {}, config = {}) => {
+    const res = await apiClient.put(url, data, config);
+    return res.data;
+  },
+  patch: async (url, data = {}, config = {}) => {
+    const res = await apiClient.patch(url, data, config);
+    return res.data;
+  },
+  delete: async (url, config = {}) => {
+    const res = await apiClient.delete(url, config);
+    return res.data;
   }
+};
 
-  try {
-    const response = await axios.post(`${API_BASE_URL}/chat/message`, {
-      message: `Enhance and expand this project prompt with detailed user roles, core features, REST API requirements, and database entities into a clean specification:\n\n${description}`
-    }, { timeout: 15000 });
-
-    if (response.data && response.data.response) {
-      return response.data.response;
-    }
-  } catch (err) {
-    console.warn('Enhance prompt endpoint fallback:', err);
-  }
-
-  // Smart fallback enhancement if LLM endpoint is slow
-  return `${description.trim()}\n\nDetailed Architectural Requirements:\n- User Authentication: Secure JWT token auth & role-based access control.\n- Core Features: Interactive CRUD dashboards, search filtering, and state persistence.\n- REST API: FastAPI endpoint architecture with Pydantic validation schemas.\n- Database & Testing: Relational schema design with automated unit test suites.`;
-}
-
-export async function sendMessage(message, sessionId = "default") {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/chat/message`, {
-      message,
-      session_id: sessionId
-    }, { timeout: 30000 });
-    return response.data;
-  } catch (error) {
-    console.error("sendMessage error:", error);
-    return {
-      response: `[Error]: Could not communicate with backend engine. ${error.message || ""}`,
-      intent: "general_qa",
-      agent: "QA_Agent"
-    };
-  }
-}
+export default api;

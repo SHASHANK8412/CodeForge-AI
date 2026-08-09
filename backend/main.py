@@ -43,11 +43,14 @@ from backend.routes.project import router as project_router
 from backend.dashboard.monitoring_dashboard import router as monitoring_router
 from backend.dashboard.learning_dashboard import router as learning_router
 from backend.dashboard.evolution_dashboard import router as evolution_router
+from backend.auth.routes import router as auth_router
 app = FastAPI(
     title="AIForge API",
     description="Multi-Agent AI Software Engineer Backend",
     version="1.0.0"
 )
+app.include_router(auth_router)
+
 
 from fastapi.middleware.gzip import GZipMiddleware
 
@@ -234,13 +237,23 @@ def home():
     }
 
 
+import os
+
 @app.get("/health")
+@app.get("/api/health")
 def health():
+    ai_mode = os.environ.get("AI_MODE", "local")
     return {
         "status": "healthy",
-        "database": "connected",
-        "cache": "active"
+        "ai_mode": ai_mode,
+        "services": {
+            "database": "healthy",
+            "ollama": "healthy",
+            "langgraph": "healthy",
+            "cache": "healthy"
+        }
     }
+
 
 
 @app.get("/metrics")

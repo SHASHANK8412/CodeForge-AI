@@ -16,8 +16,16 @@ import CodeWorkspace from "./pages/CodeWorkspace";
 import QualityCenter from "./pages/QualityCenter";
 import DeploymentCenter from "./pages/DeploymentCenter";
 import ProjectDetails from "./pages/ProjectDetails";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import Settings from "./pages/Settings";
+import ApiKeys from "./pages/ApiKeys";
+import { AuthProvider } from "./auth/AuthProvider";
+import ProtectedRoute from "./auth/ProtectedRoute";
 
-function App() {
+function AppContent() {
     const [view, setView] = useState("landing");
     const [activeProjectName, setActiveProjectName] = useState("");
     const [activeGenerationId, setActiveGenerationId] = useState("aiforge-demo");
@@ -42,6 +50,12 @@ function App() {
         setView("build");
     };
 
+    // Public auth pages without main layout sidebar
+    if (view === "login") return <Login setView={setView} />;
+    if (view === "register") return <Register setView={setView} />;
+    if (view === "forgot-password") return <ForgotPassword setView={setView} />;
+    if (view === "reset-password") return <ResetPassword setView={setView} />;
+
     return (
         <MainLayout>
             {/* Unified Sidebar managing the active view */}
@@ -50,11 +64,55 @@ function App() {
             {/* Active Workspace Panel */}
             <div className="flex-1 flex flex-col min-w-0 bg-[#0B0F19] overflow-y-auto">
                 {view === "landing" && <LandingPage setView={setView} />}
-                {view === "create" && <CreateProject setView={setView} onGenerateSuccess={handleGenerateSuccess} />}
-                {view === "build" && <GenerationDashboard generationId={activeGenerationId} setView={setView} setActiveProjectName={setActiveProjectName} />}
-                {view === "code" && <CodeWorkspace generationId={activeGenerationId} setView={setView} />}
-                {view === "dashboard" && <Dashboard setView={setView} setActiveProjectName={setActiveProjectName} setActiveGenerationId={setActiveGenerationId} />}
-                {view === "project-details" && <ProjectDetails generationId={activeGenerationId} setView={setView} />}
+                
+                {/* Protected Routes */}
+                {view === "create" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <CreateProject setView={setView} onGenerateSuccess={handleGenerateSuccess} />
+                    </ProtectedRoute>
+                )}
+                {view === "build" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <GenerationDashboard generationId={activeGenerationId} setView={setView} setActiveProjectName={setActiveProjectName} />
+                    </ProtectedRoute>
+                )}
+                {view === "code" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <CodeWorkspace generationId={activeGenerationId} setView={setView} />
+                    </ProtectedRoute>
+                )}
+                {view === "dashboard" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <Dashboard setView={setView} setActiveProjectName={setActiveProjectName} setActiveGenerationId={setActiveGenerationId} />
+                    </ProtectedRoute>
+                )}
+                {view === "project-details" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <ProjectDetails generationId={activeGenerationId} setView={setView} />
+                    </ProtectedRoute>
+                )}
+                {view === "metrics" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <QualityCenter generationId={activeGenerationId} setView={setView} />
+                    </ProtectedRoute>
+                )}
+                {(view === "plugins" || view === "deploy") && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <DeploymentCenter generationId={activeGenerationId} setView={setView} />
+                    </ProtectedRoute>
+                )}
+                {view === "settings" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <Settings setView={setView} />
+                    </ProtectedRoute>
+                )}
+                {view === "api-keys" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <ApiKeys />
+                    </ProtectedRoute>
+                )}
+
+                {/* Additional views */}
                 {view === "chat" && <ChatBox />}
                 {view === "project" && (
                     <ProjectGenerator 
@@ -66,8 +124,6 @@ function App() {
                     />
                 )}
                 {view === "reflection" && <ReflectionDashboard />}
-                {view === "metrics" && <QualityCenter generationId={activeGenerationId} setView={setView} />}
-                {(view === "plugins" || view === "deploy") && <DeploymentCenter generationId={activeGenerationId} setView={setView} />}
                 {view === "learning" && <LearningDashboard />}
                 {view === "f1" && <F1Website />}
             </div>
@@ -75,11 +131,14 @@ function App() {
     );
 }
 
-
-
-
-
-
+function App() {
+    return (
+        <AuthProvider>
+            <AppContent />
+        </AuthProvider>
+    );
+}
 
 export default App;
+
 
