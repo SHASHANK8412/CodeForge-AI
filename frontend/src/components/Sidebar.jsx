@@ -220,100 +220,105 @@ function Sidebar({ currentView, setView }) {
                 </button>
             </div>
 
-            {/* Navigation Tabs */}
-            <div className="flex-1 min-h-0 overflow-y-auto p-3 border-b border-gray-800 space-y-1 custom-scrollbar">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.key}
-                        onClick={() => setView(tab.key)}
-                        className={`w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
-                            currentView === tab.key
-                                ? "bg-gray-800 text-white font-semibold shadow-inner border border-gray-700/50"
-                                : "text-gray-400 hover:text-white hover:bg-gray-800/40"
-                        }`}
-                    >
-                        <span className={currentView === tab.key ? "text-[#6366F1]" : ""}>
-                            {tab.icon}
-                        </span>
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
-
-            {/* Search and History */}
-            <div className="h-44 shrink-0 flex flex-col p-3 border-t border-gray-800/60">
-                <div className="relative mb-3">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 text-gray-500 pointer-events-none">
-                        <FaSearch size={11} />
+            {/* Single Unified Scrollable Body */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-4 custom-scrollbar">
+                {/* Navigation Tabs */}
+                <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider px-2 block mb-1">
+                        Workspace Navigation
                     </span>
-                    <input
-                        type="search"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Search chats..."
-                        className="w-full bg-[#1e293b]/60 border border-gray-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-gray-500 outline-none focus:border-[#6366F1] transition"
-                    />
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.key}
+                            onClick={() => setView(tab.key)}
+                            className={`w-full flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium transition-all ${
+                                currentView === tab.key
+                                    ? "bg-gray-800 text-white font-semibold shadow-inner border border-gray-700/50"
+                                    : "text-gray-400 hover:text-white hover:bg-gray-800/40"
+                            }`}
+                        >
+                            <span className={currentView === tab.key ? "text-[#6366F1]" : ""}>
+                                {tab.icon}
+                            </span>
+                            {tab.label}
+                        </button>
+                    ))}
                 </div>
 
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider px-2 mb-2">
-                    Recent Conversations
-                </span>
+                {/* Search and Recent Conversations */}
+                <div className="pt-3 border-t border-gray-800 space-y-2">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider px-2 block">
+                        Recent Conversations
+                    </span>
+                    <div className="relative">
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 text-gray-500 pointer-events-none">
+                            <FaSearch size={11} />
+                        </span>
+                        <input
+                            type="search"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Search chats..."
+                            className="w-full bg-[#1e293b]/60 border border-gray-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-gray-500 outline-none focus:border-[#6366F1] transition"
+                        />
+                    </div>
 
-                <div className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                    {loading && sessions.length === 0 ? (
-                        <div className="text-xs text-gray-500 italic px-2 py-4">Loading history...</div>
-                    ) : visibleSessions.length === 0 ? (
-                        <div className="text-xs text-gray-500 italic px-2 py-4">No discussions found.</div>
-                    ) : (
-                        visibleSessions.map((session) => {
-                            const isActive = activeSessionId === session.conversation_id && currentView === "chat";
-                            return (
-                                <div
-                                    key={session.conversation_id}
-                                    onClick={() => handleOpenSession(session.conversation_id)}
-                                    className={`group flex items-center justify-between rounded-lg px-3 py-2 text-xs transition cursor-pointer border ${
-                                        isActive
-                                            ? "bg-gray-800/80 border-[#6366F1] text-white font-semibold shadow-inner"
-                                            : "border-transparent text-gray-400 hover:text-white hover:bg-gray-800/30"
-                                    }`}
-                                >
-                                    <div className="min-w-0 flex-1 pr-2">
-                                        <div className="truncate font-medium flex items-center gap-1.5">
-                                            <span className="text-indigo-400 flex-shrink-0 text-[10px]">📄</span>
-                                            <span className="truncate">{session.title}</span>
+                    <div className="space-y-1 pt-1">
+                        {loading && sessions.length === 0 ? (
+                            <div className="text-xs text-gray-500 italic px-2 py-2">Loading history...</div>
+                        ) : visibleSessions.length === 0 ? (
+                            <div className="text-xs text-gray-500 italic px-2 py-2">No discussions found.</div>
+                        ) : (
+                            visibleSessions.map((session) => {
+                                const isActive = activeSessionId === session.conversation_id && currentView === "chat";
+                                return (
+                                    <div
+                                        key={session.conversation_id}
+                                        onClick={() => handleOpenSession(session.conversation_id)}
+                                        className={`group flex items-center justify-between rounded-lg px-3 py-2 text-xs transition cursor-pointer border ${
+                                            isActive
+                                                ? "bg-gray-800/80 border-[#6366F1] text-white font-semibold shadow-inner"
+                                                : "border-transparent text-gray-400 hover:text-white hover:bg-gray-800/30"
+                                        }`}
+                                    >
+                                        <div className="min-w-0 flex-1 pr-2">
+                                            <div className="truncate font-medium flex items-center gap-1.5">
+                                                <span className="text-indigo-400 flex-shrink-0 text-[10px]">📄</span>
+                                                <span className="truncate">{session.title}</span>
+                                            </div>
+                                            <div className="text-[10px] text-gray-600 truncate mt-0.5">
+                                                {session.message_count || 0} messages
+                                            </div>
                                         </div>
-                                        <div className="text-[10px] text-gray-600 truncate mt-0.5">
-                                            {session.message_count || 0} messages
+
+                                        {/* Action buttons shown on hover */}
+                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleRenameConversation(session.conversation_id, session.title);
+                                                }}
+                                                className="text-gray-500 hover:text-white transition-colors"
+                                                title="Rename Chat"
+                                            >
+                                                <FaPen size={9} />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteConversation(session.conversation_id);
+                                                }}
+                                                className="text-gray-500 hover:text-red-400 transition-colors"
+                                                title="Delete Chat"
+                                            >
+                                                <FaTrash size={9} />
+                                            </button>
                                         </div>
                                     </div>
-
-                                    {/* Action buttons shown on hover */}
-                                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleRenameConversation(session.conversation_id, session.title);
-                                            }}
-                                            className="text-gray-500 hover:text-white transition-colors"
-                                            title="Rename Chat"
-                                        >
-                                            <FaPen size={9} />
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDeleteConversation(session.conversation_id);
-                                            }}
-                                            className="text-gray-500 hover:text-red-400 transition-colors"
-                                            title="Delete Chat"
-                                        >
-                                            <FaTrash size={9} />
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })
-                    )}
+                                );
+                            })
+                        )}
+                    </div>
                 </div>
             </div>
 

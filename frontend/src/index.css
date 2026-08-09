@@ -15,28 +15,28 @@ body {
     color: #fff;
 }
 
-/* Slim, theme-matched scrollbars for the app's dark surfaces */
+/* Slim, clearly visible theme-matched scrollbars */
 .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(15, 23, 42, 0.5);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #1e293b;
-    border-radius: 8px;
+    background-color: #334155;
+    border-radius: 9999px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: #334155;
+    background-color: #6366F1;
 }
 
 * {
     scrollbar-width: thin;
-    scrollbar-color: #1e293b transparent;
+    scrollbar-color: #334155 rgba(15, 23, 42, 0.5);
 }
 
 @keyframes fade-in {
