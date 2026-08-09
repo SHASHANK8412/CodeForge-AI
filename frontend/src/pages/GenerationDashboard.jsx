@@ -61,11 +61,12 @@ export default function GenerationDashboard({ generationId = 'aiforge-demo', set
 
   const handleOpenWorkspace = () => {
     if (setView) {
-      setView('project');
+      setView('code');
     } else {
       window.location.href = `/projects/${generationId}/code`;
     }
   };
+
 
   const handleViewQualityReport = () => {
     if (setView) {

@@ -12,6 +12,7 @@ import F1Website from "./components/F1Website";
 import LandingPage from "./pages/LandingPage";
 import CreateProject from "./pages/CreateProject";
 import GenerationDashboard from "./pages/GenerationDashboard";
+import CodeWorkspace from "./pages/CodeWorkspace";
 
 function App() {
     const [view, setView] = useState("landing");
@@ -48,6 +49,7 @@ function App() {
                 {view === "landing" && <LandingPage setView={setView} />}
                 {view === "create" && <CreateProject setView={setView} onGenerateSuccess={handleGenerateSuccess} />}
                 {view === "build" && <GenerationDashboard generationId={activeGenerationId} setView={setView} setActiveProjectName={setActiveProjectName} />}
+                {view === "code" && <CodeWorkspace generationId={activeGenerationId} setView={setView} />}
                 {view === "dashboard" && <Dashboard setView={setView} />}
                 {view === "chat" && <ChatBox />}
                 {view === "project" && (
@@ -68,6 +70,7 @@ function App() {
         </MainLayout>
     );
 }
+
 
 
 

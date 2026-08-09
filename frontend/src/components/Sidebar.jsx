@@ -164,6 +164,7 @@ function Sidebar({ currentView, setView }) {
         { key: "landing", label: "SaaS Landing Page", icon: <FaGlobe size={14} className="text-cyan-400" /> },
         { key: "create", label: "Create Project", icon: <FaPlus size={14} className="text-cyan-400" /> },
         { key: "build", label: "Live Build Dashboard", icon: <FaBolt size={14} className="text-yellow-400" /> },
+        { key: "code", label: "Code Workspace", icon: <FaCode size={14} className="text-emerald-400" /> },
         { key: "dashboard", label: "Home Dashboard", icon: <FaHome size={14} /> },
         { key: "chat", label: "Chat Workspace", icon: <FaCommentAlt size={14} /> },
         { key: "project", label: "Project Builder", icon: <FaHammer size={14} /> },
@@ -173,6 +174,7 @@ function Sidebar({ currentView, setView }) {
         { key: "metrics", label: "Metrics Board", icon: <FaChartBar size={14} /> },
         { key: "f1", label: "F1 Grand Prix Site", icon: <FaTrophy size={14} className="text-red-500" /> },
     ];
+
 
 
 

@@ -1,6 +1,6 @@
 {
-  "run_id": "aiforge_bench_1786259617",
-  "timestamp": "2026-08-09T07:13:37.332418+00:00",
+  "run_id": "aiforge_bench_1786260061",
+  "timestamp": "2026-08-09T07:21:01.542731+00:00",
   "model": "qwen2.5-coder:14b",
   "summary": {
     "total_benchmarks": 5,
@@ -16,7 +16,7 @@
   "benchmarks": [
     {
       "project_name": "TodoApp",
-      "started_at": "2026-08-09T07:13:37.326345+00:00",
+      "started_at": "2026-08-09T07:21:01.536283+00:00",
       "duration_seconds": 0.0,
       "generation_success": true,
       "execution_success": true,
@@ -33,11 +33,11 @@
       "failed_repairs": 0,
       "final_status": "PASS",
       "failure_reason": "None",
-      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1056\\test_benchmark_runner0\\generated_projects\\TodoApp.zip"
+      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1057\\test_benchmark_runner0\\generated_projects\\TodoApp.zip"
     },
     {
       "project_name": "BlogAPI",
-      "started_at": "2026-08-09T07:13:37.327517+00:00",
+      "started_at": "2026-08-09T07:21:01.538108+00:00",
       "duration_seconds": 0.0,
       "generation_success": true,
       "execution_success": true,
@@ -54,11 +54,11 @@
       "failed_repairs": 0,
       "final_status": "PASS",
       "failure_reason": "None",
-      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1056\\test_benchmark_runner0\\generated_projects\\BlogAPI.zip"
+      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1057\\test_benchmark_runner0\\generated_projects\\BlogAPI.zip"
     },
     {
       "project_name": "ExpenseTracker",
-      "started_at": "2026-08-09T07:13:37.329518+00:00",
+      "started_at": "2026-08-09T07:21:01.539739+00:00",
       "duration_seconds": 0.0,
       "generation_success": true,
       "execution_success": true,
@@ -75,11 +75,11 @@
       "failed_repairs": 0,
       "final_status": "PASS",
       "failure_reason": "None",
-      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1056\\test_benchmark_runner0\\generated_projects\\ExpenseTracker.zip"
+      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1057\\test_benchmark_runner0\\generated_projects\\ExpenseTracker.zip"
     },
     {
       "project_name": "AuthDashboard",
-      "started_at": "2026-08-09T07:13:37.330821+00:00",
+      "started_at": "2026-08-09T07:21:01.541323+00:00",
       "duration_seconds": 0.0,
       "generation_success": true,
       "execution_success": true,
@@ -96,11 +96,11 @@
       "failed_repairs": 0,
       "final_status": "PASS",
       "failure_reason": "None",
-      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1056\\test_benchmark_runner0\\generated_projects\\AuthDashboard.zip"
+      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1057\\test_benchmark_runner0\\generated_projects\\AuthDashboard.zip"
     },
     {
       "project_name": "ECommerce",
-      "started_at": "2026-08-09T07:13:37.332398+00:00",
+      "started_at": "2026-08-09T07:21:01.542708+00:00",
       "duration_seconds": 0.0,
       "generation_success": true,
       "execution_success": true,
@@ -117,7 +117,7 @@
       "failed_repairs": 0,
       "final_status": "PASS",
       "failure_reason": "None",
-      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1056\\test_benchmark_runner0\\generated_projects\\ECommerce.zip"
+      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1057\\test_benchmark_runner0\\generated_projects\\ECommerce.zip"
     }
   ]
 }
