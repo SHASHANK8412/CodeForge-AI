@@ -26,6 +26,11 @@ import ObservabilityDashboard from "./pages/ObservabilityDashboard";
 import EvaluationCenter from "./pages/EvaluationCenter";
 import AutopilotDashboard from "./pages/AutopilotDashboard";
 import FlightRecorder from "./pages/FlightRecorder";
+import SimulatorPage from "./pages/SimulatorPage";
+import DnaGraphPage from "./pages/DnaGraphPage";
+import BugBountyPage from "./pages/BugBountyPage";
+import DebateArenaPage from "./pages/DebateArenaPage";
+import SoftwareAssistantPage from "./pages/SoftwareAssistantPage";
 import { AuthProvider } from "./auth/AuthProvider";
 import ProtectedRoute from "./auth/ProtectedRoute";
 
@@ -134,6 +139,31 @@ function AppContent() {
                 {view === "flight-recorder" && (
                     <ProtectedRoute onRedirectLogin={() => setView("login")}>
                         <FlightRecorder projectId={activeGenerationId} setView={setView} />
+                    </ProtectedRoute>
+                )}
+                {view === "simulator" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <SimulatorPage projectId={activeGenerationId} />
+                    </ProtectedRoute>
+                )}
+                {view === "dna" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <DnaGraphPage projectId={activeGenerationId} />
+                    </ProtectedRoute>
+                )}
+                {view === "bug-bounty" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <BugBountyPage projectId={activeGenerationId} />
+                    </ProtectedRoute>
+                )}
+                {view === "debate" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <DebateArenaPage generationId={activeGenerationId} />
+                    </ProtectedRoute>
+                )}
+                {view === "talk" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <SoftwareAssistantPage projectId={activeGenerationId} />
                     </ProtectedRoute>
                 )}
 

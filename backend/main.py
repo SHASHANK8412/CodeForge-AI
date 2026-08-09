@@ -187,6 +187,14 @@ def register_routers() -> None:
     app.include_router(day15_autopilot_router)
     app.include_router(day15_flight_router)
 
+    from backend.intelligence.routes import sim_router, dna_router, bug_router, debate_router, talk_router, cto_router
+    app.include_router(sim_router)
+    app.include_router(dna_router)
+    app.include_router(bug_router)
+    app.include_router(debate_router)
+    app.include_router(talk_router)
+    app.include_router(cto_router)
+
     from backend.routes.deployment_routes import router as day33_cicd_router
     app.include_router(day33_cicd_router)
 
