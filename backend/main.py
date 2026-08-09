@@ -44,12 +44,26 @@ from backend.dashboard.monitoring_dashboard import router as monitoring_router
 from backend.dashboard.learning_dashboard import router as learning_router
 from backend.dashboard.evolution_dashboard import router as evolution_router
 from backend.auth.routes import router as auth_router
+from backend.observability.routes import router as observability_router
+
 app = FastAPI(
     title="AIForge API",
     description="Multi-Agent AI Software Engineer Backend",
     version="1.0.0"
 )
 app.include_router(auth_router)
+app.include_router(observability_router)
+
+import secrets
+from fastapi import Request
+
+@app.middleware("http")
+async def correlation_id_middleware(request: Request, call_next):
+    correlation_id = request.headers.get("X-Correlation-ID") or f"req_{secrets.token_hex(6)}"
+    response = await call_next(request)
+    response.headers["X-Correlation-ID"] = correlation_id
+    return response
+
 
 
 from fastapi.middleware.gzip import GZipMiddleware

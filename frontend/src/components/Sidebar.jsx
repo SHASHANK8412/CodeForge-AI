@@ -172,6 +172,8 @@ function Sidebar({ currentView, setView }) {
         { key: "metrics", label: "Quality Center", icon: <FaChartBar size={14} className="text-amber-400" /> },
         { key: "plugins", label: "Deployment Center", icon: <FaRocket size={14} className="text-purple-400" /> },
         { key: "dashboard", label: "Home Dashboard", icon: <FaHome size={14} /> },
+        { key: "observability", label: "Observability Telemetry", icon: <FaChartBar size={14} className="text-cyan-400" /> },
+        { key: "evaluations", label: "Evaluation Center", icon: <FaBrain size={14} className="text-amber-400" /> },
         { key: "settings", label: "Settings & API Keys", icon: <FaCog size={14} className="text-slate-400" /> },
         { key: "chat", label: "Chat Workspace", icon: <FaCommentAlt size={14} /> },
         { key: "project", label: "Project Builder", icon: <FaHammer size={14} /> },
@@ -179,6 +181,7 @@ function Sidebar({ currentView, setView }) {
         { key: "reflection", label: "Reflection Hub", icon: <FaBrain size={14} /> },
         { key: "f1", label: "F1 Grand Prix Site", icon: <FaTrophy size={14} className="text-red-500" /> },
     ];
+
 
 
 

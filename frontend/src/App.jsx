@@ -22,8 +22,11 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Settings from "./pages/Settings";
 import ApiKeys from "./pages/ApiKeys";
+import ObservabilityDashboard from "./pages/ObservabilityDashboard";
+import EvaluationCenter from "./pages/EvaluationCenter";
 import { AuthProvider } from "./auth/AuthProvider";
 import ProtectedRoute from "./auth/ProtectedRoute";
+
 
 function AppContent() {
     const [view, setView] = useState("landing");
@@ -111,6 +114,17 @@ function AppContent() {
                         <ApiKeys />
                     </ProtectedRoute>
                 )}
+                {view === "observability" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <ObservabilityDashboard />
+                    </ProtectedRoute>
+                )}
+                {view === "evaluations" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <EvaluationCenter />
+                    </ProtectedRoute>
+                )}
+
 
                 {/* Additional views */}
                 {view === "chat" && <ChatBox />}

@@ -10,8 +10,10 @@ import ReviewerFindings from '../components/quality/ReviewerFindings';
 import TestingFindings from '../components/quality/TestingFindings';
 import RepairWorkflow from '../components/quality/RepairWorkflow';
 import Recommendations from '../components/quality/Recommendations';
+import FeedbackRating from '../components/quality/FeedbackRating';
 import { fetchQualityReport, triggerAutomaticRepair } from '../services/quality';
 import { FaSpinner, FaExclamationTriangle, FaRedo } from 'react-icons/fa';
+
 
 export default function QualityCenter({ generationId = 'aiforge-demo', setView }) {
   const [data, setData] = useState(null);
@@ -168,7 +170,12 @@ export default function QualityCenter({ generationId = 'aiforge-demo', setView }
 
         {/* AI Recommendations */}
         <Recommendations recommendations={recommendations} />
+
+        {/* User Quality & Helpfulness Feedback */}
+        <FeedbackRating projectId={generationId} />
       </main>
     </div>
   );
 }
+
+

@@ -1,6 +1,6 @@
 {
-  "run_id": "aiforge_bench_1786261978",
-  "timestamp": "2026-08-09T07:52:58.144770+00:00",
+  "run_id": "aiforge_bench_1786262745",
+  "timestamp": "2026-08-09T08:05:45.356611+00:00",
   "model": "qwen2.5-coder:14b",
   "summary": {
     "total_benchmarks": 5,
@@ -9,15 +9,15 @@
     "e2e_success_rate": 1.0,
     "self_healing_success_rate": 0.0,
     "export_success_rate": 1.0,
-    "total_duration_seconds": 0.03,
-    "avg_duration_seconds": 0.01,
+    "total_duration_seconds": 0.01,
+    "avg_duration_seconds": 0.0,
     "avg_iterations": 0.0
   },
   "benchmarks": [
     {
       "project_name": "TodoApp",
-      "started_at": "2026-08-09T07:52:58.125007+00:00",
-      "duration_seconds": 0.01,
+      "started_at": "2026-08-09T08:05:45.346906+00:00",
+      "duration_seconds": 0.0,
       "generation_success": true,
       "execution_success": true,
       "testing_success": true,
@@ -33,12 +33,12 @@
       "failed_repairs": 0,
       "final_status": "PASS",
       "failure_reason": "None",
-      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1062\\test_benchmark_runner0\\generated_projects\\TodoApp.zip"
+      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1063\\test_benchmark_runner0\\generated_projects\\TodoApp.zip"
     },
     {
       "project_name": "BlogAPI",
-      "started_at": "2026-08-09T07:52:58.130911+00:00",
-      "duration_seconds": 0.01,
+      "started_at": "2026-08-09T08:05:45.348998+00:00",
+      "duration_seconds": 0.0,
       "generation_success": true,
       "execution_success": true,
       "testing_success": true,
@@ -54,12 +54,12 @@
       "failed_repairs": 0,
       "final_status": "PASS",
       "failure_reason": "None",
-      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1062\\test_benchmark_runner0\\generated_projects\\BlogAPI.zip"
+      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1063\\test_benchmark_runner0\\generated_projects\\BlogAPI.zip"
     },
     {
       "project_name": "ExpenseTracker",
-      "started_at": "2026-08-09T07:52:58.136774+00:00",
-      "duration_seconds": 0.01,
+      "started_at": "2026-08-09T08:05:45.351313+00:00",
+      "duration_seconds": 0.0,
       "generation_success": true,
       "execution_success": true,
       "testing_success": true,
@@ -75,11 +75,11 @@
       "failed_repairs": 0,
       "final_status": "PASS",
       "failure_reason": "None",
-      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1062\\test_benchmark_runner0\\generated_projects\\ExpenseTracker.zip"
+      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1063\\test_benchmark_runner0\\generated_projects\\ExpenseTracker.zip"
     },
     {
       "project_name": "AuthDashboard",
-      "started_at": "2026-08-09T07:52:58.140869+00:00",
+      "started_at": "2026-08-09T08:05:45.353759+00:00",
       "duration_seconds": 0.0,
       "generation_success": true,
       "execution_success": true,
@@ -96,11 +96,11 @@
       "failed_repairs": 0,
       "final_status": "PASS",
       "failure_reason": "None",
-      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1062\\test_benchmark_runner0\\generated_projects\\AuthDashboard.zip"
+      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1063\\test_benchmark_runner0\\generated_projects\\AuthDashboard.zip"
     },
     {
       "project_name": "ECommerce",
-      "started_at": "2026-08-09T07:52:58.144711+00:00",
+      "started_at": "2026-08-09T08:05:45.356577+00:00",
       "duration_seconds": 0.0,
       "generation_success": true,
       "execution_success": true,
@@ -117,7 +117,7 @@
       "failed_repairs": 0,
       "final_status": "PASS",
       "failure_reason": "None",
-      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1062\\test_benchmark_runner0\\generated_projects\\ECommerce.zip"
+      "zip_path": "C:\\Users\\Shashank\\AppData\\Local\\Temp\\pytest-of-Shashank\\pytest-1063\\test_benchmark_runner0\\generated_projects\\ECommerce.zip"
     }
   ]
 }
