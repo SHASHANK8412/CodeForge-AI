@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ProjectActivity from '../components/dashboard/ProjectActivity';
 import ProjectVersions from '../components/dashboard/ProjectVersions';
+import ProjectMemoryDashboard from '../components/memory/ProjectMemoryDashboard';
 import { fetchProjectDetails } from '../services/projects';
 import { FaArrowLeft, FaCheckCircle, FaCode, FaShieldAlt, FaRocket, FaSpinner } from 'react-icons/fa';
 
@@ -125,6 +126,9 @@ export default function ProjectDetails({ generationId = 'aiforge-fooddelivery-ai
           <ProjectActivity activity={activity} />
           <ProjectVersions versions={versions} onViewVersion={() => handleNavigate('code')} />
         </div>
+
+        {/* Project Memory & Decisions Dashboard */}
+        <ProjectMemoryDashboard projectId={generationId} />
       </div>
     </div>
   );

@@ -109,6 +109,8 @@ async def planner_node(state: ProjectState) -> dict:
     agent_timers.clear()
 
     prompt = state.get("user_prompt") or state.get("prompt", "")
+    project_id = state.get("project_id") or state.get("project_name") or "default_project"
+    gen_id = state.get("generation_id") or state.get("session_id", "default")
     _logger.info(f"✔ [1/14] Planner started: {prompt[:40]}...")
     _fire_lifecycle("agent_started", "planner")
 
@@ -126,7 +128,7 @@ async def planner_node(state: ProjectState) -> dict:
     with Timer() as timer:
         raw_plan = await planner.run_async(prompt)
 
-    session_id = state.get("session_id", "default")
+    session_id = gen_id
     plan_json = planner.parse_plan_json(raw_plan, allow_fallback=True)
     global_cache_service.set("planner", prompt, plan_json)
     memory_manager.save_agent_output(session_id, "planner", plan_json)
@@ -134,10 +136,25 @@ async def planner_node(state: ProjectState) -> dict:
     workflow_profiler.record_agent_time("planner", timer.elapsed)
     _fire_lifecycle("agent_completed", "planner", duration=timer.elapsed)
 
+    # Persist Planner requirements & tech choices to long-term memory safely
+    try:
+        reqs = plan_json.get("functional_requirements") or plan_json.get("requirements", [])
+        if reqs:
+            memory_manager.save(project_id, "REQUIREMENT", "functional_requirements", reqs, "planner", "HIGH", generation_id=gen_id)
+        stack = plan_json.get("tech_stack") or {}
+        if stack:
+            memory_manager.save(project_id, "TECHNOLOGY", "tech_stack", stack, "planner", "HIGH", generation_id=gen_id)
+        if "auth" in str(reqs).lower() or "jwt" in str(reqs).lower():
+            memory_manager.save_decision(project_id, "JWT Bearer Authentication", "Secure user sessions across API routes", "planner", "HIGH", generation_id=gen_id)
+    except Exception as e:
+        _logger.warning(f"Planner memory persistence warning: {e}")
+
     return {
         "prompt": prompt,
         "user_prompt": prompt,
         "user_request": prompt,
+        "project_id": project_id,
+        "generation_id": gen_id,
         "project_name": plan_json.get("project_name", "AIForgeApp"),
         "requirements": plan_json.get("functional_requirements") or plan_json.get("requirements", []),
         "project_spec": plan_json,
@@ -152,6 +169,8 @@ async def architect_node(state: ProjectState) -> dict:
     _logger.info("✔ [2/14] Architect started")
     _fire_lifecycle("agent_started", "architect")
     session_id = state.get("session_id", "default")
+    project_id = state.get("project_id") or state.get("project_name") or "default_project"
+    gen_id = state.get("generation_id") or session_id
     plan_json = state.get("plan") or memory_manager.get_agent_output(session_id, "planner")
 
     cached_arch = global_cache_service.get("architect", plan_json)
@@ -174,6 +193,19 @@ async def architect_node(state: ProjectState) -> dict:
     agent_timers["architect"] = timer.elapsed
     workflow_profiler.record_agent_time("architect", timer.elapsed)
     _fire_lifecycle("agent_completed", "architect", duration=timer.elapsed)
+
+    # Persist Architect architecture & key decisions to long-term memory safely
+    try:
+        memory_manager.save(project_id, "ARCHITECTURE", "architecture_spec", arch_json, "architect", "CRITICAL", generation_id=gen_id)
+        be_framework = arch_json.get("backend", "FastAPI")
+        db_engine = arch_json.get("database", "PostgreSQL")
+        fe_framework = arch_json.get("frontend", "React")
+
+        memory_manager.save_decision(project_id, f"Use {db_engine} database engine", "Relational consistency, indexing, and schema integrity", "architect", "CRITICAL", generation_id=gen_id)
+        memory_manager.save_decision(project_id, f"Use {be_framework} backend framework", "High performance async REST API endpoint routing", "architect", "CRITICAL", generation_id=gen_id)
+        memory_manager.save_decision(project_id, f"Use {fe_framework} frontend framework", "Component-driven reactive single-page app architecture", "architect", "HIGH", generation_id=gen_id)
+    except Exception as e:
+        _logger.warning(f"Architect memory persistence warning: {e}")
 
     return {
         "architecture": arch_json,

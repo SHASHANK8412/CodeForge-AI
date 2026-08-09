@@ -47,7 +47,14 @@ class ProjectState(TypedDict, total=False):
     # Prompt & Core Request inputs
     prompt: str
     user_prompt: str
-    user_request: str
+    # Day 12 Context & Memory Extensions
+    project_id: str
+    generation_id: str
+    technology_stack: Dict[str, Any]
+    agent_outputs: Dict[str, Any]
+    memory: List[Dict[str, Any]]
+    review_results: Dict[str, Any]
+    decisions: List[Dict[str, Any]]
 
     # Autonomous Engineering Project Metadata & Specs (Incremental Additions)
     project_name: str

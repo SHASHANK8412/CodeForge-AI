@@ -1,0 +1,56 @@
+{
+  "proj_api": {
+    "memories": {
+      "mem_yfdpJvYbvKI": {
+        "id": "mem_yfdpJvYbvKI",
+        "project_id": "proj_api",
+        "generation_id": null,
+        "user_id": null,
+        "memory_type": "REQUIREMENT",
+        "key": "api_req",
+        "value": "JWT Auth Required",
+        "source_agent": "planner",
+        "importance": "MEDIUM",
+        "created_at": "2026-08-09T08:27:56.409864+00:00",
+        "updated_at": "2026-08-09T08:29:11.442361+00:00"
+      }
+    },
+    "decisions": {
+      "dec_rYZM8dIn4hw": {
+        "id": "dec_rYZM8dIn4hw",
+        "project_id": "proj_api",
+        "generation_id": null,
+        "decision": "Use FastAPI",
+        "reason": "High async performance",
+        "agent": "architect",
+        "timestamp": "2026-08-09T08:27:56.410911+00:00",
+        "importance": "HIGH"
+      },
+      "dec_2f0-mTJoHFY": {
+        "id": "dec_2f0-mTJoHFY",
+        "project_id": "proj_api",
+        "generation_id": null,
+        "decision": "Use FastAPI",
+        "reason": "High async performance",
+        "agent": "architect",
+        "timestamp": "2026-08-09T08:28:39.280568+00:00",
+        "importance": "HIGH"
+      },
+      "dec_WLRvklBLs6c": {
+        "id": "dec_WLRvklBLs6c",
+        "project_id": "proj_api",
+        "generation_id": null,
+        "decision": "Use FastAPI",
+        "reason": "High async performance",
+        "agent": "architect",
+        "timestamp": "2026-08-09T08:29:11.443224+00:00",
+        "importance": "HIGH"
+      }
+    },
+    "meta": {
+      "project_id": "proj_api",
+      "created_at": "2026-08-09T08:27:56.409835+00:00",
+      "updated_at": "2026-08-09T08:29:11.443224+00:00"
+    }
+  }
+}
