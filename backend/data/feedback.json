@@ -50,5 +50,18 @@
     ],
     "comment": "Excellent multi-agent project generation!",
     "created_at": "2026-08-09T14:04:50.444204"
+  },
+  {
+    "id": "fb_5",
+    "user_id": "usr_59d2df50bab4",
+    "project_id": "aiforge-fooddelivery-ai",
+    "helpful": true,
+    "rating": 5,
+    "tags": [
+      "Code quality",
+      "Architecture"
+    ],
+    "comment": "Excellent multi-agent project generation!",
+    "created_at": "2026-08-09T14:10:20.633441"
   }
 ]

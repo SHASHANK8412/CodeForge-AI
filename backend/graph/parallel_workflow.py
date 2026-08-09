@@ -1,3 +1,4 @@
+import os
 import logging
 import json
 import re
@@ -598,16 +599,38 @@ from backend.memory.project_memory_service import global_project_memory_service
 from backend.execution.models import MemoryRecord
 
 
+from backend.execution.failure_classifier import classify_test_failure, FailureCategory
+from backend.agents.repair_agent import global_repair_agent
+from backend.quality.version_manager import global_version_manager
+from backend.quality.gates import evaluate_quality_gates, GateStatus
+
+MAX_REPAIR_ATTEMPTS = int(os.getenv("MAX_REPAIR_ATTEMPTS", 3))
+
+
 async def debug_node(state: ProjectState) -> dict:
-    _logger.info("✔ [12/14] DebugAgent analyzing failure evidence...")
+    _logger.info("✔ [12/14] DebugAgent analyzing failure evidence & classifying root causes...")
     _fire_lifecycle("agent_started", "debug")
     iteration = state.get("iteration", 0) + 1
-    max_iterations = state.get("max_iterations", 3)
+    max_iterations = state.get("max_iterations", MAX_REPAIR_ATTEMPTS)
 
     debug_res = global_debug_agent.diagnose_and_repair(dict(state))
 
     existing_fixes = state.get("fixes", []) or []
     existing_errors = state.get("errors", []) or []
+    existing_causes = state.get("root_causes", []) or []
+
+    # Classify failure
+    stderr = str((state.get("execution_results") or {}).get("stderr", ""))
+    fail_obj = classify_test_failure(stderr or debug_res.diagnosis)
+
+    # Generate targeted RepairPlan
+    files_map = dict(state.get("files", {}) or {})
+    repair_plan = global_repair_agent.generate_repair_plan(
+        root_cause=debug_res.root_cause,
+        affected_files=debug_res.files_to_modify,
+        classified_failures=[fail_obj.model_dump()],
+        files_map=files_map
+    )
 
     try:
         global_project_memory_service.store_memory(MemoryRecord(
@@ -631,29 +654,37 @@ async def debug_node(state: ProjectState) -> dict:
         "max_iterations": max_iterations,
         "fixes": existing_fixes + [debug_res.model_dump()],
         "errors": existing_errors + [debug_res.diagnosis],
+        "root_causes": existing_causes + [debug_res.root_cause],
+        "repair_status": f"DIAGNOSED_ATTEMPT_{iteration}",
         "current_step": "debug",
-        "stream_events": [f"⚠️ Debugger diagnosed failure (Attempt {iteration}/{max_iterations}): {debug_res.diagnosis}"]
+        "stream_events": [f"⚠️ Debugger diagnosed failure ({fail_obj.category.value}): {debug_res.diagnosis}"]
     }
 
 
-
 async def patch_node(state: ProjectState) -> dict:
-    _logger.info("✔ Applying targeted patch to generated project on disk...")
+    _logger.info("✔ Applying targeted patch and taking version snapshot...")
     _fire_lifecycle("agent_started", "patch")
     fixes = state.get("fixes", []) or []
     files_map = dict(state.get("files", {}) or {})
     proj_path_str = state.get("project_path", "")
+    project_id = str(state.get("project_name", state.get("project_id", "default_project")))
+    target_dir = Path(proj_path_str).resolve() if proj_path_str else None
 
-    if not fixes or not proj_path_str:
+    # Take Snapshot before applying repair
+    global_version_manager.create_snapshot(
+        project_id=project_id,
+        files_map=files_map,
+        repair_reason="Pre-patch snapshot",
+        test_result=state.get("test_results", {})
+    )
+
+    if not fixes:
         _fire_lifecycle("agent_completed", "patch")
         return {"current_step": "patch"}
 
     latest_fix = fixes[-1]
     changes = latest_fix.get("changes", {})
-    target_dir = Path(proj_path_str).resolve()
-
     modified_files = []
-    file_backups = dict(state.get("file_backups", {}) or {})
 
     for rel_path, new_content in changes.items():
         clean_rel = rel_path.replace("\\", "/").lstrip("/")
@@ -661,26 +692,34 @@ async def patch_node(state: ProjectState) -> dict:
             _logger.warning(f"Path traversal rejected in patch_node: {rel_path}")
             continue
 
-        dest_path = (target_dir / clean_rel).resolve()
-        if not str(dest_path).startswith(str(target_dir)):
-            _logger.warning(f"Path traversal rejected in patch_node: {rel_path}")
-            continue
+        patch_op = global_repair_agent.generate_repair_plan(
+            root_cause=latest_fix.get("root_cause", "Patch fix"),
+            affected_files=[clean_rel],
+            classified_failures=[],
+            files_map=files_map
+        ).patches[0] if latest_fix.get("root_cause") else None
 
-        # Backup previous file content before patching
-        if dest_path.exists():
-            file_backups[clean_rel] = dest_path.read_text(encoding="utf-8")
+        if target_dir:
+            dest_path = (target_dir / clean_rel).resolve()
+            if not str(dest_path).startswith(str(target_dir)):
+                _logger.warning(f"Path traversal rejected in patch_node: {rel_path}")
+                continue
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
+            dest_path.write_text(new_content, encoding="utf-8")
 
-        dest_path.parent.mkdir(parents=True, exist_ok=True)
-        dest_path.write_text(new_content, encoding="utf-8")
         files_map[clean_rel] = new_content
         modified_files.append(clean_rel)
+
+    attempt = state.get("repair_attempt", state.get("iteration", 0)) + 1
 
     _fire_lifecycle("agent_completed", "patch")
     return {
         "files": files_map,
-        "file_backups": file_backups,
+        "repair_attempt": attempt,
+        "iteration": attempt,
+        "repair_status": f"PATCHED_ATTEMPT_{attempt}",
         "current_step": "patch",
-        "stream_events": [f"✔ Applied targeted patch to {len(modified_files)} file(s): {modified_files}"]
+        "stream_events": [f"✔ Applied targeted patch (Attempt {attempt}) to {len(modified_files)} file(s): {modified_files}"]
     }
 
 
@@ -688,32 +727,17 @@ def restore_file_backups(state: ProjectState) -> dict:
     """
     Restores modified files on disk and in ProjectState["files"] from ProjectState["file_backups"].
     """
-    file_backups = state.get("file_backups", {}) or {}
-    proj_path_str = state.get("project_path", "")
-    if not file_backups or not proj_path_str:
-        return {}
-
-    target_dir = Path(proj_path_str).resolve()
-    restored_files = []
+    project_id = str(state.get("project_name", state.get("project_id", "default_project")))
     files_map = dict(state.get("files", {}) or {})
+    proj_path_str = state.get("project_path", "")
+    target_dir = Path(proj_path_str).resolve() if proj_path_str else None
 
-    for rel_path, old_content in file_backups.items():
-        clean_rel = rel_path.replace("\\", "/").lstrip("/")
-        if clean_rel.startswith("/") or clean_rel.startswith("\\"):
-            continue
-        dest_path = (target_dir / clean_rel).resolve()
-        if not str(dest_path).startswith(str(target_dir)):
-            continue
-
-        dest_path.parent.mkdir(parents=True, exist_ok=True)
-        dest_path.write_text(old_content, encoding="utf-8")
-        files_map[clean_rel] = old_content
-        restored_files.append(clean_rel)
+    restored_ver = global_version_manager.rollback(project_id, files_map, project_dir=target_dir)
 
     return {
         "files": files_map,
         "current_step": "rollback",
-        "stream_events": [f"✔ Restored {len(restored_files)} file(s) from backup: {restored_files}"]
+        "stream_events": [f"✔ Restored project to version '{restored_ver.version_id if restored_ver else 'snapshot'}'"]
     }
 
 
@@ -724,23 +748,36 @@ def route_after_testing(state: ProjectState) -> str:
     exec_res = state.get("execution_results", {}) or {}
     test_res = state.get("test_results", {}) or {}
     status = state.get("status", "")
+    quality_report = state.get("quality_report")
 
     exit_code = exec_res.get("exit_code", -1)
     is_test_success = test_res.get("success", False)
 
-    if exit_code == 0 and is_test_success:
+    q_status = getattr(quality_report, "overall_status", None) if quality_report else None
+    if isinstance(quality_report, dict):
+        q_status = quality_report.get("overall_status")
+
+    if exit_code == 0 and is_test_success and q_status in (None, "PASS", "WARN", GateStatus.PASS, GateStatus.WARN):
         global_export_gate.mark_verified(state)
         return "packaging"
 
-
-    if status in ["UNSUPPORTED", "SECURITY_ERROR"]:
+    if status in ["UNSUPPORTED", "SECURITY_ERROR", "FAILED_REPEATED_ROOT_CAUSE", "FAILED_MAX_ITERATIONS"]:
         return END
 
-    iteration = state.get("iteration", 0)
-    max_iterations = state.get("max_iterations", 3)
+    attempt = state.get("repair_attempt", state.get("iteration", 0))
+    max_attempts = state.get("max_repair_attempts", state.get("max_iterations", MAX_REPAIR_ATTEMPTS))
 
-    if iteration >= max_iterations:
+    root_causes = state.get("root_causes", [])
+    if global_version_manager.detect_repeated_failure(root_causes):
+        state["status"] = "FAILED_REPEATED_ROOT_CAUSE"
+        state["repair_status"] = "STOPPED_REPEATED_FAILURE"
+        _logger.warning("Repeated repair failure detected. Manual intervention required.")
+        return END
+
+    if attempt >= max_attempts:
         state["status"] = "FAILED_MAX_ITERATIONS"
+        state["repair_status"] = "STOPPED_MAX_ATTEMPTS"
+        _logger.warning(f"Maximum repair attempts ({max_attempts}) reached. Stopping loop.")
         return END
 
     return "debug"

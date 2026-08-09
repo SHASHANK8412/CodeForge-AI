@@ -104,6 +104,16 @@ class ProjectState(TypedDict, total=False):
     validation_report: Dict[str, Any]
     reflection_report: Dict[str, Any]
 
+    # Day 14 Repair Loop State
+    repair_attempt: int
+    max_repair_attempts: int
+    findings: List[Dict[str, Any]]
+    test_failures: List[Dict[str, Any]]
+    root_causes: List[str]
+    repairs: List[Dict[str, Any]]
+    snapshots: List[Dict[str, Any]]
+    repair_status: str
+
     # DevOps & Deployment fields
     deployment_files: Dict[str, str]
     deployment_report: Dict[str, Any]

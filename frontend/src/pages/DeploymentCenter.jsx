@@ -114,6 +114,18 @@ export default function DeploymentCenter({ generationId = 'aiforge-demo', setVie
           onStartDeployment={handleStartDeployment}
         />
 
+        {readiness.quality_passed === false && (
+          <div className="p-4 bg-rose-950/40 border border-rose-500/30 rounded-2xl text-rose-400 text-xs flex items-center justify-between shadow-xl">
+            <div>
+              <span className="font-bold text-sm block text-rose-300">Deployment Blocked</span>
+              <span>Critical security or quality issue remains unresolved in this project release.</span>
+            </div>
+            <button onClick={() => handleNavigate('quality')} className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl transition">
+              View Quality Center
+            </button>
+          </div>
+        )}
+
         {/* Target Provider Selector */}
         <ProviderSelector
           providers={providers}
