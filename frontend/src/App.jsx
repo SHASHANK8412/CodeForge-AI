@@ -15,6 +15,7 @@ import GenerationDashboard from "./pages/GenerationDashboard";
 import CodeWorkspace from "./pages/CodeWorkspace";
 import QualityCenter from "./pages/QualityCenter";
 import DeploymentCenter from "./pages/DeploymentCenter";
+import ProjectDetails from "./pages/ProjectDetails";
 
 function App() {
     const [view, setView] = useState("landing");
@@ -52,7 +53,8 @@ function App() {
                 {view === "create" && <CreateProject setView={setView} onGenerateSuccess={handleGenerateSuccess} />}
                 {view === "build" && <GenerationDashboard generationId={activeGenerationId} setView={setView} setActiveProjectName={setActiveProjectName} />}
                 {view === "code" && <CodeWorkspace generationId={activeGenerationId} setView={setView} />}
-                {view === "dashboard" && <Dashboard setView={setView} />}
+                {view === "dashboard" && <Dashboard setView={setView} setActiveProjectName={setActiveProjectName} setActiveGenerationId={setActiveGenerationId} />}
+                {view === "project-details" && <ProjectDetails generationId={activeGenerationId} setView={setView} />}
                 {view === "chat" && <ChatBox />}
                 {view === "project" && (
                     <ProjectGenerator 
@@ -72,6 +74,7 @@ function App() {
         </MainLayout>
     );
 }
+
 
 
 
