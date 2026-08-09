@@ -221,7 +221,7 @@ function Sidebar({ currentView, setView }) {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="p-3 border-b border-gray-800 space-y-1">
+            <div className="flex-1 min-h-0 overflow-y-auto p-3 border-b border-gray-800 space-y-1 custom-scrollbar">
                 {tabs.map((tab) => (
                     <button
                         key={tab.key}
@@ -241,7 +241,7 @@ function Sidebar({ currentView, setView }) {
             </div>
 
             {/* Search and History */}
-            <div className="flex-1 flex flex-col min-h-0 p-3">
+            <div className="h-44 shrink-0 flex flex-col p-3 border-t border-gray-800/60">
                 <div className="relative mb-3">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 text-gray-500 pointer-events-none">
                         <FaSearch size={11} />
