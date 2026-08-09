@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaCommentAlt, FaHammer, FaBrain, FaChartBar, FaPlus, FaSearch, FaTrash, FaPen, FaFolderOpen, FaServer, FaHome, FaPlug, FaTrophy, FaGlobe, FaBolt, FaCode } from "react-icons/fa";
+import { FaCommentAlt, FaHammer, FaBrain, FaChartBar, FaPlus, FaSearch, FaTrash, FaPen, FaFolderOpen, FaServer, FaHome, FaPlug, FaTrophy, FaGlobe, FaBolt, FaCode, FaRocket } from "react-icons/fa";
+
 
 
 
@@ -166,15 +167,16 @@ function Sidebar({ currentView, setView }) {
         { key: "create", label: "Create Project", icon: <FaPlus size={14} className="text-cyan-400" /> },
         { key: "build", label: "Live Build Dashboard", icon: <FaBolt size={14} className="text-yellow-400" /> },
         { key: "code", label: "Code Workspace", icon: <FaCode size={14} className="text-emerald-400" /> },
+        { key: "metrics", label: "Quality Center", icon: <FaChartBar size={14} className="text-amber-400" /> },
+        { key: "plugins", label: "Deployment Center", icon: <FaRocket size={14} className="text-purple-400" /> },
         { key: "dashboard", label: "Home Dashboard", icon: <FaHome size={14} /> },
         { key: "chat", label: "Chat Workspace", icon: <FaCommentAlt size={14} /> },
         { key: "project", label: "Project Builder", icon: <FaHammer size={14} /> },
-        { key: "plugins", label: "Plugins Engine", icon: <FaPlug size={14} /> },
         { key: "learning", label: "Learning Hub", icon: <FaBrain size={14} /> },
         { key: "reflection", label: "Reflection Hub", icon: <FaBrain size={14} /> },
-        { key: "metrics", label: "Metrics Board", icon: <FaChartBar size={14} /> },
         { key: "f1", label: "F1 Grand Prix Site", icon: <FaTrophy size={14} className="text-red-500" /> },
     ];
+
 
 
 

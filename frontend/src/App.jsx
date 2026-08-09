@@ -14,6 +14,7 @@ import CreateProject from "./pages/CreateProject";
 import GenerationDashboard from "./pages/GenerationDashboard";
 import CodeWorkspace from "./pages/CodeWorkspace";
 import QualityCenter from "./pages/QualityCenter";
+import DeploymentCenter from "./pages/DeploymentCenter";
 
 function App() {
     const [view, setView] = useState("landing");
@@ -64,13 +65,14 @@ function App() {
                 )}
                 {view === "reflection" && <ReflectionDashboard />}
                 {view === "metrics" && <QualityCenter generationId={activeGenerationId} setView={setView} />}
-                {view === "plugins" && <PluginsDashboard />}
+                {(view === "plugins" || view === "deploy") && <DeploymentCenter generationId={activeGenerationId} setView={setView} />}
                 {view === "learning" && <LearningDashboard />}
                 {view === "f1" && <F1Website />}
             </div>
         </MainLayout>
     );
 }
+
 
 
 
