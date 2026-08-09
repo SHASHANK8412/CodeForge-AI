@@ -141,6 +141,9 @@ def register_routers() -> None:
     from backend.routes.upload import router as upload_router
     app.include_router(upload_router)
 
+    from backend.routes.generate import router as generate_legacy_router
+    app.include_router(generate_legacy_router)
+
     from backend.routes.memory import router as day18_memory_router
     app.include_router(day18_memory_router)
 
@@ -436,6 +439,8 @@ def get_project_file_tree(project_id: str):
 
 
 @app.post("/generate")
+@app.post("/api/generate")
+@app.post("/api/project/generate")
 async def generate(request: PromptRequest):
     started_at = perf_counter()
     try:
