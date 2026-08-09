@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaCommentAlt, FaHammer, FaBrain, FaChartBar, FaPlus, FaSearch, FaTrash, FaPen, FaFolderOpen, FaServer, FaHome, FaPlug, FaTrophy, FaGlobe } from "react-icons/fa";
+import { FaCommentAlt, FaHammer, FaBrain, FaChartBar, FaPlus, FaSearch, FaTrash, FaPen, FaFolderOpen, FaServer, FaHome, FaPlug, FaTrophy, FaGlobe, FaBolt } from "react-icons/fa";
+
 
 import {
     createConversation,
