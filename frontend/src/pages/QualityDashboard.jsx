@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import EvaluationDashboard from '../components/EvaluationDashboard';
 
 export default function QualityDashboard() {
   const [data, setData] = useState({
@@ -53,6 +53,10 @@ export default function QualityDashboard() {
           Autonomous Project Intelligence, 8-Dimension Quality Scoring, Security Auditing, & Self-Improvement Telemetry
         </p>
       </header>
+
+      {/* Interactive Evaluation & Self-Repair Engine */}
+      <EvaluationDashboard />
+
 
       {/* Top Metric Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>

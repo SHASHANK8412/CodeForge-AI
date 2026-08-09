@@ -102,3 +102,61 @@ class RegressionReport(BaseModel):
     regressions_list: List[Dict[str, Any]] = Field(default_factory=list)
     improvements_list: List[Dict[str, Any]] = Field(default_factory=list)
     summary_message: str
+
+
+class EvaluationScoreBreakdown(BaseModel):
+    """
+    100-point evaluation score breakdown:
+    - Requirement Coverage: 20 pts
+    - Code Correctness: 20 pts
+    - Tests: 20 pts
+    - Security: 15 pts
+    - Architecture: 10 pts
+    - Code Quality: 10 pts
+    - Documentation: 5 pts
+    """
+    requirement_coverage: float = Field(default=20.0, description="Out of 20")
+    code_correctness: float = Field(default=20.0, description="Out of 20")
+    tests: float = Field(default=20.0, description="Out of 20")
+    security: float = Field(default=15.0, description="Out of 15")
+    architecture: float = Field(default=10.0, description="Out of 10")
+    code_quality: float = Field(default=10.0, description="Out of 10")
+    documentation: float = Field(default=5.0, description="Out of 5")
+    overall_score: float = Field(default=100.0, description="Sum out of 100")
+
+
+class EvaluationTestSummary(BaseModel):
+    """
+    Empirical test execution summary.
+    """
+    total_tests: int = Field(default=0)
+    tests_passed: int = Field(default=0)
+    tests_failed: int = Field(default=0)
+    success: bool = Field(default=True)
+
+
+class ProjectEvaluationResult(BaseModel):
+    """
+    Structured Project Evaluation & Self-Repair Result returned to API/Dashboard.
+    """
+    project_name: str = Field(default="AIForge Project")
+    requirements: str = Field(default="")
+    overall_score: float = Field(default=100.0)
+    final_status: str = Field(default="PASSED", description="PASSED or FAILED")
+    scores: EvaluationScoreBreakdown = Field(default_factory=EvaluationScoreBreakdown)
+    test_results: EvaluationTestSummary = Field(default_factory=EvaluationTestSummary)
+    repair_attempts: int = Field(default=0)
+    max_repair_attempts: int = Field(default=3)
+    repaired_files: List[str] = Field(default_factory=list)
+    remaining_errors: List[str] = Field(default_factory=list)
+    execution_time_seconds: float = Field(default=0.0)
+
+
+class EvaluateProjectRequest(BaseModel):
+    """
+    Request model for POST /api/evaluate endpoint.
+    """
+    project_path: Optional[str] = Field(default=None)
+    requirements: str = Field(description="User requirement prompt")
+    max_repair_attempts: int = Field(default=3)
+

@@ -361,4 +361,39 @@ def get_project_file_content(project_name: str, path: str):
         raise HTTPException(status_code=500, detail=f"Failed to read file: {str(exc)}")
 
 
+from backend.evaluation import EvaluateProjectRequest, global_project_evaluator
+
+
+@router.post("/evaluate")
+@router.post("/api/evaluate")
+def evaluate_project(request: EvaluateProjectRequest):
+    """
+    Evaluates project, runs tests, triggers self-repair loop, and returns evaluation score breakdown.
+    """
+    proj_path = request.project_path
+    if not proj_path:
+        safe_name = "".join([c if c.isalnum() or c in " -_" else "_" for c in request.requirements]).strip()
+        proj_path = str(Path.cwd() / "generated_projects" / safe_name)
+
+    eval_result = global_project_evaluator.evaluate_and_repair_project(
+        project_path=proj_path,
+        requirements=request.requirements,
+        max_repair_attempts=request.max_repair_attempts
+    )
+
+    return {
+        "status": eval_result.final_status,
+        "score": eval_result.overall_score,
+        "repair_attempts": eval_result.repair_attempts,
+        "max_repair_attempts": eval_result.max_repair_attempts,
+        "evaluation": eval_result.scores.model_dump(),
+        "test_results": eval_result.test_results.model_dump(),
+        "repaired_files": eval_result.repaired_files,
+        "remaining_errors": eval_result.remaining_errors,
+        "execution_time_seconds": eval_result.execution_time_seconds
+    }
+
+
+
+
 
