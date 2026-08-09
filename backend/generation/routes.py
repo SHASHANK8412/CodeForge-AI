@@ -63,7 +63,13 @@ class GenerationStatusResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 def _seed_demo_generation(gen_id: str, user_id: str) -> Dict[str, Any]:
+    from backend.routes.generate import GENERATIONS_DB
     now = "2026-08-09T14:00:00.000Z"
+
+    db_info = GENERATIONS_DB.get(gen_id, {})
+    proj_name = db_info.get("project_name", "AIForge Generated Application")
+    prompt = f"Project {proj_name}"
+
     agents = [
         {"name": name, "status": "completed", "started_at": now,
          "completed_at": now, "duration": 1.2, "retry_count": 0, "error": None}
@@ -77,9 +83,9 @@ def _seed_demo_generation(gen_id: str, user_id: str) -> Dict[str, Any]:
     ]
     record: Dict[str, Any] = {
         "generation_id": gen_id,
-        "project_id": "aiforge-demo",
+        "project_id": gen_id,
         "user_id": user_id,
-        "prompt": "FoodDelivery AI Demo Application",
+        "prompt": prompt,
         "status": "completed",
         "current_agent": "deployment",
         "progress": 100,
@@ -101,7 +107,7 @@ def _require_owned(gen_id: str, user_id: str) -> Dict[str, Any]:
     """Return the generation record or raise HTTP 403/404."""
     rec = _store.get(gen_id)
     if not rec:
-        if gen_id in ("aiforge-demo", "aiforge_demo") or gen_id.startswith("aiforge-demo"):
+        if gen_id in ("aiforge-demo", "aiforge_demo") or gen_id.startswith("aiforge-") or gen_id.startswith("aiforge_") or gen_id.startswith("gen_"):
             rec = _seed_demo_generation(gen_id, user_id)
         else:
             raise HTTPException(
@@ -109,7 +115,7 @@ def _require_owned(gen_id: str, user_id: str) -> Dict[str, Any]:
                 detail="Generation not found."
             )
     elif rec.get("user_id") != user_id and rec.get("user_id") not in ("default", "demo_user"):
-        if gen_id in ("aiforge-demo", "aiforge_demo") or gen_id.startswith("aiforge-demo"):
+        if gen_id in ("aiforge-demo", "aiforge_demo") or gen_id.startswith("aiforge-") or gen_id.startswith("aiforge_") or gen_id.startswith("gen_"):
             rec["user_id"] = user_id
         else:
             raise HTTPException(
