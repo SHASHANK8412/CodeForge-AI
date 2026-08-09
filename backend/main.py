@@ -218,6 +218,9 @@ def register_routers() -> None:
     from backend.readiness.routes import day19_readiness_router
     app.include_router(day19_readiness_router)
 
+    from backend.devops.routes import day20_devops_router
+    app.include_router(day20_devops_router)
+
     from backend.routes.deployment_routes import router as day33_cicd_router
     app.include_router(day33_cicd_router)
 
