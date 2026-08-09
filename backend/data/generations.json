@@ -14950,5 +14950,1175 @@
     "completed_at": "2026-08-09T09:15:30.545142+00:00",
     "error": null,
     "created_at": "2026-08-09T09:15:30.203054+00:00"
+  },
+  "gen_ElPWyP18-UB5rg": {
+    "generation_id": "gen_ElPWyP18-UB5rg",
+    "project_id": "proj_auto_001",
+    "user_id": "user_test_01",
+    "prompt": "Build a task management platform with FastAPI and React",
+    "status": "cancelled",
+    "current_agent": null,
+    "progress": 0,
+    "agents": [
+      {
+        "name": "planner",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "architect",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "frontend",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "backend",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "database",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "assembly",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "reviewer",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "documentation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "build_validation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "dependency_manager",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "security_scan",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "performance",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "execution_validation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "testing",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "debug",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "patch",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "packaging",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "deployment",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      }
+    ],
+    "events": [
+      {
+        "id": "evt_yvVv1a4-7Xc",
+        "type": "generation_started",
+        "agent": null,
+        "message": "Generation started",
+        "metadata": {},
+        "timestamp": "2026-08-09T09:31:33.786936+00:00"
+      },
+      {
+        "id": "evt_eLzbfk53NsI",
+        "type": "generation_cancelled",
+        "agent": null,
+        "message": "Generation cancelled by user",
+        "metadata": {},
+        "timestamp": "2026-08-09T09:31:33.866121+00:00"
+      }
+    ],
+    "started_at": "2026-08-09T09:31:33.781339+00:00",
+    "completed_at": "2026-08-09T09:31:33.827120+00:00",
+    "error": null,
+    "created_at": "2026-08-09T09:31:33.743550+00:00"
+  },
+  "gen_RcLbhGCCgenZIQ": {
+    "generation_id": "gen_RcLbhGCCgenZIQ",
+    "project_id": "proj_auto_002",
+    "user_id": "user_test_01",
+    "prompt": "Build e-commerce app",
+    "status": "paused",
+    "current_agent": null,
+    "progress": 0,
+    "agents": [
+      {
+        "name": "planner",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "architect",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "frontend",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "backend",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "database",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "assembly",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "reviewer",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "documentation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "build_validation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "dependency_manager",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "security_scan",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "performance",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "execution_validation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "testing",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "debug",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "patch",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "packaging",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "deployment",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      }
+    ],
+    "events": [
+      {
+        "id": "evt_qXtfO8l1Vc4",
+        "type": "generation_started",
+        "agent": null,
+        "message": "Generation started",
+        "metadata": {},
+        "timestamp": "2026-08-09T09:31:34.221404+00:00"
+      },
+      {
+        "id": "evt_-c43uVyQUMM",
+        "type": "generation_cancelled",
+        "agent": null,
+        "message": "Generation cancelled by user",
+        "metadata": {},
+        "timestamp": "2026-08-09T09:31:34.297629+00:00"
+      }
+    ],
+    "started_at": "2026-08-09T09:31:34.211883+00:00",
+    "completed_at": "2026-08-09T09:31:34.257530+00:00",
+    "error": null,
+    "created_at": "2026-08-09T09:31:34.109007+00:00"
+  },
+  "gen_guQ4NILcex5-XA": {
+    "generation_id": "gen_guQ4NILcex5-XA",
+    "project_id": "proj_auto_003",
+    "user_id": "user_test_01",
+    "prompt": "Build analytics dashboard",
+    "status": "building",
+    "current_agent": null,
+    "progress": 0,
+    "agents": [
+      {
+        "name": "planner",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "architect",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "frontend",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "backend",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "database",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "assembly",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "reviewer",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "documentation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "build_validation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "dependency_manager",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "security_scan",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "performance",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "execution_validation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "testing",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "debug",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "patch",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "packaging",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "deployment",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      }
+    ],
+    "events": [
+      {
+        "id": "evt_i_S9W9EXKZk",
+        "type": "generation_started",
+        "agent": null,
+        "message": "Generation started",
+        "metadata": {},
+        "timestamp": "2026-08-09T09:31:34.672615+00:00"
+      },
+      {
+        "id": "evt_hYDMiNfAaHA",
+        "type": "generation_cancelled",
+        "agent": null,
+        "message": "Generation cancelled by user",
+        "metadata": {},
+        "timestamp": "2026-08-09T09:31:34.751137+00:00"
+      }
+    ],
+    "started_at": "2026-08-09T09:31:34.663042+00:00",
+    "completed_at": "2026-08-09T09:31:34.715104+00:00",
+    "error": null,
+    "created_at": "2026-08-09T09:31:34.563953+00:00"
+  },
+  "gen_uD-_HTPvkF53Gw": {
+    "generation_id": "gen_uD-_HTPvkF53Gw",
+    "project_id": "proj_auto_004",
+    "user_id": "user_test_01",
+    "prompt": "Build CRM tool",
+    "status": "cancelled",
+    "current_agent": null,
+    "progress": 0,
+    "agents": [
+      {
+        "name": "planner",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "architect",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "frontend",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "backend",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "database",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "assembly",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "reviewer",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "documentation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "build_validation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "dependency_manager",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "security_scan",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "performance",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "execution_validation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "testing",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "debug",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "patch",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "packaging",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "deployment",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      }
+    ],
+    "events": [
+      {
+        "id": "evt_MKgWg6lxknA",
+        "type": "generation_started",
+        "agent": null,
+        "message": "Generation started",
+        "metadata": {},
+        "timestamp": "2026-08-09T09:31:35.219272+00:00"
+      },
+      {
+        "id": "evt_CU5XdRjBMDE",
+        "type": "generation_cancelled",
+        "agent": null,
+        "message": "Generation cancelled by user",
+        "metadata": {},
+        "timestamp": "2026-08-09T09:31:35.281649+00:00"
+      }
+    ],
+    "started_at": "2026-08-09T09:31:35.212739+00:00",
+    "completed_at": "2026-08-09T09:31:35.553789+00:00",
+    "error": null,
+    "created_at": "2026-08-09T09:31:35.117295+00:00"
+  },
+  "gen_k210v_tJ5eD8_A": {
+    "generation_id": "gen_k210v_tJ5eD8_A",
+    "project_id": "proj_comp",
+    "user_id": "user_test_01",
+    "prompt": "Build SaaS app",
+    "status": "cancelled",
+    "current_agent": null,
+    "progress": 0,
+    "agents": [
+      {
+        "name": "planner",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "architect",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "frontend",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "backend",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "database",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "assembly",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "reviewer",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "documentation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "build_validation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "dependency_manager",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "security_scan",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "performance",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "execution_validation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "testing",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "debug",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "patch",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "packaging",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "deployment",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      }
+    ],
+    "events": [
+      {
+        "id": "evt__ZVKxal5FeQ",
+        "type": "generation_started",
+        "agent": null,
+        "message": "Generation started",
+        "metadata": {},
+        "timestamp": "2026-08-09T09:31:35.687880+00:00"
+      },
+      {
+        "id": "evt_VxAVFpNd5fg",
+        "type": "generation_cancelled",
+        "agent": null,
+        "message": "Generation cancelled by user",
+        "metadata": {},
+        "timestamp": "2026-08-09T09:31:35.753679+00:00"
+      }
+    ],
+    "started_at": "2026-08-09T09:31:35.683939+00:00",
+    "completed_at": "2026-08-09T09:31:35.718980+00:00",
+    "error": null,
+    "created_at": "2026-08-09T09:31:35.654730+00:00"
+  },
+  "gen_gS7rzDDnuoYQnA": {
+    "generation_id": "gen_gS7rzDDnuoYQnA",
+    "project_id": "proj_fail",
+    "user_id": "user_test_01",
+    "prompt": "Build broken app",
+    "status": "cancelled",
+    "current_agent": null,
+    "progress": 0,
+    "agents": [
+      {
+        "name": "planner",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "architect",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "frontend",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "backend",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "database",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "assembly",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "reviewer",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "documentation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "build_validation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "dependency_manager",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "security_scan",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "performance",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "execution_validation",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "testing",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "debug",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "patch",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "packaging",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "deployment",
+        "status": "waiting",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "retry_count": 0,
+        "error": null
+      }
+    ],
+    "events": [
+      {
+        "id": "evt_3bi2aWa9UEY",
+        "type": "generation_started",
+        "agent": null,
+        "message": "Generation started",
+        "metadata": {},
+        "timestamp": "2026-08-09T09:31:36.080251+00:00"
+      },
+      {
+        "id": "evt_QpRLt2Yr578",
+        "type": "generation_cancelled",
+        "agent": null,
+        "message": "Generation cancelled by user",
+        "metadata": {},
+        "timestamp": "2026-08-09T09:31:36.161344+00:00"
+      }
+    ],
+    "started_at": "2026-08-09T09:31:36.071973+00:00",
+    "completed_at": "2026-08-09T09:31:36.421660+00:00",
+    "error": null,
+    "created_at": "2026-08-09T09:31:36.029957+00:00"
   }
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaCommentAlt, FaHammer, FaBrain, FaChartBar, FaPlus, FaSearch, FaTrash, FaPen, FaFolderOpen, FaServer, FaHome, FaPlug, FaTrophy, FaGlobe, FaBolt, FaCode, FaRocket, FaCog, FaUserCircle, FaSignOutAlt } from "react-icons/fa";
+import { FaCommentAlt, FaHammer, FaBrain, FaChartBar, FaPlus, FaSearch, FaTrash, FaPen, FaFolderOpen, FaServer, FaHome, FaPlug, FaTrophy, FaGlobe, FaBolt, FaCode, FaRocket, FaCog, FaUserCircle, FaSignOutAlt, FaShieldAlt } from "react-icons/fa";
 import { useAuth } from "../auth/useAuth";
 
 
@@ -197,6 +197,7 @@ function Sidebar({ currentView, setView }) {
                 { key: "debate", label: "Multi-Agent Debate", icon: <FaBrain size={12} className="text-amber-400" /> },
                 { key: "talk", label: "Talk to Your Code", icon: <FaCommentAlt size={12} className="text-indigo-400" /> },
                 { key: "flight-recorder", label: "Flight Recorder", icon: <FaBrain size={12} className="text-indigo-400" /> },
+                { key: "security", label: "Security Center", icon: <FaShieldAlt size={12} className="text-emerald-400" /> },
             ]
         },
         {

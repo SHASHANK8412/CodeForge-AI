@@ -9,6 +9,8 @@ import Dashboard from "./pages/Dashboard";
 import PluginsDashboard from "./pages/PluginsDashboard";
 import LearningDashboard from "./pages/LearningDashboard";
 import F1Website from "./components/F1Website";
+import TalkToCodePage from "./pages/SoftwareAssistantPage";
+import SecurityCenter from "./pages/SecurityCenter";
 import LandingPage from "./pages/LandingPage";
 import CreateProject from "./pages/CreateProject";
 import GenerationDashboard from "./pages/GenerationDashboard";
@@ -169,6 +171,11 @@ function AppContent() {
 
 
                 {/* Additional views */}
+                {view === "security" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <SecurityCenter projectId={activeGenerationId} />
+                    </ProtectedRoute>
+                )}
                 {view === "chat" && <ChatBox />}
                 {view === "project" && (
                     <ProjectGenerator 

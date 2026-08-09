@@ -60,10 +60,13 @@ import secrets
 from fastapi import Request
 
 @app.middleware("http")
-async def correlation_id_middleware(request: Request, call_next):
+async def security_headers_middleware(request: Request, call_next):
     correlation_id = request.headers.get("X-Correlation-ID") or f"req_{secrets.token_hex(6)}"
     response = await call_next(request)
     response.headers["X-Correlation-ID"] = correlation_id
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     return response
 
 
@@ -197,6 +200,9 @@ def register_routers() -> None:
     app.include_router(debate_router)
     app.include_router(talk_router)
     app.include_router(cto_router)
+
+    from backend.security.routes import security_router
+    app.include_router(security_router)
 
     from backend.routes.deployment_routes import router as day33_cicd_router
     app.include_router(day33_cicd_router)
