@@ -183,6 +183,10 @@ def register_routers() -> None:
     from backend.routes.repair import router as day14_repair_router
     app.include_router(day14_repair_router)
 
+    from backend.autopilot.routes import router as day15_autopilot_router, flight_router as day15_flight_router
+    app.include_router(day15_autopilot_router)
+    app.include_router(day15_flight_router)
+
     from backend.routes.deployment_routes import router as day33_cicd_router
     app.include_router(day33_cicd_router)
 

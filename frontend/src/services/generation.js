@@ -140,6 +140,8 @@ export function isTerminalStatus(status) {
  *
  * @returns {{ disconnect: () => void }}
  */
+export const subscribeToGenerationEvents = connectGenerationStream;
+
 export function connectGenerationStream(generationId, callbacks = {}) {
   const {
     onSnapshot,

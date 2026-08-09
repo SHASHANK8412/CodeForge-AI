@@ -24,6 +24,8 @@ import Settings from "./pages/Settings";
 import ApiKeys from "./pages/ApiKeys";
 import ObservabilityDashboard from "./pages/ObservabilityDashboard";
 import EvaluationCenter from "./pages/EvaluationCenter";
+import AutopilotDashboard from "./pages/AutopilotDashboard";
+import FlightRecorder from "./pages/FlightRecorder";
 import { AuthProvider } from "./auth/AuthProvider";
 import ProtectedRoute from "./auth/ProtectedRoute";
 
@@ -122,6 +124,16 @@ function AppContent() {
                 {view === "evaluations" && (
                     <ProtectedRoute onRedirectLogin={() => setView("login")}>
                         <EvaluationCenter />
+                    </ProtectedRoute>
+                )}
+                {view === "autopilot" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <AutopilotDashboard generationId={activeGenerationId} setView={setView} setActiveGenerationId={setActiveGenerationId} />
+                    </ProtectedRoute>
+                )}
+                {view === "flight-recorder" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <FlightRecorder projectId={activeGenerationId} setView={setView} />
                     </ProtectedRoute>
                 )}
 

@@ -167,6 +167,8 @@ function Sidebar({ currentView, setView }) {
     const tabs = [
         { key: "landing", label: "SaaS Landing Page", icon: <FaGlobe size={14} className="text-cyan-400" /> },
         { key: "create", label: "Create Project", icon: <FaPlus size={14} className="text-cyan-400" /> },
+        { key: "autopilot", label: "Engineering Autopilot", icon: <FaBolt size={14} className="text-yellow-400" /> },
+        { key: "flight-recorder", label: "Flight Recorder", icon: <FaBrain size={14} className="text-indigo-400" /> },
         { key: "build", label: "Live Build Dashboard", icon: <FaBolt size={14} className="text-yellow-400" /> },
         { key: "code", label: "Code Workspace", icon: <FaCode size={14} className="text-emerald-400" /> },
         { key: "metrics", label: "Quality Center", icon: <FaChartBar size={14} className="text-amber-400" /> },
