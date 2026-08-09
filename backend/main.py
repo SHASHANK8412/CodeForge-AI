@@ -209,6 +209,9 @@ def register_routers() -> None:
     from backend.debate.routes import day16_debate_router
     app.include_router(day16_debate_router)
 
+    from backend.browser_testing.routes import day17_browser_testing_router
+    app.include_router(day17_browser_testing_router)
+
     from backend.routes.deployment_routes import router as day33_cicd_router
     app.include_router(day33_cicd_router)
 
