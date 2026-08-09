@@ -72,7 +72,7 @@ function AppContent() {
             <Sidebar currentView={view} setView={setView} />
             
             {/* Active Workspace Panel */}
-            <div className="flex-1 flex flex-col min-w-0 bg-[#0B0F19] overflow-y-auto">
+            <div className={`flex-1 flex flex-col min-w-0 min-h-0 bg-[#0B0F19] ${view === "code" ? "overflow-hidden" : "overflow-y-auto"}`}>
                 {view === "landing" && <LandingPage setView={setView} />}
                 
                 {/* Protected Routes */}

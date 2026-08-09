@@ -218,7 +218,7 @@ function Sidebar({ currentView, setView }) {
     ];
 
     return (
-        <div className={`${isCollapsed ? "w-16" : "w-72"} bg-[#0F172A] border-r border-gray-800 flex flex-col h-full text-white select-none transition-all duration-200`}>
+        <div className={`${isCollapsed ? "w-[64px]" : "w-[260px]"} bg-[#0F172A] border-r border-gray-800 flex flex-col h-full shrink-0 text-white select-none transition-all duration-200 overflow-hidden`}>
             {/* Header section */}
             <div className="p-3 border-b border-gray-800 space-y-2">
                 <div className="flex items-center justify-between">
