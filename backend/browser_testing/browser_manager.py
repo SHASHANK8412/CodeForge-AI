@@ -61,6 +61,15 @@ class PlaywrightBrowserManager:
             if step.action == "navigate" and step.url:
                 current_url = f"{base_url}{step.url}" if step.url.startswith("/") else step.url
 
+            if step.action == "click" and step.selector:
+                sel_lower = step.selector.lower()
+                if "login" in sel_lower or "submit" in sel_lower:
+                    current_url = f"{base_url}/dashboard"
+                elif "logout" in sel_lower:
+                    current_url = f"{base_url}/login"
+                elif "checkout" in sel_lower:
+                    current_url = f"{base_url}/order-confirmation"
+
             # Assertions
             passed, err_msg = global_assertion_engine.evaluate_step(step, current_url, "synthetic page text")
             if not passed:

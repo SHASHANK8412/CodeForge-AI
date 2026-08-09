@@ -212,6 +212,9 @@ def register_routers() -> None:
     from backend.browser_testing.routes import day17_browser_testing_router
     app.include_router(day17_browser_testing_router)
 
+    from backend.performance.routes import day18_performance_router
+    app.include_router(day18_performance_router)
+
     from backend.routes.deployment_routes import router as day33_cicd_router
     app.include_router(day33_cicd_router)
 
