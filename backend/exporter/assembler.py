@@ -43,6 +43,14 @@ class ProjectAssembler:
         files["backend/requirements.txt"] = req_txt
         files["frontend/package.json"] = pkg_json
 
+        # Ensure mandatory standard root directories exist
+        if not any(p.startswith("backend/") for p in files):
+            files["backend/main.py"] = "from fastapi import FastAPI\napp = FastAPI()\n"
+        if not any(p.startswith("frontend/") for p in files):
+            files["frontend/src/App.jsx"] = "export default function App() { return <div>App</div>; }\n"
+        if not any(p.startswith("database/") for p in files):
+            files["database/schema.sql"] = "-- PostgreSQL 3NF Schema\nCREATE TABLE IF NOT EXISTS users (id UUID PRIMARY KEY);\n"
+
         # 4. Generate README & Env Example
         tech_stack = {
             "frontend": "React (Vite)",

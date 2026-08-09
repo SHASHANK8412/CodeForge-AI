@@ -1,0 +1,6 @@
+{
+  "file": "frontend/src/Wallet.jsx",
+  "category": "UI_COMPONENT",
+  "summary": "React Component (Wallet.jsx)",
+  "snippet": "import React from 'react'; export default function Wallet() {}"
+}

@@ -10,3 +10,15 @@ backend/rag/chroma_db/
 backend/rag/documents/
 generated_projects/
 *.db
+workspace/
+workspace_test_env/
+*.sqlite3
+logs/*.log
+backend/logs/*.log
+.worktrees/
+backend/vector_store/
+backend/memory/vector_store.json
+v2/logs/
+*.log
+
+

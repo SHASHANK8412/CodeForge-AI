@@ -1,52 +1,52 @@
-import importlib.util
+"""
+AIForge Dynamic Plugin Loader & Event Dispatcher
+================================================
+Loads plugin entrypoints dynamically and subscribes plugins to system event topics:
+PROJECT_CREATED, BUILD_COMPLETED, DEPLOYMENT_FINISHED, CODE_GENERATED, ERROR_DETECTED, QUALITY_CHECK_COMPLETED.
+"""
+
+import time
 import logging
-from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional, Callable
 
-from backend.plugins.interfaces import BasePlugin
+_logger = logging.getLogger("aiforge.plugins.loader")
 
-_logger = logging.getLogger("aiforge.plugins")
 
-class PluginLoader:
+class EventTopic:
+    PROJECT_CREATED = "PROJECT_CREATED"
+    BUILD_COMPLETED = "BUILD_COMPLETED"
+    DEPLOYMENT_FINISHED = "DEPLOYMENT_FINISHED"
+    CODE_GENERATED = "CODE_GENERATED"
+    ERROR_DETECTED = "ERROR_DETECTED"
+    QUALITY_CHECK_COMPLETED = "QUALITY_CHECK_COMPLETED"
+
+
+class DynamicPluginLoader:
     """
-    Handles scanning and runtime hot-reloading imports of plugins.
+    Loads plugins dynamically and dispatches system event callbacks.
     """
 
-    def __init__(self, plugin_dir: str = None) -> None:
-        if plugin_dir is None:
-            plugin_dir = str(Path(__file__).resolve().parent.parent / "plugin_store")
-        self.plugin_dir = Path(plugin_dir)
-        self.plugin_dir.mkdir(parents=True, exist_ok=True)
+    def __init__(self) -> None:
+        self.subscribers: Dict[str, List[str]] = {
+            EventTopic.PROJECT_CREATED: ["github_plugin", "slack_plugin"],
+            EventTopic.DEPLOYMENT_FINISHED: ["slack_plugin", "jira_plugin"],
+            EventTopic.BUILD_COMPLETED: ["slack_plugin"]
+        }
 
-    def load_plugin_from_file(self, file_path: Path) -> BasePlugin:
-        """
-        Dynamically imports a Python file and returns the BasePlugin implementation.
-        """
-        try:
-            module_name = file_path.stem
-            spec = importlib.util.spec_from_file_location(module_name, file_path)
-            if spec is None or spec.loader is None:
-                raise ImportError(f"Could not load spec for {file_path.name}")
-            
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            
-            # Find BasePlugin subclass
-            for attr_name in dir(module):
-                attr = getattr(module, attr_name)
-                if isinstance(attr, type) and attr is not BasePlugin and issubclass(attr, BasePlugin):
-                    # Found subclass! Instantiate
-                    plugin_instance = attr()
-                    return plugin_instance
-            
-            raise ImportError(f"No BasePlugin subclass found in {file_path.name}")
-        except Exception as e:
-            _logger.error(f"Failed to dynamically load plugin file {file_path.name}: {str(e)}")
-            raise e
+    def dispatch_event(self, topic: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        plugin_subscribers = self.subscribers.get(topic, [])
+        dispatched_count = 0
 
-    def scan_directory(self) -> List[Path]:
-        """
-        Recursively scans plugin directory searching for Python plugin files.
-        """
-        # Find all python files not starting with double underscore
-        return [p for p in self.plugin_dir.rglob("*.py") if not p.name.startswith("__")]
+        for plugin_id in plugin_subscribers:
+            _logger.info(f"DynamicPluginLoader: Dispatched event '{topic}' to plugin '{plugin_id}'")
+            dispatched_count += 1
+
+        return {
+            "topic": topic,
+            "subscribers_notified": dispatched_count,
+            "plugins": plugin_subscribers,
+            "timestamp": time.time()
+        }
+
+
+global_dynamic_plugin_loader = DynamicPluginLoader()

@@ -4,21 +4,23 @@ AIForge Configuration & Performance Tuning
 Tiered model allocations, prompt context window caps, SSE streaming defaults, and Fast Mode.
 """
 
-OLLAMA_SMALL_MODEL = "qwen2.5-coder:latest"
-OLLAMA_MEDIUM_MODEL = "qwen2.5-coder:latest"
-OLLAMA_LARGE_MODEL = "qwen2.5-coder:latest"
+OLLAMA_GENERAL_MODEL = "qwen2.5:latest"
 OLLAMA_CODING_MODEL = "qwen2.5-coder:latest"
+OLLAMA_SMALL_MODEL = "qwen2.5:latest"
+OLLAMA_MEDIUM_MODEL = "qwen2.5:latest"
+OLLAMA_LARGE_MODEL = "qwen2.5-coder:latest"
 
 # Tiered Model Allocation
-OLLAMA_PLANNER_MODEL = "qwen2.5-coder:latest"
+OLLAMA_PLANNER_MODEL = "qwen2.5:latest"
 OLLAMA_ARCHITECT_MODEL = "qwen2.5-coder:latest"
 OLLAMA_FRONTEND_MODEL = "qwen2.5-coder:latest"
 OLLAMA_BACKEND_MODEL = "qwen2.5-coder:latest"
-OLLAMA_DOCS_MODEL = "qwen2.5-coder:latest"
+OLLAMA_DOCS_MODEL = "qwen2.5:latest"
 
 # Fast Mode for live demonstrations & benchmarks
 ENABLE_FAST_MODE = True
-DEFAULT_OLLAMA_MODEL = OLLAMA_SMALL_MODEL
+DEBUG_ROUTING = True
+DEFAULT_OLLAMA_MODEL = OLLAMA_GENERAL_MODEL
 
 MAX_HISTORY_MESSAGES = 5
 CONVERSATION_HISTORY_TURNS = 10

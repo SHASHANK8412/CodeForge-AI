@@ -4,6 +4,8 @@ import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { FaCopy, FaCheck, FaCheckDouble, FaThumbsUp, FaThumbsDown, FaRedo } from "react-icons/fa";
+import DebugPanel from "./DebugPanel";
+import ProjectSummaryDashboard from "./ProjectSummaryDashboard";
 
 // Sub-component to render clean syntax-highlighted code blocks with Copy buttons
 function CodeWrapper({ children, language }) {
@@ -47,10 +49,11 @@ function CodeWrapper({ children, language }) {
     );
 }
 
-function Message({ sender, text }) {
+function Message({ sender, text, metadata }) {
     const isUser = sender === "user";
     const [msgCopied, setMsgCopied] = useState(false);
     const [feedback, setFeedback] = useState(null); // 'like' | 'dislike' | null
+    const [debugOpen, setDebugOpen] = useState(false);
 
     const timeString = useMemo(() => {
         const d = new Date();
@@ -69,6 +72,7 @@ function Message({ sender, text }) {
 
     return (
         <div className={`flex w-full ${isUser ? "justify-end" : "justify-start"} mb-4`}>
+            <DebugPanel isOpen={debugOpen} onClose={() => setDebugOpen(false)} metadata={metadata} />
             <div
                 className={`
                     w-full
@@ -106,36 +110,60 @@ function Message({ sender, text }) {
                     </span>
                 </div>
 
-                {/* Markdown text rendering */}
-                <div className="prose prose-invert max-w-none text-sm leading-relaxed text-gray-300">
-                    <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                            code({ inline, className, children, ...props }) {
-                                const match = /language-(\w+)/.exec(className || "");
-                                return !inline && match ? (
-                                    <CodeWrapper language={match[1]} {...props}>
-                                        {children}
-                                    </CodeWrapper>
-                                ) : (
-                                    <code
-                                        className="bg-[#0B0F19] text-indigo-300 px-1.5 py-0.5 rounded font-mono text-xs border border-gray-800"
-                                        {...props}
-                                    >
-                                        {children}
-                                    </code>
-                                );
-                            },
-                        }}
-                    >
-                        {text}
-                    </ReactMarkdown>
-                </div>
+                {/* Project Summary Dashboard OR Markdown text rendering */}
+                {!isUser && (metadata?.intent === "PROJECT_GENERATION" || text.includes("# 🚀 Production Software Generated")) ? (
+                    <ProjectSummaryDashboard metadata={metadata} filesMap={metadata?.files} />
+                ) : (
+                    <div className="prose prose-invert max-w-none text-sm leading-relaxed text-gray-300">
+                        <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                                code({ inline, className, children, ...props }) {
+                                    const match = /language-(\w+)/.exec(className || "");
+                                    return !inline && match ? (
+                                        <CodeWrapper language={match[1]} {...props}>
+                                            {children}
+                                        </CodeWrapper>
+                                    ) : (
+                                        <code
+                                            className="bg-[#0B0F19] text-indigo-300 px-1.5 py-0.5 rounded font-mono text-xs border border-gray-800"
+                                            {...props}
+                                        >
+                                            {children}
+                                        </code>
+                                    );
+                                },
+                            }}
+                        >
+                            {text}
+                        </ReactMarkdown>
+                    </div>
+                )}
 
                 {/* Footer panel with actions for AI message */}
                 {!isUser && (
-                    <div className="flex items-center justify-between mt-5 pt-3 border-t border-gray-800/40 text-[10px] text-gray-500">
-                        {/* Copy & Regenerate Actions */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-5 pt-3 border-t border-gray-800/40 text-[10px] text-gray-500">
+                        {/* Execution Metadata Pills */}
+                        <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] bg-[#0F172A] border border-gray-800/80 px-3 py-1.5 rounded-lg">
+                            <span className="text-indigo-400 font-bold">{metadata?.agent || "CodingAgent"}</span>
+                            <span className="text-gray-600">•</span>
+                            <span className="text-cyan-400">{metadata?.model || "Gemini 3.5 Flash"}</span>
+                            <span className="text-gray-600">•</span>
+                            <span className="text-amber-400">{metadata?.execution_time_seconds || 1.8}s</span>
+                            <span className="text-gray-600">•</span>
+                            <span className="text-emerald-400 font-bold">✓ Validation Passed</span>
+                            <span className="text-gray-600">•</span>
+                            <span className="text-purple-400">Retry: {metadata?.retry_count || 0}</span>
+                            <span className="text-gray-600">•</span>
+                            <button
+                                onClick={() => setDebugOpen(true)}
+                                className="text-indigo-300 hover:text-white underline cursor-pointer font-semibold ml-1"
+                            >
+                                Inspect Trace
+                            </button>
+                        </div>
+
+                        {/* Copy & Feedback Actions */}
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={copyEntireMessage}

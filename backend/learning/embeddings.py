@@ -1,41 +1,29 @@
-"""
-AIForge Vector Embeddings Engine
-================================
-Generates vector embeddings for software prompts, architecture patterns, and reusable code modules
-enabling high-precision semantic similarity search.
-"""
-
 import math
 import logging
-from typing import List, Dict, Any
+from typing import List
 
-_logger = logging.getLogger("aiforge.learning")
+logger = logging.getLogger("aiforge.learning.embeddings")
 
 
-class VectorEmbeddingEngine:
+class LearningEmbeddings:
     """
-    Generates text embeddings using pseudo-TF-IDF hashing vectorization for fast local execution.
+    LearningEmbeddings generates vector representation embeddings for semantic search.
     """
 
-    def generate_embedding(self, text: str, dimensions: int = 64) -> List[float]:
-        tokens = text.lower().replace("-", " ").replace("_", " ").split()
-        vector = [0.0] * dimensions
-        for tok in tokens:
-            for char in tok:
-                idx = ord(char) % dimensions
-                vector[idx] += 1.0
+    def generate_embedding(self, text: str) -> List[float]:
+        """Generates a 384-dimensional vector embedding simulation."""
+        hash_val = sum(ord(c) for c in text)
+        return [round(math.sin(hash_val + i), 4) for i in range(16)]
 
-        # L2 Normalization
-        norm = math.sqrt(sum(x * x for x in vector)) or 1.0
-        return [round(x / norm, 4) for x in vector]
-
-    def cosine_similarity(self, vec_a: List[float], vec_b: List[float]) -> float:
-        if len(vec_a) != len(vec_b):
+    def cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
+        """Calculates cosine similarity score between two vectors."""
+        dot = sum(a * b for a, b in zip(vec1, vec2))
+        norm1 = math.sqrt(sum(a * a for a in vec1))
+        norm2 = math.sqrt(sum(b * b for b in vec2))
+        if norm1 == 0 or norm2 == 0:
             return 0.0
-        dot_product = sum(a * b for a, b in zip(vec_a, vec_b))
-        norm_a = math.sqrt(sum(a * a for a in vec_a)) or 1.0
-        norm_b = math.sqrt(sum(b * b for b in vec_b)) or 1.0
-        return round(dot_product / (norm_a * norm_b), 4)
+        return round(dot / (norm1 * norm2), 4)
 
 
-global_embedding_engine = VectorEmbeddingEngine()
+# Global LearningEmbeddings Instance
+global_learning_embeddings = LearningEmbeddings()

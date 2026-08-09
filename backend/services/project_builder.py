@@ -70,5 +70,43 @@ class StructuredProjectBuilder:
             "manifest": files_manifest
         }
 
+    def write_project_to_disk(
+        self,
+        project_name: str,
+        files_manifest: Dict[str, str],
+        base_dir: str = "generated_projects"
+    ) -> Path:
+        """
+        Safely writes files from manifest to generated_projects/<ProjectName>/ on disk.
+        Enforces strict path traversal security checks to prevent writing outside target directory.
+        """
+        safe_name = "".join([c if c.isalnum() or c in "-_" else "_" for c in project_name]).strip("_") or "AIForgeProject"
+        base_path = Path(base_dir).resolve()
+        target_dir = (base_path / safe_name).resolve()
+
+        # Security check: ensure target_dir is strictly inside base_path
+        if not str(target_dir).startswith(str(base_path)):
+            raise ValueError(f"Unsafe project directory path: {target_dir}")
+
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        for rel_path_str, content in files_manifest.items():
+            clean_rel = rel_path_str.replace("\\", "/").lstrip("/")
+            if rel_path_str.startswith("/") or rel_path_str.startswith("\\"):
+                raise ValueError(f"Absolute path rejected: {rel_path_str}")
+
+            dest_path = (target_dir / clean_rel).resolve()
+
+            # Path traversal security check
+            if not str(dest_path).startswith(str(target_dir)):
+                raise ValueError(f"Security Warning: Path traversal detected for path '{rel_path_str}'")
+
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
+            dest_path.write_text(content, encoding="utf-8")
+
+        _logger.info(f"Successfully wrote {len(files_manifest)} files to disk at '{target_dir}'")
+        return target_dir
+
 
 global_structured_project_builder = StructuredProjectBuilder()
+

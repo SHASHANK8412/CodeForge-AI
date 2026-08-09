@@ -1,141 +1,100 @@
-"""
-AIForge Day 96 & 97 Knowledge Base & Reusable Component Library
-===============================================================
-Maintains reusable knowledge templates & best practices for:
-- React Authentication
-- JWT Bearer Middleware
-- CRUD APIs
-- Docker Containerization
-- Redis Caching
-- FastAPI Architecture
-- Testing Strategy
-- CI/CD Workflows
-- OAuth Integration
-- Payment Gateway (Stripe/PayPal)
-- Charts & Visualization
-- Admin Dashboard
-"""
-
-import json
+import time
 import logging
 from typing import Dict, Any, List, Optional
 
-_logger = logging.getLogger("aiforge.learning.knowledge_base")
+logger = logging.getLogger("aiforge.learning.knowledge_base")
 
 
-class ReusableKnowledgeBase:
+class KnowledgeBase:
     """
-    Knowledge Base for reusable software components and best practices.
+    KnowledgeBase stores categorized engineering patterns, confidence scores,
+    and architecture templates.
     """
 
-    def __init__(self) -> None:
-        self.catalog = {
-            "React Authentication": {
-                "category": "frontend",
-                "description": "Stateless JWT Auth Provider with Context API and localStorage token persistence",
-                "best_practices": ["Store JWT in secure HTTPOnly cookie or encrypted memory", "Auto refresh token on 401"],
-                "reusable_template": "export const AuthProvider = ({ children }) => { ... }",
-                "common_bugs": ["Token expiration unhandled causing UI crash"],
-                "solutions": ["Add axios request/response interceptors for silent refresh"]
+    def __init__(self):
+        self.entries: List[Dict[str, Any]] = [
+            {
+                "id": "kb_01",
+                "category": "Architecture",
+                "name": "FastAPI + React Microservice Architecture",
+                "description": "Production-ready decoupled microservice architecture pattern",
+                "confidence_score": 9.8,
+                "reuse_count": 42,
+                "version": "1.0",
+                "tags": ["fastapi", "react", "architecture"]
             },
-            "JWT": {
-                "category": "security",
-                "description": "HS256 or RS256 JWT validation middleware for FastAPI routes",
-                "best_practices": ["Use short-lived access tokens (15m) and refresh tokens (7d)"],
-                "reusable_template": "def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)): ...",
-                "common_bugs": ["Algorithm mismatch or missing secret key"],
-                "solutions": ["Enforce ALGORITHM='HS256' in PyJWT decode"]
+            {
+                "id": "kb_02",
+                "category": "Authentication",
+                "name": "JWT Auth Dependency Injection",
+                "description": "OAuth2 password bearer with JWT token validation",
+                "confidence_score": 9.9,
+                "reuse_count": 58,
+                "version": "1.2",
+                "tags": ["jwt", "auth", "security"]
             },
-            "CRUD APIs": {
-                "category": "backend",
-                "description": "Standardized RESTful CRUD route patterns with Pydantic validation",
-                "best_practices": ["Use HTTP 201 for Created, 204 for No Content", "Paginate GET list endpoints"],
-                "reusable_template": "@router.get('/items', response_model=List[ItemSchema]) ...",
-                "common_bugs": ["N+1 query loading in database relationships"],
-                "solutions": ["Use joinedload or selectinload in SQLAlchemy queries"]
+            {
+                "id": "kb_03",
+                "category": "Database",
+                "name": "SQLAlchemy Async Session Pool",
+                "description": "Async PostgreSQL connection pool and migration strategy",
+                "confidence_score": 9.5,
+                "reuse_count": 31,
+                "version": "1.0",
+                "tags": ["sqlalchemy", "postgres", "database"]
+            }
+        ]
+
+        self.templates: Dict[str, Dict[str, Any]] = {
+            "e_commerce": {
+                "name": "E-Commerce Platform",
+                "stack": "FastAPI + React + PostgreSQL + Stripe",
+                "components": ["Product Catalog", "Cart System", "Checkout Flow", "Order Management"]
             },
-            "Docker": {
-                "category": "devops",
-                "description": "Multi-stage production Dockerfile and Docker Compose orchestration",
-                "best_practices": ["Use alpine base images", "Run container as non-root user"],
-                "reusable_template": "FROM node:18-alpine AS builder ...",
-                "common_bugs": ["Oversized container build context"],
-                "solutions": ["Add .dockerignore ignoring node_modules and build artifacts"]
+            "hospital_management": {
+                "name": "Hospital & Healthcare System",
+                "stack": "FastAPI + React + PostgreSQL + Docker",
+                "components": ["Patient Records", "Doctor Scheduling", "Billing & Claims", "Prescriptions"]
             },
-            "Redis": {
-                "category": "database",
-                "description": "In-memory caching and rate-limiting store",
-                "best_practices": ["Set TTL expiration on cached keys", "Use Redis connection pool"],
-                "reusable_template": "redis_client = redis.Redis(host='localhost', port=6379, db=0)",
-                "common_bugs": ["Unbounded cache growth filling memory"],
-                "solutions": ["Configure maxmemory-policy volatile-lru"]
+            "banking": {
+                "name": "Banking & Fintech System",
+                "stack": "FastAPI + React + PostgreSQL + Redis",
+                "components": ["Account Ledger", "Fund Transfer", "Audit Logs", "MFA Auth"]
             },
-            "FastAPI": {
-                "category": "backend",
-                "description": "Asynchronous RESTful API framework with Swagger OpenAPI documentation",
-                "best_practices": ["Group routes into APIRouters", "Use dependency injection for DB sessions"],
-                "reusable_template": "app = FastAPI(title='AIForge Microservice')",
-                "common_bugs": ["Blocking sync IO calls inside async path functions"],
-                "solutions": ["Use async def with async libraries or run_in_executor for sync IO"]
-            },
-            "Testing": {
-                "category": "qa",
-                "description": "Pytest unit & integration test suite with coverage reports",
-                "best_practices": ["Mock external network calls", "Use test fixtures for DB setup"],
-                "reusable_template": "def test_api_endpoint(client): response = client.get('/health'); assert response.status_code == 200",
-                "common_bugs": ["Test pollution across test runs"],
-                "solutions": ["Rollback database transaction after each test case"]
-            },
-            "CI/CD": {
-                "category": "devops",
-                "description": "GitHub Actions automated build, test, and cloud deployment workflow",
-                "best_practices": ["Run linter and tests before merge", "Use repository secrets for keys"],
-                "reusable_template": "name: CI/CD Pipeline\non: [push]",
-                "common_bugs": ["Failing build due to un-pinned dependencies"],
-                "solutions": ["Use package-lock.json / poetry.lock / requirements.txt with exact versions"]
-            },
-            "OAuth": {
-                "category": "security",
-                "description": "Google & GitHub OAuth2 Social Authentication Flow",
-                "best_practices": ["Validate state parameter to prevent CSRF"],
-                "reusable_template": "async def oauth_callback(code: str): ...",
-                "common_bugs": ["Mismatched redirect URI"],
-                "solutions": ["Match exact redirect URI in OAuth app console"]
-            },
-            "Payment Gateway": {
-                "category": "integration",
-                "description": "Stripe Payment Intent and Webhook Event Processor",
-                "best_practices": ["Verify Stripe webhook signature"],
-                "reusable_template": "stripe.PaymentIntent.create(amount=total, currency='usd')",
-                "common_bugs": ["Duplicate event processing from retried webhooks"],
-                "solutions": ["Store processed webhook event IDs in database for idempotency"]
-            },
-            "Charts": {
-                "category": "frontend",
-                "description": "Recharts / Chart.js Data Analytics Visualization Component",
-                "best_practices": ["Memoize chart dataset calculation"],
-                "reusable_template": "<ResponsiveContainer><LineChart data={data}><Line dataKey='val'/></LineChart></ResponsiveContainer>",
-                "common_bugs": ["Re-rendering entire chart canvas on every state tick"],
-                "solutions": ["Wrap chart component in React.memo"]
-            },
-            "Admin Dashboard": {
-                "category": "frontend",
-                "description": "Role-Based Admin Portal with Data Tables, Metrics Cards, and User Management",
-                "best_practices": ["Protect admin routes with Role-Based Access Control (RBAC)"],
-                "reusable_template": "export function AdminDashboard() { ... }",
-                "common_bugs": ["Exposing admin APIs without RBAC authorization check"],
-                "solutions": ["Add require_admin role check dependency in FastAPI router"]
+            "chat_app": {
+                "name": "Real-time Messaging Platform",
+                "stack": "FastAPI WebSockets + React + Redis",
+                "components": ["WebSocket Gateway", "Chat Rooms", "Message Store", "Presence Online"]
             }
         }
 
-    def get_all_knowledge(self) -> Dict[str, Any]:
-        return {
-            "total_components": len(self.catalog),
-            "catalog": self.catalog
+    def list_knowledge(self, category: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Lists knowledge entries optionally filtered by category."""
+        if category:
+            return [e for e in self.entries if e.get("category", "").lower() == category.lower()]
+        return self.entries
+
+    def store_pattern(self, name: str, category: str, description: str, tags: List[str] = None) -> Dict[str, Any]:
+        """Stores a new knowledge item into the KnowledgeBase."""
+        entry = {
+            "id": f"kb_{len(self.entries) + 1:02d}",
+            "category": category,
+            "name": name,
+            "description": description,
+            "confidence_score": 9.0,
+            "reuse_count": 1,
+            "version": "1.0",
+            "tags": tags or [],
+            "timestamp": time.time()
         }
+        self.entries.append(entry)
+        logger.info(f"KnowledgeBase stored pattern '{name}' under '{category}'")
+        return entry
 
-    def get_component(self, name: str) -> Optional[Dict[str, Any]]:
-        return self.catalog.get(name)
+    def get_templates(self) -> Dict[str, Dict[str, Any]]:
+        """Returns architecture template library."""
+        return self.templates
 
 
-global_knowledge_base = ReusableKnowledgeBase()
+# Global KnowledgeBase Instance
+global_knowledge_base = KnowledgeBase()

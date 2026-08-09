@@ -1,0 +1,27 @@
+{
+  "project_id": "test_idx_01",
+  "prompt": "Build blog app",
+  "framework": "FullStack",
+  "quality_score": 95.0,
+  "tags": [
+    "fullstack",
+    "build",
+    "blog",
+    "app"
+  ],
+  "knowledge": {
+    "ui_components": [
+      {
+        "file": "App.jsx",
+        "code": "React code"
+      }
+    ],
+    "error_resolution_pairs": [
+      {
+        "error": "Missing module",
+        "solution": "pip install"
+      }
+    ]
+  },
+  "indexed_at": "2026-08-01T12:36:29Z"
+}

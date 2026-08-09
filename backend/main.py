@@ -7,6 +7,26 @@ _repo_root = Path(__file__).resolve().parent.parent
 if str(_repo_root) not in sys.path:
     sys.path.insert(0, str(_repo_root))
 
+import logging
+
+# Centralized Logging Configuration: silence repetitive terminal polling logs & write to file
+_log_dir = _repo_root / "backend" / "logs"
+_log_dir.mkdir(parents=True, exist_ok=True)
+_log_file = _log_dir / "aiforge.log"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    handlers=[
+        logging.FileHandler(_log_file, encoding="utf-8"),
+        logging.StreamHandler()
+    ]
+)
+
+# Mute repetitive terminal logs for uvicorn access, httpx, httpcore, and SRE health checks
+logging.getLogger("uvicorn.access").disabled = True
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from time import perf_counter
@@ -31,15 +51,25 @@ app = FastAPI(
 
 from fastapi.middleware.gzip import GZipMiddleware
 
-# Allow frontend (React/Vite) to connect
+# Allow frontend (React/Vite) to connect seamlessly without CORS origin errors
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "*"
+    ],
+    allow_origin_regex=r"https?://.*",
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 
 def register_routers() -> None:
     app.include_router(chat_router)
@@ -52,7 +82,9 @@ def register_routers() -> None:
     app.include_router(learning_router)
     app.include_router(evolution_router)
     from backend.api.plugins import router as plugins_router
+    from backend.routes.export import router as export_router
     app.include_router(plugins_router)
+    app.include_router(export_router)
 
     from backend.routes.learning_routes import router as learning_engine_router
     app.include_router(learning_engine_router)
@@ -105,6 +137,75 @@ def register_routers() -> None:
     from backend.routes.plugins import router as day23_plugins_router
     app.include_router(day23_plugins_router)
 
+    from backend.routes.debugging import router as day24_debugging_router
+    app.include_router(day24_debugging_router)
+
+    from backend.routes.learning import router as day25_learning_router
+    app.include_router(day25_learning_router)
+
+    from backend.routes.project_manager import router as day26_pm_router
+    app.include_router(day26_pm_router)
+
+    from backend.routes.governance_routes import router as day28_governance_router
+    app.include_router(day28_governance_router)
+
+    from backend.routes.project_manager_routes import router as day29_pm_agent_router
+    app.include_router(day29_pm_agent_router)
+
+    from backend.routes.communication_routes import router as day30_communication_router
+    app.include_router(day30_communication_router)
+
+    from backend.routes.approval_routes import router as day31_approval_router
+    app.include_router(day31_approval_router)
+
+    from backend.routes.self_healing_routes import router as day32_self_healing_router
+    app.include_router(day32_self_healing_router)
+
+    from backend.routes.deployment_routes import router as day33_cicd_router
+    app.include_router(day33_cicd_router)
+
+    from backend.routes.llm_routes import router as day34_llm_router
+    app.include_router(day34_llm_router)
+
+    from backend.routes.knowledge_routes import router as day35_knowledge_router
+    app.include_router(day35_knowledge_router)
+
+    from backend.routes.quality_routes import router as day36_quality_router
+    app.include_router(day36_quality_router)
+
+    from backend.routes.architecture_routes import router as day37_architecture_router
+    app.include_router(day37_architecture_router)
+
+    from backend.routes.enterprise_routes import router as day38_enterprise_router
+    app.include_router(day38_enterprise_router)
+
+    from backend.routes.plugin_routes import router as day39_plugin_router
+    app.include_router(day39_plugin_router)
+
+    from backend.routes.distributed_routes import router as day40_distributed_router
+    app.include_router(day40_distributed_router)
+
+    from backend.routes.learning_routes import router as day41_learning_router
+    app.include_router(day41_learning_router)
+
+    from backend.routes.consensus_routes import router as day43_consensus_router
+    app.include_router(day43_consensus_router)
+
+    from backend.routes.day44_learning_routes import router as day44_learning_router
+    app.include_router(day44_learning_router)
+
+    from backend.routes.production_grade_routes import router as production_grade_router
+    app.include_router(production_grade_router)
+
+    from backend.routes.mcp_routes import router as day45_mcp_router
+    app.include_router(day45_mcp_router)
+
+    from backend.routes.monitoring_routes import router as day46_monitoring_router
+    app.include_router(day46_monitoring_router)
+
+    from backend.routes.days47_50_routes import router as days47_50_router
+    app.include_router(days47_50_router)
+
     from v2.api.gateway import router as v2_gateway_router
     app.include_router(v2_gateway_router)
 
@@ -144,6 +245,33 @@ def health():
 
 @app.get("/metrics")
 def metrics():
+    try:
+        from backend.services.reflection_service import ReflectionService
+        ref_metrics = ReflectionService().get_dashboard_metrics()
+        try:
+            import psutil
+            process = psutil.Process()
+            ref_metrics["memory_rss_mb"] = round(process.memory_info().rss / (1024 * 1024), 2)
+            ref_metrics["cpu_percent"] = psutil.cpu_percent(interval=None)
+            ref_metrics["active_threads"] = process.num_threads()
+        except Exception:
+            pass
+        return ref_metrics
+    except Exception:
+        return {
+            "projects_generated": 0,
+            "reflection_score": 85.0,
+            "knowledge_size": 0,
+            "top_lessons": [],
+            "common_bugs": [],
+            "improvement_rate": 0.0,
+            "average_test_score": 0.0,
+            "status": "operational"
+        }
+
+
+@app.get("/system/metrics")
+def system_metrics():
     try:
         import psutil
         process = psutil.Process()

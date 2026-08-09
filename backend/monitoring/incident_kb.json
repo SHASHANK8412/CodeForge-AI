@@ -20,7 +20,7 @@
     "root_cause": "PostgreSQL unavailable",
     "strategy": "Restart Backend Process",
     "success": false,
-    "duration_seconds": 0.8005554676055908,
+    "duration_seconds": 0.8008017539978027,
     "confidence": 0.96
   },
   {
@@ -28,7 +28,7 @@
     "root_cause": "PostgreSQL unavailable",
     "strategy": "Restart Database",
     "success": false,
-    "duration_seconds": 1.8013732433319092,
+    "duration_seconds": 1.8013575077056885,
     "confidence": 0.96
   },
   {
@@ -36,103 +36,23 @@
     "root_cause": "PostgreSQL unavailable",
     "strategy": "Restart Database",
     "success": false,
-    "duration_seconds": 2.8021790981292725,
+    "duration_seconds": 2.801612377166748,
     "confidence": 0.96
   },
   {
     "signature": "api_downtime",
     "root_cause": "PostgreSQL unavailable",
     "strategy": "Restart Backend Process",
-    "success": false,
-    "duration_seconds": 0.8017594814300537,
+    "success": true,
+    "duration_seconds": 0.8021671772003174,
     "confidence": 0.96
   },
   {
-    "signature": "api_downtime",
-    "root_cause": "PostgreSQL unavailable",
-    "strategy": "Restart Database",
-    "success": false,
-    "duration_seconds": 1.8026726245880127,
-    "confidence": 0.96
-  },
-  {
-    "signature": "api_downtime",
-    "root_cause": "PostgreSQL unavailable",
-    "strategy": "Restart Database",
-    "success": false,
-    "duration_seconds": 2.8037350177764893,
-    "confidence": 0.96
-  },
-  {
-    "signature": "api_downtime",
-    "root_cause": "PostgreSQL unavailable",
-    "strategy": "Restart Backend Process",
-    "success": false,
-    "duration_seconds": 0.8009738922119141,
-    "confidence": 0.96
-  },
-  {
-    "signature": "api_downtime",
-    "root_cause": "PostgreSQL unavailable",
-    "strategy": "Restart Database",
-    "success": false,
-    "duration_seconds": 1.8017463684082031,
-    "confidence": 0.96
-  },
-  {
-    "signature": "api_downtime",
-    "root_cause": "PostgreSQL unavailable",
-    "strategy": "Restart Database",
-    "success": false,
-    "duration_seconds": 2.8051016330718994,
-    "confidence": 0.96
-  },
-  {
-    "signature": "api_downtime",
-    "root_cause": "PostgreSQL unavailable",
-    "strategy": "Restart Backend Process",
-    "success": false,
-    "duration_seconds": 0.8008213043212891,
-    "confidence": 0.96
-  },
-  {
-    "signature": "api_downtime",
-    "root_cause": "PostgreSQL unavailable",
-    "strategy": "Restart Database",
-    "success": false,
-    "duration_seconds": 1.8016250133514404,
-    "confidence": 0.96
-  },
-  {
-    "signature": "api_downtime",
-    "root_cause": "PostgreSQL unavailable",
-    "strategy": "Restart Database",
-    "success": false,
-    "duration_seconds": 2.8026061058044434,
-    "confidence": 0.96
-  },
-  {
-    "signature": "api_downtime",
-    "root_cause": "PostgreSQL unavailable",
-    "strategy": "Restart Backend Process",
-    "success": false,
-    "duration_seconds": 0.8014345169067383,
-    "confidence": 0.96
-  },
-  {
-    "signature": "api_downtime",
-    "root_cause": "PostgreSQL unavailable",
-    "strategy": "Restart Database",
-    "success": false,
-    "duration_seconds": 1.802274227142334,
-    "confidence": 0.96
-  },
-  {
-    "signature": "api_downtime",
-    "root_cause": "PostgreSQL unavailable",
-    "strategy": "Restart Database",
-    "success": false,
-    "duration_seconds": 2.8031373023986816,
-    "confidence": 0.96
+    "signature": "ollama_failure",
+    "root_cause": "Failed to connect to local Ollama service",
+    "strategy": "Check and restart the Ollama service",
+    "success": true,
+    "duration_seconds": 0.8014733791351318,
+    "confidence": 0.98
   }
 ]

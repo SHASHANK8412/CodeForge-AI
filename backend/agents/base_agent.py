@@ -1,14 +1,19 @@
+"""
+AIForge Universal Base Agent Architecture
+=========================================
+Base class for all specialized AIForge agents.
+Contains ONLY universal agent behavior:
+- Reusable LLM invocation methods (generate, generate_async, run, run_async).
+- Clean prompt assembly without forcing rigid global headings or coding templates.
+"""
+
 from backend.services.llm import generate_text, generate_text_async
 
 
 class BaseAgent:
     """
-    Base class for every AIForge agent.
-
-    All specialized agents (Planner, Architect, Frontend, Backend,
-    Database, Documentation, Testing, Reviewer, GitHub, etc.) inherit
-    from this class so they share a single, consistent way to talk to
-    the LLM (via `generate`/`run`) and to build prompts (`build_prompt`).
+    Base class for AIForge specialized agents.
+    Provides clean LLM generation utilities without forcing global output templates.
     """
 
     def __init__(self, system_prompt: str, task_name: str = "general"):
@@ -17,19 +22,13 @@ class BaseAgent:
 
     def generate(self, prompt: str) -> str:
         """
-        Simple one-shot generation helper.
-
-        Several agents (Backend, Database, Documentation, GitHub, ...)
-        already build a single, fully-formed prompt themselves and just
-        need the raw LLM response back. This method reuses the same
-        `generate_text` service as `run()` so behavior (model selection,
-        caching, fallback handling) stays identical across all agents.
+        One-shot generation helper directly passing system prompt and user prompt to LLM.
         """
         return generate_text(self.system_prompt, prompt, task=self.task_name)
 
     async def generate_async(self, prompt: str) -> str:
         """
-        Async version of the one-shot generation helper.
+        Async version of one-shot generation helper.
         """
         return await generate_text_async(self.system_prompt, prompt, task=self.task_name)
 
@@ -39,24 +38,31 @@ class BaseAgent:
         memory_context: str = "",
         previous_output: str = "",
     ) -> str:
-
+        """
+        Builds user prompt context while preserving prompt isolation.
+        Filters past code context from memory for non-coding tasks to prevent prompt contamination.
+        """
         sections = []
 
-        if memory_context:
-            sections.append(f"Memory Context\n{memory_context}")
+        if memory_context and memory_context.strip():
+            # If current task is non-coding, sanitize past code snippets from memory context
+            sanitized_memory = memory_context
+            if self.task_name in ["explanation", "general", "resume"]:
+                # Filter code snippets and code fences from past memory to prevent format leakage
+                lines = memory_context.split("\n")
+                filtered = [
+                    line for line in lines
+                    if not any(marker in line for marker in ["def ", "class ", "```", "return ", "solve_", "import "])
+                ]
+                sanitized_memory = "\n".join(filtered).strip()
 
-        if previous_output:
-            sections.append(f"Previous Agent Output\n{previous_output}")
+            if sanitized_memory:
+                sections.append(f"Memory Context:\n{sanitized_memory}")
 
-        sections.append(f"Current Task\n{user_prompt}")
-        sections.append(
-            "Response Format\n"
-            "- Use Markdown headings and bullet points.\n"
-            "- Start with a brief one-line summary.\n"
-            "- Keep the response concise and structured.\n"
-            "- Use code fences for code, commands, and config.\n"
-            "- Avoid filler, greetings, and repeated wording."
-        )
+        if previous_output and previous_output.strip():
+            sections.append(f"Previous Agent Output:\n{previous_output}")
+
+        sections.append(user_prompt)
 
         return "\n\n".join(sections)
 
@@ -65,7 +71,7 @@ class BaseAgent:
         user_prompt: str,
         memory_context: str = "",
         previous_output: str = "",
-    ):
+    ) -> str:
         final_prompt = self.build_prompt(user_prompt, memory_context, previous_output)
         return generate_text(self.system_prompt, final_prompt, task=self.task_name)
 
@@ -74,6 +80,6 @@ class BaseAgent:
         user_prompt: str,
         memory_context: str = "",
         previous_output: str = "",
-    ):
+    ) -> str:
         final_prompt = self.build_prompt(user_prompt, memory_context, previous_output)
-        return await generate_text_async(self.system_prompt, final_prompt, task=self.task_name)
+        return await generate_text_async(self.system_prompt, final_prompt, task=self.task_name)

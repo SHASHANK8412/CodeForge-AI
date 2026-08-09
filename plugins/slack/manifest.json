@@ -1,0 +1,12 @@
+{
+    "id": "slack_plugin",
+    "name": "Slack Plugin",
+    "version": "1.2.0",
+    "author": "AIForge",
+    "description": "Slack Notifications Integration",
+    "category": "Productivity",
+    "permissions": [
+        "internet"
+    ],
+    "entry": "plugin.py"
+}

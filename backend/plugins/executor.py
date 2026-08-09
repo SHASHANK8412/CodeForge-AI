@@ -4,16 +4,6 @@ from typing import Dict, Any, List
 
 from backend.plugins.registry import global_plugin_registry
 from backend.plugins.sandbox import global_tool_sandbox
-from backend.tools import (
-    global_filesystem_tool,
-    global_terminal_tool,
-    global_git_tool,
-    global_postgres_tool,
-    global_docker_tool,
-    global_browser_tool,
-    global_python_runner_tool
-)
-
 logger = logging.getLogger("aiforge.plugins.executor")
 
 
@@ -23,15 +13,24 @@ class ToolExecutionEngine:
     verifying permissions in ToolSandbox and recording telemetry logs.
     """
 
-    TOOL_MAP = {
-        "filesystem": (global_filesystem_tool, "read_files"),
-        "terminal": (global_terminal_tool, "execute_commands"),
-        "git": (global_git_tool, "git_ops"),
-        "postgres": (global_postgres_tool, "db_ops"),
-        "docker": (global_docker_tool, "docker_ops"),
-        "browser": (global_browser_tool, "browser_ops"),
-        "python_runner": (global_python_runner_tool, "python_exec")
-    }
+    def _get_tool_map(self) -> Dict[str, Any]:
+        from backend.tools.filesystem import global_filesystem_tool
+        from backend.tools.terminal import global_terminal_tool
+        from backend.tools.git import global_git_tool
+        from backend.tools.postgres import global_postgres_tool
+        from backend.tools.docker import global_docker_tool
+        from backend.tools.browser import global_browser_tool
+        from backend.tools.python_runner import global_python_runner_tool
+
+        return {
+            "filesystem": (global_filesystem_tool, "read_files"),
+            "terminal": (global_terminal_tool, "execute_commands"),
+            "git": (global_git_tool, "git_ops"),
+            "postgres": (global_postgres_tool, "db_ops"),
+            "docker": (global_docker_tool, "docker_ops"),
+            "browser": (global_browser_tool, "browser_ops"),
+            "python_runner": (global_python_runner_tool, "python_exec")
+        }
 
     def __init__(self):
         self.logs: List[Dict[str, Any]] = []
@@ -47,7 +46,7 @@ class ToolExecutionEngine:
         if not tool_meta.get("enabled", True):
             return {"status": "error", "message": f"Tool '{tool_name}' is currently disabled."}
 
-        tool_tuple = self.TOOL_MAP.get(tool_name)
+        tool_tuple = self._get_tool_map().get(tool_name)
         if not tool_tuple:
             return {"status": "error", "message": f"No implementation handler for tool '{tool_name}'."}
 

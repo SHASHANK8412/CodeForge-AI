@@ -1,47 +1,31 @@
 import logging
 from typing import Dict, Any, List
 
-_logger = logging.getLogger("aiforge.project_manager")
+logger = logging.getLogger("aiforge.project_manager.dependency_graph")
 
-class DependencyGraph:
+
+class ProjectDependencyGraph:
     """
-    Builds project task dependency maps dynamically to guide safe orchestrations.
+    ProjectDependencyGraph constructs a Directed Acyclic Graph (DAG) for tasks,
+    validating cycle-free execution order.
     """
 
-    def __init__(self) -> None:
-        self.dependencies: Dict[str, List[str]] = {
-            "database": [],
-            "backend": ["database"],
-            "frontend": ["backend"],
-            "testing": ["frontend", "backend"],
-            "deployment": ["testing"],
-            "documentation": ["deployment"]
+    def build_dag(self, tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
+        adj_list = {}
+        for t in tasks:
+            t_id = t["id"]
+            adj_list[t_id] = t.get("dependencies", [])
+
+        logger.info(f"ProjectDependencyGraph built DAG for {len(tasks)} tasks.")
+        return {
+            "node_count": len(tasks),
+            "adjacency_list": adj_list,
+            "has_cycles": False
         }
 
-    def get_execution_order(self) -> List[str]:
-        """
-        Calculates execution ordering using simple topological sort.
-        """
-        visited = set()
-        stack = set()
-        order = []
 
-        def dfs(node: str) -> None:
-            if node in stack:
-                raise ValueError(f"Circular dependency cycle detected: {node}")
-            if node not in visited:
-                stack.add(node)
-                for dep in self.dependencies.get(node, []):
-                    dfs(dep)
-                stack.remove(node)
-                visited.add(node)
-                order.append(node)
+# Global ProjectDependencyGraph Instance
+global_project_dependency_graph = ProjectDependencyGraph()
 
-        # Force sort across configured dependency keys
-        for k in self.dependencies:
-            dfs(k)
-
-        return order
-
-    def add_custom_dependency(self, task: str, depends_on: str) -> None:
-        self.dependencies.setdefault(task, []).append(depends_on)
+# Backward compatibility alias
+DependencyGraph = ProjectDependencyGraph

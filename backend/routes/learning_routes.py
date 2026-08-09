@@ -1,115 +1,118 @@
 """
-FastAPI Routes for Day 73 Autonomous Learning & Self-Improvement Engine
-======================================================================
-Exposes REST endpoints for prior experience search, learning cycle execution,
-prompt enhancement, architecture memory, and dashboard telemetry.
+FastAPI Routes for Day 41 Production-Ready Learning Engine
+===========================================================
+Exposes REST APIs for historical project memory, bug fix memory, pattern templates, semantic project search, user feedback collection, platform statistics, and the Learning Dashboard.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from typing import Dict, Any, List, Optional
-from backend.learning.learning_engine import global_learning_engine
+from typing import Dict, Any, Optional, List
 
-router = APIRouter(prefix="/api/v1/learning", tags=["Learning & Self-Improvement Engine"])
+from backend.learning.project_memory import global_production_project_memory
+from backend.learning.knowledge_store import global_production_knowledge_store
+from backend.learning.pattern_detector import global_pattern_detector
+from backend.learning.embedding_search import global_semantic_search_engine
+from backend.learning.success_tracker import global_success_tracker
+from backend.learning.learning_engine import global_production_learning_engine
+
+router = APIRouter(tags=["Production-Ready Learning Engine"])
 
 
-class PriorSearchRequest(BaseModel):
+class RecordProjectInput(BaseModel):
     user_prompt: str
+    architecture: Optional[str] = "Modular Monolith"
+    generated_files: Optional[List[str]] = []
+    technologies: Optional[List[str]] = ["FastAPI", "React"]
+    execution_time_seconds: Optional[float] = 15.0
+    success_status: Optional[str] = "SUCCESS"
 
 
-class PromptEnhanceRequest(BaseModel):
-    prompt: str
+class UserFeedbackInput(BaseModel):
+    project_id: str
+    rating: int  # 1 to 5 stars
+    comment: Optional[str] = ""
 
 
-class LearningCycleRequest(BaseModel):
-    project_name: str
-    project_type: str
-    user_prompt: str
-    technologies: List[str]
-    architecture: str
-    success: Optional[bool] = True
-    execution_time: Optional[float] = 30.0
-    errors: Optional[List[str]] = None
-    fixes: Optional[List[str]] = None
-    score: Optional[float] = 95.0
+class BugFixInput(BaseModel):
+    bug: str
+    cause: str
+    solution: str
+    affected_files: Optional[List[str]] = []
+    confidence_score: Optional[float] = 0.95
 
 
-@router.post("/search-prior")
-async def search_prior_experience(req: PriorSearchRequest) -> Dict[str, Any]:
-    """Queries prior project memory before generation to reuse architectures and best practices."""
+@router.get("/learning/projects")
+@router.get("/api/v1/learning/projects")
+async def list_learned_projects() -> Dict[str, Any]:
+    """Retrieves all historical project records stored in Project Memory."""
+    projects = global_production_project_memory.get_all_projects()
+    return {"status": "success", "total_projects": len(projects), "projects": projects}
+
+
+@router.get("/learning/patterns")
+@router.get("/api/v1/learning/patterns")
+async def list_learned_patterns() -> Dict[str, Any]:
+    """Retrieves all detected reusable software architecture and code patterns."""
+    patterns = global_pattern_detector.get_all_templates()
+    return {"status": "success", "total_patterns": len(patterns), "patterns": patterns}
+
+
+@router.get("/learning/bugs")
+@router.get("/api/v1/learning/bugs")
+async def list_learned_bugs() -> Dict[str, Any]:
+    """Retrieves Bug Memory repository with causes, solutions, and confidence scores."""
+    bugs = global_production_knowledge_store.get_all_bugs()
+    return {"status": "success", "total_bugs": len(bugs), "bugs": bugs}
+
+
+@router.get("/learning/statistics")
+@router.get("/api/v1/learning/statistics")
+async def get_learning_statistics() -> Dict[str, Any]:
+    """Retrieves platform-wide learning analytics and agent performance metrics."""
+    stats = global_success_tracker.get_statistics()
+    return {"status": "success", "statistics": stats["statistics"]}
+
+
+@router.post("/learning/project")
+@router.post("/api/v1/learning/project")
+async def store_project_memory(req: RecordProjectInput) -> Dict[str, Any]:
+    """Stores a generated project into persistent Project Memory."""
     try:
-        res = global_learning_engine.query_prior_experience(req.user_prompt)
-        return {"status": "success", "result": res}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/enhance-prompt")
-async def enhance_user_prompt(req: PromptEnhanceRequest) -> Dict[str, Any]:
-    """Enhances user prompt before execution by attaching production requirements and best practices."""
-    try:
-        enhanced = global_learning_engine.prompt_optimizer.enhance_user_prompt(req.prompt)
-        return {"status": "success", "enhanced_prompt": enhanced}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/cycle")
-async def execute_learning_cycle(req: LearningCycleRequest) -> Dict[str, Any]:
-    """Executes continuous learning cycle post-generation."""
-    try:
-        res = global_learning_engine.run_learning_cycle(
-            project_name=req.project_name,
-            project_type=req.project_type,
+        rec = global_production_project_memory.record_project(
             user_prompt=req.user_prompt,
-            technologies=req.technologies,
-            architecture=req.architecture,
-            success=req.success,
-            execution_time=req.execution_time,
-            errors=req.errors,
-            fixes=req.fixes,
-            score=req.score
+            architecture=req.architecture or "Modular Monolith",
+            generated_files=req.generated_files or [],
+            technologies=req.technologies or ["FastAPI", "React"],
+            execution_time_seconds=req.execution_time_seconds or 15.0,
+            success_status=req.success_status or "SUCCESS"
         )
-        return {"status": "success", "result": res}
+        return {"status": "success", "project_record": rec}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/dashboard")
+@router.post("/learning/feedback")
+@router.post("/api/v1/learning/feedback")
+async def submit_user_feedback(req: UserFeedbackInput) -> Dict[str, Any]:
+    """Submits user feedback rating and comments for a generated project."""
+    try:
+        updated = global_production_project_memory.add_user_feedback(req.project_id, req.rating, req.comment or "")
+        return {"status": "success", "project_record": updated}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/learning/search")
+@router.get("/api/v1/learning/search")
+async def search_learned_projects(q: str = Query(..., description="Semantic search query prompt")) -> Dict[str, Any]:
+    """Performs semantic vector search over past successful project blueprints."""
+    res = global_semantic_search_engine.search_similar_projects(q)
+    return {"status": "success", "search_results": res}
+
+
+@router.get("/learning/dashboard")
+@router.get("/api/v1/learning/dashboard")
 async def get_learning_dashboard() -> Dict[str, Any]:
-    """Returns telemetry data for AI Learning Dashboard."""
-    try:
-        telemetry = global_learning_engine.get_telemetry()
-        return {"status": "success", "telemetry": telemetry}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/experiences")
-async def get_experiences() -> Dict[str, Any]:
-    """Returns all stored experiences."""
-    try:
-        experiences = global_learning_engine.experience_store.get_all_experiences()
-        return {"status": "success", "experiences": experiences}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/architectures")
-async def get_architectures() -> Dict[str, Any]:
-    """Returns stored architectural recommendations by project category."""
-    try:
-        architectures = global_learning_engine.architecture_memory.get_all_architectures()
-        return {"status": "success", "architectures": architectures}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/best-practices")
-async def get_best_practices() -> Dict[str, Any]:
-    """Returns list of active engineering best practices."""
-    try:
-        best_practices = global_learning_engine.best_practices.get_all_best_practices()
-        return {"status": "success", "best_practices": best_practices}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    """Retrieves Learning Dashboard data: Projects Stored, Patterns Learned, Bug Library, Best Practices, Success Rate %, Build Time, Tech Stack, Base Size."""
+    dash = global_production_learning_engine.get_dashboard_data()
+    return {"status": "success", "learning_dashboard": dash}

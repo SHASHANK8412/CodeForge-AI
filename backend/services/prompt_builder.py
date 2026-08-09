@@ -62,12 +62,37 @@ class ContextScopedPromptBuilder:
         context_prefix = f"{rag_context}\n\n" if rag_context else ""
         return f"{context_prefix}Generate PostgreSQL SQL schema and SQLAlchemy models for entities: {models}"
 
-    def build_reviewer_prompt(self, generated_files: Dict[str, str]) -> str:
-        file_summary = list(generated_files.keys()) if isinstance(generated_files, dict) else []
-        return f"Review generated project files: {file_summary}"
+    def build_reviewer_prompt(
+        self,
+        frontend_code: str = "",
+        backend_code: str = "",
+        database_code: str = "",
+        duplicate_report: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        duplicate_report = duplicate_report or {}
+        duplicate_count = duplicate_report.get("duplicate_count", 0)
+        duplicate_files = [
+            entry.get("files", []) for entry in duplicate_report.get("duplicates", [])
+        ]
+        duplicate_summary = (
+            f"{duplicate_count} duplicate code block(s) already detected across: {duplicate_files}"
+            if duplicate_count
+            else "No duplicate code blocks detected by the automated scanner."
+        )
+        return (
+            "Review the following real generated project source code.\n\n"
+            f"Automated Duplicate Scan Result\n{duplicate_summary}\n"
+            "Reference this scan instead of re-deriving duplicate findings yourself.\n\n"
+            f"Frontend Code\n{frontend_code[:1500] or '(none generated)'}\n\n"
+            f"Backend Code\n{backend_code[:1500] or '(none generated)'}\n\n"
+            f"Database Code\n{database_code[:1500] or '(none generated)'}"
+        )
 
     def build_testing_prompt(self, backend_code: str, frontend_code: str) -> str:
-        return f"Generate Pytest unit tests for Backend:\n{backend_code[:500]}\nand React Testing Library tests for Frontend."
+        return (
+            f"Backend Code\n{backend_code[:1500] or '(none generated)'}\n\n"
+            f"Frontend Code\n{frontend_code[:1500] or '(none generated)'}"
+        )
 
 
 global_prompt_builder = ContextScopedPromptBuilder()

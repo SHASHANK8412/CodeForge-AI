@@ -1,67 +1,47 @@
-"""
-AIForge Day 101 Product Manager Agent
-======================================
-Responsibilities:
-- Analyze user feedback & GitHub issues
-- Read feature requests & merge duplicates
-- Prioritize backlog based on business value
-- Estimate implementation effort
-- Recommend automated sprint roadmap
-"""
-
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
-from backend.services.feedback_service import global_feedback_service
-from backend.services.roadmap_service import global_roadmap_service
-
-_logger = logging.getLogger("aiforge.agents.product_manager")
+logger = logging.getLogger("aiforge.agents.product_manager")
 
 
 class ProductManagerAgent:
     """
-    Autonomous Product Manager Agent.
+    ProductManagerAgent analyzes user prompts, decomposes functional & non-functional requirements,
+    estimates complexity, and formulates high-level development roadmaps.
     """
 
-    def analyze_feedback_and_plan(
-        self,
-        feedback_list: Optional[List[str]] = None,
-        github_issues: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
-        _logger.info("ProductManagerAgent: Running product intelligence analysis...")
+    def analyze_requirements(self, prompt: str) -> Dict[str, Any]:
+        """Analyzes project prompt and extracts roadmap & requirements."""
+        prompt_lower = prompt.lower()
 
-        feedback_list = feedback_list or [
-            "Dark mode needed",
-            "Login is slow",
-            "Add notifications",
-            "Dashboard crashes",
-            "Better mobile support"
+        functional_reqs = [
+            "User Authentication & Authorization",
+            "Core Business Logic & API Endpoints",
+            "Responsive Web User Interface",
+            "Database Schema & Persistence"
         ]
 
-        github_issues = github_issues or [
-            "Login broken",
-            "Can't sign in",
-            "Dashboard crash on load",
-            "Need dark theme"
+        if "banking" in prompt_lower or "finance" in prompt_lower:
+            functional_reqs.append("Transaction Ledger & Transfer Gateway")
+        elif "ecommerce" in prompt_lower or "shop" in prompt_lower:
+            functional_reqs.append("Product Catalog & Stripe Payment Gateway")
+
+        non_functional_reqs = [
+            "Sub-100ms API Response Latency",
+            "JWT Token Security",
+            "Docker Container Deployment Readiness",
+            "99.9% System Uptime"
         ]
 
-        # 1. Categorize priority
-        categorized = global_feedback_service.categorize_feedback(feedback_list)
-
-        # 2. Merge duplicates
-        duplicates = global_feedback_service.detect_duplicate_issues(github_issues)
-
-        # 3. Generate Roadmap
-        roadmap = global_roadmap_service.generate_sprint_roadmap(feedback_list)
-
+        logger.info(f"ProductManagerAgent analyzed prompt '{prompt[:30]}...'")
         return {
-            "status": "success",
-            "agent_role": "ProductManagerAgent",
-            "categorized_priorities": categorized,
-            "merged_duplicate_issues": duplicates,
-            "sprint_roadmap": roadmap["roadmap"],
-            "backlog_summary": roadmap["backlog_queue"]
+            "prompt": prompt,
+            "complexity": "Medium-High",
+            "functional_requirements": functional_reqs,
+            "non_functional_requirements": non_functional_reqs,
+            "recommended_stack": "FastAPI + React + PostgreSQL + Docker"
         }
 
 
+# Global ProductManagerAgent Instance
 global_product_manager_agent = ProductManagerAgent()

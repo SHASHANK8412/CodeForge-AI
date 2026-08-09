@@ -1,0 +1,29 @@
+{
+  "qwen2.5-coder": {
+    "model": "qwen2.5-coder",
+    "avg_latency": 2.1,
+    "wins": 159,
+    "quality": 95.2,
+    "errors": 2,
+    "total_tokens": 129200,
+    "total_runs": 165
+  },
+  "deepseek-coder": {
+    "model": "deepseek-coder",
+    "avg_latency": 2.4,
+    "wins": 142,
+    "quality": 94.8,
+    "errors": 3,
+    "total_tokens": 145200,
+    "total_runs": 155
+  },
+  "codellama": {
+    "model": "codellama",
+    "avg_latency": 2.8,
+    "wins": 98,
+    "quality": 91.5,
+    "errors": 5,
+    "total_tokens": 112300,
+    "total_runs": 120
+  }
+}

@@ -1,0 +1,261 @@
+[
+  {
+    "id": "tc-perf-01",
+    "name": "Fast Explanation Path - Formula 1",
+    "category": "FAST_PATH",
+    "query": "Explain Formula 1.",
+    "expected_path": "FAST",
+    "expected_max_model_calls": 1,
+    "expected_rag": false,
+    "expected_git": false,
+    "expected_tests": false
+  },
+  {
+    "id": "tc-perf-02",
+    "name": "Fast Explanation Path - Recursion",
+    "category": "FAST_PATH",
+    "query": "Explain recursion simply.",
+    "expected_path": "FAST",
+    "expected_max_model_calls": 1,
+    "expected_rag": false,
+    "expected_git": false,
+    "expected_tests": false
+  },
+  {
+    "id": "tc-perf-03",
+    "name": "Fast Coding Path - Binary Search",
+    "category": "FAST_PATH",
+    "query": "Write binary search in Python.",
+    "expected_path": "FAST_CODING",
+    "expected_max_model_calls": 1,
+    "expected_rag": false,
+    "expected_git": false,
+    "expected_tests": false
+  },
+  {
+    "id": "tc-perf-04",
+    "name": "Fast Coding Path - Factorial",
+    "category": "FAST_PATH",
+    "query": "Write a factorial function in Python.",
+    "expected_path": "FAST_CODING",
+    "expected_max_model_calls": 1,
+    "expected_rag": false,
+    "expected_git": false,
+    "expected_tests": false
+  },
+  {
+    "id": "tc-perf-05",
+    "name": "Retrieval Path - Uploaded Document Question",
+    "category": "RETRIEVAL_PATH",
+    "query": "According to the uploaded document, what database is required?",
+    "has_documents": true,
+    "expected_path": "RETRIEVAL",
+    "expected_rag": true,
+    "expected_git": false,
+    "expected_tests": false
+  },
+  {
+    "id": "tc-perf-06",
+    "name": "Repository Read Path - Auth Location",
+    "category": "REPOSITORY_PATH",
+    "query": "Where is authentication implemented in this repository?",
+    "has_active_repo": true,
+    "expected_path": "REPOSITORY",
+    "expected_rag": true,
+    "expected_repository": true,
+    "expected_git": false
+  },
+  {
+    "id": "tc-perf-07",
+    "name": "Engineering Workflow Path - Issue Fix",
+    "category": "ENGINEERING_PATH",
+    "query": "Fix issue #123: refresh token expiration bug.",
+    "has_active_repo": true,
+    "expected_path": "ENGINEERING_WORKFLOW",
+    "expected_planner": true,
+    "expected_git": true,
+    "expected_tests": true
+  },
+  {
+    "id": "tc-perf-08",
+    "name": "Fast Path Policy - Generic Question Zero RAG",
+    "category": "POLICY",
+    "query": "What is Object Oriented Programming?",
+    "expected_path": "FAST",
+    "expected_rag": false
+  },
+  {
+    "id": "tc-perf-09",
+    "name": "Fast Path Policy - Simple Algorithm Zero Git",
+    "category": "POLICY",
+    "query": "Implement quicksort in Python.",
+    "expected_path": "FAST_CODING",
+    "expected_git": false
+  },
+  {
+    "id": "tc-perf-10",
+    "name": "Policy Engine - File Path Detection",
+    "category": "POLICY",
+    "query": "Explain backend/services/auth_service.py",
+    "has_active_repo": true,
+    "expected_path": "REPOSITORY"
+  },
+  {
+    "id": "tc-perf-11",
+    "name": "Cache Test - Repeat Query Lookup",
+    "category": "CACHING",
+    "query": "Explain python list comprehension.",
+    "test_cache_repeat": true
+  },
+  {
+    "id": "tc-perf-12",
+    "name": "Cache Test - Versioned Key Collision Resistance",
+    "category": "CACHING",
+    "query": "What is recursion?",
+    "test_key_versioning": true
+  },
+  {
+    "id": "tc-perf-13",
+    "name": "Cache Test - LRU Eviction Under Pressure",
+    "category": "CACHING",
+    "test_lru_eviction": true
+  },
+  {
+    "id": "tc-perf-14",
+    "name": "Cache Test - TTL Expiration",
+    "category": "CACHING",
+    "test_ttl_expiry": true
+  },
+  {
+    "id": "tc-perf-15",
+    "name": "Single Flight Test - Concurrent Identical Invocations",
+    "category": "CACHING",
+    "test_single_flight": true
+  },
+  {
+    "id": "tc-perf-16",
+    "name": "Concurrency Test - Bounded Thread Pool",
+    "category": "CONCURRENCY",
+    "test_thread_bounds": true
+  },
+  {
+    "id": "tc-perf-17",
+    "name": "Concurrency Test - DAG Task Scheduler",
+    "category": "CONCURRENCY",
+    "test_dag_execution": true
+  },
+  {
+    "id": "tc-perf-18",
+    "name": "Concurrency Test - Resource Semaphore Isolation",
+    "category": "CONCURRENCY",
+    "test_semaphores": true
+  },
+  {
+    "id": "tc-perf-19",
+    "name": "Concurrency Test - Request Cancellation",
+    "category": "CONCURRENCY",
+    "test_cancellation": true
+  },
+  {
+    "id": "tc-perf-20",
+    "name": "Concurrency Test - Request Budget Enforcement",
+    "category": "CONCURRENCY",
+    "test_budget_enforcement": true
+  },
+  {
+    "id": "tc-perf-21",
+    "name": "Retry Policy - Transient Network Error",
+    "category": "RESILIENCE",
+    "test_transient_retry": true
+  },
+  {
+    "id": "tc-perf-22",
+    "name": "Retry Policy - Non-Retryable Syntax Error",
+    "category": "RESILIENCE",
+    "test_non_retryable": true
+  },
+  {
+    "id": "tc-perf-23",
+    "name": "Circuit Breaker - State Machine Transitions",
+    "category": "RESILIENCE",
+    "test_circuit_transitions": true
+  },
+  {
+    "id": "tc-perf-24",
+    "name": "Circuit Breaker - Half-Open Recovery Probe",
+    "category": "RESILIENCE",
+    "test_half_open_recovery": true
+  },
+  {
+    "id": "tc-perf-25",
+    "name": "Fallback Policy - Degraded Mode Output",
+    "category": "RESILIENCE",
+    "test_fallback_mode": true
+  },
+  {
+    "id": "tc-perf-26",
+    "name": "Workflow Checkpoint - Stage Persistence",
+    "category": "RECOVERY",
+    "test_save_checkpoint": true
+  },
+  {
+    "id": "tc-perf-27",
+    "name": "Workflow Checkpoint - Fingerprint Validation & Resume",
+    "category": "RECOVERY",
+    "test_resume_checkpoint": true
+  },
+  {
+    "id": "tc-perf-28",
+    "name": "Workflow Checkpoint - Invalidation on Source Change",
+    "category": "RECOVERY",
+    "test_invalidate_checkpoint": true
+  },
+  {
+    "id": "tc-perf-29",
+    "name": "Resource Cleanup - Safe Worktree & Sandbox Purge",
+    "category": "RECOVERY",
+    "test_safe_cleanup": true
+  },
+  {
+    "id": "tc-perf-30",
+    "name": "Crash Recovery - Unfinished Workflow Resume",
+    "category": "RECOVERY",
+    "test_crash_recovery": true
+  },
+  {
+    "id": "tc-perf-31",
+    "name": "Observability - Correlation ID Propagation",
+    "category": "OBSERVABILITY",
+    "test_correlation_ids": true
+  },
+  {
+    "id": "tc-perf-32",
+    "name": "Observability - StageTrace Latency Measurement",
+    "category": "OBSERVABILITY",
+    "test_stage_latency": true
+  },
+  {
+    "id": "tc-perf-33",
+    "name": "Observability - Secret Redaction Shield in Logs",
+    "category": "OBSERVABILITY",
+    "test_secret_redaction": true
+  },
+  {
+    "id": "tc-perf-34",
+    "name": "Observability - Audit Event Recording",
+    "category": "OBSERVABILITY",
+    "test_audit_events": true
+  },
+  {
+    "id": "tc-perf-35",
+    "name": "Health Service - Subsystem Diagnostic Check",
+    "category": "OBSERVABILITY",
+    "test_health_check": true
+  },
+  {
+    "id": "tc-perf-36",
+    "name": "Performance Profiler - Baseline Comparison",
+    "category": "OBSERVABILITY",
+    "test_profiler_baseline": true
+  }
+]

@@ -78,6 +78,7 @@ class WorkspaceProject:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
+            "project_id": self.id,
             "name": self.name,
             "description": self.description,
             "status": self.status,

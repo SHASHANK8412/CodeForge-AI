@@ -60,7 +60,7 @@ class HealthChecker:
         """
         Gathers health check states and computes an overall health score (0-100).
         """
-        _logger.info("Executing SRE health checks...")
+        _logger.debug("Executing SRE health checks...")
         
         api_res = await self.check_api_endpoint()
         db_res = await self.check_database()

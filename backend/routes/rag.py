@@ -1,118 +1,99 @@
+"""
+AIForge V2 — Day 13 FastAPI RAG API Routes
+"""
 from __future__ import annotations
 
 from pathlib import Path
 from uuid import uuid4
+from typing import List, Dict, Any
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
-from backend.rag.rag_pipeline import RAGPipeline
-from backend.rag.utils.loader import DocumentLoader
-from backend.rag.utils.splitter import DocumentSplitter
-from backend.rag.utils.vector_store import VectorStore
-
+from backend.rag.pipeline import global_rag_pipeline
+from backend.rag.ingestion import global_ingestion_pipeline
+from backend.rag.models import GroundedResponse, GroundingStatus
 
 router = APIRouter(tags=["rag"])
 legacy_router = APIRouter(prefix="/rag", tags=["rag"])
 
 
 class RAGQueryRequest(BaseModel):
-	question: str = Field(min_length=1)
+    question: str = Field(min_length=1)
 
 
 class RAGUploadResponse(BaseModel):
-	success: bool
-	files: list[str]
-	chunks_indexed: int
-	message: str
-
-
-rag_pipeline = RAGPipeline()
-document_loader = DocumentLoader()
-document_splitter = DocumentSplitter()
-vector_store = VectorStore()
+    success: bool
+    files: list[str]
+    chunks_indexed: int
+    message: str
 
 
 def _documents_dir() -> Path:
-	return document_loader.documents_path
+    return Path("data/documents")
 
 
 async def _upload_documents(files: list[UploadFile]):
-	if not files:
-		raise HTTPException(status_code=400, detail="At least one file is required.")
+    if not files:
+        raise HTTPException(status_code=400, detail="At least one file is required.")
 
-	documents_dir = _documents_dir()
-	documents_dir.mkdir(parents=True, exist_ok=True)
+    documents_dir = _documents_dir()
+    documents_dir.mkdir(parents=True, exist_ok=True)
 
-	saved_files: list[Path] = []
-	for uploaded_file in files:
-		suffix = Path(uploaded_file.filename or "").suffix.lower()
-		if suffix not in {".pdf", ".txt", ".md"}:
-			raise HTTPException(status_code=400, detail=f"Unsupported file type: {uploaded_file.filename}")
+    saved_files: list[Path] = []
+    total_chunks = 0
 
-		unique_name = f"{uuid4().hex}_{Path(uploaded_file.filename).name}"
-		target_path = documents_dir / unique_name
-		content = await uploaded_file.read()
-		if not content:
-			continue
-		target_path.write_bytes(content)
-		saved_files.append(target_path)
+    for uploaded_file in files:
+        suffix = Path(uploaded_file.filename or "").suffix.lower()
+        if suffix not in {".pdf", ".txt", ".md", ".docx"}:
+            raise HTTPException(status_code=400, detail=f"Unsupported file type: {uploaded_file.filename}")
 
-	if not saved_files:
-		raise HTTPException(status_code=400, detail="No valid document content was uploaded.")
+        unique_name = f"{uuid4().hex[:8]}_{Path(uploaded_file.filename).name}"
+        target_path = documents_dir / unique_name
+        content = await uploaded_file.read()
+        if not content:
+            continue
+        target_path.write_bytes(content)
+        saved_files.append(target_path)
 
-	loaded_documents = document_loader.load_paths(saved_files)
-	if not loaded_documents:
-		raise HTTPException(status_code=400, detail="Uploaded files could not be read as documents.")
+        res = global_rag_pipeline.process_and_index_document(str(target_path))
+        total_chunks += res.get("chunks_count", 0)
 
-	chunks = document_splitter.split_documents(loaded_documents)
-	if not chunks:
-		raise HTTPException(status_code=400, detail="No retrievable chunks were created from the uploaded documents.")
+    if not saved_files:
+        raise HTTPException(status_code=400, detail="No valid document content was uploaded.")
 
-	vector_store.add_documents(chunks)
-
-	return RAGUploadResponse(
-		success=True,
-		files=[path.name for path in saved_files],
-		chunks_indexed=len(chunks),
-		message="Document indexed successfully",
-	)
+    return RAGUploadResponse(
+        success=True,
+        files=[path.name for path in saved_files],
+        chunks_indexed=total_chunks,
+        message="Document indexed successfully into Production RAG pipeline"
+    )
 
 
 @router.post("/upload", response_model=RAGUploadResponse)
 async def upload_documents(files: list[UploadFile] = File(...)):
-	return await _upload_documents(files)
+    return await _upload_documents(files)
 
 
 @legacy_router.post("/upload", response_model=RAGUploadResponse)
 async def legacy_upload_documents(files: list[UploadFile] = File(...)):
-	return await _upload_documents(files)
+    return await _upload_documents(files)
 
 
 @router.post("/query")
 async def query_documents(request: RAGQueryRequest):
-    from backend.rag.pipeline import global_rag_pipeline
-    results = global_rag_pipeline.retrieve_context(request.question, top_k=5)
-    context_list = [r.get("text", "") for r in results]
-    sources = [r.get("source", "") for r in results]
-
-    answer_prefix = "According to uploaded project documents:\n\n"
-    if context_list:
-        snippets = "\n\n".join([f"- From **{s}**:\n  {t}" for s, t in zip(sources, context_list)])
-        answer = f"{answer_prefix}{snippets}"
-    else:
-        answer = "No relevant uploaded documents found matching your question."
-
+    grounded_res = global_rag_pipeline.query_grounded_answer(request.question)
     return {
         "success": True,
         "question": request.question,
-        "context": context_list,
-        "sources": sources,
-        "answer": answer,
-        "source_details": results
+        "answer": grounded_res.answer,
+        "grounding_status": grounded_res.grounding_status.value,
+        "citations": [c.dict() for c in grounded_res.citations],
+        "unsupported_claims": grounded_res.unsupported_claims,
+        "confidence_score": grounded_res.confidence_score
     }
 
 
 @legacy_router.post("/query")
 async def legacy_query_documents(request: RAGQueryRequest):
-	return await query_documents(request)
+    return await query_documents(request)

@@ -1,0 +1,38 @@
+{
+  "project_id": "proj_day44_02",
+  "prompt": "Build a real-time crypto trading wallet application",
+  "framework": "FullStack",
+  "quality_score": 96.0,
+  "tags": [
+    "real-time",
+    "build",
+    "crypto",
+    "a",
+    "fullstack",
+    "trading",
+    "wallet",
+    "application"
+  ],
+  "knowledge": {
+    "api_patterns": [],
+    "database_schemas": [],
+    "ui_components": [
+      {
+        "file": "frontend/src/Wallet.jsx",
+        "category": "UI_COMPONENT",
+        "summary": "React Component (Wallet.jsx)",
+        "snippet": "import React from 'react'; export default function Wallet() {}"
+      }
+    ],
+    "folder_structures": [
+      "frontend",
+      "backend"
+    ],
+    "reusable_prompts": [
+      "Build a real-time crypto trading wallet application"
+    ],
+    "error_resolution_pairs": [],
+    "testing_strategies": []
+  },
+  "indexed_at": "2026-07-31T12:41:47Z"
+}

@@ -22,28 +22,41 @@ class ProjectValidator:
             "consistency": False
         }
 
-        # 1. Frontend Checks
+        # 1. Root Directory Checks ('backend', 'frontend', 'database')
+        has_fe_dir = any(path.startswith("frontend/") for path in project_files)
+        has_be_dir = any(path.startswith("backend/") for path in project_files)
+        has_db_dir = any(path.startswith("database/") for path in project_files)
+
+        missing_dirs = []
+        if not has_be_dir: missing_dirs.append("'backend'")
+        if not has_fe_dir: missing_dirs.append("'frontend'")
+        if not has_db_dir: missing_dirs.append("'database'")
+
+        if missing_dirs:
+            errors.append(f"Missing recommended root directories: {', '.join(missing_dirs)}")
+
+        # 1b. Frontend Details
         has_fe_pkg = any("package.json" in path for path in project_files)
         has_fe_src = any("frontend/src" in path or "src/App.jsx" in path for path in project_files)
-        if has_fe_pkg and has_fe_src:
+        if has_fe_pkg and has_fe_src and has_fe_dir:
             checks["frontend"] = True
         else:
             errors.append("Frontend validation failed: Missing package.json or src components.")
 
-        # 2. Backend Checks
+        # 2. Backend Details
         has_be_req = any("requirements.txt" in path for path in project_files)
         has_be_main = any("main.py" in path for path in project_files)
-        if has_be_req and has_be_main:
+        if has_be_req and has_be_main and has_be_dir:
             checks["backend"] = True
         else:
             errors.append("Backend validation failed: Missing requirements.txt or main.py.")
 
-        # 3. Database Checks
+        # 3. Database Details
         has_db_schema = any("schema.sql" in path or "database/" in path for path in project_files)
-        if has_db_schema:
+        if has_db_schema and has_db_dir:
             checks["database"] = True
         else:
-            warnings.append("Database validation warning: No explicit schema.sql found.")
+            errors.append("Database validation failed: Missing database directory or schema.sql.")
 
         # 4. Documentation Checks
         has_readme = any("README.md" in path for path in project_files)

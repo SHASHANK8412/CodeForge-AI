@@ -50,41 +50,83 @@ def create_conversation(request: ConversationCreateRequest | None = None):
     }
 
 
+from backend.services.generation_service import global_generation_pipeline
+from backend.config import DEBUG_ROUTING
+
+
 @router.post("/message")
 async def chat_message(request: ChatMessageRequest):
-    started_at = perf_counter()
-
     if request.conversation_id:
         conversation = conversation_manager.get_conversation(request.conversation_id)
         if conversation is None:
-            raise HTTPException(status_code=404, detail="Conversation not found.")
+            conversation = conversation_manager.create_conversation(
+                conversation_id=request.conversation_id,
+                title=generate_conversation_title(request.message)
+            )
         conversation_id = conversation.conversation_id
     else:
         conversation = conversation_manager.create_conversation(title=generate_conversation_title(request.message))
         conversation_id = conversation.conversation_id
 
-    result = await asyncio.to_thread(
-        graph.invoke,
-        {
-            "prompt": request.message,
-            "session_id": conversation_id,
-        },
+    # Execute Canonical Generation Pipeline
+    gen_result = await global_generation_pipeline.generate(
+        user_prompt=request.message,
+        conversation_id=conversation_id
+    )
+
+    # Save ONLY clean accepted response into conversation memory
+    msg_metadata = {
+        "intent": gen_result.intent,
+        "agent": gen_result.agent,
+        "model": gen_result.model,
+        "project_name": request.message,
+        "quality_score": gen_result.quality_score,
+        "execution_time_seconds": gen_result.execution_time_seconds,
+        "files": gen_result.files_map,
+        "retry_count": gen_result.attempts - 1,
+        "validated": gen_result.validation_passed
+    }
+
+    conversation_manager.record_turn(
+        conversation_id=conversation_id,
+        user_prompt=request.message,
+        assistant_response=gen_result.response,
+        metadata=msg_metadata
     )
 
     updated_conversation = conversation_manager.get_conversation(conversation_id)
     messages = conversation_manager.get_messages(conversation_id)
 
-    elapsed_ms = (perf_counter() - started_at) * 1000
-    print(f"/chat/message completed in {elapsed_ms:.1f}ms")
-
-    return {
+    resp_payload = {
         "success": True,
         "conversation": _conversation_payload(updated_conversation),
-        "response": result["response"],
-        "plan": result.get("plan", ""),
-        "architecture": result.get("architecture", ""),
+        "response": gen_result.response,
+        "plan": gen_result.plan_text,
+        "architecture": gen_result.arch_text,
+        "files": gen_result.files_map,
+        "quality_score": gen_result.quality_score,
+        "intent": gen_result.intent,
+        "agent": gen_result.agent,
+        "model": gen_result.model,
+        "execution_time_seconds": gen_result.execution_time_seconds,
+        "validation_passed": gen_result.validation_passed,
+        "contract_check": "PASS" if gen_result.validation_passed else "WARNING",
+        "retry_count": gen_result.attempts - 1,
+        "quality": gen_result.quality_metadata,
         "messages": [_message_payload(message) for message in messages],
     }
+
+    if DEBUG_ROUTING:
+        resp_payload["routing"] = {
+            "intent": gen_result.intent,
+            "agent": gen_result.agent,
+            "confidence": 1.0,
+            "source": "rule",
+            "reason": "",
+            "contract": "PASS" if gen_result.validation_passed else "WARNING"
+        }
+
+    return resp_payload
 
 
 @router.post("")
@@ -110,7 +152,7 @@ def list_conversations(
 def get_conversation_history(conversation_id: str, limit: int = Query(default=100, ge=1, le=500)):
     conversation = conversation_manager.get_conversation(conversation_id)
     if conversation is None:
-        raise HTTPException(status_code=404, detail="Conversation not found.")
+        conversation = conversation_manager.create_conversation(conversation_id=conversation_id)
 
     messages = conversation_manager.get_messages(conversation_id, limit=limit)
     return {
@@ -122,10 +164,11 @@ def get_conversation_history(conversation_id: str, limit: int = Query(default=10
 
 @router.put("/title/{conversation_id}")
 def rename_conversation(conversation_id: str, request: ConversationRenameRequest):
-    try:
+    conversation = conversation_manager.get_conversation(conversation_id)
+    if conversation is None:
+        conversation = conversation_manager.create_conversation(conversation_id=conversation_id, title=request.title)
+    else:
         conversation = conversation_manager.rename_conversation(conversation_id, request.title)
-    except KeyError as exc:
-        raise HTTPException(status_code=404, detail="Conversation not found.") from exc
 
     return {
         "success": True,
@@ -136,10 +179,9 @@ def rename_conversation(conversation_id: str, request: ConversationRenameRequest
 @router.delete("/{conversation_id}")
 def delete_conversation(conversation_id: str):
     conversation = conversation_manager.get_conversation(conversation_id)
-    if conversation is None:
-        raise HTTPException(status_code=404, detail="Conversation not found.")
+    if conversation is not None:
+        conversation_manager.delete_conversation(conversation_id)
 
-    conversation_manager.delete_conversation(conversation_id)
     return {
         "success": True,
         "conversation_id": conversation_id,

@@ -1,0 +1,20 @@
+{
+  "project_id": "test_ret_01",
+  "prompt": "Create e-commerce dashboard",
+  "framework": "FullStack",
+  "quality_score": 97.0,
+  "tags": [
+    "create",
+    "e-commerce",
+    "dashboard",
+    "fullstack"
+  ],
+  "knowledge": {
+    "ui_components": [
+      {
+        "name": "DashboardCard"
+      }
+    ]
+  },
+  "indexed_at": "2026-08-01T12:37:01Z"
+}

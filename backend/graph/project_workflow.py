@@ -102,28 +102,37 @@ async def _run_stage_async(stage_name: str, task_key: str, coro) -> dict:
 # ---------------- Nodes ---------------- #
 
 async def planner_node(state: ProjectState) -> dict:
-    prompt = state.get("prompt") or state.get("user_prompt", "")
+    prompt = state.get("prompt") or state.get("user_prompt") or state.get("user_request", "")
     async def work():
+        raw_plan = await planner.run_async(prompt)
+        plan_json = planner.parse_plan_json(raw_plan, allow_fallback=True)
         return {
-            "plan": await planner.run_async(prompt),
+            "prompt": prompt,
+            "user_prompt": prompt,
+            "user_request": prompt,
+            "project_name": plan_json.get("project_name", "AIForgeApp"),
+            "requirements": plan_json.get("functional_requirements") or plan_json.get("requirements", []),
+            "project_spec": plan_json,
+            "plan": plan_json,
             "current_step": "planner",
         }
     return await _run_stage_async("Planner", "planner", work())
 
 
-async def architect_node(state: ProjectState) -> dict:
-    prompt = state.get("prompt") or state.get("user_prompt", "")
-    async def work():
-        architecture_input = f"""Project Request
-{prompt}
 
-Project Plan
-{state.get('plan', '')}"""
+async def architect_node(state: ProjectState) -> dict:
+    project_spec = state.get("project_spec") or state.get("plan") or {}
+    async def work():
+        architecture_input = f"""Project Specification
+{project_spec}"""
+        raw_arch = await architect.run_async(architecture_input)
+        arch_json = architect.parse_architecture_json(raw_arch, allow_fallback=True)
         return {
-            "architecture": await architect.run_async(architecture_input),
+            "architecture": arch_json,
             "current_step": "architect",
         }
     return await _run_stage_async("Architect", "architect", work())
+
 
 
 async def frontend_node(state: ProjectState) -> dict:
