@@ -13,6 +13,7 @@ import LandingPage from "./pages/LandingPage";
 import CreateProject from "./pages/CreateProject";
 import GenerationDashboard from "./pages/GenerationDashboard";
 import CodeWorkspace from "./pages/CodeWorkspace";
+import QualityCenter from "./pages/QualityCenter";
 
 function App() {
     const [view, setView] = useState("landing");
@@ -62,7 +63,7 @@ function App() {
                     />
                 )}
                 {view === "reflection" && <ReflectionDashboard />}
-                {view === "metrics" && <MetricsDashboard />}
+                {view === "metrics" && <QualityCenter generationId={activeGenerationId} setView={setView} />}
                 {view === "plugins" && <PluginsDashboard />}
                 {view === "learning" && <LearningDashboard />}
                 {view === "f1" && <F1Website />}
@@ -70,6 +71,7 @@ function App() {
         </MainLayout>
     );
 }
+
 
 
 
