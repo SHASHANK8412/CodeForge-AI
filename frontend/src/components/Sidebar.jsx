@@ -163,87 +163,131 @@ function Sidebar({ currentView, setView }) {
         };
     }, []);
 
-    // Menu tabs for view toggling
-    const tabs = [
-        { key: "landing", label: "SaaS Landing Page", icon: <FaGlobe size={14} className="text-cyan-400" /> },
-        { key: "create", label: "Create Project", icon: <FaPlus size={14} className="text-cyan-400" /> },
-        { key: "autopilot", label: "Engineering Autopilot", icon: <FaBolt size={14} className="text-yellow-400" /> },
-        { key: "simulator", label: "What-If Simulator", icon: <FaBolt size={14} className="text-purple-400" /> },
-        { key: "dna", label: "Engineering DNA Graph", icon: <FaBrain size={14} className="text-cyan-400" /> },
-        { key: "bug-bounty", label: "AI Bug Hunter", icon: <FaRocket size={14} className="text-emerald-400" /> },
-        { key: "debate", label: "Multi-Agent Debate", icon: <FaBrain size={14} className="text-amber-400" /> },
-        { key: "talk", label: "Talk to Your Code", icon: <FaCommentAlt size={14} className="text-indigo-400" /> },
-        { key: "flight-recorder", label: "Flight Recorder", icon: <FaBrain size={14} className="text-indigo-400" /> },
-        { key: "build", label: "Live Build Dashboard", icon: <FaBolt size={14} className="text-yellow-400" /> },
-        { key: "code", label: "Code Workspace", icon: <FaCode size={14} className="text-emerald-400" /> },
-        { key: "metrics", label: "Quality Center", icon: <FaChartBar size={14} className="text-amber-400" /> },
-        { key: "plugins", label: "Deployment Center", icon: <FaRocket size={14} className="text-purple-400" /> },
-        { key: "dashboard", label: "Home Dashboard", icon: <FaHome size={14} /> },
-        { key: "observability", label: "Observability Telemetry", icon: <FaChartBar size={14} className="text-cyan-400" /> },
-        { key: "evaluations", label: "Evaluation Center", icon: <FaBrain size={14} className="text-amber-400" /> },
-        { key: "settings", label: "Settings & API Keys", icon: <FaCog size={14} className="text-slate-400" /> },
-        { key: "chat", label: "Chat Workspace", icon: <FaCommentAlt size={14} /> },
-        { key: "project", label: "Project Builder", icon: <FaHammer size={14} /> },
-        { key: "learning", label: "Learning Hub", icon: <FaBrain size={14} /> },
-        { key: "reflection", label: "Reflection Hub", icon: <FaBrain size={14} /> },
-        { key: "f1", label: "F1 Grand Prix Site", icon: <FaTrophy size={14} className="text-red-500" /> },
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [openGroups, setOpenGroups] = useState({
+        core: true,
+        ai: true,
+        tools: false,
+    });
+
+    const toggleGroup = (groupKey) => {
+        setOpenGroups((prev) => ({ ...prev, [groupKey]: !prev[groupKey] }));
+    };
+
+    const categorizedTabs = [
+        {
+            key: "core",
+            label: "🚀 WORKSPACE & BUILD",
+            items: [
+                { key: "create", label: "Create Project", icon: <FaPlus size={12} className="text-cyan-400" /> },
+                { key: "code", label: "Code Workspace", icon: <FaCode size={12} className="text-emerald-400" /> },
+                { key: "build", label: "Live Build Dashboard", icon: <FaBolt size={12} className="text-yellow-400" /> },
+                { key: "dashboard", label: "Home Dashboard", icon: <FaHome size={12} className="text-slate-300" /> },
+                { key: "landing", label: "SaaS Landing Page", icon: <FaGlobe size={12} className="text-cyan-400" /> },
+            ]
+        },
+        {
+            key: "ai",
+            label: "🧬 AI & AUTOPILOT",
+            items: [
+                { key: "autopilot", label: "Engineering Autopilot", icon: <FaBolt size={12} className="text-yellow-400" /> },
+                { key: "simulator", label: "What-If Simulator", icon: <FaBolt size={12} className="text-purple-400" /> },
+                { key: "dna", label: "Engineering DNA Graph", icon: <FaBrain size={12} className="text-cyan-400" /> },
+                { key: "bug-bounty", label: "AI Bug Hunter", icon: <FaRocket size={12} className="text-emerald-400" /> },
+                { key: "debate", label: "Multi-Agent Debate", icon: <FaBrain size={12} className="text-amber-400" /> },
+                { key: "talk", label: "Talk to Your Code", icon: <FaCommentAlt size={12} className="text-indigo-400" /> },
+                { key: "flight-recorder", label: "Flight Recorder", icon: <FaBrain size={12} className="text-indigo-400" /> },
+            ]
+        },
+        {
+            key: "tools",
+            label: "🛠️ QUALITY, DEPLOY & TOOLS",
+            items: [
+                { key: "metrics", label: "Quality Center", icon: <FaChartBar size={12} className="text-amber-400" /> },
+                { key: "plugins", label: "Deployment Center", icon: <FaRocket size={12} className="text-purple-400" /> },
+                { key: "observability", label: "Observability Telemetry", icon: <FaChartBar size={12} className="text-cyan-400" /> },
+                { key: "evaluations", label: "Evaluation Center", icon: <FaBrain size={12} className="text-amber-400" /> },
+                { key: "settings", label: "Settings & API Keys", icon: <FaCog size={12} className="text-slate-400" /> },
+                { key: "chat", label: "Chat Workspace", icon: <FaCommentAlt size={12} /> },
+                { key: "project", label: "Project Builder", icon: <FaHammer size={12} /> },
+                { key: "learning", label: "Learning Hub", icon: <FaBrain size={12} /> },
+                { key: "reflection", label: "Reflection Hub", icon: <FaBrain size={12} /> },
+                { key: "f1", label: "F1 Grand Prix Site", icon: <FaTrophy size={12} className="text-red-500" /> },
+            ]
+        }
     ];
 
-
-
-
-
-
-
-
     return (
-        <div className="w-72 bg-[#0F172A] border-r border-gray-800 flex flex-col h-full text-white select-none">
+        <div className={`${isCollapsed ? "w-16" : "w-72"} bg-[#0F172A] border-r border-gray-800 flex flex-col h-full text-white select-none transition-all duration-200`}>
             {/* Header section */}
-            <div className="p-4 border-b border-gray-800 space-y-3">
-                <div className="flex items-center gap-2">
-                    <div className="bg-[#6366F1] p-1.5 rounded-lg text-white font-extrabold text-sm">
-                        AF
+            <div className="p-3 border-b border-gray-800 space-y-2">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className="bg-[#6366F1] p-1.5 rounded-lg text-white font-extrabold text-sm shrink-0">
+                            AF
+                        </div>
+                        {!isCollapsed && (
+                            <div>
+                                <h1 className="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
+                                    🚀 AIForge
+                                </h1>
+                                <span className="text-[10px] text-gray-500 font-mono">WORKSPACE</span>
+                            </div>
+                        )}
                     </div>
-                    <div>
-                        <h1 className="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
-                            🚀 AIForge
-                        </h1>
-                        <span className="text-[10px] text-gray-500 font-mono">WORKSPACE</span>
-                    </div>
+                    <button
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        className="text-gray-400 hover:text-white p-1 rounded-md hover:bg-gray-800 transition"
+                        title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                    >
+                        {isCollapsed ? "➔" : "◀"}
+                    </button>
                 </div>
 
                 <button
                     onClick={handleNewChat}
-                    className="w-full flex items-center justify-center gap-2 bg-[#6366F1] hover:bg-[#5053e1] text-white rounded-lg py-2.5 px-4 text-sm font-semibold transition shadow-md shadow-indigo-500/10 active:scale-95"
+                    className={`w-full flex items-center justify-center gap-2 bg-[#6366F1] hover:bg-[#5053e1] text-white rounded-lg ${isCollapsed ? "py-2 px-1 text-xs" : "py-2 px-3 text-xs"} font-semibold transition shadow-md shadow-indigo-500/10 active:scale-95`}
                 >
-                    <FaPlus size={12} /> New Chat
+                    <FaPlus size={11} /> {!isCollapsed && "New Chat"}
                 </button>
             </div>
 
             {/* Single Unified Scrollable Body */}
-            <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-4 custom-scrollbar">
-                {/* Navigation Tabs */}
-                <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider px-2 block mb-1">
-                        Workspace Navigation
-                    </span>
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.key}
-                            onClick={() => setView(tab.key)}
-                            className={`w-full flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium transition-all ${
-                                currentView === tab.key
-                                    ? "bg-gray-800 text-white font-semibold shadow-inner border border-gray-700/50"
-                                    : "text-gray-400 hover:text-white hover:bg-gray-800/40"
-                            }`}
-                        >
-                            <span className={currentView === tab.key ? "text-[#6366F1]" : ""}>
-                                {tab.icon}
-                            </span>
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
+            <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-3 custom-scrollbar">
+                {categorizedTabs.map((group) => (
+                    <div key={group.key} className="space-y-1">
+                        {!isCollapsed && (
+                            <button
+                                onClick={() => toggleGroup(group.key)}
+                                className="w-full flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 py-1 hover:text-white transition"
+                            >
+                                <span>{group.label}</span>
+                                <span>{openGroups[group.key] ? "▼" : "▶"}</span>
+                            </button>
+                        )}
+                        {(isCollapsed || openGroups[group.key]) && (
+                            <div className="space-y-0.5">
+                                {group.items.map((tab) => (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => setView(tab.key)}
+                                        title={tab.label}
+                                        className={`w-full flex items-center ${isCollapsed ? "justify-center px-2 py-2" : "gap-2.5 px-2.5 py-1.5"} rounded-lg text-xs font-medium transition-all ${
+                                            currentView === tab.key
+                                                ? "bg-gray-800 text-white font-semibold border border-gray-700/50"
+                                                : "text-gray-400 hover:text-white hover:bg-gray-800/40"
+                                        }`}
+                                    >
+                                        <span className={currentView === tab.key ? "text-[#6366F1]" : ""}>
+                                            {tab.icon}
+                                        </span>
+                                        {!isCollapsed && <span>{tab.label}</span>}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ))}
 
                 {/* Search and Recent Conversations */}
                 <div className="pt-3 border-t border-gray-800 space-y-2">
