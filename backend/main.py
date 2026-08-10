@@ -233,6 +233,9 @@ def register_routers() -> None:
     from backend.evolution.routes import day24_evolution_router
     app.include_router(day24_evolution_router)
 
+    from backend.architecture_simulator.routes import day25_architect_router
+    app.include_router(day25_architect_router)
+
     from backend.routes.deployment_routes import router as day33_cicd_router
     app.include_router(day33_cicd_router)
 
