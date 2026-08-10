@@ -26,7 +26,9 @@ import Settings from "./pages/Settings";
 import ObservabilityPage from "./pages/ObservabilityPage";
 import ObservabilityDashboard from "./pages/ObservabilityDashboard";
 import MonitoringPage from "./pages/MonitoringPage";
+import GitHubDashboardPage from "./pages/GitHubDashboardPage";
 import EvaluationCenter from "./pages/EvaluationCenter";
+
 
 
 import AutopilotDashboard from "./pages/AutopilotDashboard";
@@ -193,7 +195,9 @@ function AppContent() {
                 {view === "reflection" && <ReflectionDashboard />}
                 {view === "learning" && <LearningDashboard />}
                 {view === "monitoring" && <MonitoringPage />}
+                {view === "github" && <GitHubDashboardPage />}
                 {view === "f1" && <F1Website />}
+
 
             </div>
         </MainLayout>

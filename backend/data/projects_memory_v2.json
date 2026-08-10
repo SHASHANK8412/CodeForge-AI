@@ -92,5 +92,53 @@
       "created_at": "2026-08-09T08:27:56.409835+00:00",
       "updated_at": "2026-08-10T02:08:35.692567+00:00"
     }
+  },
+  "default_project": {
+    "memories": {
+      "mem_TFkoTrZoiTc": {
+        "id": "mem_TFkoTrZoiTc",
+        "project_id": "default_project",
+        "generation_id": "default",
+        "user_id": null,
+        "memory_type": "REQUIREMENT",
+        "key": "functional_requirements",
+        "value": [
+          "FR-1: Display real-time race results and standings.",
+          "FR-2: Allow users to create accounts and profiles.",
+          "FR-3: Enable user comments on race articles.",
+          "FR-4: Provide historical race data and statistics.",
+          "FR-5: Implement a live chat feature for community interaction."
+        ],
+        "source_agent": "planner",
+        "importance": "HIGH",
+        "created_at": "2026-08-10T02:32:23.989850+00:00",
+        "updated_at": "2026-08-10T02:32:23.989850+00:00"
+      },
+      "mem_3CCnRIwF8sw": {
+        "id": "mem_3CCnRIwF8sw",
+        "project_id": "default_project",
+        "generation_id": "default",
+        "user_id": null,
+        "memory_type": "TECHNOLOGY",
+        "key": "tech_stack",
+        "value": {
+          "frontend": "React.js",
+          "backend": "Node.js with Express",
+          "database": "MongoDB",
+          "auth": "JWT",
+          "infra": "AWS"
+        },
+        "source_agent": "planner",
+        "importance": "HIGH",
+        "created_at": "2026-08-10T02:32:24.001768+00:00",
+        "updated_at": "2026-08-10T02:32:24.001768+00:00"
+      }
+    },
+    "decisions": {},
+    "meta": {
+      "project_id": "default_project",
+      "created_at": "2026-08-10T02:32:23.989805+00:00",
+      "updated_at": "2026-08-10T02:32:24.001768+00:00"
+    }
   }
 }

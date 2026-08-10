@@ -401,6 +401,37 @@ def monitoring_overview(project_id: str = "aiforge-demo"):
     return global_monitoring_service.get_monitoring_overview(project_id=project_id)
 
 
+@app.get("/api/github/overview")
+def github_overview(project_id: str = "aiforge-demo"):
+    from backend.github.service import global_github_service
+    return global_github_service.get_pr_dashboard_overview(project_id=project_id)
+
+
+class GithubConnectRequest(BaseModel):
+    repo_url: str
+    project_id: str = "aiforge-demo"
+    token: Optional[str] = None
+
+
+@app.post("/api/github/connect")
+def github_connect(req: GithubConnectRequest):
+    from backend.github.repositories import global_repository_analyzer
+    return global_repository_analyzer.connect_repository(req.repo_url, project_id=req.project_id, token=req.token)
+
+
+class CopilotGithubRequest(BaseModel):
+    query: str
+    project_id: str = "aiforge-demo"
+    full_repo_name: str = "SHASHANK8412/CodeForge-AI"
+
+
+@app.post("/api/github/copilot")
+def github_copilot(req: CopilotGithubRequest):
+    from backend.github.service import global_github_service
+    return global_github_service.handle_copilot_github_query(req.project_id, req.query, full_repo_name=req.full_repo_name)
+
+
+
 @app.get("/system/metrics")
 def system_metrics():
     try:

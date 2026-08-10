@@ -20,7 +20,7 @@
     "root_cause": "PostgreSQL unavailable",
     "strategy": "Restart Backend Process",
     "success": false,
-    "duration_seconds": 0.8008017539978027,
+    "duration_seconds": 0.8004477024078369,
     "confidence": 0.96
   },
   {
@@ -28,7 +28,7 @@
     "root_cause": "PostgreSQL unavailable",
     "strategy": "Restart Database",
     "success": false,
-    "duration_seconds": 1.8013575077056885,
+    "duration_seconds": 1.8010575771331787,
     "confidence": 0.96
   },
   {
@@ -36,23 +36,7 @@
     "root_cause": "PostgreSQL unavailable",
     "strategy": "Restart Database",
     "success": false,
-    "duration_seconds": 2.801612377166748,
+    "duration_seconds": 2.801633358001709,
     "confidence": 0.96
-  },
-  {
-    "signature": "api_downtime",
-    "root_cause": "PostgreSQL unavailable",
-    "strategy": "Restart Backend Process",
-    "success": true,
-    "duration_seconds": 0.8021671772003174,
-    "confidence": 0.96
-  },
-  {
-    "signature": "ollama_failure",
-    "root_cause": "Failed to connect to local Ollama service",
-    "strategy": "Check and restart the Ollama service",
-    "success": true,
-    "duration_seconds": 0.8014733791351318,
-    "confidence": 0.98
   }
 ]
