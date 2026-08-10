@@ -354,7 +354,7 @@ function ProjectGenerator() {
                                             Loading file content...
                                         </div>
                                     ) : (
-                                        <div className="rounded-xl overflow-hidden border border-gray-800/80 text-xs">
+                                        <div className="rounded-xl overflow-auto flex-1 min-h-0 border border-gray-800/80 text-xs custom-scrollbar">
                                             <SyntaxHighlighter
                                                 style={oneDark}
                                                 language={selectedFile.path.split(".").pop()}
@@ -363,6 +363,7 @@ function ProjectGenerator() {
                                                     margin: 0,
                                                     background: "#0F172A",
                                                     padding: "16px",
+                                                    overflow: "visible",
                                                 }}
                                             >
                                                 {selectedFile.content}
