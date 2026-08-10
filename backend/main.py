@@ -48,6 +48,7 @@ from backend.dashboard.evolution_dashboard import router as evolution_router
 from backend.auth.routes import router as auth_router
 from backend.observability.routes import router as observability_router
 from backend.generation.routes import router as generation_router
+from backend.routes.execution_routes import router as execution_router
 
 app = FastAPI(
     title="AIForge API",
@@ -57,6 +58,7 @@ app = FastAPI(
 app.include_router(auth_router)
 app.include_router(observability_router)
 app.include_router(generation_router)
+app.include_router(execution_router)
 
 import secrets
 from fastapi import Request

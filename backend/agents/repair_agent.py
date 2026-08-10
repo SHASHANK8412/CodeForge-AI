@@ -71,13 +71,16 @@ class RepairAgent(BaseAgent):
             if "missing import" in root_cause.lower() or "modulenotfounderror" in root_cause.lower() or "importerror" in root_cause.lower():
                 # Extract missing module from root cause or error msg
                 mod_name = "os"
-                for cf in classified_failures:
-                    msg = cf.get("message", "")
-                    if "no module named" in msg.lower():
-                        parts = msg.lower().split("no module named")
-                        if len(parts) > 1:
-                            mod_name = parts[1].strip().strip("'\"").split()[0]
-                
+                combined_text = (root_cause + " " + " ".join(cf.get("message", "") for cf in classified_failures)).lower()
+                if "no module named" in combined_text:
+                    parts = combined_text.split("no module named")
+                    if len(parts) > 1:
+                        mod_name = parts[1].strip().strip("'\"").split()[0]
+                elif "import" in combined_text:
+                    parts = combined_text.split("import")
+                    if len(parts) > 1:
+                        mod_name = parts[1].strip().split()[0]
+
                 new_import = f"import {mod_name}\n"
                 if new_import not in content:
                     replacement_text = f"{new_import}{content}"
@@ -153,6 +156,45 @@ class RepairAgent(BaseAgent):
 
         _logger.info(f"Patch successfully validated and applied to '{rel_path}'")
         return True
+
+    def repair_code(
+        self,
+        diagnostic_data: Dict[str, Any],
+        files_map: Dict[str, str],
+        project_dir: Optional[Path] = None
+    ) -> Dict[str, Any]:
+        root_cause = str(diagnostic_data.get("root_cause", "Fix error"))
+        affected = list(diagnostic_data.get("affected_files", []))
+        if not affected and files_map:
+            affected = [list(files_map.keys())[0]]
+
+        plan = self.generate_repair_plan(
+            root_cause=root_cause,
+            affected_files=affected,
+            classified_failures=[],
+            files_map=files_map,
+            repair_strategy=diagnostic_data.get("recommended_fix", "Targeted repair")
+        )
+
+        applied_files = []
+        changes = []
+
+        for patch in plan.patches:
+            if self.validate_and_apply_patch(patch, files_map, project_dir):
+                applied_files.append(patch.file)
+                changes.append({
+                    "file": patch.file,
+                    "operation": patch.operation,
+                    "reason": root_cause
+                })
+
+        return {
+            "status": "fixed" if applied_files else "failed",
+            "modified_files": applied_files,
+            "changes": changes,
+            "reason": root_cause,
+            "confidence": plan.confidence if applied_files else 0.0
+        }
 
 
 global_repair_agent = RepairAgent()

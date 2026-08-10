@@ -569,30 +569,60 @@ async def performance_node(state: ProjectState) -> dict:
     }
 
 
+from backend.agents.execution_agent import global_execution_agent
+from backend.agents.diagnostic_agent import global_diagnostic_agent
+from backend.validation.validation_pipeline import global_validation_pipeline
+
+
 async def execution_validation_node(state: ProjectState) -> dict:
-    _logger.info("✔ [11/14] Project Execution Agent verifying runtime startup...")
+    _logger.info("✔ [11/14] Execution Agent verifying sandboxed runtime & compilation...")
     _fire_lifecycle("agent_started", "execution_validation")
     project_path = state.get("project_path", "")
     existing_commands = state.get("commands", []) or []
+    files_manifest = dict(state.get("files", {}) or {})
+    history = list(state.get("execution_history", []) or [])
 
     with Timer() as timer:
-        exec_res = global_project_runner.run_project(project_path)
+        exec_report = global_execution_agent.execute_project(
+            files_manifest=files_manifest,
+            project_dir=project_path if project_path else None
+        )
 
     agent_timers["execution_validation"] = timer.elapsed
-    exec_dict = exec_res.model_dump()
-    cmd_str = exec_dict.get("command", "compileall")
-    new_status = "PASS" if exec_res.exit_code == 0 else "FAIL"
+    exec_dict = exec_report.model_dump()
+    cmd_str = exec_report.failed_command or "compileall"
+    new_status = "PASS" if exec_report.exit_code == 0 else "FAIL"
+
+    # Run 8-Level Validation Pipeline
+    val_report = global_validation_pipeline.run_pipeline(
+        files_manifest=files_manifest,
+        execution_data=exec_dict,
+        test_data=state.get("test_results", {})
+    )
+
+    attempt_record = {
+        "attempt": len(history) + 1,
+        "status": exec_report.status,
+        "exit_code": exec_report.exit_code,
+        "error_type": exec_report.error_type,
+        "failed_command": exec_report.failed_command,
+        "duration_ms": exec_report.duration_ms,
+        "validation_status": val_report.overall_status
+    }
+    history.append(attempt_record)
 
     _fire_lifecycle("agent_completed", "execution_validation", duration=timer.elapsed)
     return {
         "execution_results": exec_dict,
+        "execution_history": history,
+        "validation_report": val_report.model_dump(),
+        "quality_score": val_report.quality_scores,
         "commands": existing_commands + [cmd_str],
         "status": new_status,
-        "error": exec_res.stderr if exec_res.exit_code != 0 else "",
+        "error": exec_report.stderr if exec_report.exit_code != 0 else "",
         "current_step": "execution_validation",
-        "stream_events": [f"✔ Execution Verification: {'PASS' if exec_res.exit_code == 0 else 'FAIL'} (Exit code: {exec_res.exit_code})"]
+        "stream_events": [f"✔ Execution Verification: {val_report.overall_status} (Exit code: {exec_report.exit_code})"]
     }
-
 
 
 from backend.memory.project_memory_service import global_project_memory_service
@@ -608,42 +638,48 @@ MAX_REPAIR_ATTEMPTS = int(os.getenv("MAX_REPAIR_ATTEMPTS", 3))
 
 
 async def debug_node(state: ProjectState) -> dict:
-    _logger.info("✔ [12/14] DebugAgent analyzing failure evidence & classifying root causes...")
+    _logger.info("✔ [12/14] Diagnostic Agent analyzing failure evidence & root causes...")
     _fire_lifecycle("agent_started", "debug")
     iteration = state.get("iteration", 0) + 1
     max_iterations = state.get("max_iterations", MAX_REPAIR_ATTEMPTS)
 
-    debug_res = global_debug_agent.diagnose_and_repair(dict(state))
-
-    existing_fixes = state.get("fixes", []) or []
-    existing_errors = state.get("errors", []) or []
-    existing_causes = state.get("root_causes", []) or []
-
-    # Classify failure
-    stderr = str((state.get("execution_results") or {}).get("stderr", ""))
-    fail_obj = classify_test_failure(stderr or debug_res.diagnosis)
-
-    # Generate targeted RepairPlan
     files_map = dict(state.get("files", {}) or {})
+    exec_res = dict(state.get("execution_results", {}) or {})
+    fixes = list(state.get("fixes", []) or [])
+    existing_errors = list(state.get("errors", []) or [])
+    existing_causes = list(state.get("root_causes", []) or [])
+
+    # Structured Diagnosis via DiagnosticAgent
+    diag_res = global_diagnostic_agent.diagnose_failure(
+        execution_report=exec_res,
+        files_manifest=files_map,
+        architecture_spec=state.get("architecture"),
+        previous_fixes=fixes
+    )
+    diag_dict = diag_res.model_dump()
+
+    # Generate targeted RepairPlan via RepairAgent
     repair_plan = global_repair_agent.generate_repair_plan(
-        root_cause=debug_res.root_cause,
-        affected_files=debug_res.files_to_modify,
-        classified_failures=[fail_obj.model_dump()],
+        root_cause=diag_res.root_cause,
+        affected_files=diag_res.affected_files,
+        classified_failures=[{"message": exec_res.get("stderr", "")}],
         files_map=files_map
     )
+
+    debug_res = global_debug_agent.diagnose_and_repair(dict(state))
 
     try:
         global_project_memory_service.store_memory(MemoryRecord(
             project_id=str(state.get("project_name", state.get("project_id", "default_project"))),
             memory_type="FAILURE",
-            content=debug_res.diagnosis,
-            error_type=debug_res.error_type,
+            content=diag_res.root_cause,
+            error_type=diag_res.error_category,
             technology=str(state.get("technology_stack", "python")),
-            files=debug_res.files_to_modify,
-            root_cause=debug_res.root_cause,
-            fix=json.dumps(debug_res.changes),
+            files=diag_res.affected_files,
+            root_cause=diag_res.root_cause,
+            fix=json.dumps([p.model_dump() for p in repair_plan.patches]),
             result="FAIL",
-            confidence=debug_res.confidence
+            confidence=diag_res.confidence
         ))
     except Exception as e:
         _logger.warning(f"Memory store failed safely in debug_node: {e}")
@@ -652,12 +688,14 @@ async def debug_node(state: ProjectState) -> dict:
     return {
         "iteration": iteration,
         "max_iterations": max_iterations,
-        "fixes": existing_fixes + [debug_res.model_dump()],
-        "errors": existing_errors + [debug_res.diagnosis],
-        "root_causes": existing_causes + [debug_res.root_cause],
+        "error_category": diag_res.error_category,
+        "diagnostic_result": diag_dict,
+        "fixes": fixes + [debug_res.model_dump()],
+        "errors": existing_errors + [diag_res.root_cause],
+        "root_causes": existing_causes + [diag_res.root_cause],
         "repair_status": f"DIAGNOSED_ATTEMPT_{iteration}",
         "current_step": "debug",
-        "stream_events": [f"⚠️ Debugger diagnosed failure ({fail_obj.category.value}): {debug_res.diagnosis}"]
+        "stream_events": [f"⚠️ Diagnostic Agent: ({diag_res.error_category}) -> {diag_res.root_cause}"]
     }
 
 

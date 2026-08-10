@@ -120,3 +120,9 @@ class ProjectState(TypedDict, total=False):
     deployment_platform: str
     deployment_guide: str
 
+    # Execution & Self-Healing Engine state fields
+    execution_history: List[Dict[str, Any]]
+    error_category: str
+    diagnostic_result: Dict[str, Any]
+    repair_result: Dict[str, Any]
+
