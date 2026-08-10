@@ -18,7 +18,12 @@ class ProjectZipper:
 
         with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
             for rel_path, content in project_files.items():
-                archive_path = f"{root_folder}/{rel_path.lstrip('/')}"
+                # Sanitize path to prevent Zip Slip / path traversal attacks
+                clean_parts = [part for part in rel_path.replace("\\", "/").split("/") if part not in ("", "..", ".")]
+                clean_rel_path = "/".join(clean_parts)
+                if not clean_rel_path:
+                    continue
+                archive_path = f"{root_folder}/{clean_rel_path}"
                 zf.writestr(archive_path, content)
 
         buffer.seek(0)

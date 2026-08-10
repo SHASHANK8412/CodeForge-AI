@@ -22,8 +22,32 @@ class CacheService:
     Centralized Redis Cache & Background Job Service.
     """
 
-    def __init__(self):
+    def __init__(self, redis_client: Any = None):
         self._local_jobs: Dict[str, Job] = {}
+        self._local_cache: Dict[str, Any] = {}
+        self.redis_client = redis_client
+
+    def set(self, key: str, value: Any, ttl_seconds: int = 300) -> bool:
+        client = self.redis_client or get_redis_client()
+        if client is not None:
+            try:
+                client.setex(f"aiforge:cache:{key}", ttl_seconds, json.dumps(value))
+                return True
+            except Exception:
+                pass
+        self._local_cache[key] = value
+        return True
+
+    def get(self, key: str) -> Optional[Any]:
+        client = self.redis_client or get_redis_client()
+        if client is not None:
+            try:
+                raw = client.get(f"aiforge:cache:{key}")
+                if raw:
+                    return json.loads(raw.decode("utf-8") if isinstance(raw, bytes) else raw)
+            except Exception:
+                pass
+        return self._local_cache.get(key)
 
     def create_job(
         self,

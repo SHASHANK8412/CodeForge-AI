@@ -39,21 +39,31 @@ AGENT_DEFAULT_PATHS = {
 }
 
 
-def extract_files_from_agent_output(text: str, agent_name: str = "") -> Dict[str, str]:
+def extract_files_from_agent_output(text: str, agent_name: str = "", default_filename: str = "") -> Dict[str, str]:
     """Scans LLM output text for multi-file markdown code blocks with filepath annotations.
 
-    If no annotations are found but code blocks exist, uses the agent's default path.
+    If no annotations are found but code blocks exist, uses default_filename or agent's default path.
     Returns a dict mapping relative_filepath -> file_content.
     """
     files: Dict[str, str] = {}
     if not text or not text.strip():
         return files
 
-    # Pattern for annotated code blocks:
-    # ```language
-    # # filepath: path/to/file.ext  (or // filename: ..., or -- filepath: ...)
-    # content
-    # ```
+    # Pattern 1: # filepath: path/to/file.ext \n ```language ... ```
+    prefix_pattern = re.compile(
+        r"(?:#|//|--|\*)\s*(?:filepath|filename|file|path):\s*([^\n\r]+)\s*\n\s*```[a-zA-Z0-9_\-]*\s*\n(.*?)(?:```)",
+        re.DOTALL | re.IGNORECASE
+    )
+
+    for match in prefix_pattern.finditer(text):
+        filepath = match.group(1).strip()
+        content = match.group(2)
+        filepath = re.sub(r"^[#/\-\*\s]+", "", filepath).strip()
+        normalized_path = filepath.replace("\\", "/").strip("/")
+        if normalized_path and content:
+            files[normalized_path] = content
+
+    # Pattern 2: ```language \n # filepath: path/to/file.ext \n ... ```
     annotated_pattern = re.compile(
         r"```[a-zA-Z0-9_\-]*\s*\n"
         r"(?:#|//|--|\*)\s*(?:filepath|filename|file|path):\s*([^\n\r]+)\s*\n"
@@ -84,7 +94,7 @@ def extract_files_from_agent_output(text: str, agent_name: str = "") -> Dict[str
     )
 
     blocks = unannotated_pattern.findall(text)
-    default_path = AGENT_DEFAULT_PATHS.get(agent_name.lower(), "")
+    default_path = default_filename or AGENT_DEFAULT_PATHS.get(agent_name.lower(), "")
 
     if blocks and default_path:
         longest_block = max(blocks, key=len)

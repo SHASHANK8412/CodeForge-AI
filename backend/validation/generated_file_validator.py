@@ -91,6 +91,19 @@ class GeneratedFileValidator:
             line_count=len((content or "").splitlines())
         )
 
+        # 0. Path safety checks
+        if ".." in clean_path.split("/"):
+            res.is_valid = False
+            res.status = "PATH_TRAVERSAL_ATTEMPT"
+            res.errors.append(f"Path '{clean_path}' contains path traversal sequence '..'.")
+            return res
+
+        if any(char in clean_path for char in ["|", "<", ">", "?", "*", "\0"]):
+            res.is_valid = False
+            res.status = "INVALID_PATH"
+            res.errors.append(f"Path '{clean_path}' contains illegal path characters.")
+            return res
+
         # 1. Non-empty check
         if not content or not content.strip():
             res.is_valid = False

@@ -140,5 +140,145 @@
       "created_at": "2026-08-10T02:32:23.989805+00:00",
       "updated_at": "2026-08-10T02:32:24.001768+00:00"
     }
+  },
+  "Task Management SaaS": {
+    "memories": {
+      "mem_Ef-tZdNrgyo": {
+        "id": "mem_Ef-tZdNrgyo",
+        "project_id": "Task Management SaaS",
+        "generation_id": "default",
+        "user_id": null,
+        "memory_type": "REQUIREMENT",
+        "key": "functional_requirements",
+        "value": [
+          "FR-1: User registration and login with JWT.",
+          "FR-2: Task creation, update, delete, and list functionalities.",
+          "FR-3: Project management including task assignment and status tracking.",
+          "FR-4: Prioritize tasks based on urgency.",
+          "FR-5: Search and filter tasks by various criteria.",
+          "FR-6: Real-time dashboard updates for users."
+        ],
+        "source_agent": "planner",
+        "importance": "HIGH",
+        "created_at": "2026-08-10T07:11:09.422150+00:00",
+        "updated_at": "2026-08-10T07:11:09.422150+00:00"
+      },
+      "mem_PUzhtuKPokk": {
+        "id": "mem_PUzhtuKPokk",
+        "project_id": "Task Management SaaS",
+        "generation_id": "default",
+        "user_id": null,
+        "memory_type": "TECHNOLOGY",
+        "key": "tech_stack",
+        "value": {
+          "frontend": "React",
+          "backend": "FastAPI",
+          "database": "PostgreSQL",
+          "auth": "JWT",
+          "infra": "AWS"
+        },
+        "source_agent": "planner",
+        "importance": "HIGH",
+        "created_at": "2026-08-10T07:11:09.424981+00:00",
+        "updated_at": "2026-08-10T07:11:09.424981+00:00"
+      },
+      "mem_zBMsh0hPEFQ": {
+        "id": "mem_zBMsh0hPEFQ",
+        "project_id": "Task Management SaaS",
+        "generation_id": "default",
+        "user_id": null,
+        "memory_type": "ARCHITECTURE",
+        "key": "architecture_spec",
+        "value": {
+          "components": [
+            "Navbar",
+            "Sidebar",
+            "DashboardCard",
+            "LoginForm"
+          ],
+          "routes": [
+            "GET /health",
+            "POST /api/auth/login",
+            "GET /api/data"
+          ],
+          "models": [
+            "User",
+            "Session",
+            "Item"
+          ],
+          "dependencies": [
+            "react",
+            "fastapi",
+            "sqlalchemy",
+            "pydantic"
+          ],
+          "folder_structure": {
+            "frontend": [
+              "src/App.jsx",
+              "src/components/Navbar.jsx"
+            ],
+            "backend": [
+              "main.py",
+              "models.py",
+              "auth.py"
+            ],
+            "database": [
+              "schema.sql"
+            ]
+          }
+        },
+        "source_agent": "architect",
+        "importance": "CRITICAL",
+        "created_at": "2026-08-10T07:15:51.238295+00:00",
+        "updated_at": "2026-08-10T07:15:51.238295+00:00"
+      }
+    },
+    "decisions": {
+      "dec_LqnivrIH1n0": {
+        "id": "dec_LqnivrIH1n0",
+        "project_id": "Task Management SaaS",
+        "generation_id": "default",
+        "decision": "JWT Bearer Authentication",
+        "reason": "Secure user sessions across API routes",
+        "agent": "planner",
+        "timestamp": "2026-08-10T07:11:09.426597+00:00",
+        "importance": "HIGH"
+      },
+      "dec_aBw2nm-umiw": {
+        "id": "dec_aBw2nm-umiw",
+        "project_id": "Task Management SaaS",
+        "generation_id": "default",
+        "decision": "Use PostgreSQL database engine",
+        "reason": "Relational consistency, indexing, and schema integrity",
+        "agent": "architect",
+        "timestamp": "2026-08-10T07:15:51.262729+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_NPYyCm987Wk": {
+        "id": "dec_NPYyCm987Wk",
+        "project_id": "Task Management SaaS",
+        "generation_id": "default",
+        "decision": "Use FastAPI backend framework",
+        "reason": "High performance async REST API endpoint routing",
+        "agent": "architect",
+        "timestamp": "2026-08-10T07:15:51.265692+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_tFwnzZc-kyI": {
+        "id": "dec_tFwnzZc-kyI",
+        "project_id": "Task Management SaaS",
+        "generation_id": "default",
+        "decision": "Use React frontend framework",
+        "reason": "Component-driven reactive single-page app architecture",
+        "agent": "architect",
+        "timestamp": "2026-08-10T07:15:51.267236+00:00",
+        "importance": "HIGH"
+      }
+    },
+    "meta": {
+      "project_id": "Task Management SaaS",
+      "created_at": "2026-08-10T07:11:09.422088+00:00",
+      "updated_at": "2026-08-10T07:15:51.267236+00:00"
+    }
   }
 }

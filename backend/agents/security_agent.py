@@ -19,14 +19,18 @@ class SecurityAgent:
     Dedicated Security Agent for LangGraph workflows and repair pipelines.
     """
 
-    def analyze_project(
-        self,
-        project_id: str,
-        files_map: Dict[str, str],
-        user_id: str = "demo_user"
-    ) -> SecurityReport:
-        _logger.info(f"[SecurityAgent] Inspecting {len(files_map)} files for project '{project_id}'")
-        return global_security_service.run_full_security_scan(project_id, files_map, user_id)
+    def scan_files(self, files_map: Dict[str, str], project_id: str = "default_project") -> SecurityReport:
+        return self.analyze_project(project_id, files_map)
+
+    def generate_security_report_markdown(self, report: SecurityReport) -> str:
+        md = [f"# Security Audit Report\n**Score**: {report.score}/100\n"]
+        if report.vulnerabilities:
+            md.append("## Vulnerabilities Found:")
+            for v in report.vulnerabilities:
+                md.append(f"- **[{v.severity}]** {v.title}: {v.description}")
+        else:
+            md.append("✔ No high-severity vulnerabilities detected.")
+        return "\n".join(md)
 
 
 global_security_agent = SecurityAgent()
