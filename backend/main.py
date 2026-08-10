@@ -431,6 +431,66 @@ def github_copilot(req: CopilotGithubRequest):
     return global_github_service.handle_copilot_github_query(req.project_id, req.query, full_repo_name=req.full_repo_name)
 
 
+@app.get("/api/kubernetes/status")
+def k8s_status(project_id: str = "aiforge-demo"):
+    from backend.kubernetes.service import global_kubernetes_service
+    return global_kubernetes_service.get_status(project_id=project_id)
+
+
+@app.post("/api/kubernetes/manifests")
+def k8s_generate_manifests(project_id: str = "aiforge-demo"):
+    from backend.kubernetes.service import global_kubernetes_service
+    return global_kubernetes_service.generate_manifests(project_id=project_id)
+
+
+class K8sDeployRequest(BaseModel):
+    project_id: str = "aiforge-demo"
+    image_tag: str = "v1.5"
+    simulate_failure: bool = False
+
+
+@app.post("/api/kubernetes/deploy")
+def k8s_deploy(req: K8sDeployRequest):
+    from backend.kubernetes.service import global_kubernetes_service
+    return global_kubernetes_service.deploy(project_id=req.project_id, image_tag=req.image_tag, simulate_failure=req.simulate_failure)
+
+
+class K8sScaleApiRequest(BaseModel):
+    project_id: str = "aiforge-demo"
+    component: str = "backend"
+    current_replicas: int = 3
+    desired_replicas: int = 5
+    user_approved: bool = True
+    reason: str = "Scaling requested via Dashboard"
+
+
+@app.post("/api/kubernetes/scale")
+def k8s_scale(req: K8sScaleApiRequest):
+    from backend.kubernetes.service import global_kubernetes_service
+    from backend.kubernetes.models import K8sScaleRequest
+    s_req = K8sScaleRequest(
+        project_id=req.project_id,
+        component=req.component,
+        current_replicas=req.current_replicas,
+        desired_replicas=req.desired_replicas,
+        reason=req.reason
+    )
+    return global_kubernetes_service.scale(s_req, user_approved=req.user_approved)
+
+
+@app.post("/api/kubernetes/rollback")
+def k8s_rollback(project_id: str = "aiforge-demo"):
+    from backend.kubernetes.service import global_kubernetes_service
+    return global_kubernetes_service.rollback(project_id=project_id)
+
+
+@app.get("/api/kubernetes/events")
+def k8s_events(project_id: str = "aiforge-demo"):
+    from backend.kubernetes.service import global_kubernetes_service
+    return global_kubernetes_service.get_events(project_id=project_id)
+
+
+
 
 @app.get("/system/metrics")
 def system_metrics():
