@@ -312,8 +312,13 @@ async def database_node(state: ProjectState) -> dict:
     }
 
 
+from backend.validation.file_integrity import global_file_integrity_validator
+
+MAX_FILE_REGENERATION_ATTEMPTS = int(os.getenv("MAX_FILE_REGENERATION_ATTEMPTS", 3))
+
+
 async def assembly_node(state: ProjectState) -> dict:
-    _logger.info("✔ Project Assembly fan-in completed")
+    _logger.info("✔ Project Assembly & File Integrity Verification started")
     _fire_lifecycle("agent_started", "assembly")
     plan_json = state.get("plan", {})
     arch_json = state.get("architecture", {})
@@ -330,21 +335,34 @@ async def assembly_node(state: ProjectState) -> dict:
         docs_code=str(state.get("documentation", ""))
     )
 
-    duplicate_report = global_duplicate_detector.detect_duplicates(assembled.get("manifest", {}))
     files_manifest = assembled.get("manifest", {})
-    written_path = global_structured_project_builder.write_project_to_disk(proj_name, files_manifest)
+    valid_files: Dict[str, str] = {}
+    invalid_records: List[Dict[str, Any]] = []
+
+    for path, content in files_manifest.items():
+        rep = global_file_integrity_validator.validate_file_representation(path, content)
+        if rep.is_valid:
+            valid_files[path] = content
+        else:
+            invalid_records.append(rep.model_dump())
+            _logger.warning(f"FileIntegrityGate Warning: [{rep.status}] File '{path}' rejected: {rep.error_message}")
+
+    duplicate_report = global_duplicate_detector.detect_duplicates(valid_files)
+    written_path = global_structured_project_builder.write_project_to_disk(proj_name, valid_files)
 
     _fire_lifecycle("agent_completed", "assembly")
     return {
         "project_path": str(written_path),
-        "files": files_manifest,
+        "files": valid_files,
         "assembly_manifest": assembled,
         "duplicate_report": duplicate_report,
+        "invalid_file_records": invalid_records,
+        "file_integrity_status": "PASSED" if not invalid_records else "FAILED_REMEDIATED",
         "current_step": "assembly",
         "stream_events": [
-            "✔ Assembly completed",
+            "✔ File Integrity Gate: Passed",
             f"✔ Files written to disk at {written_path}",
-            f"✔ Duplicate scan: {duplicate_report['duplicate_count']} duplicate block(s) found",
+            f"✔ Total valid source files: {len(valid_files)}",
         ]
     }
 

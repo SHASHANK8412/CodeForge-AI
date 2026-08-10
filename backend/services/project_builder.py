@@ -22,6 +22,7 @@ Formula-Racing/
 """
 
 import json
+import hashlib
 import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional
@@ -133,7 +134,16 @@ class StructuredProjectBuilder:
             dest_path.parent.mkdir(parents=True, exist_ok=True)
             dest_path.write_text(content, encoding="utf-8")
 
-        _logger.info(f"Successfully wrote {len(files_manifest)} files to disk at '{target_dir}'")
+            # Write -> Read-Back Verification (Checksum Check)
+            readback_content = dest_path.read_text(encoding="utf-8")
+            expected_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+            actual_hash = hashlib.sha256(readback_content.encode("utf-8")).hexdigest()
+
+            if expected_hash != actual_hash:
+                _logger.error(f"FileIntegrityError: Hash mismatch after disk write for '{clean_rel}'")
+                raise IOError(f"FileIntegrityError: Disk write verification failed for '{clean_rel}'")
+
+        _logger.info(f"Successfully wrote and verified {len(files_manifest)} files to disk at '{target_dir}'")
         return target_dir
 
 

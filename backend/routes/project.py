@@ -398,15 +398,18 @@ def evaluate_project(request: EvaluateProjectRequest):
 from backend.execution.project_runner import global_project_runner
 
 
+from backend.validation.file_integrity import global_file_integrity_validator, FileRepresentation
+
+
 @router.get("/api/projects/{generation_id}/files")
 def get_project_files_endpoint(generation_id: str):
     """
-    Returns full file tree and content map for generation_id.
+    Returns full file tree and FileRepresentation content map for generation_id.
     """
     from backend.generators.project_generator import GENERATED_PROJECTS_DIR
     target_dir = None
 
-    # Check generated_projects folder
+    # Check generated_projects folder matching generation_id or safe project name
     for p in GENERATED_PROJECTS_DIR.glob("*"):
         if p.is_dir() and (generation_id.lower() in p.name.lower() or p.name.lower() in generation_id.lower()):
             target_dir = p
@@ -414,7 +417,7 @@ def get_project_files_endpoint(generation_id: str):
 
     if not target_dir:
         candidates = [p for p in GENERATED_PROJECTS_DIR.glob("*") if p.is_dir()]
-        target_dir = candidates[0] if candidates else (GENERATED_PROJECTS_DIR / "FoodDelivery_AI")
+        target_dir = candidates[0] if candidates else (GENERATED_PROJECTS_DIR / "AIForge_Project")
 
     files_list = []
     if target_dir.exists():
@@ -422,39 +425,83 @@ def get_project_files_endpoint(generation_id: str):
             if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.parts):
                 rel = str(fpath.relative_to(target_dir)).replace("\\", "/")
 
-                # Security: mask sensitive .env files
                 if fpath.name == ".env":
-                    content = "# .env.example\nPORT=8000\nDATABASE_URL=postgresql://user:pass@localhost:5432/food_delivery\nJWT_SECRET=secret_key_example\n"
+                    content = "# .env.example\nPORT=8000\nDATABASE_URL=postgresql://user:pass@localhost:5432/app\nJWT_SECRET=secret_key_example\n"
                 else:
                     try:
                         content = fpath.read_text(encoding="utf-8", errors="ignore")
                     except Exception:
                         content = ""
 
-                # Determine language extension
-                ext = fpath.suffix.lstrip(".").lower()
-                lang = "javascript"
-                if ext in ["py"]: lang = "python"
-                elif ext in ["sql"]: lang = "sql"
-                elif ext in ["json"]: lang = "json"
-                elif ext in ["jsx", "tsx", "ts", "js"]: lang = "javascript"
-                elif ext in ["md"]: lang = "markdown"
-                elif ext in ["html"]: lang = "html"
-                elif ext in ["css"]: lang = "css"
-                elif ext in ["yml", "yaml"]: lang = "yaml"
-                elif fpath.name.lower() == "dockerfile": lang = "dockerfile"
-
-                files_list.append({
-                    "path": rel,
-                    "name": fpath.name,
-                    "language": lang,
-                    "content": content
-                })
+                rep = global_file_integrity_validator.validate_file_representation(rel, content)
+                rep_dict = rep.model_dump()
+                rep_dict["name"] = fpath.name
+                files_list.append(rep_dict)
 
     return {
         "project_id": generation_id,
-        "project_name": target_dir.name if target_dir else "FoodDelivery AI",
+        "project_name": target_dir.name if target_dir else "AIForge Project",
         "files": files_list
+    }
+
+
+@router.get("/api/projects/{project_id}/integrity")
+def get_project_integrity_endpoint(project_id: str):
+    """
+    Development debug endpoint returning complete project file integrity report.
+    """
+    from backend.generators.project_generator import GENERATED_PROJECTS_DIR
+    target_dir = None
+
+    for p in GENERATED_PROJECTS_DIR.glob("*"):
+        if p.is_dir() and (project_id.lower() in p.name.lower() or p.name.lower() in project_id.lower()):
+            target_dir = p
+            break
+
+    if not target_dir:
+        candidates = [p for p in GENERATED_PROJECTS_DIR.glob("*") if p.is_dir()]
+        target_dir = candidates[0] if candidates else None
+
+    if not target_dir or not target_dir.exists():
+        return {
+            "project_id": project_id,
+            "files": 0,
+            "valid": 0,
+            "empty": 0,
+            "placeholder": 0,
+            "mismatched": 0,
+            "integrity": "FAILED",
+            "files_detail": []
+        }
+
+    details = []
+    valid_count = 0
+    empty_count = 0
+    placeholder_count = 0
+
+    for fpath in target_dir.rglob("*"):
+        if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.parts):
+            rel = str(fpath.relative_to(target_dir)).replace("\\", "/")
+            content = fpath.read_text(encoding="utf-8", errors="ignore")
+            rep = global_file_integrity_validator.validate_file_representation(rel, content)
+
+            if rep.status == "VALID": valid_count += 1
+            elif rep.status == "EMPTY": empty_count += 1
+            elif rep.status == "PLACEHOLDER": placeholder_count += 1
+
+            details.append(rep.model_dump())
+
+    overall_integrity = "PASSED" if (empty_count == 0 and placeholder_count == 0 and valid_count > 0) else "FAILED"
+
+    return {
+        "project_id": project_id,
+        "files": len(details),
+        "valid": valid_count,
+        "empty": empty_count,
+        "placeholder": placeholder_count,
+        "mismatched": 0,
+        "integrity": overall_integrity,
+        "files_detail": details
     }
 
 

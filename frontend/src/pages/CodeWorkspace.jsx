@@ -230,16 +230,23 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Ready
+                {activeFile?.status === 'INCOMPLETE' || activeFile?.status === 'PLACEHOLDER' ? (
+                  <span className="text-amber-400 font-bold uppercase text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/40">
+                    ⚠ {activeFile.status}
+                  </span>
+                ) : 'Ready'}
               </span>
               <span>UTF-8</span>
               <span className="text-slate-300">
                 Ln {editorMeta.cursorLine}, Col {editorMeta.cursorCol}
               </span>
+              <span className="text-slate-400">
+                Project: <strong className="text-slate-200">{files.length}</strong> files | <strong className="text-slate-200">{files.reduce((acc, f) => acc + (f.content ? f.content.split('\n').length : 0), 0)}</strong> lines
+              </span>
             </div>
 
             <div className="flex items-center gap-4">
-              <span>Lines: <strong className="text-slate-200">{editorMeta.lineCount}</strong></span>
+              <span>File Lines: <strong className="text-slate-200">{editorMeta.lineCount}</strong></span>
               <span>{formatBytes(editorMeta.fileSize)}</span>
               <span className="text-cyan-400 uppercase text-[10px] font-bold">{editorMeta.language}</span>
             </div>

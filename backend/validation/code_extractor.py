@@ -51,7 +51,7 @@ def extract_files_from_agent_output(text: str, agent_name: str = "", default_fil
 
     # Pattern 1: # filepath: path/to/file.ext \n ```language ... ```
     prefix_pattern = re.compile(
-        r"(?:#|//|--|\*)\s*(?:filepath|filename|file|path):\s*([^\n\r]+)\s*\n\s*```[a-zA-Z0-9_\-]*\s*\n(.*?)(?:```)",
+        r"(?:#|//|--|/\*|<!--|\*)\s*(?:filepath|filename|file|path):\s*([^\n\r\*]+?)(?:\*/|-->)?\s*\n\s*```[a-zA-Z0-9_\-]*\s*\n(.*?)(?:```)",
         re.DOTALL | re.IGNORECASE
     )
 
@@ -66,7 +66,7 @@ def extract_files_from_agent_output(text: str, agent_name: str = "", default_fil
     # Pattern 2: ```language \n # filepath: path/to/file.ext \n ... ```
     annotated_pattern = re.compile(
         r"```[a-zA-Z0-9_\-]*\s*\n"
-        r"(?:#|//|--|\*)\s*(?:filepath|filename|file|path):\s*([^\n\r]+)\s*\n"
+        r"(?:#|//|--|/\*|<!--|\*)\s*(?:filepath|filename|file|path):\s*([^\n\r\*]+?)(?:\*/|-->)?\s*\n"
         r"(.*?)"
         r"\n```",
         re.DOTALL | re.IGNORECASE
@@ -76,11 +76,23 @@ def extract_files_from_agent_output(text: str, agent_name: str = "", default_fil
         filepath = match.group(1).strip()
         content = match.group(2)
 
-        # Clean filepath string
         filepath = re.sub(r"^[#/\-\*\s]+", "", filepath).strip()
         normalized_path = filepath.replace("\\", "/").strip("/")
 
         if normalized_path and content:
+            files[normalized_path] = content
+
+    # Pattern 3: ### backend/auth.py \n ```python \n ... ```
+    header_pattern = re.compile(
+        r"(?:###|##|#)\s*([a-zA-Z0-9_\-/\.]+\.[a-zA-Z0-9]+)\s*\n\s*```[a-zA-Z0-9_\-]*\s*\n(.*?)\n```",
+        re.DOTALL | re.IGNORECASE
+    )
+
+    for match in header_pattern.finditer(text):
+        filepath = match.group(1).strip()
+        content = match.group(2)
+        normalized_path = filepath.replace("\\", "/").strip("/")
+        if normalized_path and content and normalized_path not in files:
             files[normalized_path] = content
 
     # If annotated blocks were found, return them
