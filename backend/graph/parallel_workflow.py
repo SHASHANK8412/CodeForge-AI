@@ -527,26 +527,46 @@ async def dependency_manager_node(state: ProjectState) -> dict:
     }
 
 
+from backend.security.security_manager import global_security_manager
+from backend.agents.security_repair_agent import global_security_repair_agent
+
+MAX_SECURITY_REPAIR_ATTEMPTS = int(os.getenv("MAX_SECURITY_REPAIR_ATTEMPTS", 3))
+
+
 async def security_scan_node(state: ProjectState) -> dict:
-    _logger.info("✔ [9/14] Security Agent scanning codebase...")
+    _logger.info("✔ [9/14] Security Manager auditing project for vulnerabilities & secret leaks...")
     _fire_lifecycle("agent_started", "security_scan")
-    all_files = {
-        "frontend/App.jsx": str(state.get("frontend", "")),
-        "backend/main.py": str(state.get("backend", "")),
-        "database/schema.sql": str(state.get("database", ""))
-    }
+    files_manifest = dict(state.get("files", {}) or {})
+    proj_name = str(state.get("project_name", state.get("project_id", "AIForge Application")))
 
     with Timer() as timer:
-        sec_report = security_agent.scan_files(all_files)
-        sec_md = security_agent.generate_security_report_markdown(sec_report)
+        sec_report = global_security_manager.audit_project(proj_name, files_manifest)
+        sec_md = global_security_manager.generate_security_markdown(sec_report)
 
     agent_timers["security_scan"] = timer.elapsed
+    report_dict = sec_report.model_dump()
+
+    # Automatically trigger Security Repair if GATE is FAILED or WARNING
+    sec_attempts = state.get("security_repair_attempts", 0)
+    if sec_report.gate_status in ["FAILED", "WARNING"] and sec_attempts < MAX_SECURITY_REPAIR_ATTEMPTS:
+        sec_attempts += 1
+        _logger.info(f"Security Gate '{sec_report.gate_status}'. Auto-remediating issues (Attempt {sec_attempts}/{MAX_SECURITY_REPAIR_ATTEMPTS})...")
+        fix_res = global_security_repair_agent.fix_security_issues(sec_report.findings, files_manifest)
+
+        # Re-scan after repair
+        re_sec_report = global_security_manager.audit_project(proj_name, files_manifest)
+        sec_md = global_security_manager.generate_security_markdown(re_sec_report)
+        report_dict = re_sec_report.model_dump()
 
     _fire_lifecycle("agent_completed", "security_scan", duration=timer.elapsed)
     return {
+        "files": files_manifest,
         "security_report": sec_md,
+        "security_data": report_dict,
+        "security_score": report_dict.get("security_score", 100.0),
+        "security_gate": report_dict.get("gate_status", "PASSED"),
         "current_step": "security_scan",
-        "stream_events": [f"✔ Security Audit Completed (Score: {sec_report.score}/100)"]
+        "stream_events": [f"✔ Security Audit: {report_dict.get('gate_status', 'PASSED')} (Score: {report_dict.get('security_score', 100.0)}/100)"]
     }
 
 

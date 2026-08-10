@@ -126,3 +126,9 @@ class ProjectState(TypedDict, total=False):
     diagnostic_result: Dict[str, Any]
     repair_result: Dict[str, Any]
 
+    # Security & Dependency Intelligence Engine state fields
+    security_data: Dict[str, Any]
+    security_score: float
+    security_gate: str
+    security_repair_attempts: int
+
