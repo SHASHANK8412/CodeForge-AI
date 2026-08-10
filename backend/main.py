@@ -227,6 +227,9 @@ def register_routers() -> None:
     from backend.memory.routes import day22_memory_router
     app.include_router(day22_memory_router)
 
+    from backend.copilot.routes import day23_copilot_router
+    app.include_router(day23_copilot_router)
+
     from backend.routes.deployment_routes import router as day33_cicd_router
     app.include_router(day33_cicd_router)
 
