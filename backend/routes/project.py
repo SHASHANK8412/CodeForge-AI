@@ -220,9 +220,10 @@ def get_latest_reflection():
 def get_lessons():
     return reflection_service.load_lessons()
 
-@router.get("/metrics")
+@router.get("/reflection/metrics")
 def get_metrics():
     return reflection_service.get_dashboard_metrics()
+
 
 @router.post("/reflection/run")
 async def run_reflection_manually(request: ReflectionRunRequest):

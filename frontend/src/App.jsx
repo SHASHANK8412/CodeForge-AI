@@ -25,7 +25,9 @@ import ResetPassword from "./pages/ResetPassword";
 import Settings from "./pages/Settings";
 import ObservabilityPage from "./pages/ObservabilityPage";
 import ObservabilityDashboard from "./pages/ObservabilityDashboard";
+import MonitoringPage from "./pages/MonitoringPage";
 import EvaluationCenter from "./pages/EvaluationCenter";
+
 
 import AutopilotDashboard from "./pages/AutopilotDashboard";
 import FlightRecorder from "./pages/FlightRecorder";
@@ -190,7 +192,9 @@ function AppContent() {
                 )}
                 {view === "reflection" && <ReflectionDashboard />}
                 {view === "learning" && <LearningDashboard />}
+                {view === "monitoring" && <MonitoringPage />}
                 {view === "f1" && <F1Website />}
+
             </div>
         </MainLayout>
     );

@@ -1,7 +1,9 @@
 import sys
 from pathlib import Path
+from typing import Optional, Dict, Any, List
 
 # Ensure repository root is in sys.path so absolute imports of the 'backend' package work
+
 # when running uvicorn directly from inside the backend directory.
 _repo_root = Path(__file__).resolve().parent.parent
 if str(_repo_root) not in sys.path:
@@ -359,33 +361,44 @@ def database_health():
     return check_db_health()
 
 
+@app.get("/api/jobs/{job_id}")
+def get_job_status(job_id: str):
+    from backend.cache.service import global_cache_service
+    from fastapi import HTTPException
+    job = global_cache_service.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found")
+    return job
+
+
+@app.get("/api/jobs")
+def list_jobs(project_id: Optional[str] = None):
+    from backend.cache.service import global_cache_service
+    return global_cache_service.list_jobs(project_id=project_id)
+
+
+@app.get("/api/cache/metrics")
+def cache_metrics():
+    from backend.cache.service import global_cache_service
+    return global_cache_service.measure_performance()
+
+
+
 
 
 @app.get("/metrics")
-def metrics():
-    try:
-        from backend.services.reflection_service import ReflectionService
-        ref_metrics = ReflectionService().get_dashboard_metrics()
-        try:
-            import psutil
-            process = psutil.Process()
-            ref_metrics["memory_rss_mb"] = round(process.memory_info().rss / (1024 * 1024), 2)
-            ref_metrics["cpu_percent"] = psutil.cpu_percent(interval=None)
-            ref_metrics["active_threads"] = process.num_threads()
-        except Exception:
-            pass
-        return ref_metrics
-    except Exception:
-        return {
-            "projects_generated": 0,
-            "reflection_score": 85.0,
-            "knowledge_size": 0,
-            "top_lessons": [],
-            "common_bugs": [],
-            "improvement_rate": 0.0,
-            "average_test_score": 0.0,
-            "status": "operational"
-        }
+@app.get("/api/metrics")
+def prometheus_metrics():
+    from fastapi.responses import Response
+    from backend.monitoring.prometheus import global_prometheus_registry, CONTENT_TYPE_LATEST
+    payload = global_prometheus_registry.generate_metrics_payload()
+    return Response(content=payload, media_type=CONTENT_TYPE_LATEST)
+
+
+@app.get("/api/monitoring/overview")
+def monitoring_overview(project_id: str = "aiforge-demo"):
+    from backend.monitoring.service import global_monitoring_service
+    return global_monitoring_service.get_monitoring_overview(project_id=project_id)
 
 
 @app.get("/system/metrics")

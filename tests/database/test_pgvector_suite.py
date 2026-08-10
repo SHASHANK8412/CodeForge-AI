@@ -45,28 +45,35 @@ class TestPostgresPgvectorSuite:
         assert res.json()["status"] in ("healthy", "degraded")
 
     def test_structured_crud_and_isolation(self):
+        import uuid
+        p1_id = f"proj_a_{uuid.uuid4().hex[:6]}"
+        p2_id = f"proj_b_{uuid.uuid4().hex[:6]}"
+        inc1_id = f"inc_a_{uuid.uuid4().hex[:6]}"
+        inc2_id = f"inc_b_{uuid.uuid4().hex[:6]}"
+
         db = SessionLocal()
         try:
-            p1 = ProjectModel(id="proj_alpha", name="Alpha SaaS System")
-            p2 = ProjectModel(id="proj_beta", name="Beta Machine Learning")
+            p1 = ProjectModel(id=p1_id, name="Alpha SaaS System")
+            p2 = ProjectModel(id=p2_id, name="Beta Machine Learning")
             db.add_all([p1, p2])
 
-            inc1 = IncidentModel(id="inc_a1", project_id="proj_alpha", type="DATABASE_TIMEOUT", symptoms="[]")
-            inc2 = IncidentModel(id="inc_b1", project_id="proj_beta", type="MEMORY_LEAK", symptoms="[]")
+            inc1 = IncidentModel(id=inc1_id, project_id=p1_id, type="DATABASE_TIMEOUT", symptoms="[]")
+            inc2 = IncidentModel(id=inc2_id, project_id=p2_id, type="MEMORY_LEAK", symptoms="[]")
             db.add_all([inc1, inc2])
 
             db.commit()
 
             # Verify project isolation
-            alpha_incidents = db.query(IncidentModel).filter(IncidentModel.project_id == "proj_alpha").all()
+            alpha_incidents = db.query(IncidentModel).filter(IncidentModel.project_id == p1_id).all()
             assert len(alpha_incidents) == 1
-            assert alpha_incidents[0].id == "inc_a1"
+            assert alpha_incidents[0].id == inc1_id
 
-            beta_incidents = db.query(IncidentModel).filter(IncidentModel.project_id == "proj_beta").all()
+            beta_incidents = db.query(IncidentModel).filter(IncidentModel.project_id == p2_id).all()
             assert len(beta_incidents) == 1
-            assert beta_incidents[0].id == "inc_b1"
+            assert beta_incidents[0].id == inc2_id
         finally:
             db.close()
+
 
     def test_vector_dimension_validation(self):
         store = PostgresVectorStore(collection_name="test_dim_check")

@@ -1,0 +1,29 @@
+{
+  "annotations": {"list": []},
+  "title": "AIForge Overview",
+  "uid": "aiforge-overview",
+  "tags": ["aiforge", "overview"],
+  "panels": [
+    {
+      "id": 1,
+      "title": "HTTP Requests Total",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [{"expr": "sum(http_requests_total)"}]
+    },
+    {
+      "id": 2,
+      "title": "HTTP Error Rate (%)",
+      "type": "gauge",
+      "datasource": "Prometheus",
+      "targets": [{"expr": "sum(rate(http_errors_total[5m])) / sum(rate(http_requests_total[5m])) * 100"}]
+    },
+    {
+      "id": 3,
+      "title": "P95 Request Latency (ms)",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "targets": [{"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) * 1000"}]
+    }
+  ]
+}
