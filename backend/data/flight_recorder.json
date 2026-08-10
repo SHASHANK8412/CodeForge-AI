@@ -251,6 +251,24 @@
       "test_before": null,
       "test_after": null,
       "timestamp": "2026-08-10 06:59:23"
+    },
+    {
+      "id": "fre_JwYYrt43QzM",
+      "generation_id": "gen_fre_001",
+      "project_id": "proj_fre_001",
+      "stage": "BUILD",
+      "agent": "backend",
+      "event_type": "stage_completed",
+      "decision": "FastAPI REST API generated",
+      "reason": null,
+      "files_changed": [
+        "backend/main.py"
+      ],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-10 07:07:17"
     }
   ],
   "proj_auto_001": [
@@ -461,6 +479,22 @@
       "test_before": null,
       "test_after": null,
       "timestamp": "2026-08-10 06:59:21"
+    },
+    {
+      "id": "fre_4Y-i-aaf_-c",
+      "generation_id": "gen_XT8z1wQRiJBkgQ",
+      "project_id": "proj_auto_001",
+      "stage": "PLAN",
+      "agent": "planner",
+      "event_type": "autopilot_started",
+      "decision": "Autopilot started in BALANCED mode",
+      "reason": "Goal: Build a task management platform with FastAPI and React",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-10 07:07:15"
     }
   ],
   "proj_auto_002": [
@@ -863,6 +897,38 @@
       "test_before": null,
       "test_after": null,
       "timestamp": "2026-08-10 06:59:22"
+    },
+    {
+      "id": "fre_ZXvnMAV9_XI",
+      "generation_id": "gen_yZTl6OHKhIUtZQ",
+      "project_id": "proj_auto_002",
+      "stage": "PLAN",
+      "agent": "planner",
+      "event_type": "autopilot_started",
+      "decision": "Autopilot started in BALANCED mode",
+      "reason": "Goal: Build e-commerce app",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-10 07:07:15"
+    },
+    {
+      "id": "fre_MaMKCDZWhaQ",
+      "generation_id": "gen_yZTl6OHKhIUtZQ",
+      "project_id": "proj_auto_002",
+      "stage": "BUILD",
+      "agent": "system",
+      "event_type": "autopilot_paused",
+      "decision": "Autopilot paused",
+      "reason": "User requested manual pause.",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-10 07:07:16"
     }
   ],
   "proj_auto_003": [
@@ -1457,6 +1523,54 @@
       "test_before": null,
       "test_after": null,
       "timestamp": "2026-08-10 06:59:22"
+    },
+    {
+      "id": "fre_9Oq07Wp4P28",
+      "generation_id": "gen_rUi487ZE16wx4g",
+      "project_id": "proj_auto_003",
+      "stage": "PLAN",
+      "agent": "planner",
+      "event_type": "autopilot_started",
+      "decision": "Autopilot started in BALANCED mode",
+      "reason": "Goal: Build analytics dashboard",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-10 07:07:16"
+    },
+    {
+      "id": "fre_tYgzaJDw9Zo",
+      "generation_id": "gen_rUi487ZE16wx4g",
+      "project_id": "proj_auto_003",
+      "stage": "BUILD",
+      "agent": "system",
+      "event_type": "autopilot_paused",
+      "decision": "Autopilot paused",
+      "reason": "User requested manual pause.",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-10 07:07:16"
+    },
+    {
+      "id": "fre_6G2_qXn0l_4",
+      "generation_id": "gen_rUi487ZE16wx4g",
+      "project_id": "proj_auto_003",
+      "stage": "BUILD",
+      "agent": "system",
+      "event_type": "autopilot_resumed",
+      "decision": "Autopilot resumed",
+      "reason": "User requested resume.",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-10 07:07:16"
     }
   ],
   "proj_auto_004": [
@@ -1843,6 +1957,38 @@
       "test_before": null,
       "test_after": null,
       "timestamp": "2026-08-10 06:59:23"
+    },
+    {
+      "id": "fre_Xiowgp6fju8",
+      "generation_id": "gen_rU4qvKli-UB2Jg",
+      "project_id": "proj_auto_004",
+      "stage": "PLAN",
+      "agent": "planner",
+      "event_type": "autopilot_started",
+      "decision": "Autopilot started in BALANCED mode",
+      "reason": "Goal: Build CRM tool",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-10 07:07:16"
+    },
+    {
+      "id": "fre_SzW4mZu7jhE",
+      "generation_id": "gen_rU4qvKli-UB2Jg",
+      "project_id": "proj_auto_004",
+      "stage": "BUILD",
+      "agent": "system",
+      "event_type": "autopilot_stopped",
+      "decision": "Autopilot stopped",
+      "reason": "User cancelled execution.",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-10 07:07:17"
     }
   ],
   "proj_comp": [
@@ -2053,6 +2199,22 @@
       "test_before": null,
       "test_after": null,
       "timestamp": "2026-08-10 06:59:23"
+    },
+    {
+      "id": "fre_taY8ZbMfGFk",
+      "generation_id": "gen_kqEH1KsPmfvy9g",
+      "project_id": "proj_comp",
+      "stage": "PLAN",
+      "agent": "planner",
+      "event_type": "autopilot_started",
+      "decision": "Autopilot started in BALANCED mode",
+      "reason": "Goal: Build SaaS app",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-10 07:07:17"
     }
   ],
   "proj_fail": [
@@ -2439,6 +2601,38 @@
       "test_before": null,
       "test_after": null,
       "timestamp": "2026-08-10 06:59:24"
+    },
+    {
+      "id": "fre_tjI6WRszLoU",
+      "generation_id": "gen_5N9otVuUgD3-Ng",
+      "project_id": "proj_fail",
+      "stage": "PLAN",
+      "agent": "planner",
+      "event_type": "autopilot_started",
+      "decision": "Autopilot started in BALANCED mode",
+      "reason": "Goal: Build broken app",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-10 07:07:17"
+    },
+    {
+      "id": "fre_7xnLiQhjlVc",
+      "generation_id": "gen_5N9otVuUgD3-Ng",
+      "project_id": "proj_fail",
+      "stage": "BUILD",
+      "agent": "system",
+      "event_type": "autopilot_stopped",
+      "decision": "Autopilot stopped",
+      "reason": "User cancelled execution.",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-10 07:07:17"
     }
   ]
 }

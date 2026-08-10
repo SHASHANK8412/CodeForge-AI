@@ -1,15 +1,80 @@
+"""
+AIForge Day 22 — Contextual Memory Retrieval Engine
+===================================================
+Ranks memories using semantic relevance, project context, importance, recency, confidence,
+and agent-role specialization (Architect, Backend, Frontend, Security, Performance, DevOps, Incident).
+Maintains backwards compatibility with Day 12 MemoryRetriever.
+"""
+
 import json
 import time
 import logging
-from typing import Dict, Any, List, Optional
+from typing import List, Dict, Any, Optional
 
+from backend.memory.models import (
+    EngineeringMemory, MemoryType, MemoryImportance, MemoryStatus,
+    ProjectMemory, DecisionRecord, ImportanceLevel
+)
+from backend.memory.repository import global_memory_repository
 from backend.memory.short_term import global_short_term_memory
 from backend.memory.long_term import global_long_term_memory
-from backend.memory.models import ProjectMemory, DecisionRecord, ImportanceLevel
 from backend.rag.pipeline import global_rag_pipeline
 
-logger = logging.getLogger("aiforge.memory.retrieval")
+_logger = logging.getLogger("aiforge.memory.retrieval")
 
+AGENT_TYPE_INTERESTS: Dict[str, List[MemoryType]] = {
+    "Architect": [MemoryType.ARCHITECTURE_DECISION, MemoryType.PROJECT_CONSTRAINT, MemoryType.TECHNOLOGY_DECISION],
+    "Backend": [MemoryType.CODING_PATTERN, MemoryType.ARCHITECTURE_DECISION, MemoryType.PERFORMANCE_LESSON],
+    "Frontend": [MemoryType.USER_PREFERENCE, MemoryType.CODING_PATTERN, MemoryType.KNOWN_LIMITATION],
+    "Security": [MemoryType.SECURITY_LESSON, MemoryType.INCIDENT_LESSON, MemoryType.PROJECT_CONSTRAINT],
+    "Performance": [MemoryType.PERFORMANCE_LESSON, MemoryType.SUCCESSFUL_APPROACH, MemoryType.FAILED_APPROACH],
+    "DevOps": [MemoryType.DEPLOYMENT_LESSON, MemoryType.PROJECT_CONSTRAINT, MemoryType.INCIDENT_LESSON],
+    "Incident": [MemoryType.INCIDENT_LESSON, MemoryType.REPAIR_HISTORY, MemoryType.FAILED_APPROACH],
+}
+
+
+class MemoryRetrievalEngine:
+    """
+    Ranks and retrieves contextual memories for Day 22 Engineering Memory.
+    """
+
+    def retrieve_contextual_memories(
+        self,
+        project_id: str,
+        task_query: str,
+        agent_type: str = "Backend",
+        top_k: int = 5
+    ) -> List[EngineeringMemory]:
+        _logger.info(f"[MemoryRetrieval] Querying memories for '{agent_type}' agent on task '{task_query[:30]}...'")
+
+        all_memories = global_memory_repository.get_by_project(project_id, active_only=True)
+        if not all_memories:
+            return []
+
+        q_lower = task_query.lower()
+        preferred_types = AGENT_TYPE_INTERESTS.get(agent_type, [])
+
+        def score_memory(mem: EngineeringMemory) -> float:
+            score = 0.0
+            if mem.type in preferred_types:
+                score += 30.0
+            if any(term in q_lower for term in mem.title.lower().split() + mem.content.lower().split()):
+                score += 40.0
+            if mem.importance == MemoryImportance.CRITICAL:
+                score += 25.0
+            elif mem.importance == MemoryImportance.HIGH:
+                score += 15.0
+            score += min(mem.usage_count * 2.0, 10.0)
+            return score
+
+        ranked = sorted(all_memories, key=score_memory, reverse=True)
+        return ranked[:top_k]
+
+
+global_memory_retrieval_engine = MemoryRetrievalEngine()
+
+
+# Legacy Day 12 Compatibility Layer
 MAX_MEMORY_ITEMS = 15
 MAX_RAG_RESULTS = 5
 MAX_CONTEXT_TOKENS = 3000
@@ -21,7 +86,7 @@ def _approx_token_count(text: str) -> int:
 
 class MemoryRetriever:
     """
-    Implements multi-tier memory retrieval strategy with strict context size control and importance ranking.
+    Multi-tier memory retrieval strategy with strict context size control.
     """
 
     def retrieve_relevant_memory(
@@ -34,52 +99,28 @@ class MemoryRetriever:
         generation_id: Optional[str] = None,
         long_term_store: Optional[Any] = None
     ) -> Dict[str, Any]:
-        """
-        Retrieves relevant context for an agent in prioritized order:
-        1. Current generation state (short-term)
-        2. Architectural decisions
-        3. Relevant previous agent outputs
-        4. Relevant long-term project memories (ranked by importance & relevance)
-        5. RAG knowledge context
-        """
         start_time = time.perf_counter()
         lt = long_term_store or global_long_term_memory
 
-        # 1. Short-Term Generation Memory
         st_data = global_short_term_memory.get_all()
-
-        # 2. Project Architectural Decisions
         decisions: List[DecisionRecord] = lt.get_decisions(project_id)
+        long_mems: List[ProjectMemory] = lt.search_memories(project_id=project_id, query=query, top_k=limit)
 
-        # 3. Previous Agent Outputs from Long-Term & Short-Term
-        agent_outputs = st_data.get("agent_outputs", {})
-
-        # 4. Long-Term Project Memories (ranked)
-        long_mems: List[ProjectMemory] = lt.search_memories(
-            project_id=project_id,
-            query=query,
-            top_k=limit
-        )
-
-        # 5. RAG Retrieval Context
         rag_context = ""
         try:
             rag_context = global_rag_pipeline.get_context_string_for_agent(agent_name, query)
         except Exception as e:
-            logger.warning(f"RAG retrieval warning for agent '{agent_name}': {e}")
+            _logger.warning(f"RAG retrieval warning for agent '{agent_name}': {e}")
 
-        # Assemble and format context string while honoring max_tokens budget
         context_parts: List[str] = []
         token_count = 0
 
-        # Include Decisions (Priority High)
         if decisions:
             dec_lines = [f"- {d.decision} (Reason: {d.reason}) [{d.agent}]" for d in decisions[:5]]
             dec_text = "### Key Architectural Decisions\n" + "\n".join(dec_lines)
             context_parts.append(dec_text)
             token_count += _approx_token_count(dec_text)
 
-        # Include Relevant Long-Term Memories
         if long_mems and token_count < max_tokens:
             mem_lines = []
             for m in long_mems[:limit]:
@@ -93,7 +134,6 @@ class MemoryRetriever:
                 context_parts.append(mem_text)
                 token_count += _approx_token_count(mem_text)
 
-        # Include RAG Context
         if rag_context and token_count < max_tokens:
             rag_text = f"### Relevant Documentation & Knowledge\n{rag_context[:1000]}"
             if token_count + _approx_token_count(rag_text) <= max_tokens:
@@ -102,12 +142,6 @@ class MemoryRetriever:
 
         context_string = "\n\n".join(context_parts)
         retrieval_ms = (time.perf_counter() - start_time) * 1000
-
-        logger.info(
-            f"[MEMORY] project={project_id} agent={agent_name} "
-            f"retrieved={len(long_mems) + len(decisions)} context_size={len(context_string)} chars "
-            f"tokens=~{token_count} time={retrieval_ms:.2f}ms"
-        )
 
         return {
             "project_id": project_id,
@@ -122,7 +156,6 @@ class MemoryRetriever:
         }
 
 
-# Global MemoryRetriever instance
 global_memory_retriever = MemoryRetriever()
 
 

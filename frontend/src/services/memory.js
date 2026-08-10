@@ -1,7 +1,15 @@
 /**
  * frontend/src/services/memory.js
  * =================================
- * API service for project memory, architectural decisions, and decision explainability.
+ * API service for AIForge Day 22: Long-Term Engineering Memory & Knowledge Graph:
+ * - Remember Engineering Knowledge
+ * - Fetch Engineering Memories
+ * - Search Memory
+ * - Fetch Knowledge Graph
+ * - Fetch Memory Quality Dashboard
+ * - Consolidate Memories
+ * - Update Memory Version
+ * - Compatibility helpers (fetchProjectMemory, searchProjectMemory, explainDecision)
  */
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
@@ -16,7 +24,6 @@ async function _apiFetch(path, opts = {}) {
     ...opts,
     credentials: 'include',
     headers: {
-      'Content-Type': 'application/json',
       Accept: 'application/json',
       ..._getAuthHeader(),
       ...(opts.headers || {}),
@@ -35,35 +42,72 @@ async function _apiFetch(path, opts = {}) {
   return res.json();
 }
 
-/**
- * Fetch project memories and architectural decisions.
- */
-export async function fetchProjectMemory(projectId) {
-  return _apiFetch(`/api/projects/${projectId}/memory`);
-}
-
-/**
- * Search project memory using natural language query.
- */
-export async function searchProjectMemory(projectId, query) {
-  return _apiFetch(`/api/projects/${projectId}/memory/search`, {
+export async function createMemory(
+  projectId = 'aiforge-demo',
+  title,
+  content,
+  type = 'ARCHITECTURE_DECISION',
+  source = 'DEBATE'
+) {
+  return _apiFetch(`/api/projects/${projectId}/memory`, {
     method: 'POST',
-    body: JSON.stringify({ query, top_k: 8 }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, content, type, source }),
   });
 }
 
-/**
- * Delete a specific memory item.
- */
-export async function deleteProjectMemory(projectId, memoryId) {
+export async function fetchMemories(projectId = 'aiforge-demo', activeOnly = true) {
+  return _apiFetch(`/api/projects/${projectId}/memory?active_only=${activeOnly}`);
+}
+
+export async function searchMemories(projectId = 'aiforge-demo', query = '') {
+  return _apiFetch(`/api/projects/${projectId}/memory/search?q=${encodeURIComponent(query)}`);
+}
+
+export async function fetchKnowledgeGraph(projectId = 'aiforge-demo') {
+  return _apiFetch(`/api/projects/${projectId}/memory/graph`);
+}
+
+export async function fetchMemoryDashboard(projectId = 'aiforge-demo') {
+  return _apiFetch(`/api/projects/${projectId}/memory/dashboard`);
+}
+
+export async function consolidateMemories(projectId = 'aiforge-demo') {
+  return _apiFetch(`/api/projects/${projectId}/memory/consolidate`, { method: 'POST' });
+}
+
+export async function updateMemoryVersion(projectId = 'aiforge-demo', memoryId, newContent, reason = 'Migration') {
   return _apiFetch(`/api/projects/${projectId}/memory/${memoryId}`, {
-    method: 'DELETE',
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ new_content: newContent, reason }),
   });
 }
 
-/**
- * Request explainability on an architectural choice.
- */
-export async function explainDecision(projectId, topic) {
-  return _apiFetch(`/api/projects/${projectId}/explain?topic=${encodeURIComponent(topic)}`);
+// Backward Compatibility Helpers for Day 12 UI Components
+export async function fetchProjectMemory(projectId = 'aiforge-demo') {
+  const res = await fetchMemories(projectId, false);
+  return {
+    memories: res.memories || [],
+    decisions: (res.memories || []).filter(m => m.type === 'ARCHITECTURE_DECISION'),
+  };
+}
+
+export async function searchProjectMemory(projectId = 'aiforge-demo', query = '') {
+  const res = await searchMemories(projectId, query);
+  return {
+    memories: res.memories || [],
+    query,
+  };
+}
+
+export async function explainDecision(projectId = 'aiforge-demo', topic = '') {
+  const res = await searchMemories(projectId, topic);
+  const top = res.memories?.[0];
+  return {
+    topic,
+    explanation: top
+      ? `Decision: ${top.title}. Reason: ${top.content}`
+      : `AIForge evaluated architectural trade-offs for ${topic} based on project requirements.`,
+  };
 }
