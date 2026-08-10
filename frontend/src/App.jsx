@@ -23,9 +23,10 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Settings from "./pages/Settings";
-import ApiKeys from "./pages/ApiKeys";
+import ObservabilityPage from "./pages/ObservabilityPage";
 import ObservabilityDashboard from "./pages/ObservabilityDashboard";
 import EvaluationCenter from "./pages/EvaluationCenter";
+
 import AutopilotDashboard from "./pages/AutopilotDashboard";
 import FlightRecorder from "./pages/FlightRecorder";
 import SimulatorPage from "./pages/SimulatorPage";
@@ -125,9 +126,10 @@ function AppContent() {
                 )}
                 {view === "observability" && (
                     <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                        <ObservabilityDashboard />
+                        <ObservabilityPage projectId={activeGenerationId} />
                     </ProtectedRoute>
                 )}
+
                 {view === "evaluations" && (
                     <ProtectedRoute onRedirectLogin={() => setView("login")}>
                         <EvaluationCenter />

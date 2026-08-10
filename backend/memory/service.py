@@ -70,7 +70,33 @@ class EngineeringMemoryService:
         saved = global_memory_repository.save(memory)
         # Check and supersede conflicting historical memories
         global_memory_consolidation_engine.detect_and_handle_contradictions(project_id, saved)
+
+        # Index vector embedding in pgvector / PostgresVectorStore
+        try:
+            from backend.rag.embedding_service import global_embedding_service
+            from backend.database.service import global_database_service
+
+            text_to_embed = f"{title}\n{content}"
+            embeddings = global_embedding_service.embed_batch([text_to_embed])
+            if embeddings:
+
+                global_database_service.vector_store.add(
+                    documents=[{
+                        "id": saved.id,
+                        "text": text_to_embed,
+                        "source": "engineering_memory",
+                        "document_type": "ENGINEERING_MEMORY",
+                        "title": title,
+                        "type": mem_type.value
+                    }],
+                    embeddings=embeddings,
+                    project_id=project_id
+                )
+        except Exception as e:
+            _logger.warning(f"[EngineeringMemoryService] Vector indexing notice: {e}")
+
         return saved
+
 
     def retrieve(
         self,
@@ -93,7 +119,29 @@ class EngineeringMemoryService:
     def search(self, project_id: str, query: str) -> List[EngineeringMemory]:
         q_lower = query.lower()
         all_m = global_memory_repository.get_by_project(project_id, active_only=False)
-        return [m for m in all_m if q_lower in m.title.lower() or q_lower in m.content.lower()]
+        exact_matches = [m for m in all_m if q_lower in m.title.lower() or q_lower in m.content.lower()]
+        if exact_matches:
+            return exact_matches
+
+        # Keyword match
+        words = [w for w in q_lower.split() if len(w) > 3]
+        if words:
+            kw_matches = [m for m in all_m if any(w in m.title.lower() or w in m.content.lower() for w in words)]
+            if kw_matches:
+                return kw_matches
+
+        # Semantic similarity search fallback
+        try:
+            from backend.rag.embedding_service import global_embedding_service
+            from backend.database.service import global_database_service
+
+            q_emb = global_embedding_service.embed_query(query)
+            vec_res = global_database_service.vector_store.search(q_emb, project_id=project_id, top_k=5)
+            doc_ids = set(r["id"] for r in vec_res)
+            return [m for m in all_m if m.id in doc_ids]
+        except Exception:
+            return []
+
 
     def update(self, memory_id: str, new_content: str, reason: str = "Migration") -> EngineeringMemory:
         updated = global_memory_repository.update_version(memory_id, new_content, reason)

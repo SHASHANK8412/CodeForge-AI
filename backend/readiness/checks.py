@@ -198,7 +198,7 @@ class ReadinessCheckCollector:
             )
         )
 
-        # 10. Deployment & Observability Check
+        # 10. Deployment & Infrastructure Check
         checks.append(
             ReadinessCheck(
                 id="chk_dep_01",
@@ -212,7 +212,24 @@ class ReadinessCheckCollector:
             )
         )
 
+        # 11. OpenTelemetry Observability Check
+        from backend.observability.integration import global_telemetry_multi_system_bridge
+        otel_status = global_telemetry_multi_system_bridge.evaluate_observability_readiness(project_id)
+        checks.append(
+            ReadinessCheck(
+                id="chk_otel_01",
+                category="Observability",
+                name="OpenTelemetry Distributed Tracing & Telemetry Audit",
+                status=CheckStatus.PASS if otel_status.status == "PASS" else (CheckStatus.WARN if otel_status.status == "WARN" else CheckStatus.NOT_AVAILABLE),
+                severity=CheckSeverity.MEDIUM,
+                score=100.0 if otel_status.status == "PASS" else 75.0,
+                evidence=otel_status.details,
+                blocking=False
+            )
+        )
+
         return checks
 
 
 global_readiness_check_collector = ReadinessCheckCollector()
+

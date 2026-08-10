@@ -59,15 +59,40 @@ app.include_router(generation_router)
 import secrets
 from fastapi import Request
 
+from backend.observability.service import global_opentelemetry_service
+
 @app.middleware("http")
-async def security_headers_middleware(request: Request, call_next):
-    correlation_id = request.headers.get("X-Correlation-ID") or f"req_{secrets.token_hex(6)}"
+async def opentelemetry_fastapi_middleware(request: Request, call_next):
+    start_time = perf_counter()
+    trace_id = f"trace_{secrets.token_urlsafe(6)}"
+
     response = await call_next(request)
-    response.headers["X-Correlation-ID"] = correlation_id
+
+    duration_ms = round((perf_counter() - start_time) * 1000, 2)
+    path = request.url.path
+    method = request.method
+
+    # Do not flood telemetry on static/health polls
+    if not path.startswith(("/health", "/metrics", "/favicon")):
+        try:
+            headers = dict(request.headers)
+            global_opentelemetry_service.record_trace(
+                project_id="aiforge-demo",
+                http_method=method,
+                route=path,
+                status_code=response.status_code,
+                headers=headers
+            )
+        except Exception:
+            pass
+
+    response.headers["X-Trace-ID"] = trace_id
+    response.headers["X-Correlation-ID"] = request.headers.get("X-Correlation-ID") or f"req_{secrets.token_hex(6)}"
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     return response
+
 
 
 
@@ -325,6 +350,14 @@ def health():
             "cache": "healthy"
         }
     }
+
+
+@app.get("/health/database")
+@app.get("/api/health/database")
+def database_health():
+    from backend.database.connection import check_db_health
+    return check_db_health()
+
 
 
 

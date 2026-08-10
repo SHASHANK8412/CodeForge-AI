@@ -72,8 +72,15 @@ class VectorStore:
                 except Exception:
                     pass
 
+        try:
+            from backend.database.service import global_database_service
+            global_database_service.vector_store.add(documents, embeddings, project_id=project_id)
+        except Exception as e:
+            logger.debug(f"PostgresVectorStore add notice: {e}")
+
         logger.info(f"VectorStore added {added_count} chunk(s) for project '{project_id}'")
         return added_count
+
 
     def search(
         self,

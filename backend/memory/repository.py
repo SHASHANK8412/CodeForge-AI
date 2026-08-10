@@ -15,9 +15,12 @@ from backend.memory.policies import global_memory_security_policy
 _logger = logging.getLogger("aiforge.memory.repository")
 
 
+from backend.database.repositories.memory_repository import global_postgres_memory_repository
+
+
 class MemoryRepository:
     """
-    Project-isolated memory storage repository.
+    Project-isolated memory storage repository backed by PostgreSQL database with vector support.
     """
 
     def __init__(self):
@@ -33,13 +36,37 @@ class MemoryRepository:
         memory.updated_at = now_str
 
         self._memories[memory.id] = memory
+
+        try:
+            global_postgres_memory_repository.save(memory)
+        except Exception as e:
+            _logger.warning(f"[MemoryRepo] Postgres save notice: {e}")
+
         _logger.info(f"[MemoryRepo] Saved memory '{memory.id}' ({memory.type.value}) for project '{memory.project_id}'")
         return memory
 
     def get(self, memory_id: str) -> Optional[EngineeringMemory]:
-        return self._memories.get(memory_id)
+        if memory_id in self._memories:
+            return self._memories[memory_id]
+        try:
+            mem = global_postgres_memory_repository.get(memory_id)
+            if mem:
+                self._memories[mem.id] = mem
+                return mem
+        except Exception:
+            pass
+        return None
 
     def get_by_project(self, project_id: str, active_only: bool = True) -> List[EngineeringMemory]:
+        try:
+            db_mems = global_postgres_memory_repository.get_by_project(project_id, active_only=active_only)
+            for m in db_mems:
+                self._memories[m.id] = m
+            if db_mems:
+                return db_mems
+        except Exception:
+            pass
+
         memories = [m for m in self._memories.values() if m.project_id == project_id]
         if active_only:
             memories = [m for m in memories if m.status == MemoryStatus.ACTIVE]
@@ -51,6 +78,7 @@ class MemoryRepository:
             raise ValueError(f"Memory '{old_memory_id}' not found")
 
         old_mem.status = MemoryStatus.SUPERSEDED
+        self.save(old_mem)
 
         new_mem = EngineeringMemory(
             id=f"mem_{secrets.token_urlsafe(6)}",
@@ -74,3 +102,4 @@ class MemoryRepository:
 
 
 global_memory_repository = MemoryRepository()
+
