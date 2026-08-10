@@ -543,6 +543,99 @@ def infra_copilot(req: CopilotInfraRequest):
     return global_infrastructure_service.handle_copilot_infra_query(req.query, project_id=req.project_id)
 
 
+# ─────────────────────────────────────────────────────────
+# Day 33: AI FinOps & Infrastructure Cost Intelligence
+# ─────────────────────────────────────────────────────────
+
+@app.get("/api/finops/overview")
+def finops_overview(project_id: str = "aiforge-demo", provider: str = "AWS", environment: str = "production"):
+    from backend.finops.service import global_finops_service
+    bd = global_finops_service.analyze_cost(project_id, provider, environment)
+    budget = global_finops_service.calculate_budget(
+        project_id, environment, monthly_limit=250.0, current_estimate=bd.total_monthly_estimate
+    )
+    forecast = global_finops_service.forecast_cost(project_id, bd.total_monthly_estimate)
+    waste = global_finops_service.detect_waste(project_id)
+    recs = global_finops_service.generate_recommendations(project_id)
+    trend = global_finops_service.build_trend(project_id)
+    return {
+        "project_id": project_id,
+        "provider": provider,
+        "environment": environment,
+        "breakdown": bd.model_dump(),
+        "budget": budget.model_dump(),
+        "forecast": forecast.model_dump(),
+        "waste": [w.model_dump() for w in waste],
+        "recommendations": [r.model_dump() for r in recs],
+        "trend": trend,
+    }
+
+
+@app.get("/api/finops/recommendations")
+def finops_recommendations(project_id: str = "aiforge-demo", policy: str = "BALANCED"):
+    from backend.finops.service import global_finops_service
+    recs = global_finops_service.generate_recommendations(project_id, policy=policy)
+    return {"project_id": project_id, "policy": policy, "recommendations": [r.model_dump() for r in recs]}
+
+
+@app.get("/api/finops/budget")
+def finops_budget(project_id: str = "aiforge-demo", monthly_limit: float = 250.0, environment: str = "production"):
+    from backend.finops.service import global_finops_service
+    bd = global_finops_service.analyze_cost(project_id, "AWS", environment)
+    budget = global_finops_service.calculate_budget(
+        project_id, environment, monthly_limit, current_estimate=bd.total_monthly_estimate
+    )
+    return budget.model_dump()
+
+
+class FinOpsCompareRequest(BaseModel):
+    project_id: str = "aiforge-demo"
+    question: str = "Which architecture should I choose?"
+
+
+@app.post("/api/finops/compare")
+def finops_compare(req: FinOpsCompareRequest):
+    from backend.finops.service import global_finops_service
+    comparison = global_finops_service.compare_architectures(req.project_id, req.question)
+    return comparison.model_dump()
+
+
+class FinOpsCopilotRequest(BaseModel):
+    project_id: str = "aiforge-demo"
+    question: str
+
+
+@app.post("/api/finops/copilot")
+def finops_copilot(req: FinOpsCopilotRequest):
+    from backend.finops.service import global_finops_service
+    return global_finops_service.answer_copilot(req.project_id, req.question)
+
+
+@app.get("/api/finops/kubernetes")
+def finops_kubernetes(
+    project_id: str = "aiforge-demo",
+    service_count: int = 1,
+    avg_rps: float = 10.0,
+    scaling_needed: bool = False,
+    multi_region: bool = False,
+):
+    from backend.finops.service import global_finops_service
+    return global_finops_service.evaluate_kubernetes(
+        project_id, service_count, avg_rps, scaling_needed, multi_region
+    )
+
+
+@app.get("/api/finops/anomaly")
+def finops_anomaly(project_id: str = "aiforge-demo", baseline: float = 150.0, observed: float = 420.0):
+    from backend.finops.service import global_finops_service
+    anomaly = global_finops_service.detect_anomaly(project_id, baseline, observed)
+    return anomaly.model_dump()
+
+
+@app.get("/api/finops/simulate")
+def finops_simulate(project_id: str = "aiforge-demo", scenario: str = "add_kubernetes", current_monthly: float = 184.0):
+    from backend.finops.service import global_finops_service
+    return global_finops_service.simulate_cost_change(project_id, scenario, current_monthly)
 
 
 
