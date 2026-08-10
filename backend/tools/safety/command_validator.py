@@ -23,12 +23,11 @@ class CommandValidator:
                 _logger.warning(f"Security Warning: Command blacklisted -> '{c}'")
                 return False
 
-        # 2. Command injection checks (avoid chaining operators unless explicitly structured)
-        if ";" in c or "&&" in c or "||" in c or "|" in c:
-            # Simple allow whitelisted chains (like pytest -v | grep or git add && git commit)
-            whitelisted_chains = ["git", "pytest", "npm", "pip", "python"]
-            if not any(word in c for word in whitelisted_chains):
-                _logger.warning(f"Security Warning: Command contains potential injection operators -> '{c}'")
+        # 2. Strict Command injection checks (block operators ; && || | ` $)
+        injection_operators = [";", "&&", "||", "|", "`", "$("]
+        for op in injection_operators:
+            if op in c:
+                _logger.warning(f"Security Warning: Command contains forbidden shell operator '{op}' -> '{c}'")
                 return False
 
         return True

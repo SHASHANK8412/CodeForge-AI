@@ -100,7 +100,7 @@ async def opentelemetry_fastapi_middleware(request: Request, call_next):
 
 from fastapi.middleware.gzip import GZipMiddleware
 
-# Allow frontend (React/Vite) to connect seamlessly without CORS origin errors
+# Restrict CORS to explicit trusted frontend origins for security
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -110,12 +110,10 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
-        "*"
     ],
-    allow_origin_regex=r"https?://.*",
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Correlation-ID", "X-Trace-ID"],
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 

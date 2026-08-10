@@ -23,6 +23,19 @@ from backend.observability.integration import global_telemetry_multi_system_brid
 _logger = logging.getLogger("aiforge.observability.service")
 
 
+def _sanitize_headers(headers: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    if not headers:
+        return {}
+    sensitive_keys = {"authorization", "cookie", "x-api-key", "secret", "password", "token"}
+    sanitized = {}
+    for k, v in headers.items():
+        if k.lower() in sensitive_keys or any(s in k.lower() for s in sensitive_keys):
+            sanitized[k] = "[REDACTED]"
+        else:
+            sanitized[k] = str(v)
+    return sanitized
+
+
 class OpenTelemetryService:
     """
     Centralized service for OpenTelemetry Observability & Distributed Tracing.
@@ -44,7 +57,7 @@ class OpenTelemetryService:
         trace_id = f"trace_{secrets.token_urlsafe(6)}"
         _logger.info(f"[OpenTelemetryService] Creating trace '{trace_id}' for '{http_method} {route}'")
 
-        safe_headers = headers or {"Authorization": "Bearer secret_jwt_token_12345"}
+        safe_headers = _sanitize_headers(headers) if headers else {}
 
         # 1. FastAPI Root Span
         s_fastapi = global_opentelemetry_tracer.create_span(
