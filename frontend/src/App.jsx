@@ -28,7 +28,9 @@ import ObservabilityDashboard from "./pages/ObservabilityDashboard";
 import MonitoringPage from "./pages/MonitoringPage";
 import GitHubDashboardPage from "./pages/GitHubDashboardPage";
 import KubernetesDashboardPage from "./pages/KubernetesDashboardPage";
+import InfrastructureDashboardPage from "./pages/InfrastructureDashboardPage";
 import EvaluationCenter from "./pages/EvaluationCenter";
+
 
 
 
@@ -199,7 +201,9 @@ function AppContent() {
                 {view === "monitoring" && <MonitoringPage />}
                 {view === "github" && <GitHubDashboardPage />}
                 {view === "kubernetes" && <KubernetesDashboardPage />}
+                {view === "infrastructure" && <InfrastructureDashboardPage />}
                 {view === "f1" && <F1Website />}
+
 
 
 

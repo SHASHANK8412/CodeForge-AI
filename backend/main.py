@@ -490,6 +490,60 @@ def k8s_events(project_id: str = "aiforge-demo"):
     return global_kubernetes_service.get_events(project_id=project_id)
 
 
+@app.get("/api/infrastructure/overview")
+def infra_overview(project_id: str = "aiforge-demo", environment: str = "production", provider: str = "AWS"):
+    from backend.infrastructure.service import global_infrastructure_service
+    plan = global_infrastructure_service.plan(project_id=project_id, environment=environment, provider=provider)
+    cost = global_infrastructure_service.estimate(project_id=project_id, provider_name=provider)
+    sec = global_infrastructure_service.security_scan()
+    return {
+        "project_id": project_id,
+        "environment": environment,
+        "provider": provider,
+        "plan": plan.model_dump() if hasattr(plan, "model_dump") else plan.dict(),
+        "cost": cost.model_dump() if hasattr(cost, "model_dump") else cost.dict(),
+        "security": sec.model_dump() if hasattr(sec, "model_dump") else sec.dict()
+    }
+
+
+
+class InfraApplyRequest(BaseModel):
+    project_id: str = "aiforge-demo"
+    environment: str = "production"
+    user_approved: bool = True
+    simulate_destructive: bool = False
+
+
+@app.post("/api/infrastructure/apply")
+def infra_apply(req: InfraApplyRequest):
+    from backend.infrastructure.service import global_infrastructure_service
+    return global_infrastructure_service.apply(
+        project_id=req.project_id,
+        environment=req.environment,
+        user_approved=req.user_approved,
+        simulate_destructive=req.simulate_destructive
+    )
+
+
+@app.post("/api/infrastructure/drift")
+def infra_drift(project_id: str = "aiforge-demo", simulate_drift: bool = True):
+    from backend.infrastructure.service import global_infrastructure_service
+    res = global_infrastructure_service.detect_drift(project_id=project_id, simulate_drift=simulate_drift)
+    return res.model_dump() if hasattr(res, "model_dump") else res.dict()
+
+
+class CopilotInfraRequest(BaseModel):
+    query: str
+    project_id: str = "aiforge-demo"
+
+
+@app.post("/api/infrastructure/copilot")
+def infra_copilot(req: CopilotInfraRequest):
+    from backend.infrastructure.service import global_infrastructure_service
+    return global_infrastructure_service.handle_copilot_infra_query(req.query, project_id=req.project_id)
+
+
+
 
 
 @app.get("/system/metrics")
