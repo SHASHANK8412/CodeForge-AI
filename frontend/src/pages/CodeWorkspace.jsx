@@ -153,6 +153,39 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
     }
   };
 
+  const [targetLine, setTargetLine] = useState(null);
+  const [editorMeta, setEditorMeta] = useState({
+    fileName: '',
+    filePath: '',
+    language: 'javascript',
+    lineCount: 0,
+    fileSize: 0,
+    cursorLine: 1,
+    cursorCol: 1,
+  });
+
+  const handleSelectFinding = (filePath, lineNumber) => {
+    let target = files.find((f) => f.path === filePath || f.path.endsWith(filePath) || filePath.endsWith(f.name));
+    if (!target && files.length > 0) {
+      target = files[0];
+    }
+    if (target) {
+      if (!openFiles.some((f) => f.path === target.path)) {
+        setOpenFiles([...openFiles, target]);
+      }
+      setActiveFile(target);
+      setTargetLine(lineNumber);
+    }
+  };
+
+  const formatBytes = (bytes) => {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
   const handleSelectionAction = (actionType, text) => {
     setSelectedCode(text);
   };
@@ -176,7 +209,7 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
         {/* Column 1: File Explorer */}
         <FileExplorer files={files} activeFile={activeFile} onFileSelect={handleFileSelect} />
 
-        {/* Column 2: Editor Tabs, Code Editor & Bottom Resizable Terminal */}
+        {/* Column 2: Editor Tabs, Code Editor, IDE Status Bar & Bottom Resizable Terminal */}
         <div ref={centerColRef} className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#0b0f19] border-r border-slate-800/80 overflow-hidden relative">
           <EditorTabs
             openFiles={openFiles}
@@ -185,7 +218,32 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
             onCloseTab={handleCloseTab}
           />
 
-          <CodeEditor activeFile={activeFile} onSelectionAction={handleSelectionAction} />
+          <CodeEditor
+            activeFile={activeFile}
+            targetLine={targetLine}
+            onSelectionAction={handleSelectionAction}
+            onUpdateMetadata={setEditorMeta}
+          />
+
+          {/* IDE Bottom Metadata Status Bar */}
+          <div className="bg-slate-950 px-3.5 py-1 border-t border-b border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400 shrink-0 select-none">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Ready
+              </span>
+              <span>UTF-8</span>
+              <span className="text-slate-300">
+                Ln {editorMeta.cursorLine}, Col {editorMeta.cursorCol}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <span>Lines: <strong className="text-slate-200">{editorMeta.lineCount}</strong></span>
+              <span>{formatBytes(editorMeta.fileSize)}</span>
+              <span className="text-cyan-400 uppercase text-[10px] font-bold">{editorMeta.language}</span>
+            </div>
+          </div>
 
           {/* Vertical Terminal Drag Resizer */}
           {terminalOpen && (
@@ -249,7 +307,11 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
 
       {/* Action Modals */}
       <TestResults testData={testModalData} onClose={() => setTestModalData(null)} />
-      <ReviewResults reviewData={reviewModalData} onClose={() => setReviewModalData(null)} />
+      <ReviewResults
+        reviewData={reviewModalData}
+        onClose={() => setReviewModalData(null)}
+        onSelectFinding={handleSelectFinding}
+      />
     </div>
   );
 }
