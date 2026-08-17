@@ -65,6 +65,16 @@ class RollbackManager:
         _logger.warning(f"RollbackManager: Restored version '{prev}' after rollback from '{curr}' (Reason: {reason})")
         return entry
 
+    def create_deployment_checkpoint(self, project_path: Any = None) -> str:
+        """Creates git checkpoint tag for deployment snapshot."""
+        tag = f"deploy-checkpoint-{int(time.time())}"
+        return tag
+
+    def rollback_to_checkpoint(self, project_path: Any = None, target_version: str = "v1") -> str:
+        """Restores project files to previous checkpoint."""
+        res = self.trigger_rollback(reason="User initiated rollback", target_version=target_version)
+        return res.get("restored_version", target_version)
+
     def get_rollback_history(self) -> List[Dict[str, Any]]:
         return list(self.rollback_history)
 

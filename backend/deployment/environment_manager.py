@@ -81,7 +81,7 @@ class EnvironmentManager:
                 is_secret=("SECRET" in req or "KEY" in req or "PASS" in req or "URL" in req),
                 is_required=True,
                 is_configured=is_ok,
-                masked_value=self.mask_value(val) if ("SECRET" in req or "KEY" in req or "PASS" in req) else val
+                masked_value=self.mask_value(val) if ("SECRET" in req or "KEY" in req or "PASS" in req or "URL" in req) else val
             )
 
         is_valid = (len(missing) == 0)

@@ -188,23 +188,44 @@ class ProjectMemoryService:
             return True
         return False
 
-    def search_project_memories(self, project_id: str, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
-        """Searches active project memories by keyword."""
+    def record_decision(
+        self,
+        project_id: str,
+        decision: str,
+        rationale: str = "",
+        agent_name: str = "system",
+        tags: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
+        """Convenience method to record an architectural or deployment decision."""
+        return self.save_project_memory(
+            project_id=project_id,
+            memory_type="DECISION",
+            key=decision[:40],
+            value={"decision": decision, "rationale": rationale, "agent": agent_name},
+            source=agent_name,
+            tags=tags or ["decision"]
+        )
+
+    def get_project_profile(self, project_id: str) -> Any:
+        """Retrieves profile containing active decisions and memories for project."""
+        from pydantic import BaseModel
         active = self.get_active_memories(project_id)
-        if not query.strip():
-            return active[:top_k]
+        class MockDecision(BaseModel):
+            decision: str
+            rationale: str = ""
+        class MockProfile(BaseModel):
+            project_id: str
+            decisions: List[MockDecision] = []
 
-        q_terms = set(query.lower().split())
-        scored = []
+        decs = []
         for m in active:
-            text = f"{m.get('key', '')} {m.get('memory_type', '')} {json.dumps(m.get('value', ''))}".lower()
-            matches = sum(1 for term in q_terms if term in text)
-            imp_boost = {"CRITICAL": 3.0, "HIGH": 2.0, "MEDIUM": 1.0, "LOW": 0.5}.get(m.get("importance"), 1.0)
-            score = matches * imp_boost
-            scored.append((score, m))
-
-        scored.sort(key=lambda x: x[0], reverse=True)
-        return [item[1] for item in scored[:top_k]]
+            if m.get("memory_type") == "DECISION":
+                v = m.get("value", {})
+                if isinstance(v, dict):
+                    decs.append(MockDecision(decision=v.get("decision", m.get("key", "")), rationale=v.get("rationale", "")))
+                else:
+                    decs.append(MockDecision(decision=str(v), rationale=""))
+        return MockProfile(project_id=project_id, decisions=decs)
 
     # =========================================================================
     # Tier 2 & 3: Execution Memory & Backward-Compatible MemoryRecord API

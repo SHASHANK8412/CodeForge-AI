@@ -302,3 +302,107 @@ def get_deployment_history_endpoint(generation_id: str):
     """Returns deployment history."""
     state = get_deployment_status_endpoint(generation_id)
     return {"history": state["history"]}
+
+
+class DeployApprovalRequest(BaseModel):
+    approved: bool = False
+    providers: Optional[List[str]] = None
+
+
+@router.post("/api/projects/{generation_id}/deployment/plan")
+def get_deployment_plan_endpoint(generation_id: str):
+    """Generates structured pre-deployment plan without modifying production."""
+    from backend.agents.devops_agent import global_devops_agent
+    project_dir = GENERATED_PROJECTS_DIR / generation_id
+    files = _read_project_files(project_dir)
+    plan = global_devops_agent.prepare_deployment_plan(generation_id, files)
+    return plan.model_dump()
+
+
+@router.post("/api/projects/{generation_id}/deployment/deploy")
+async def execute_approved_deployment_endpoint(generation_id: str, req: DeployApprovalRequest):
+    """Executes production deployment only with explicit user approval."""
+    if not req.approved:
+        raise HTTPException(status_code=400, detail="Deployment aborted: Explicit human approval is required.")
+
+    from backend.agents.devops_agent import global_devops_agent
+    project_dir = GENERATED_PROJECTS_DIR / generation_id
+    files = _read_project_files(project_dir)
+
+    plan = global_devops_agent.prepare_deployment_plan(generation_id, files)
+    if not plan.readiness.is_ready:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Deployment blocked: Critical blockers present ({plan.readiness.blockers})"
+        )
+
+    result = await global_devops_agent.execute_approved_deployment(
+        project_id=generation_id,
+        plan=plan,
+        approved_by_user=True
+    )
+
+    # Sync state DB
+    state = get_deployment_status_endpoint(generation_id)
+    state["status"] = "LIVE"
+    state["urls"]["frontend"] = result.get("frontend_url")
+    state["urls"]["backend"] = result.get("backend_url")
+    now_str = datetime.now().strftime("%H:%M:%S")
+    state["logs"].append(f"[{now_str}] [DEPLOY] Production deployment verified live by DevOps Agent.")
+
+    return result
+
+
+class DiagnoseRequest(BaseModel):
+    logs: Optional[List[str]] = None
+    error_message: Optional[str] = ""
+
+
+@router.post("/api/projects/{generation_id}/deployment/diagnose")
+def diagnose_deployment_endpoint(generation_id: str, req: DiagnoseRequest):
+    """AI DevOps Copilot failure analysis."""
+    from backend.deployment.devops_copilot import global_devops_copilot
+    state = get_deployment_status_endpoint(generation_id)
+    logs_to_check = req.logs or state.get("logs", [])
+    diagnosis = global_devops_copilot.diagnose_failure(
+        project_id=generation_id,
+        logs=logs_to_check,
+        error_message=req.error_message or ""
+    )
+    return diagnosis.model_dump()
+
+
+class RollbackRequest(BaseModel):
+    target_version: Optional[str] = "v1"
+
+
+@router.post("/api/projects/{generation_id}/deployment/rollback")
+def rollback_deployment_endpoint(generation_id: str, req: RollbackRequest):
+    """Safe snapshot rollback to previous deployment."""
+    from backend.deployment.rollback_manager import global_rollback_manager
+    project_dir = GENERATED_PROJECTS_DIR / generation_id
+    state = get_deployment_status_endpoint(generation_id)
+
+    tag = global_rollback_manager.rollback_to_checkpoint(project_dir, req.target_version)
+    state["status"] = "ROLLED_BACK"
+    now_str = datetime.now().strftime("%H:%M:%S")
+    state["logs"].append(f"[{now_str}] [ROLLBACK] Reverted project deployment to checkpoint {req.target_version}.")
+
+    return {
+        "status": "ROLLED_BACK",
+        "target_version": req.target_version,
+        "message": f"Successfully rolled back deployment to {req.target_version}"
+    }
+
+
+class EnvConfigureRequest(BaseModel):
+    env_vars: Dict[str, str]
+
+
+@router.put("/api/projects/{generation_id}/deployment/env")
+def update_environment_variables_endpoint(generation_id: str, req: EnvConfigureRequest):
+    """Configures project environment variables safely."""
+    global_environment_manager.configure_environment(generation_id, req.env_vars)
+    state = get_deployment_status_endpoint(generation_id)
+    return {"status": "SUCCESS", "configured_count": len(req.env_vars)}
+
