@@ -15,7 +15,7 @@
 import React from 'react';
 import {
   FaCheckCircle, FaSpinner, FaClock, FaTimesCircle,
-  FaArrowDown, FaWrench, FaRedo,
+  FaArrowDown, FaWrench, FaRedo, FaPauseCircle, FaShieldAlt
 } from 'react-icons/fa';
 
 const STATUS_CONFIG = {
@@ -30,6 +30,30 @@ const STATUS_CONFIG = {
     label: 'Running',
     labelClass: 'text-cyan-400',
     boxClass: 'bg-indigo-950/60 border-cyan-400/50 shadow-cyan-500/10 shadow-md',
+  },
+  waiting_for_approval: {
+    icon: <FaPauseCircle className="w-3.5 h-3.5 text-amber-400 animate-pulse" />,
+    label: 'Waiting for Approval',
+    labelClass: 'text-amber-400 font-bold',
+    boxClass: 'bg-amber-950/60 border-amber-500/80 shadow-amber-500/20 shadow-lg animate-pulse',
+  },
+  paused: {
+    icon: <FaPauseCircle className="w-3.5 h-3.5 text-amber-400 animate-pulse" />,
+    label: 'Paused',
+    labelClass: 'text-amber-400 font-bold',
+    boxClass: 'bg-amber-950/60 border-amber-500/80 shadow-amber-500/20 shadow-lg',
+  },
+  approved: {
+    icon: <FaCheckCircle className="w-3 h-3 text-emerald-400" />,
+    label: 'Approved',
+    labelClass: 'text-emerald-400',
+    boxClass: 'bg-emerald-950/40 border-emerald-700/50',
+  },
+  rejected: {
+    icon: <FaTimesCircle className="w-3 h-3 text-rose-400" />,
+    label: 'Rejected / Revising',
+    labelClass: 'text-rose-400',
+    boxClass: 'bg-rose-950/40 border-rose-700/50',
   },
   failed: {
     icon: <FaTimesCircle className="w-3 h-3 text-rose-400" />,
@@ -86,7 +110,7 @@ function AgentBox({ name, label, agentsMap }) {
       )}
       {!duration && !retries && (
         <p className="text-[10px] text-slate-600 italic mt-0.5">
-          {status === 'waiting' ? 'Waiting in queue…' : ''}
+          {status === 'waiting' ? 'Waiting in queue…' : status === 'waiting_for_approval' ? 'Awaiting human decision' : ''}
         </p>
       )}
     </div>
@@ -108,8 +132,9 @@ export default function AgentPipeline({ agentsMap = {} }) {
 
   return (
     <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-5 shadow-xl font-sans space-y-1.5">
-      <h3 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-3 border-b border-slate-800 pb-2">
-        Multi-Agent Workflow Pipeline
+      <h3 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-3 border-b border-slate-800 pb-2 flex items-center justify-between">
+        <span>Autonomous Multi-Agent Pipeline</span>
+        <span className="text-[9px] font-mono text-cyan-400 font-normal">HITL Checkpoints Active</span>
       </h3>
 
       {/* Sequential: Planner */}
@@ -118,6 +143,10 @@ export default function AgentPipeline({ agentsMap = {} }) {
 
       {/* Sequential: Architect */}
       {box('architect', 'Architect Agent')}
+      <Arrow />
+
+      {/* Checkpoint 1: Architecture Approval */}
+      {box('human_approval', '⏸ Human Approval (Architecture)')}
       <Arrow />
 
       {/* Parallel fan-out: Frontend | Backend | Database */}
@@ -179,6 +208,10 @@ export default function AgentPipeline({ agentsMap = {} }) {
       )}
       <Arrow />
 
+      {/* Checkpoint 2: Final Quality Approval */}
+      {box('final_approval', '⏸ Final Approval (Export)')}
+      <Arrow />
+
       {/* Packaging */}
       {box('packaging', 'Packaging')}
       <Arrow />
@@ -188,3 +221,4 @@ export default function AgentPipeline({ agentsMap = {} }) {
     </div>
   );
 }
+

@@ -58,21 +58,21 @@ export default function ObservabilityPage({ projectId = 'aiforge-demo' }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 font-sans p-6 space-y-6 select-none">
+    <div className="min-h-screen bg-[#08090D] text-[#F5F7FA] font-sans p-6 space-y-6 select-none">
       {/* Top Header */}
-      <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-2xl flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-[#0F1117] border border-[#242833] rounded-2xl p-6 shadow-2xl flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-cyan-600/20 border border-cyan-500/40 rounded-xl text-cyan-400">
+          <div className="p-3 bg-[#8D5CF6]/10 border border-[#8D5CF6]/30 rounded-xl text-[#8D5CF6]">
             <FaStream className="w-7 h-7 animate-pulse" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-white flex items-center gap-2">
               📡 OpenTelemetry Observability & Tracing
-              <span className="text-xs px-2.5 py-0.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-full font-mono">
+              <span className="text-xs px-2.5 py-0.5 bg-[#8D5CF6]/10 border border-[#8D5CF6]/30 text-[#8D5CF6] rounded-full font-mono font-bold">
                 OTEL DISTRIBUTED TRACER V2
               </span>
             </h1>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[#9AA1B2]">
               Real-time request spans, database query durations, secret redaction, and Flight Recorder correlation.
             </p>
           </div>
@@ -86,27 +86,27 @@ export default function ObservabilityPage({ projectId = 'aiforge-demo' }) {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center p-12 text-slate-400 font-mono text-xs">
-          <FaSpinner className="w-5 h-5 animate-spin text-cyan-400 mr-2" /> Collecting OpenTelemetry spans & metrics…
+        <div className="flex items-center justify-center p-12 text-[#9AA1B2] font-mono text-xs">
+          <FaSpinner className="w-5 h-5 animate-spin text-[#8D5CF6] mr-2" /> Collecting OpenTelemetry spans & metrics…
         </div>
       ) : (
         <>
           {/* METRICS BANNER */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-center">
-            <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl shadow-xl">
-              <span className="text-[10px] text-slate-400 uppercase block font-bold">Total Requests</span>
+            <div className="bg-[#0F1117] border border-[#242833] p-4 rounded-xl shadow-xl">
+              <span className="text-[10px] text-[#9AA1B2] uppercase block font-bold">Total Requests</span>
               <span className="text-2xl font-extrabold text-white">{metrics?.total_requests || 12842}</span>
             </div>
-            <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl shadow-xl">
-              <span className="text-[10px] text-slate-400 uppercase block font-bold">Error Rate</span>
+            <div className="bg-[#0F1117] border border-[#242833] p-4 rounded-xl shadow-xl">
+              <span className="text-[10px] text-[#9AA1B2] uppercase block font-bold">Error Rate</span>
               <span className="text-2xl font-extrabold text-emerald-400">{metrics?.error_rate_pct || 0.14}%</span>
             </div>
-            <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl shadow-xl">
-              <span className="text-[10px] text-slate-400 uppercase block font-bold">P95 Latency</span>
+            <div className="bg-[#0F1117] border border-[#242833] p-4 rounded-xl shadow-xl">
+              <span className="text-[10px] text-[#9AA1B2] uppercase block font-bold">P95 Latency</span>
               <span className="text-2xl font-extrabold text-cyan-400">{metrics?.p95_duration_ms || 182}ms</span>
             </div>
-            <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl shadow-xl">
-              <span className="text-[10px] text-slate-400 uppercase block font-bold">Active Incidents</span>
+            <div className="bg-[#0F1117] border border-[#242833] p-4 rounded-xl shadow-xl">
+              <span className="text-[10px] text-[#9AA1B2] uppercase block font-bold">Active Incidents</span>
               <span className="text-2xl font-extrabold text-indigo-400">{metrics?.active_incidents_count || 0}</span>
             </div>
           </div>
@@ -129,9 +129,9 @@ export default function ObservabilityPage({ projectId = 'aiforge-demo' }) {
           {/* TRACE INSPECTOR & WATERFALL SPANS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans">
             {/* Left: Traces List */}
-            <div className="bg-slate-950 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3 font-mono text-xs">
-              <span className="font-bold text-slate-300 uppercase tracking-wider block border-b border-slate-800 pb-2">
-                📡 Recent Distributed Traces
+            <div className="bg-[#0F1117] border border-[#242833] rounded-2xl p-5 shadow-xl space-y-3 font-mono text-xs">
+              <span className="font-bold text-[#F5F7FA] uppercase tracking-wider block border-b border-[#242833] pb-2">
+                Distributed Traces
               </span>
               <div className="space-y-2">
                 {traces.map((t) => (
@@ -140,55 +140,55 @@ export default function ObservabilityPage({ projectId = 'aiforge-demo' }) {
                     onClick={() => inspectTrace(t.trace_id)}
                     className={`p-3 rounded-xl border cursor-pointer transition ${
                       selectedTrace?.trace_id === t.trace_id
-                        ? 'bg-slate-900 border-cyan-500 text-white'
-                        : 'bg-slate-950 border-slate-800 hover:border-slate-700 text-slate-300'
+                        ? 'bg-[#151821] border-[#8D5CF6] text-white'
+                        : 'bg-[#08090D] border-[#242833] hover:border-[#151821] text-[#9AA1B2]'
                     }`}
                   >
                     <div className="flex justify-between items-center">
                       <span className="font-bold text-cyan-400">{t.root_http_method} {t.root_route}</span>
                       <span className="text-[10px] text-slate-400 font-bold">{t.total_duration_ms}ms</span>
                     </div>
-                    <span className="text-[10px] text-slate-400 font-mono block">Trace ID: {t.trace_id}</span>
+                    <span className="text-[10px] text-slate-500 font-mono block mt-1">ID: {t.trace_id}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Right: Span Waterfall & DNA Mapping */}
-            <div className="md:col-span-2 bg-slate-950 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4 font-mono text-xs">
+            <div className="md:col-span-2 bg-[#0F1117] border border-[#242833] rounded-2xl p-5 shadow-xl space-y-4 font-mono text-xs">
               {selectedTrace ? (
                 <>
-                  <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                  <div className="flex justify-between items-center border-b border-[#242833] pb-3">
                     <div>
-                      <span className="font-bold text-cyan-400 text-sm">{selectedTrace.root_http_method} {selectedTrace.root_route}</span>
-                      <span className="text-slate-400 text-xs block font-mono">Trace ID: {selectedTrace.trace_id} (Total: {selectedTrace.total_duration_ms}ms)</span>
+                      <span className="font-bold text-[#F5F7FA] text-sm">{selectedTrace.root_http_method} {selectedTrace.root_route}</span>
+                      <span className="text-[#9AA1B2] text-xs block font-mono mt-0.5">Trace ID: {selectedTrace.trace_id} ({selectedTrace.total_duration_ms}ms)</span>
                     </div>
-                    <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded font-bold">
+                    <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded font-bold font-mono">
                       HTTP {selectedTrace.status_code}
                     </span>
                   </div>
 
                   {/* SPAN WATERFALL */}
                   <div className="space-y-3 font-sans">
-                    <span className="text-[10px] text-slate-400 uppercase font-mono block font-bold">Span Timeline Breakdown</span>
+                    <span className="text-[10px] text-[#9AA1B2] uppercase font-mono block font-bold">Span Timeline Breakdown</span>
                     {(selectedTrace.spans || []).map((span) => (
-                      <div key={span.span_id} className="p-3 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+                      <div key={span.span_id} className="p-3 bg-[#08090D] border border-[#242833] rounded-xl space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="text-xs font-bold text-white font-mono">{span.name}</span>
                           <span className="text-xs font-bold text-cyan-400 font-mono">{span.duration_ms}ms</span>
                         </div>
 
                         {/* Visual Bar */}
-                        <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+                        <div className="w-full bg-[#151821] h-2 rounded-full overflow-hidden">
                           <div
-                            className="bg-cyan-500 h-full rounded-full"
+                            className="bg-[#8D5CF6] h-full rounded-full"
                             style={{ width: `${Math.min(100, (span.duration_ms / selectedTrace.total_duration_ms) * 100)}%` }}
                           />
                         </div>
 
-                        <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono">
+                        <div className="flex justify-between items-center text-[10px] text-[#9AA1B2] font-mono">
                           <span>Kind: {span.kind}</span>
-                          {span.dna_file_path && <span className="text-emerald-400 flex items-center gap-1"><FaCode /> {span.dna_file_path}</span>}
+                          {span.dna_file_path && <span className="text-[#8D5CF6] flex items-center gap-1"><FaCode /> {span.dna_file_path}</span>}
                         </div>
                       </div>
                     ))}
@@ -196,11 +196,11 @@ export default function ObservabilityPage({ projectId = 'aiforge-demo' }) {
 
                   {/* FLIGHT RECORDER CORRELATION */}
                   {selectedTrace.flight_recorder_events?.length > 0 && (
-                    <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl space-y-1 text-slate-300">
-                      <span className="text-[10px] text-indigo-400 uppercase font-mono font-bold block">Flight Recorder Event Correlation</span>
+                    <div className="p-3 bg-[#08090D] border border-[#242833] rounded-xl space-y-1 text-[#9AA1B2]">
+                      <span className="text-[10px] text-[#8D5CF6] uppercase font-mono font-bold block">Flight Recorder Event Correlation</span>
                       <div className="flex flex-wrap gap-2 text-[10px] font-mono">
                         {selectedTrace.flight_recorder_events.map((e, idx) => (
-                          <span key={idx} className="px-2 py-0.5 bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 rounded font-bold">
+                          <span key={idx} className="px-2 py-0.5 bg-[#8D5CF6]/10 border border-[#8D5CF6]/30 text-[#8D5CF6] rounded font-bold">
                             {e}
                           </span>
                         ))}
@@ -209,7 +209,7 @@ export default function ObservabilityPage({ projectId = 'aiforge-demo' }) {
                   )}
                 </>
               ) : (
-                <div className="text-slate-400 text-center py-12">Select a trace to view span breakdown.</div>
+                <div className="text-[#9AA1B2] text-center py-12">Select a trace to view span breakdown.</div>
               )}
             </div>
           </div>

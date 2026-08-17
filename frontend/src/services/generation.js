@@ -102,6 +102,30 @@ export async function cancelGeneration(generationId) {
 }
 
 /**
+ * Approve a paused workflow stage (Architecture or Final Review).
+ * @param {string} generationId
+ * @param {string} [notes]
+ */
+export async function approveGeneration(generationId, notes = '') {
+  return _apiFetch(`/api/generations/${generationId}/approve`, {
+    method: 'POST',
+    body: JSON.stringify({ notes }),
+  });
+}
+
+/**
+ * Reject a paused workflow stage with specific revision feedback.
+ * @param {string} generationId
+ * @param {string} feedback
+ */
+export async function rejectGeneration(generationId, feedback) {
+  return _apiFetch(`/api/generations/${generationId}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ feedback }),
+  });
+}
+
+/**
  * List all generations for the authenticated user.
  */
 export async function listGenerations() {

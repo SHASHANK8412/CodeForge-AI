@@ -18,6 +18,7 @@ import CodeWorkspace from "./pages/CodeWorkspace";
 import QualityCenter from "./pages/QualityCenter";
 import DeploymentCenter from "./pages/DeploymentCenter";
 import ProjectDetails from "./pages/ProjectDetails";
+import ProjectOverviewPage from "./pages/ProjectOverviewPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -84,7 +85,7 @@ function AppContent() {
             <Sidebar currentView={view} setView={setView} />
             
             {/* Active Workspace Panel */}
-            <div className={`flex-1 flex flex-col min-w-0 min-h-0 bg-[#0B0F19] ${view === "code" ? "overflow-hidden" : "overflow-y-auto"}`}>
+            <div className={`flex-1 flex flex-col min-w-0 min-h-0 bg-bg-base ${view === "code" ? "overflow-hidden" : "overflow-y-auto"}`}>
                 {view === "landing" && <LandingPage setView={setView} />}
                 
                 {/* Protected Routes */}
@@ -111,6 +112,11 @@ function AppContent() {
                 {view === "project-details" && (
                     <ProtectedRoute onRedirectLogin={() => setView("login")}>
                         <ProjectDetails generationId={activeGenerationId} setView={setView} />
+                    </ProtectedRoute>
+                )}
+                {(view === "project-overview" || view === "project-memory") && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <ProjectOverviewPage projectId={activeProjectName || activeGenerationId} setView={setView} setActiveProjectName={setActiveProjectName} setActiveGenerationId={setActiveGenerationId} />
                     </ProtectedRoute>
                 )}
                 {view === "metrics" && (

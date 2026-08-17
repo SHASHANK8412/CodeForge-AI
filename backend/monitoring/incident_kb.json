@@ -38,5 +38,2445 @@
     "success": false,
     "duration_seconds": 2.801633358001709,
     "confidence": 0.96
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8003747463226318,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8005993366241455,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009772300720215,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007843494415283,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008837699890137,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8016455173492432,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8012709617614746,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800839900970459,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800806999206543,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8045358657836914,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801002025604248,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009114265441895,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009328842163086,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8012599945068359,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009002208709717,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008482456207275,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009285926818848,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800767183303833,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8020133972167969,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007364273071289,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801173210144043,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8043045997619629,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8017570972442627,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8019335269927979,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8016917705535889,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008294105529785,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006343841552734,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008968830108643,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800694465637207,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008532524108887,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008317947387695,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008871078491211,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801530122756958,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008809089660645,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8005721569061279,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008913993835449,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011975288391113,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008487224578857,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008766174316406,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8012125492095947,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009853363037109,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006377220153809,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011581897735596,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009548187255859,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007464408874512,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801356315612793,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8012442588806152,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010194301605225,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011486530303955,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009078502655029,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800905704498291,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800922155380249,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008551597595215,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006436824798584,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010008335113525,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011114597320557,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8012216091156006,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800922155380249,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009064197540283,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008947372436523,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007745742797852,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011198043823242,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011229038238525,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.80118727684021,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8005938529968262,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010118007659912,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801234245300293,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010039329528809,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009333610534668,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8012087345123291,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007392883300781,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010039329528809,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8013362884521484,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008222579956055,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800919771194458,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009085655212402,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010473251342773,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009965419769287,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007326126098633,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8004114627838135,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800912618637085,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008508682250977,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8015642166137695,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008368015289307,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010134696960449,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008675575256348,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010644912719727,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010134696960449,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007142543792725,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009300231933594,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007535934448242,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010053634643555,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009896278381348,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011760711669922,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8005702495574951,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009426593780518,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011326789855957,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008790016174316,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8012633323669434,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8012609481811523,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008015155792236,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8013155460357666,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007428646087646,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010258674621582,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801285982131958,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009533882141113,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009495735168457,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007857799530029,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8025851249694824,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8012561798095703,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011894226074219,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8004348278045654,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010613918304443,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007419109344482,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8005881309509277,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010468482971191,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007452487945557,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009450435638428,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008029460906982,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007960319519043,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8005735874176025,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8005447387695312,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007941246032715,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007690906524658,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007690906524658,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009142875671387,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006649017333984,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8021457195281982,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008401393890381,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8005936145782471,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007590770721436,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010590076446533,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010265827178955,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8013603687286377,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009617328643799,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801206111907959,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009982109069824,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009228706359863,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8012204170227051,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008229732513428,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009781837463379,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011946678161621,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007562160491943,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8005177974700928,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009927272796631,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009378910064697,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008968830108643,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009850978851318,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009865283966064,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011147975921631,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010380268096924,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009200096130371,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009188175201416,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009309768676758,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800835132598877,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8005919456481934,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8169989585876465,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8004622459411621,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800980806350708,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010461330413818,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8012356758117676,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009028434753418,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801323413848877,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011212348937988,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006691932678223,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008215427398682,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801271915435791,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801180362701416,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011431694030762,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801182746887207,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801276683807373,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010241985321045,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006200790405273,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011379241943359,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007524013519287,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010919094085693,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010787963867188,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011922836303711,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008224964141846,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801135778427124,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008086681365967,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8015820980072021,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009307384490967,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007287979125977,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8075413703918457,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008167743682861,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007698059082031,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8014857769012451,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8016476631164551,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007676601409912,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007602691650391,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007543087005615,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009271621704102,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006923198699951,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007304668426514,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008379936218262,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8012006282806396,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010871410369873,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010034561157227,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006105422973633,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8005599975585938,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8012127876281738,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007223606109619,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006339073181152,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011186122894287,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800879716873169,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008251190185547,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8030154705047607,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010201454162598,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007464408874512,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008320331573486,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8014857769012451,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8004956245422363,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8013575077056885,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8013527393341064,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009533882141113,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011059761047363,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801131010055542,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010566234588623,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008337020874023,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800865650177002,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009159564971924,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800936222076416,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008303642272949,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009223937988281,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006398677825928,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801464319229126,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800790548324585,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011581897735596,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8004212379455566,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8015897274017334,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8055064678192139,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8016157150268555,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008277416229248,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007073402404785,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009068965911865,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8015010356903076,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007516860961914,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011980056762695,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009800910949707,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011488914489746,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007628917694092,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009686470031738,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8005356788635254,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010599613189697,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8015191555023193,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006477355957031,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800605297088623,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009443283081055,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8013060092926025,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009738922119141,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8005938529968262,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8004512786865234,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010964393615723,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8012385368347168,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010256290435791,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8076236248016357,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006303310394287,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007409572601318,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800778865814209,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8015196323394775,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007619380950928,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006930351257324,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007612228393555,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8013091087341309,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011813163757324,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008418083190918,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8005173206329346,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007960319519043,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008668422698975,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8012003898620605,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011245727539062,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8015017509460449,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010673522949219,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006725311279297,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008418083190918,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006303310394287,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008596897125244,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007075786590576,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009231090545654,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008904457092285,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009603023529053,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008031845092773,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008136749267578,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007442951202393,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011152744293213,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8011574745178223,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007528781890869,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008239269256592,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007280826568604,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8017232418060303,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8006699085235596,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009181022644043,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008675575256348,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009066581726074,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008975982666016,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.800868034362793,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8008430004119873,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8007855415344238,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8013370037078857,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010306358337402,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8010623455047607,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.8009119033813477,
+    "confidence": 0.6
+  },
+  {
+    "signature": "ollama_failure",
+    "root_cause": "Ollama local LLM API offline: Failed to connect to local Ollama: All connection attempts failed",
+    "strategy": "Restart LLM Instance",
+    "success": true,
+    "duration_seconds": 0.801018476486206,
+    "confidence": 0.6
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "FastAPI Backend API is down. Error: ",
+    "strategy": "Restart Backend Process",
+    "success": false,
+    "duration_seconds": 0.8008303642272949,
+    "confidence": 0.6
   }
 ]

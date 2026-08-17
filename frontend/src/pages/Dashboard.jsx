@@ -17,6 +17,7 @@ import {
 export default function Dashboard({ setView, setActiveProjectName, setActiveGenerationId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [promptInput, setPromptInput] = useState('');
 
   // Filters & Controls
   const [page, setPage] = useState(1);
@@ -53,6 +54,13 @@ export default function Dashboard({ setView, setActiveProjectName, setActiveGene
   };
 
   const handleNewProject = () => {
+    if (setView) setView('create');
+    else window.location.href = '/create';
+  };
+
+  const handleLaunchPrompt = () => {
+    if (!promptInput.trim()) return;
+    sessionStorage.setItem("aiforge_pending_prompt", promptInput.trim());
     if (setView) setView('create');
     else window.location.href = '/create';
   };
@@ -117,9 +125,61 @@ export default function Dashboard({ setView, setActiveProjectName, setActiveGene
   const stats = data?.stats || {};
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 font-sans p-6 space-y-6 selection:bg-cyan-500 selection:text-white">
+    <div className="min-h-screen bg-[#08090D] text-[#F5F7FA] font-sans p-6 space-y-8">
       {/* Top Header */}
       <DashboardHeader onNewProject={handleNewProject} onNotify={notify} />
+
+      {/* Central Focus Prompt Hero */}
+      <div className="bg-[#0F1117] border border-[#242833] rounded-2xl p-6 md:p-8 space-y-6 max-w-4xl mx-auto shadow-2xl relative overflow-hidden">
+        {/* Decorative background glow */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-violet-600/5 rounded-full blur-[100px] pointer-events-none" />
+        
+        <div className="text-center space-y-2 max-w-xl mx-auto">
+          <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[#F5F7FA]">Build something amazing.</h2>
+          <p className="text-xs text-[#9AA1B2]">Describe your software idea below. AIForge will architect, generate, test, and deploy it for you.</p>
+        </div>
+
+        <div className="space-y-4">
+          <div className="relative bg-[#08090D] border border-[#242833] rounded-xl p-2 focus-within:border-[#8D5CF6] transition flex flex-col sm:flex-row items-center gap-3">
+            <textarea
+              value={promptInput}
+              onChange={(e) => setPromptInput(e.target.value)}
+              placeholder="e.g. Build a task manager dashboard with drag and drop columns..."
+              rows={2}
+              className="w-full sm:flex-1 bg-transparent text-xs text-[#F5F7FA] placeholder-[#9AA1B2]/40 outline-none resize-none px-2 py-1 leading-relaxed font-mono"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleLaunchPrompt();
+                }
+              }}
+            />
+            <button
+              onClick={handleLaunchPrompt}
+              className="w-full sm:w-auto shrink-0 bg-[#8D5CF6] hover:bg-[#7c4ee4] text-white px-4 py-2.5 rounded-lg text-xs font-bold transition shadow-md shadow-violet-500/25 hover:scale-[1.02] active:scale-95 cursor-pointer"
+            >
+              Generate Project →
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+            <span className="text-[10px] uppercase font-bold text-[#9AA1B2]/50 mr-1">Suggested Ideas:</span>
+            {[
+              { label: "SaaS Dashboard", text: "Build a SaaS analytics dashboard with React, FastAPI, charts, and auth." },
+              { label: "AI Chat Room", text: "Build a real-time AI assistant chat room with document upload support." },
+              { label: "E-Commerce System", text: "Build a full e-commerce backend and frontend with Stripe checkout integrations." }
+            ].map((item, idx) => (
+              <button
+                key={idx}
+                onClick={() => setPromptInput(item.text)}
+                className="bg-[#151821] hover:bg-[#1f2330] border border-[#242833] rounded-md px-2.5 py-1 text-[11px] text-[#9AA1B2] hover:text-[#F5F7FA] transition cursor-pointer"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Summary Statistics */}
       <StatsCards stats={stats} />
@@ -138,13 +198,13 @@ export default function Dashboard({ setView, setActiveProjectName, setActiveGene
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="bg-slate-950 border border-slate-800 rounded-2xl p-6 h-48 animate-pulse flex flex-col justify-between">
+            <div key={i} className="bg-[#0F1117] border border-[#242833] rounded-2xl p-6 h-48 animate-pulse flex flex-col justify-between">
               <div className="space-y-3">
-                <div className="w-1/2 h-4 bg-slate-900 rounded" />
-                <div className="w-1/3 h-3 bg-slate-900 rounded" />
-                <div className="w-full h-3 bg-slate-900 rounded" />
+                <div className="w-1/2 h-4 bg-[#151821] rounded" />
+                <div className="w-1/3 h-3 bg-[#151821] rounded" />
+                <div className="w-full h-3 bg-[#151821] rounded" />
               </div>
-              <div className="w-1/4 h-3 bg-slate-900 rounded self-end" />
+              <div className="w-1/4 h-3 bg-[#151821] rounded self-end" />
             </div>
           ))}
         </div>

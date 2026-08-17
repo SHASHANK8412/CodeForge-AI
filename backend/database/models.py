@@ -136,3 +136,114 @@ class VectorEmbeddingModel(Base):
         Index("idx_vec_proj_coll", "project_id", "collection_name"),
         Index("idx_vec_doc_id", "project_id", "document_id"),
     )
+
+
+class WorkflowSessionModel(Base):
+    __tablename__ = "workflow_sessions"
+
+    id = Column(String(64), primary_key=True, index=True)
+    project_id = Column(String(64), index=True, nullable=False)
+    thread_id = Column(String(64), unique=True, index=True, nullable=False)
+    status = Column(String(64), default="WAITING_FOR_APPROVAL", index=True)
+    current_agent = Column(String(64), default="architect")
+    approval_status = Column(String(64), default="PENDING", index=True)
+    approval_stage = Column(String(64), default="ARCHITECTURE")
+    user_feedback = Column(Text, default="")
+    workflow_state_json = Column(Text, default="{}")
+    created_at = Column(String(64), default=lambda: datetime.now().isoformat())
+    updated_at = Column(String(64), default=lambda: datetime.now().isoformat())
+
+
+class WorkflowCheckpointModel(Base):
+    __tablename__ = "workflow_checkpoints"
+
+    id = Column(String(64), primary_key=True, index=True)
+    thread_id = Column(String(64), index=True, nullable=False)
+    checkpoint_id = Column(String(64), index=True, nullable=False)
+    parent_id = Column(String(64), nullable=True)
+    checkpoint_data = Column(Text, nullable=False)
+    metadata_data = Column(Text, nullable=False)
+    created_at = Column(String(64), default=lambda: datetime.now().isoformat(), index=True)
+
+
+class ProjectMemoryItemModel(Base):
+    __tablename__ = "project_memory_items"
+
+    id = Column(String(64), primary_key=True, index=True)
+    project_id = Column(String(64), index=True, nullable=False)
+    memory_type = Column(String(64), index=True, nullable=False)  # REQUIREMENT, ARCHITECTURE, DECISION, CONVENTION, ERROR, FIX, USER_PREFERENCE, DEPENDENCY, API, DATABASE
+    key = Column(String(255), index=True, nullable=False)
+    value_json = Column(Text, nullable=False)
+    source = Column(String(64), default="AGENT")
+    importance = Column(String(64), default="HIGH", index=True)  # CRITICAL, HIGH, MEDIUM, LOW
+    confidence = Column(Float, default=1.0)
+    status = Column(String(64), default="ACTIVE", index=True)  # ACTIVE, SUPERSEDED, ARCHIVED
+    supersedes_id = Column(String(64), nullable=True)
+    superseded_by = Column(String(64), nullable=True)
+    tags_json = Column(Text, default="[]")
+    created_at = Column(String(64), default=lambda: datetime.now().isoformat(), index=True)
+    updated_at = Column(String(64), default=lambda: datetime.now().isoformat())
+
+    __table_args__ = (
+        Index("idx_proj_mem_type", "project_id", "memory_type"),
+        Index("idx_proj_mem_status", "project_id", "status"),
+        Index("idx_proj_mem_key", "project_id", "key"),
+    )
+
+
+class CodebaseFileIndexModel(Base):
+    __tablename__ = "codebase_file_indexes"
+
+    id = Column(String(64), primary_key=True, index=True)
+    project_id = Column(String(64), index=True, nullable=False)
+    file_path = Column(String(512), index=True, nullable=False)
+    file_hash = Column(String(64), nullable=False)
+    language = Column(String(64), default="text")
+    size_bytes = Column(Integer, default=0)
+    symbols_json = Column(Text, default="[]")
+    imports_json = Column(Text, default="[]")
+    exports_json = Column(Text, default="[]")
+    last_indexed = Column(String(64), default=lambda: datetime.now().isoformat())
+
+    __table_args__ = (
+        Index("idx_code_proj_path", "project_id", "file_path"),
+        Index("idx_code_proj_hash", "project_id", "file_hash"),
+    )
+
+
+class CodeDependencyModel(Base):
+    __tablename__ = "code_dependencies"
+
+    id = Column(String(64), primary_key=True, index=True)
+    project_id = Column(String(64), index=True, nullable=False)
+    source_file = Column(String(512), index=True, nullable=False)
+    target_file_or_symbol = Column(String(512), index=True, nullable=False)
+    relationship = Column(String(64), default="IMPORTS", index=True)  # IMPORTS, CALLS, ROUTES_TO, USES, EXTENDS, DEPENDS_ON
+    metadata_json = Column(Text, default="{}")
+    created_at = Column(String(64), default=lambda: datetime.now().isoformat())
+
+    __table_args__ = (
+        Index("idx_dep_proj_src", "project_id", "source_file"),
+        Index("idx_dep_proj_rel", "project_id", "relationship"),
+    )
+
+
+class ProjectVersionSnapshotModel(Base):
+    __tablename__ = "project_version_snapshots"
+
+    id = Column(String(64), primary_key=True, index=True)
+    project_id = Column(String(64), index=True, nullable=False)
+    version_num = Column(Integer, default=1, index=True)
+    version_tag = Column(String(64), default="v1")
+    request = Column(Text, default="")
+    files_snapshot_json = Column(Text, default="{}")
+    changed_files_json = Column(Text, default="[]")
+    memory_delta_json = Column(Text, default="{}")
+    test_results_json = Column(Text, default="{}")
+    created_at = Column(String(64), default=lambda: datetime.now().isoformat(), index=True)
+
+    __table_args__ = (
+        Index("idx_ver_proj_num", "project_id", "version_num"),
+    )
+
+

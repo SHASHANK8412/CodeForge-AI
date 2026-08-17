@@ -359,6 +359,24 @@
       "test_before": null,
       "test_after": null,
       "timestamp": "2026-08-10 07:37:43"
+    },
+    {
+      "id": "fre_ei1dBrr7N9I",
+      "generation_id": "gen_fre_001",
+      "project_id": "proj_fre_001",
+      "stage": "BUILD",
+      "agent": "backend",
+      "event_type": "stage_completed",
+      "decision": "FastAPI REST API generated",
+      "reason": null,
+      "files_changed": [
+        "backend/main.py"
+      ],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-17 18:18:23"
     }
   ],
   "proj_auto_001": [
@@ -665,6 +683,22 @@
       "test_before": null,
       "test_after": null,
       "timestamp": "2026-08-10 07:37:40"
+    },
+    {
+      "id": "fre_Ue_CnAOKJm4",
+      "generation_id": "gen_igq0IQYQFfCuyw",
+      "project_id": "proj_auto_001",
+      "stage": "PLAN",
+      "agent": "planner",
+      "event_type": "autopilot_started",
+      "decision": "Autopilot started in BALANCED mode",
+      "reason": "Goal: Build a task management platform with FastAPI and React",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-17 18:18:21"
     }
   ],
   "proj_auto_002": [
@@ -1259,6 +1293,38 @@
       "test_before": null,
       "test_after": null,
       "timestamp": "2026-08-10 07:37:41"
+    },
+    {
+      "id": "fre_gEXfzPHO0-0",
+      "generation_id": "gen_YnczUjr7opCfmg",
+      "project_id": "proj_auto_002",
+      "stage": "PLAN",
+      "agent": "planner",
+      "event_type": "autopilot_started",
+      "decision": "Autopilot started in BALANCED mode",
+      "reason": "Goal: Build e-commerce app",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-17 18:18:21"
+    },
+    {
+      "id": "fre_Hm_3mCJ3y9o",
+      "generation_id": "gen_YnczUjr7opCfmg",
+      "project_id": "proj_auto_002",
+      "stage": "BUILD",
+      "agent": "system",
+      "event_type": "autopilot_paused",
+      "decision": "Autopilot paused",
+      "reason": "User requested manual pause.",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-17 18:18:22"
     }
   ],
   "proj_auto_003": [
@@ -2141,6 +2207,54 @@
       "test_before": null,
       "test_after": null,
       "timestamp": "2026-08-10 07:37:42"
+    },
+    {
+      "id": "fre_v9-LxqprwQs",
+      "generation_id": "gen_qBkgGNApUoMRvw",
+      "project_id": "proj_auto_003",
+      "stage": "PLAN",
+      "agent": "planner",
+      "event_type": "autopilot_started",
+      "decision": "Autopilot started in BALANCED mode",
+      "reason": "Goal: Build analytics dashboard",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-17 18:18:22"
+    },
+    {
+      "id": "fre_DHk-Etg7Ujw",
+      "generation_id": "gen_qBkgGNApUoMRvw",
+      "project_id": "proj_auto_003",
+      "stage": "BUILD",
+      "agent": "system",
+      "event_type": "autopilot_paused",
+      "decision": "Autopilot paused",
+      "reason": "User requested manual pause.",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-17 18:18:22"
+    },
+    {
+      "id": "fre_60Y91CYHfPY",
+      "generation_id": "gen_qBkgGNApUoMRvw",
+      "project_id": "proj_auto_003",
+      "stage": "BUILD",
+      "agent": "system",
+      "event_type": "autopilot_resumed",
+      "decision": "Autopilot resumed",
+      "reason": "User requested resume.",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-17 18:18:22"
     }
   ],
   "proj_auto_004": [
@@ -2719,6 +2833,38 @@
       "test_before": null,
       "test_after": null,
       "timestamp": "2026-08-10 07:37:43"
+    },
+    {
+      "id": "fre_0ltswWQBl0o",
+      "generation_id": "gen_V1nIie1prtbe9g",
+      "project_id": "proj_auto_004",
+      "stage": "PLAN",
+      "agent": "planner",
+      "event_type": "autopilot_started",
+      "decision": "Autopilot started in BALANCED mode",
+      "reason": "Goal: Build CRM tool",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-17 18:18:23"
+    },
+    {
+      "id": "fre_MhUMBXbw8qU",
+      "generation_id": "gen_V1nIie1prtbe9g",
+      "project_id": "proj_auto_004",
+      "stage": "BUILD",
+      "agent": "system",
+      "event_type": "autopilot_stopped",
+      "decision": "Autopilot stopped",
+      "reason": "User cancelled execution.",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-17 18:18:23"
     }
   ],
   "proj_comp": [
@@ -3603,6 +3749,58 @@
       "test_before": null,
       "test_after": null,
       "timestamp": "2026-08-10 07:37:51"
+    }
+  ],
+  "aiforge-aiforge-software-application": [
+    {
+      "id": "fre_pjtfBPlbtmg",
+      "generation_id": "aiforge-aiforge-software-application",
+      "project_id": "aiforge-aiforge-software-application",
+      "stage": "BUILD",
+      "agent": "system",
+      "event_type": "autopilot_paused",
+      "decision": "Autopilot paused",
+      "reason": "User requested manual pause.",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-17 15:50:57"
+    }
+  ],
+  "proj_1786965838275": [
+    {
+      "id": "fre_euvE3YaHctU",
+      "generation_id": "gen_0QqL9uUwQhM9Xw",
+      "project_id": "proj_1786965838275",
+      "stage": "PLAN",
+      "agent": "planner",
+      "event_type": "autopilot_started",
+      "decision": "Autopilot started in FULL_AUTONOMY mode",
+      "reason": "Goal: Build a production-ready e-commerce platform with authentication, products, cart, payments, admin dashboard and PostgreSQL database.",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-17 16:53:58"
+    },
+    {
+      "id": "fre_-2TKR6q-F0g",
+      "generation_id": "gen_0QqL9uUwQhM9Xw",
+      "project_id": "proj_1786965838275",
+      "stage": "BUILD",
+      "agent": "system",
+      "event_type": "autopilot_stopped",
+      "decision": "Autopilot stopped",
+      "reason": "User cancelled execution.",
+      "files_changed": [],
+      "quality_before": null,
+      "quality_after": null,
+      "test_before": null,
+      "test_after": null,
+      "timestamp": "2026-08-17 16:54:05"
     }
   ]
 }

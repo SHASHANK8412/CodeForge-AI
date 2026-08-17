@@ -76,6 +76,9 @@ class VersionManager:
     def get_version_history(self, project_id: str) -> List[ProjectVersion]:
         return self._history.get(project_id, [])
 
+    def get_history(self, project_id: str) -> List[ProjectVersion]:
+        return self.get_version_history(project_id)
+
     def rollback(
         self,
         project_id: str,

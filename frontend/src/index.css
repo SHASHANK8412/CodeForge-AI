@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+@theme {
+    --color-bg-base: #08090D;
+    --color-surface-card: #0F1117;
+    --color-surface-elevated: #151821;
+    --color-border-dark: #242833;
+    --color-text-primary: #F5F7FA;
+    --color-text-secondary: #9AA1B2;
+    --color-accent-violet: #8D5CF6;
+    --color-accent-blue: #6366F1;
+    
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+}
+
 html,
 body,
 #root {
@@ -9,40 +23,37 @@ body,
     padding: 0;
     overflow: hidden;
     scroll-behavior: smooth;
-}
-
-body {
-    font-family: 'Inter', sans-serif;
-    background: #0B0F19;
+    background-color: #08090D;
+    color: #F5F7FA;
 }
 
 ::selection {
-    background: rgba(99, 102, 241, 0.35);
+    background: rgba(141, 92, 246, 0.35);
     color: #fff;
 }
 
-/* Slim, clearly visible theme-matched scrollbars */
+/* Slim scrollbars matching developer platform aesthetics */
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(15, 23, 42, 0.5);
+    background: #08090D;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #334155;
-    border-radius: 9999px;
+    background-color: #242833;
+    border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: #6366F1;
+    background-color: #8D5CF6;
 }
 
 * {
     scrollbar-width: thin;
-    scrollbar-color: #334155 rgba(15, 23, 42, 0.5);
+    scrollbar-color: #242833 #08090D;
 }
 
 @keyframes fade-in {
@@ -57,7 +68,7 @@ body {
 }
 
 .animate-fade-in {
-    animation: fade-in 0.2s ease-out;
+    animation: fade-in 0.2s ease-out forwards;
 }
 
 @keyframes spin-slow {
@@ -71,4 +82,10 @@ body {
 
 .animate-spin-slow {
     animation: spin-slow 3s linear infinite;
+}
+
+/* Monaco container styling overrides */
+.monaco-editor {
+    padding-top: 8px;
+    padding-bottom: 8px;
 }

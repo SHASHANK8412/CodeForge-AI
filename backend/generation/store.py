@@ -59,24 +59,28 @@ AGENT_STATUSES = {"waiting", "running", "completed", "failed", "retrying", "skip
 
 # Weighted progress contribution per agent (must sum to 100)
 AGENT_WEIGHTS: Dict[str, float] = {
-    "planner":              10.0,
-    "architect":            10.0,
-    "frontend":             12.0,
-    "backend":              12.0,
-    "database":              8.0,
-    "assembly":              4.0,
-    "reviewer":             10.0,
-    "documentation":         5.0,
-    "build_validation":      3.0,
-    "dependency_manager":    2.0,
-    "security_scan":         3.0,
-    "performance":           2.0,
-    "execution_validation":  4.0,
-    "testing":               8.0,
-    "debug":                 2.0,
-    "patch":                 2.0,
-    "packaging":             1.0,
-    "deployment":            2.0,
+    "planner":              7.0,
+    "architect":            7.0,
+    "frontend":             9.0,
+    "backend":              9.0,
+    "database":             5.0,
+    "assembly":             3.0,
+    "reviewer":             7.0,
+    "documentation":        3.0,
+    "build_validation":     3.0,
+    "dependency_manager":   2.0,
+    "security_scan":        2.0,
+    "performance":          2.0,
+    "execution_validation": 3.0,
+    "testing":              7.0,
+    "debug":                2.0,
+    "patch":                2.0,
+    "packaging":            1.0,
+    "deployment":           2.0,
+    "github_sync":          4.0,
+    "ci_check":             4.0,
+    "live_deploy":          6.0,
+    "health_check":        10.0,
 }
 
 
@@ -168,10 +172,11 @@ class GenerationStore:
     # Public API — Creation
     # ------------------------------------------------------------------
 
-    def create(self, project_id: str, user_id: str, prompt: str) -> str:
+    def create(self, project_id: str, user_id: str, prompt: str, gen_id: Optional[str] = None) -> str:
         """Create a new generation record and return its ID."""
-        gen_id = _gen_id()
+        gen_id = gen_id or _gen_id()
         now = _now_iso()
+
         agents = [
             {"name": name, "status": "waiting", "started_at": None,
              "completed_at": None, "duration": None, "retry_count": 0, "error": None}

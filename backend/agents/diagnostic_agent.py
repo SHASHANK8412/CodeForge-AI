@@ -81,10 +81,14 @@ class DiagnosticAgent(BaseAgent):
         )
 
         try:
-            model = global_model_router.select_model("DIAGNOSTIC")
-            raw_response = self.call_llm(prompt_text, model=model)
-            clean_json = self.extract_json(raw_response)
+            raw_response = self.generate(prompt_text)
+            clean_json = raw_response
+            if "```json" in clean_json:
+                clean_json = clean_json.split("```json")[1].split("```")[0].strip()
+            elif "```" in clean_json:
+                clean_json = clean_json.split("```")[1].split("```")[0].strip()
             data = json.loads(clean_json)
+
 
             return DiagnosticResult(
                 root_cause=data.get("root_cause") or f"Execution failure in command '{failed_cmd}'",

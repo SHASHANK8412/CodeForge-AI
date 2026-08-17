@@ -89,133 +89,118 @@ export default function GitHubDashboardPage() {
   };
 
   return (
-    <div style={{ padding: '32px', backgroundColor: '#0A0D14', color: '#F3F4F6', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[#08090D] text-[#F5F7FA] font-sans p-8 space-y-6 select-none">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#242833] pb-6">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            <GitPullRequest style={{ color: '#22C55E' }} size={32} />
-            <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#FFFFFF', margin: 0 }}>
-              GitHub Integration & Autonomous PR Engineering
+          <div className="flex items-center gap-3 flex-wrap">
+            <GitPullRequest className="text-[#8D5CF6] w-7 h-7 shrink-0" />
+            <h1 className="text-xl font-bold text-white tracking-tight">
+              GitHub Integration & PR Engineering
             </h1>
-            <span style={{
-              backgroundColor: 'rgba(34, 197, 94, 0.15)',
-              color: '#22C55E',
-              border: '1px solid #22C55E',
-              borderRadius: '20px',
-              padding: '4px 12px',
-              fontSize: '12px',
-              fontWeight: '600'
-            }}>
+            <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider shrink-0">
               CONNECTED
             </span>
           </div>
-          <p style={{ color: '#9CA3AF', margin: 0, fontSize: '14px' }}>
-            Repository: <strong style={{ color: '#E5E7EB' }}>{data.connected_repository}</strong> | Project: <strong style={{ color: '#E5E7EB' }}>{projectId}</strong>
+          <p className="text-xs text-[#9AA1B2] mt-1.5">
+            Repository: <span className="font-mono text-[#F5F7FA] font-semibold">{data.connected_repository}</span> | Project ID: <span className="font-mono text-[#F5F7FA] font-semibold">{projectId}</span>
           </p>
         </div>
 
         <button
           onClick={fetchOverview}
           disabled={loading}
-          style={{
-            backgroundColor: '#1E293B',
-            color: '#E2E8F0',
-            border: '1px solid #334155',
-            borderRadius: '8px',
-            padding: '10px 18px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
+          className="bg-[#0F1117] hover:bg-[#151821] border border-[#242833] text-[#F5F7FA] px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0"
         >
-          <RefreshCw size={16} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+          <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
           Sync Repository
         </button>
       </div>
 
       {/* KPI Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-        <div style={{ backgroundColor: '#111827', border: '1px solid #1F2937', borderRadius: '12px', padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#9CA3AF', marginBottom: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '500' }}>Active Feature Branch</span>
-            <GitBranch size={18} style={{ color: '#6366F1' }} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-[#0F1117] border border-[#242833] rounded-xl p-5 space-y-2">
+          <div className="flex justify-between items-center text-[#9AA1B2]">
+            <span className="text-[10px] font-bold uppercase tracking-wider">Active Feature Branch</span>
+            <GitBranch size={15} className="text-[#8D5CF6]" />
           </div>
-          <div style={{ fontSize: '16px', fontWeight: '700', color: '#60A5FA', wordBreak: 'break-all' }}>{data.active_branch}</div>
-          <div style={{ fontSize: '12px', color: '#10B981', marginTop: '4px' }}>Default Branch Protected (`main`)</div>
+          <div className="text-xs font-mono font-bold text-cyan-400 truncate mt-1">{data.active_branch}</div>
+          <div className="text-[10px] text-emerald-400">Default Branch Protected (`main`)</div>
         </div>
 
-        <div style={{ backgroundColor: '#111827', border: '1px solid #1F2937', borderRadius: '12px', padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#9CA3AF', marginBottom: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '500' }}>Open Pull Requests</span>
-            <GitPullRequest size={18} style={{ color: '#22C55E' }} />
+        <div className="bg-[#0F1117] border border-[#242833] rounded-xl p-5 space-y-2">
+          <div className="flex justify-between items-center text-[#9AA1B2]">
+            <span className="text-[10px] font-bold uppercase tracking-wider">Open Pull Requests</span>
+            <GitPullRequest size={15} className="text-emerald-400" />
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#FFFFFF' }}>{data.open_prs_count}</div>
-          <div style={{ fontSize: '12px', color: '#10B981', marginTop: '4px' }}>Ready for Human Review</div>
+          <div className="text-2xl font-black text-white mt-1">{data.open_prs_count}</div>
+          <div className="text-[10px] text-[#9AA1B2]">Ready for Human Code Review</div>
         </div>
 
-        <div style={{ backgroundColor: '#111827', border: '1px solid #1F2937', borderRadius: '12px', padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#9CA3AF', marginBottom: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '500' }}>GitHub Actions CI Status</span>
-            <CheckCircle2 size={18} style={{ color: '#10B981' }} />
+        <div className="bg-[#0F1117] border border-[#242833] rounded-xl p-5 space-y-2">
+          <div className="flex justify-between items-center text-[#9AA1B2]">
+            <span className="text-[10px] font-bold uppercase tracking-wider">GitHub Actions CI</span>
+            <CheckCircle2 size={15} className="text-emerald-400" />
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#10B981' }}>{data.ci_overall_status}</div>
-          <div style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '4px' }}>Build &amp; Test Workflow</div>
+          <div className="text-2xl font-black text-emerald-400 mt-1">{data.ci_overall_status}</div>
+          <div className="text-[10px] text-[#9AA1B2]">Autotesting Workflow Status</div>
         </div>
 
-        <div style={{ backgroundColor: '#111827', border: '1px solid #1F2937', borderRadius: '12px', padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#9CA3AF', marginBottom: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '500' }}>Pre-Commit Security Gate</span>
-            <Shield size={18} style={{ color: '#8B5CF6' }} />
+        <div className="bg-[#0F1117] border border-[#242833] rounded-xl p-5 space-y-2">
+          <div className="flex justify-between items-center text-[#9AA1B2]">
+            <span className="text-[10px] font-bold uppercase tracking-wider">Security Gate</span>
+            <Shield size={15} className="text-[#8D5CF6]" />
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#A7F3D0' }}>{data.security_gate_status}</div>
-          <div style={{ fontSize: '12px', color: '#10B981', marginTop: '4px' }}>Zero Secrets Leaked</div>
+          <div className="text-2xl font-black text-emerald-400 mt-1">{data.security_gate_status}</div>
+          <div className="text-[10px] text-emerald-400">Zero Secrets Leaked</div>
         </div>
       </div>
 
       {/* Main Grid: Open Pull Requests & Copilot Assistant */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Open PRs Section */}
-        <div style={{ backgroundColor: '#111827', border: '1px solid #1F2937', borderRadius: '12px', padding: '24px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <GitPullRequest size={20} style={{ color: '#22C55E' }} />
+        <div className="lg:col-span-2 bg-[#0F1117] border border-[#242833] rounded-xl p-5 space-y-4">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-[#F5F7FA] flex items-center gap-2 border-b border-[#242833] pb-3">
+            <GitPullRequest size={16} className="text-emerald-400" />
             Open Pull Requests
           </h3>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="flex flex-col gap-3">
             {data.open_prs.map(pr => (
-              <div key={pr.number} style={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px', padding: '18px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+              <div key={pr.number} className="bg-[#08090D] border border-[#242833] rounded-lg p-4 space-y-3">
+                <div className="flex justify-between items-start gap-4">
                   <div>
-                    <span style={{ fontSize: '16px', fontWeight: '600', color: '#FFFFFF', marginRight: '8px' }}>#{pr.number} {pr.title}</span>
-                    <a href={pr.html_url} target="_blank" rel="noopener noreferrer" style={{ color: '#60A5FA', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px' }}>
-                      <ExternalLink size={14} /> GitHub PR
+                    <span className="text-xs font-bold text-white">#{pr.number} {pr.title}</span>
+                    <a
+                      href={pr.html_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-cyan-400 hover:underline flex items-center gap-1 text-[11px] font-mono mt-1"
+                    >
+                      <ExternalLink size={11} /> View PR on GitHub
                     </a>
                   </div>
-                  <span style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#22C55E', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>
+                  <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-mono font-bold shrink-0">
                     AI APPROVED
                   </span>
                 </div>
 
-                <div style={{ fontSize: '13px', color: '#9CA3AF', marginBottom: '12px' }}>
-                  Branch: <code style={{ color: '#E5E7EB', backgroundColor: '#111827', padding: '2px 6px', borderRadius: '4px' }}>{pr.head_branch}</code> &rarr; <code style={{ color: '#E5E7EB', backgroundColor: '#111827', padding: '2px 6px', borderRadius: '4px' }}>{pr.base_branch}</code>
+                <div className="text-[11px] text-[#9AA1B2] font-mono">
+                  Branch: <span className="text-[#F5F7FA] bg-[#151821] px-1.5 py-0.5 rounded border border-[#242833]">{pr.head_branch}</span> &rarr; <span className="text-[#F5F7FA] bg-[#151821] px-1.5 py-0.5 rounded border border-[#242833]">{pr.base_branch}</span>
                 </div>
 
                 {/* Badges Grid */}
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  <span style={{ backgroundColor: '#111827', color: '#10B981', border: '1px solid #059669', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '500' }}>
+                <div className="flex gap-2 flex-wrap">
+                  <span className="bg-[#151821] text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px] font-mono font-bold">
                     Tests: {pr.test_summary}
                   </span>
-                  <span style={{ backgroundColor: '#111827', color: '#A7F3D0', border: '1px solid #047857', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '500' }}>
+                  <span className="bg-[#151821] text-[#A7F3D0] border border-emerald-500/20 px-2 py-0.5 rounded text-[10px] font-mono font-bold">
                     Security: {pr.security_summary}
                   </span>
-                  <span style={{ backgroundColor: '#111827', color: '#60A5FA', border: '1px solid #2563EB', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '500' }}>
+                  <span className="bg-[#151821] text-cyan-400 border border-blue-500/20 px-2 py-0.5 rounded text-[10px] font-mono font-bold">
                     Browser E2E: {pr.browser_summary}
                   </span>
-                  <span style={{ backgroundColor: '#111827', color: '#F59E0B', border: '1px solid #D97706', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '500' }}>
+                  <span className="bg-[#151821] text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px] font-mono font-bold">
                     Perf: {pr.performance_summary}
                   </span>
                 </div>
@@ -225,60 +210,45 @@ export default function GitHubDashboardPage() {
         </div>
 
         {/* Right Column: Codebase Copilot GitHub Integration */}
-        <div style={{ backgroundColor: '#111827', border: '1px solid #1F2937', borderRadius: '12px', padding: '24px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Cpu size={20} style={{ color: '#6366F1' }} />
-            Codebase Copilot
+        <div className="bg-[#0F1117] border border-[#242833] rounded-xl p-5 space-y-4">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-[#F5F7FA] flex items-center gap-2 border-b border-[#242833] pb-3">
+            <Cpu size={16} className="text-[#8D5CF6]" />
+            PR Copilot Assistant
           </h3>
 
-          <form onSubmit={handleCopilotSubmit} style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input
-                type="text"
-                value={copilotQuery}
-                onChange={(e) => setCopilotQuery(e.target.value)}
-                placeholder="e.g. 'Why did CI fail?' or 'Create a PR'"
-                style={{
-                  flex: 1,
-                  backgroundColor: '#1F2937',
-                  color: '#FFFFFF',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
-                  padding: '10px 14px',
-                  fontSize: '13px'
-                }}
-              />
-              <button
-                type="submit"
-                style={{
-                  backgroundColor: '#6366F1',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 14px',
-                  cursor: 'pointer'
-                }}
-              >
-                <Send size={16} />
-              </button>
-            </div>
+          <form onSubmit={handleCopilotSubmit} className="flex gap-2">
+            <input
+              type="text"
+              value={copilotQuery}
+              onChange={(e) => setCopilotQuery(e.target.value)}
+              placeholder="Query PR checks, commits, error logs..."
+              className="flex-1 bg-[#08090D] border border-[#242833] rounded-lg px-3 py-2 text-xs text-[#F5F7FA] placeholder-[#9AA1B2]/40 outline-none focus:border-[#8D5CF6] transition font-sans"
+            />
+            <button
+              type="submit"
+              className="bg-[#8D5CF6] hover:bg-[#7c4ee4] text-white p-2 rounded-lg transition active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
+            >
+              <Send size={13} />
+            </button>
           </form>
 
           {copilotResponse && (
-            <div style={{ backgroundColor: '#1E1B4B', border: '1px solid #4338CA', borderRadius: '8px', padding: '14px', fontSize: '13px', color: '#E0E7FF' }}>
-              <strong>Copilot Response:</strong>
-              <p style={{ margin: '8px 0 0 0', lineHeight: '1.4' }}>{copilotResponse.answer}</p>
+            <div className="bg-[#8D5CF6]/10 border border-[#8D5CF6]/30 rounded-lg p-3 text-xs text-[#F5F7FA]">
+              <strong className="text-[#8D5CF6] block font-mono text-[10px] uppercase">Copilot Response:</strong>
+              <p className="margin-top: 6px leading-relaxed text-[11px] whitespace-pre-wrap">{copilotResponse.answer}</p>
             </div>
           )}
 
-          <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #1F2937' }}>
-            <h4 style={{ fontSize: '13px', color: '#9CA3AF', marginBottom: '10px' }}>Recent Git Commits</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="pt-4 border-t border-[#242833]">
+            <h4 className="text-[10px] font-mono font-bold uppercase text-[#9AA1B2] mb-3">Recent Git Commits</h4>
+            <div className="space-y-2">
               {data.recent_commits.map(c => (
-                <div key={c.sha} style={{ fontSize: '12px', color: '#D1D5DB', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <GitCommit size={14} style={{ color: '#60A5FA' }} />
-                  <code style={{ color: '#F59E0B' }}>{c.sha.slice(0, 7)}</code>
-                  <span>{c.message}</span>
+                <div key={c.sha} className="text-[11px] text-[#9AA1B2] flex items-start gap-2 leading-relaxed">
+                  <GitCommit size={13} className="text-cyan-400 shrink-0 mt-0.5" />
+                  <div className="min-w-0">
+                    <code className="text-[#8D5CF6] font-bold mr-1">{c.sha.slice(0, 7)}</code>
+                    <span className="text-[#F5F7FA] font-sans text-xs">{c.message}</span>
+                  </div>
                 </div>
               ))}
             </div>

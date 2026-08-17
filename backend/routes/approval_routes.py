@@ -128,3 +128,92 @@ async def get_approval_dashboard() -> Dict[str, Any]:
     """Retrieves Approval Dashboard data: Pending/Approved/Rejected requests, Risk Levels, and Audit Trail."""
     dash = global_approval_manager.get_approval_dashboard()
     return {"status": "success", "approval_dashboard": dash}
+
+
+# ---------------------------------------------------------------------------
+# Human-in-the-Loop Workflow Approval Endpoints
+# ---------------------------------------------------------------------------
+
+class ApproveWorkflowInput(BaseModel):
+    notes: Optional[str] = ""
+
+
+class RejectWorkflowInput(BaseModel):
+    feedback: str
+
+
+from backend.generation.manager import global_generation_manager
+
+
+@router.post("/api/projects/{project_id}/approve")
+@router.post("/api/generations/{generation_id}/approve")
+async def approve_workflow_stage(
+    project_id: Optional[str] = None,
+    generation_id: Optional[str] = None,
+    payload: Optional[ApproveWorkflowInput] = None
+) -> Dict[str, Any]:
+    """
+    Approves a paused workflow at an approval checkpoint (Architecture or Final Review)
+    and resumes multi-agent execution from the checkpoint.
+    """
+    target_id = generation_id or project_id
+    if not target_id:
+        raise HTTPException(status_code=400, detail="Project ID or Generation ID is required.")
+
+    notes = payload.notes if payload else ""
+    try:
+        res = await global_generation_manager.approve_generation(target_id, notes=notes)
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to resume workflow: {str(e)}")
+
+
+@router.post("/api/projects/{project_id}/reject")
+@router.post("/api/generations/{generation_id}/reject")
+async def reject_workflow_stage(
+    payload: RejectWorkflowInput,
+    project_id: Optional[str] = None,
+    generation_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Rejects a workflow stage with specific feedback, storing the feedback and
+    resuming the workflow through the appropriate agent to revise the plan/code.
+    """
+    target_id = generation_id or project_id
+    if not target_id:
+        raise HTTPException(status_code=400, detail="Project ID or Generation ID is required.")
+
+    if not payload.feedback or not payload.feedback.strip():
+        raise HTTPException(status_code=400, detail="Rejection feedback cannot be empty.")
+
+    try:
+        res = await global_generation_manager.reject_generation(target_id, feedback=payload.feedback.strip())
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process rejection: {str(e)}")
+
+
+@router.get("/api/projects/{project_id}/status")
+@router.get("/api/generations/{generation_id}/status")
+async def get_workflow_status(
+    project_id: Optional[str] = None,
+    generation_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Retrieves full real-time workflow status including checkpoint data, approval state,
+    and active agents. Survives browser reloads and server restarts.
+    """
+    target_id = generation_id or project_id
+    if not target_id:
+        raise HTTPException(status_code=400, detail="Project ID or Generation ID is required.")
+
+    try:
+        status_data = global_generation_manager.get_status(target_id)
+        return status_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve workflow status: {str(e)}")
+

@@ -33,6 +33,10 @@ const STAGE_LABELS = {
     documentation: "Documentation",
     testing: "Testing",
     reviewer: "Reviewer",
+    github_sync: "GitHub Integration",
+    ci_check: "CI Pipeline",
+    live_deploy: "Deployment",
+    health_check: "Health Check & Monitor",
     completed: "Completed",
 };
 
@@ -46,6 +50,10 @@ const STAGE_TO_TAB = {
     documentation: "documentation",
     testing: "tests",
     reviewer: "review",
+    github_sync: "terminal",
+    ci_check: "terminal",
+    live_deploy: "terminal",
+    health_check: "terminal",
 };
 
 const STAGES_ORDER = [
@@ -57,6 +65,10 @@ const STAGES_ORDER = [
     { key: "sandbox", label: "Execution Sandbox", desc: "Running npm build & pytest" },
     { key: "reviewer", label: "Reviewer Gate", desc: "Checking safety & errors" },
     { key: "documentation", label: "Documentation", desc: "Structuring README & guides" },
+    { key: "github_sync", label: "GitHub Integration", desc: "Pushing code to user repo" },
+    { key: "ci_check", label: "CI Pipeline", desc: "Verifying builds on GitHub Actions" },
+    { key: "live_deploy", label: "Deployment", desc: "Containerizing & deploying apps" },
+    { key: "health_check", label: "Health Monitor", desc: "Verifying /health endpoint stability" },
 ];
 
 function ProjectGenerator() {

@@ -129,6 +129,30 @@
         "importance": "HIGH",
         "created_at": "2026-08-10T02:32:24.001768+00:00",
         "updated_at": "2026-08-17T05:50:18.906771+00:00"
+      },
+      "mem_RslfP15lM0Q": {
+        "id": "mem_RslfP15lM0Q",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "user_id": null,
+        "memory_type": "ARCHITECTURE",
+        "key": "architecture_spec",
+        "value": {
+          "frontend": "React",
+          "backend": "FastAPI",
+          "database": "PostgreSQL",
+          "components": [
+            "Auth"
+          ],
+          "routes": [],
+          "models": [],
+          "dependencies": [],
+          "folder_structure": {}
+        },
+        "source_agent": "architect",
+        "importance": "CRITICAL",
+        "created_at": "2026-08-17T12:56:28.697180+00:00",
+        "updated_at": "2026-08-17T13:15:09.852177+00:00"
       }
     },
     "decisions": {
@@ -141,12 +165,252 @@
         "agent": "planner",
         "timestamp": "2026-08-17T05:50:18.907860+00:00",
         "importance": "HIGH"
+      },
+      "dec__6ImV8owjPM": {
+        "id": "dec__6ImV8owjPM",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use PostgreSQL database engine",
+        "reason": "Relational consistency, indexing, and schema integrity",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:56:28.698827+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_2rsA82fQe70": {
+        "id": "dec_2rsA82fQe70",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use FastAPI backend framework",
+        "reason": "High performance async REST API endpoint routing",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:56:28.699670+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_RIp7fZETVNI": {
+        "id": "dec_RIp7fZETVNI",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use React frontend framework",
+        "reason": "Component-driven reactive single-page app architecture",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:56:28.700698+00:00",
+        "importance": "HIGH"
+      },
+      "dec_HLe5RQi_cJ4": {
+        "id": "dec_HLe5RQi_cJ4",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use PostgreSQL database engine",
+        "reason": "Relational consistency, indexing, and schema integrity",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:57:23.074239+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_tqyPsp2NybU": {
+        "id": "dec_tqyPsp2NybU",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use FastAPI backend framework",
+        "reason": "High performance async REST API endpoint routing",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:57:23.076016+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_cYLWO8tSHHI": {
+        "id": "dec_cYLWO8tSHHI",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use React frontend framework",
+        "reason": "Component-driven reactive single-page app architecture",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:57:23.077220+00:00",
+        "importance": "HIGH"
+      },
+      "dec_vy16OFQBkMA": {
+        "id": "dec_vy16OFQBkMA",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use PostgreSQL database engine",
+        "reason": "Relational consistency, indexing, and schema integrity",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:57:45.794331+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_8WlWGqSCIGA": {
+        "id": "dec_8WlWGqSCIGA",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use FastAPI backend framework",
+        "reason": "High performance async REST API endpoint routing",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:57:45.794973+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_m4TSbJyCWRE": {
+        "id": "dec_m4TSbJyCWRE",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use React frontend framework",
+        "reason": "Component-driven reactive single-page app architecture",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:57:45.795581+00:00",
+        "importance": "HIGH"
+      },
+      "dec_WDsqD8tCTmg": {
+        "id": "dec_WDsqD8tCTmg",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use PostgreSQL database engine",
+        "reason": "Relational consistency, indexing, and schema integrity",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:58:29.438105+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_FPeVjpZuk40": {
+        "id": "dec_FPeVjpZuk40",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use FastAPI backend framework",
+        "reason": "High performance async REST API endpoint routing",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:58:29.439901+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_P_oKeYXyMsg": {
+        "id": "dec_P_oKeYXyMsg",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use React frontend framework",
+        "reason": "Component-driven reactive single-page app architecture",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:58:29.441289+00:00",
+        "importance": "HIGH"
+      },
+      "dec_OEmFTqr0src": {
+        "id": "dec_OEmFTqr0src",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use PostgreSQL database engine",
+        "reason": "Relational consistency, indexing, and schema integrity",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:58:58.752131+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_kpkKy41mruU": {
+        "id": "dec_kpkKy41mruU",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use FastAPI backend framework",
+        "reason": "High performance async REST API endpoint routing",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:58:58.752736+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_FECkq4ydkXE": {
+        "id": "dec_FECkq4ydkXE",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use React frontend framework",
+        "reason": "Component-driven reactive single-page app architecture",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:58:58.753835+00:00",
+        "importance": "HIGH"
+      },
+      "dec_8hx8duV-Bkc": {
+        "id": "dec_8hx8duV-Bkc",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use PostgreSQL database engine",
+        "reason": "Relational consistency, indexing, and schema integrity",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:59:18.400065+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_YiiY0wIgnyU": {
+        "id": "dec_YiiY0wIgnyU",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use FastAPI backend framework",
+        "reason": "High performance async REST API endpoint routing",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:59:18.401312+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_qX7tbj0kb1s": {
+        "id": "dec_qX7tbj0kb1s",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use React frontend framework",
+        "reason": "Component-driven reactive single-page app architecture",
+        "agent": "architect",
+        "timestamp": "2026-08-17T12:59:18.402687+00:00",
+        "importance": "HIGH"
+      },
+      "dec_p5YFJKDfllQ": {
+        "id": "dec_p5YFJKDfllQ",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use PostgreSQL database engine",
+        "reason": "Relational consistency, indexing, and schema integrity",
+        "agent": "architect",
+        "timestamp": "2026-08-17T13:06:47.074826+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_QtjaMtha5_g": {
+        "id": "dec_QtjaMtha5_g",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use FastAPI backend framework",
+        "reason": "High performance async REST API endpoint routing",
+        "agent": "architect",
+        "timestamp": "2026-08-17T13:06:47.076608+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_FJzHaXFzKUc": {
+        "id": "dec_FJzHaXFzKUc",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use React frontend framework",
+        "reason": "Component-driven reactive single-page app architecture",
+        "agent": "architect",
+        "timestamp": "2026-08-17T13:06:47.078241+00:00",
+        "importance": "HIGH"
+      },
+      "dec_1iWkSVrAooM": {
+        "id": "dec_1iWkSVrAooM",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use PostgreSQL database engine",
+        "reason": "Relational consistency, indexing, and schema integrity",
+        "agent": "architect",
+        "timestamp": "2026-08-17T13:15:09.853699+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_uaxNCUOdHdg": {
+        "id": "dec_uaxNCUOdHdg",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use FastAPI backend framework",
+        "reason": "High performance async REST API endpoint routing",
+        "agent": "architect",
+        "timestamp": "2026-08-17T13:15:09.854784+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_cMuDB0PdBhY": {
+        "id": "dec_cMuDB0PdBhY",
+        "project_id": "default_project",
+        "generation_id": "test_sess_fb",
+        "decision": "Use React frontend framework",
+        "reason": "Component-driven reactive single-page app architecture",
+        "agent": "architect",
+        "timestamp": "2026-08-17T13:15:09.856016+00:00",
+        "importance": "HIGH"
       }
     },
     "meta": {
       "project_id": "default_project",
       "created_at": "2026-08-10T02:32:23.989805+00:00",
-      "updated_at": "2026-08-17T05:50:18.907860+00:00"
+      "updated_at": "2026-08-17T13:15:09.856016+00:00"
     }
   },
   "Task Management SaaS": {
@@ -287,6 +551,136 @@
       "project_id": "Task Management SaaS",
       "created_at": "2026-08-10T07:11:09.422088+00:00",
       "updated_at": "2026-08-10T07:15:51.267236+00:00"
+    }
+  },
+  "proj_1786965838275": {
+    "memories": {
+      "mem_hYgP7g2Nj4s": {
+        "id": "mem_hYgP7g2Nj4s",
+        "project_id": "proj_1786965838275",
+        "generation_id": "default",
+        "user_id": null,
+        "memory_type": "REQUIREMENT",
+        "key": "functional_requirements",
+        "value": [
+          "FR-1: User authentication",
+          "FR-2: Interactive Dashboard"
+        ],
+        "source_agent": "planner",
+        "importance": "HIGH",
+        "created_at": "2026-08-17T11:24:07.995511+00:00",
+        "updated_at": "2026-08-17T11:24:07.995511+00:00"
+      },
+      "mem_fhZz1lwiao8": {
+        "id": "mem_fhZz1lwiao8",
+        "project_id": "proj_1786965838275",
+        "generation_id": "default",
+        "user_id": null,
+        "memory_type": "TECHNOLOGY",
+        "key": "tech_stack",
+        "value": {
+          "frontend": "React",
+          "backend": "FastAPI",
+          "database": "PostgreSQL",
+          "auth": "JWT",
+          "infra": "Docker"
+        },
+        "source_agent": "planner",
+        "importance": "HIGH",
+        "created_at": "2026-08-17T11:24:07.999147+00:00",
+        "updated_at": "2026-08-17T11:24:07.999147+00:00"
+      },
+      "mem_ssmdiaLg_pQ": {
+        "id": "mem_ssmdiaLg_pQ",
+        "project_id": "proj_1786965838275",
+        "generation_id": "default",
+        "user_id": null,
+        "memory_type": "ARCHITECTURE",
+        "key": "architecture_spec",
+        "value": {
+          "components": [
+            "Navbar",
+            "Sidebar",
+            "DashboardCard",
+            "LoginForm"
+          ],
+          "routes": [
+            "GET /health",
+            "POST /api/auth/login",
+            "GET /api/data"
+          ],
+          "models": [
+            "User",
+            "Session",
+            "Item"
+          ],
+          "dependencies": [
+            "react",
+            "fastapi",
+            "sqlalchemy",
+            "pydantic"
+          ],
+          "folder_structure": {
+            "frontend": [
+              "src/App.jsx"
+            ],
+            "backend": [
+              "main.py"
+            ]
+          }
+        },
+        "source_agent": "architect",
+        "importance": "CRITICAL",
+        "created_at": "2026-08-17T11:24:14.708774+00:00",
+        "updated_at": "2026-08-17T11:24:14.708774+00:00"
+      }
+    },
+    "decisions": {
+      "dec_RfNgw97RTvI": {
+        "id": "dec_RfNgw97RTvI",
+        "project_id": "proj_1786965838275",
+        "generation_id": "default",
+        "decision": "JWT Bearer Authentication",
+        "reason": "Secure user sessions across API routes",
+        "agent": "planner",
+        "timestamp": "2026-08-17T11:24:08.002726+00:00",
+        "importance": "HIGH"
+      },
+      "dec_vIOa9Z9kSH0": {
+        "id": "dec_vIOa9Z9kSH0",
+        "project_id": "proj_1786965838275",
+        "generation_id": "default",
+        "decision": "Use PostgreSQL database engine",
+        "reason": "Relational consistency, indexing, and schema integrity",
+        "agent": "architect",
+        "timestamp": "2026-08-17T11:24:14.711638+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_-0Z4YQZrN_w": {
+        "id": "dec_-0Z4YQZrN_w",
+        "project_id": "proj_1786965838275",
+        "generation_id": "default",
+        "decision": "Use FastAPI backend framework",
+        "reason": "High performance async REST API endpoint routing",
+        "agent": "architect",
+        "timestamp": "2026-08-17T11:24:14.714493+00:00",
+        "importance": "CRITICAL"
+      },
+      "dec_xa5zwHnQ4lw": {
+        "id": "dec_xa5zwHnQ4lw",
+        "project_id": "proj_1786965838275",
+        "generation_id": "default",
+        "decision": "Use React frontend framework",
+        "reason": "Component-driven reactive single-page app architecture",
+        "agent": "architect",
+        "timestamp": "2026-08-17T11:24:14.716508+00:00",
+        "importance": "HIGH"
+      }
+    },
+    "meta": {
+      "project_id": "proj_1786965838275",
+      "created_at": "2026-08-17T11:24:07.995479+00:00",
+      "updated_at": "2026-08-17T11:24:14.716508+00:00"
     }
   }
 }

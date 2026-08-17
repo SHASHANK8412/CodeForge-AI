@@ -14,11 +14,17 @@ import AgentLogs from '../components/generation/AgentLogs';
 import ProgressBar from '../components/generation/ProgressBar';
 import CompletionActions from '../components/generation/CompletionActions';
 import RepairLoop from '../components/generation/RepairLoop';
+import ApprovalPanel from '../components/generation/ApprovalPanel';
+import DebugActivityPanel from '../components/generation/DebugActivityPanel';
 import {
+
   connectGenerationStream,
   cancelGeneration,
+  approveGeneration,
+  rejectGeneration,
   isTerminalStatus,
 } from '../services/generation';
+
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -113,7 +119,30 @@ export default function GenerationDashboard({
     });
 
     // Update agent status in generation state
-    const { type, agent, progress } = evt;
+    const { type, agent, progress, metadata } = evt;
+
+    if (type === 'approval_required') {
+      setGeneration((prev) => prev ? {
+        ...prev,
+        status: 'waiting_for_approval',
+        approval_required: true,
+        approval_stage: metadata?.approval_stage || 'architecture',
+        approval_request: metadata?.approval_request || prev.approval_request || {},
+        progress: progress ?? prev.progress,
+      } : prev);
+      return;
+    }
+
+    if (type === 'approval_approved' || type === 'approval_rejected') {
+      setGeneration((prev) => prev ? {
+        ...prev,
+        status: 'running',
+        approval_required: false,
+        approval_status: type === 'approval_approved' ? 'approved' : 'rejected',
+      } : prev);
+      return;
+    }
+
     if (!agent) return;
 
     setGeneration((prev) => {
@@ -134,6 +163,7 @@ export default function GenerationDashboard({
         progress: progress ?? prev.progress,
       };
     });
+
   }, []);
 
   // ----- Connect stream -----
@@ -191,6 +221,45 @@ export default function GenerationDashboard({
     setGeneration((prev) => prev ? { ...prev, status: 'cancelled' } : prev);
   }, [genId]);
 
+  // ----- HITL Approval & Rejection Handlers -----
+  const [isApproving, setIsApproving] = useState(false);
+
+  const handleApproveWorkflow = useCallback(async (notes) => {
+    setIsApproving(true);
+    try {
+      await approveGeneration(genId, notes);
+      setGeneration((prev) => prev ? {
+        ...prev,
+        status: 'running',
+        approval_required: false,
+        approval_status: 'approved'
+      } : prev);
+    } catch (err) {
+      console.error('Approval failed:', err);
+      throw err;
+    } finally {
+      setIsApproving(false);
+    }
+  }, [genId]);
+
+  const handleRejectWorkflow = useCallback(async (feedback) => {
+    setIsApproving(true);
+    try {
+      await rejectGeneration(genId, feedback);
+      setGeneration((prev) => prev ? {
+        ...prev,
+        status: 'running',
+        approval_required: false,
+        approval_status: 'rejected'
+      } : prev);
+    } catch (err) {
+      console.error('Rejection failed:', err);
+      throw err;
+    } finally {
+      setIsApproving(false);
+    }
+  }, [genId]);
+
   // ----- Navigation -----
   const handleOpenWorkspace = useCallback(() => {
     if (setView) setView('code');
@@ -211,10 +280,13 @@ export default function GenerationDashboard({
   const totalCount = (generation?.agents || []).length || AGENT_ORDER.length;
   const logs = buildLogsFromEvents(events);
   const projectName = generation?.project_id || genId;
+  const isWaitingApproval = status === 'waiting_for_approval' || generation?.approval_required === true;
+  const approvalRequest = generation?.approval_request || {};
+  const approvalStage = generation?.approval_stage || (approvalRequest.stage || 'architecture');
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#090d16] flex items-center justify-center">
+      <div className="min-h-screen bg-[#08090D] flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-slate-400 text-sm">Connecting to generation engine…</p>
@@ -225,13 +297,14 @@ export default function GenerationDashboard({
   }
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 font-sans selection:bg-cyan-500 selection:text-white">
+    <div className="min-h-screen bg-[#08090D] text-slate-100 font-sans selection:bg-cyan-500 selection:text-white">
       <ProjectHeader
         projectName={projectName}
         generationId={genId}
         status={status}
         onCancel={handleCancel}
       />
+
 
       {/* SSE / Polling indicator */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 flex items-center gap-2">
@@ -242,6 +315,17 @@ export default function GenerationDashboard({
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        {/* Human-in-the-Loop Approval Panel */}
+        {isWaitingApproval && (
+          <ApprovalPanel
+            approvalRequest={approvalRequest}
+            stage={approvalStage}
+            onApprove={handleApproveWorkflow}
+            onReject={handleRejectWorkflow}
+            isSubmitting={isApproving}
+          />
+        )}
 
         {/* Completion modal */}
         {showCompleteModal && (
@@ -293,14 +377,21 @@ export default function GenerationDashboard({
           </div>
         )}
 
-        {/* Repair loop banner */}
-        {status === 'repairing' && (
-          <RepairLoop
-            active
-            attempt={(generation?.agents?.find(a => a.name === 'debug')?.retry_count || 0) + 1}
-            maxAttempts={3}
+        {/* Autonomous Debug -> Fix -> Retest Activity Panel */}
+        {(status === 'repairing' || isWaitingApproval && approvalStage === 'debug_escalation' || generation?.human_intervention_required) && (
+          <DebugActivityPanel
+            active={status === 'repairing' || isWaitingApproval && approvalStage === 'debug_escalation'}
+            debugState={generation?.state || generation || {}}
+            testResults={generation?.test_results || {}}
+            currentCycle={generation?.retry_count || (generation?.agents?.find(a => a.name === 'debug')?.retry_count || 0) + 1}
+            maxCycles={3}
+            humanInterventionRequired={Boolean(generation?.human_intervention_required || approvalStage === 'debug_escalation')}
+            onProvideGuidance={(text) => handleRejectWorkflow(text)}
+            onRetry={() => handleRejectWorkflow('Retry autonomous debug cycle')}
+            onProceedAnyway={() => handleApproveWorkflow()}
           />
         )}
+
 
         {/* Completion actions (non-modal variant) */}
         {status === 'completed' && !showCompleteModal && (

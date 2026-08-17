@@ -40,6 +40,17 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
+def init_db() -> None:
+    """Initializes database tables if they do not exist."""
+    try:
+        from backend.database import models  # noqa: F401
+        Base.metadata.create_all(bind=engine)
+        _logger.info("Database tables initialized successfully.")
+    except Exception as e:
+        _logger.warning(f"Database table initialization warning: {e}")
+
+
+
 def check_db_health() -> Dict[str, Any]:
     """
     Checks database health without exposing sensitive connection credentials.

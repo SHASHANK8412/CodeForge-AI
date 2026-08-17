@@ -11,25 +11,42 @@ if str(_repo_root) not in sys.path:
 
 import logging
 
-# Centralized Logging Configuration: silence repetitive terminal polling logs & write to file
+# Centralized Logging Configuration: inject correlation IDs into logs and silence repetitive polling logs
+from contextvars import ContextVar
+import secrets
+
+correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="system")
+
+class CorrelationIdFilter(logging.Filter):
+    def filter(self, record):
+        record.correlation_id = correlation_id_var.get()
+        return True
+
 _log_dir = _repo_root / "backend" / "logs"
 _log_dir.mkdir(parents=True, exist_ok=True)
 _log_file = _log_dir / "aiforge.log"
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    handlers=[
-        logging.FileHandler(_log_file, encoding="utf-8"),
-        logging.StreamHandler()
-    ]
-)
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter("%(asctime)s | %(levelname)s | [%(correlation_id)s] | %(name)s | %(message)s")
+
+file_handler = logging.FileHandler(_log_file, encoding="utf-8")
+file_handler.addFilter(CorrelationIdFilter())
+file_handler.setFormatter(formatter)
+root_logger.addHandler(file_handler)
+
+stream_handler = logging.StreamHandler()
+stream_handler.addFilter(CorrelationIdFilter())
+stream_handler.setFormatter(formatter)
+root_logger.addHandler(stream_handler)
 
 # Mute repetitive terminal logs for uvicorn access, httpx, httpcore, and SRE health checks
 logging.getLogger("uvicorn.access").disabled = True
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from time import perf_counter
 from pydantic import BaseModel
@@ -50,6 +67,7 @@ from backend.observability.routes import router as observability_router
 from backend.generation.routes import router as generation_router
 from backend.routes.execution_routes import router as execution_router
 from backend.routes.security_routes import router as security_router
+from backend.routes.project_memory_routes import router as project_memory_router
 
 app = FastAPI(
     title="AIForge API",
@@ -61,9 +79,7 @@ app.include_router(observability_router)
 app.include_router(generation_router)
 app.include_router(execution_router)
 app.include_router(security_router)
-
-import secrets
-from fastapi import Request
+app.include_router(project_memory_router)
 
 from backend.observability.service import global_opentelemetry_service
 
@@ -71,8 +87,13 @@ from backend.observability.service import global_opentelemetry_service
 async def opentelemetry_fastapi_middleware(request: Request, call_next):
     start_time = perf_counter()
     trace_id = f"trace_{secrets.token_urlsafe(6)}"
+    corr_id = request.headers.get("X-Correlation-ID") or f"req_{secrets.token_hex(6)}"
 
-    response = await call_next(request)
+    token = correlation_id_var.set(corr_id)
+    try:
+        response = await call_next(request)
+    finally:
+        correlation_id_var.reset(token)
 
     duration_ms = round((perf_counter() - start_time) * 1000, 2)
     path = request.url.path
@@ -93,11 +114,50 @@ async def opentelemetry_fastapi_middleware(request: Request, call_next):
             pass
 
     response.headers["X-Trace-ID"] = trace_id
-    response.headers["X-Correlation-ID"] = request.headers.get("X-Correlation-ID") or f"req_{secrets.token_hex(6)}"
+    response.headers["X-Correlation-ID"] = corr_id
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     return response
+
+
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    corr_id = correlation_id_var.get()
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "success": False,
+            "error": {
+                "code": f"HTTP_{exc.status_code}",
+                "message": exc.detail,
+                "request_id": corr_id,
+                "details": []
+            },
+            "detail": exc.detail
+        }
+    )
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    corr_id = correlation_id_var.get()
+    logging.exception(f"Unhandled server error: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "error": {
+                "code": "INTERNAL_SERVER_ERROR",
+                "message": "An unexpected server error occurred.",
+                "request_id": corr_id,
+                "details": []
+            },
+            "detail": "An unexpected server error occurred."
+        }
+    )
 
 
 

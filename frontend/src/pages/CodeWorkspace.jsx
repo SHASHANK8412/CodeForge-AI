@@ -512,18 +512,18 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
       <div className="flex-1 flex min-h-0 min-w-0 overflow-hidden relative">
         <FileExplorer files={files} activeFile={activeFile} onFileSelect={handleFileSelect} />
 
-        <div ref={centerColRef} className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#0b0f19] border-r border-slate-800/80 overflow-hidden relative">
-          <div className="bg-slate-950 border-b border-slate-800/80 px-3.5 py-3 flex items-center justify-between gap-3 text-sm text-slate-200 font-sans shrink-0">
+        <div ref={centerColRef} className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#08090D] border-r border-[#242833] overflow-hidden relative">
+          <div className="bg-[#0F1117] border-b border-[#242833] px-3.5 py-3 flex items-center justify-between gap-3 text-sm text-[#F5F7FA] font-sans shrink-0">
             <div>
-              <div className="font-semibold">{activeFile?.name || 'No file selected'}</div>
-              <div className="text-[11px] text-slate-500">{activeFile?.path || 'Open a file from the explorer'}</div>
+              <div className="font-semibold text-xs text-[#F5F7FA]">{activeFile?.name || 'No file selected'}</div>
+              <div className="text-[10px] text-[#9AA1B2] font-mono mt-0.5">{activeFile?.path || 'Open a file from the explorer'}</div>
             </div>
-            <div className="flex items-center gap-2 text-[11px] text-slate-400">
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-900 border border-slate-800">
-                <FaKeyboard className="w-3 h-3" /> Ctrl+Shift+P
+            <div className="flex items-center gap-2 text-[10px] text-[#9AA1B2] font-mono">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-[#08090D] border border-[#242833]">
+                <FaKeyboard className="w-3 h-3 text-[#8D5CF6]" /> Ctrl+Shift+P
               </span>
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-900 border border-slate-800">
-                <FaSearch className="w-3 h-3" /> Ctrl+Shift+F
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-[#08090D] border border-[#242833]">
+                <FaSearch className="w-3 h-3 text-[#8D5CF6]" /> Ctrl+Shift+F
               </span>
             </div>
           </div>
@@ -546,7 +546,7 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
             onSave={handleSaveFile}
           />
 
-          <div className="bg-slate-950 px-3.5 py-1 border-t border-b border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400 shrink-0 select-none">
+          <div className="bg-[#0F1117] px-3.5 py-1 border-t border-b border-[#242833] flex items-center justify-between text-[11px] font-mono text-[#9AA1B2] shrink-0 select-none">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -557,16 +557,16 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
                 ) : 'Ready'}
               </span>
               <span>UTF-8</span>
-              <span className="text-slate-300">Ln {editorMeta.cursorLine}, Col {editorMeta.cursorCol}</span>
+              <span className="text-[#9AA1B2]/80">Ln {editorMeta.cursorLine}, Col {editorMeta.cursorCol}</span>
             </div>
             <div className="flex items-center gap-4">
-              <span>File Lines: <strong className="text-slate-200">{editorMeta.lineCount}</strong></span>
+              <span>File Lines: <strong className="text-[#F5F7FA]">{editorMeta.lineCount}</strong></span>
               <span>{formatBytes(editorMeta.fileSize)}</span>
-              <span className="text-cyan-400 uppercase text-[10px] font-bold">{editorMeta.language}</span>
+              <span className="text-[#8D5CF6] uppercase text-[10px] font-bold">{editorMeta.language}</span>
             </div>
           </div>
 
-          <div className="h-70 border-t border-slate-800/80 bg-[#090d16]">
+          <div className="h-70 border-t border-[#242833] bg-[#08090D]">
             <BottomPanel
               activeTab={bottomTab}
               onTabChange={setBottomTab}
@@ -582,19 +582,19 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
           </div>
         </div>
 
-        <div className={`${rightPanelOpen ? 'w-[320px]' : 'w-10'} border-l border-slate-800/80 bg-[#090d16] flex flex-col shrink-0 h-full min-h-0 overflow-hidden transition-all duration-200`}>
-          <div className="p-2 border-b border-slate-800/80 flex items-center justify-between bg-slate-950 shrink-0">
+        <div className={`${rightPanelOpen ? 'w-[320px]' : 'w-10'} border-l border-[#242833] bg-[#0F1117] flex flex-col shrink-0 h-full min-h-0 overflow-hidden transition-all duration-200`}>
+          <div className="p-2 border-b border-[#242833] flex items-center justify-between bg-[#0F1117] shrink-0">
             {rightPanelOpen ? (
               <div className="flex gap-2">
                 <button
                   onClick={() => setRightTab('assistant')}
-                  className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 rounded transition ${rightTab === 'assistant' ? 'text-cyan-400 bg-cyan-650/15' : 'text-slate-500 hover:text-slate-300'}`}
+                  className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 rounded transition ${rightTab === 'assistant' ? 'text-[#8D5CF6] bg-[#8D5CF6]/10' : 'text-[#9AA1B2] hover:text-[#F5F7FA]'}`}
                 >
                   AI Workspace
                 </button>
                 <button
                   onClick={() => setRightTab('history')}
-                  className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 rounded transition ${rightTab === 'history' ? 'text-cyan-400 bg-cyan-650/15' : 'text-slate-500 hover:text-slate-300'}`}
+                  className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 rounded transition ${rightTab === 'history' ? 'text-[#8D5CF6] bg-[#8D5CF6]/10' : 'text-[#9AA1B2] hover:text-[#F5F7FA]'}`}
                 >
                   History
                 </button>
