@@ -149,6 +149,9 @@ def register_routers() -> None:
     from backend.routes.workspace_routes import router as workspace_engine_router
     app.include_router(workspace_engine_router)
 
+    from backend.routes.github_routes import router as github_routes_router
+    app.include_router(github_routes_router)
+
     from backend.api.project import router as project_manager_router
     app.include_router(project_manager_router)
 

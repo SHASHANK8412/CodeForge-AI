@@ -103,3 +103,46 @@ export async function askAssistant(message, fileContext = '', selectedCode = '')
     return `AIForge Assistant: Analyzed file ${fileContext || 'workspace'}. The implementation follows standard JWT authentication and FastAPI service pattern.`;
   }
 }
+
+export async function saveProjectFile(projectId, path, content) {
+  const res = await axios.put(`${API_BASE_URL}/api/project/${projectId}/file`, { path, content }, { timeout: 10000 });
+  return res.data;
+}
+
+export async function runSelectedCodeReview(projectId, path, selectedCode, action) {
+  const res = await axios.post(`${API_BASE_URL}/api/project/${projectId}/review-selection`, { path, selected_code: selectedCode, action }, { timeout: 15000 });
+  return res.data;
+}
+
+export async function proposeFix(projectId, issue) {
+  const res = await axios.post(`${API_BASE_URL}/api/project/${projectId}/propose-fix`, {
+    file: issue.file || issue.path || '',
+    line: issue.line || issue.line_number || 1,
+    category: issue.category || 'CODE_QUALITY',
+    title: issue.title || issue.message || 'Issue',
+    description: issue.description || issue.message || 'Defect',
+    suggested_fix: issue.suggested_fix || ''
+  }, { timeout: 15000 });
+  return res.data;
+}
+
+export async function applyFix(projectId, file, content) {
+  const res = await axios.post(`${API_BASE_URL}/api/project/${projectId}/apply-fix`, { file, content }, { timeout: 10000 });
+  return res.data;
+}
+
+export async function fetchSnapshots(projectId) {
+  const res = await axios.get(`${API_BASE_URL}/api/project/${projectId}/snapshots`, { timeout: 10000 });
+  return res.data;
+}
+
+export async function rollbackSnapshot(projectId, versionId) {
+  const res = await axios.post(`${API_BASE_URL}/api/project/${projectId}/rollback`, { version_id: versionId }, { timeout: 10000 });
+  return res.data;
+}
+
+export async function runAutonomousRepair(projectId) {
+  const res = await axios.post(`${API_BASE_URL}/api/project/${projectId}/auto-repair`, {}, { timeout: 45000 });
+  return res.data;
+}
+

@@ -103,16 +103,13 @@
         "memory_type": "REQUIREMENT",
         "key": "functional_requirements",
         "value": [
-          "FR-1: Display real-time race results and standings.",
-          "FR-2: Allow users to create accounts and profiles.",
-          "FR-3: Enable user comments on race articles.",
-          "FR-4: Provide historical race data and statistics.",
-          "FR-5: Implement a live chat feature for community interaction."
+          "FR-1: User authentication",
+          "FR-2: Interactive Dashboard"
         ],
         "source_agent": "planner",
         "importance": "HIGH",
         "created_at": "2026-08-10T02:32:23.989850+00:00",
-        "updated_at": "2026-08-10T02:32:23.989850+00:00"
+        "updated_at": "2026-08-17T05:50:18.905290+00:00"
       },
       "mem_3CCnRIwF8sw": {
         "id": "mem_3CCnRIwF8sw",
@@ -122,23 +119,34 @@
         "memory_type": "TECHNOLOGY",
         "key": "tech_stack",
         "value": {
-          "frontend": "React.js",
-          "backend": "Node.js with Express",
-          "database": "MongoDB",
+          "frontend": "React",
+          "backend": "FastAPI",
+          "database": "PostgreSQL",
           "auth": "JWT",
-          "infra": "AWS"
+          "infra": "Docker"
         },
         "source_agent": "planner",
         "importance": "HIGH",
         "created_at": "2026-08-10T02:32:24.001768+00:00",
-        "updated_at": "2026-08-10T02:32:24.001768+00:00"
+        "updated_at": "2026-08-17T05:50:18.906771+00:00"
       }
     },
-    "decisions": {},
+    "decisions": {
+      "dec_cnH-zOtFYyE": {
+        "id": "dec_cnH-zOtFYyE",
+        "project_id": "default_project",
+        "generation_id": "default",
+        "decision": "JWT Bearer Authentication",
+        "reason": "Secure user sessions across API routes",
+        "agent": "planner",
+        "timestamp": "2026-08-17T05:50:18.907860+00:00",
+        "importance": "HIGH"
+      }
+    },
     "meta": {
       "project_id": "default_project",
       "created_at": "2026-08-10T02:32:23.989805+00:00",
-      "updated_at": "2026-08-10T02:32:24.001768+00:00"
+      "updated_at": "2026-08-17T05:50:18.907860+00:00"
     }
   },
   "Task Management SaaS": {

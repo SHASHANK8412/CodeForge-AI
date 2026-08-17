@@ -21,6 +21,7 @@ class ProjectVersion(BaseModel):
     files_snapshot: Dict[str, str] = Field(default_factory=dict)
     changed_files: List[str] = Field(default_factory=list)
     repair_reason: str = ""
+    change_source: str = "USER"
     created_at: float = Field(default_factory=time.time)
     test_result: Dict[str, Any] = Field(default_factory=dict)
     quality_score: float = 100.0
@@ -41,7 +42,8 @@ class VersionManager:
         repair_reason: str = "Initial Generation",
         changed_files: Optional[List[str]] = None,
         test_result: Optional[Dict[str, Any]] = None,
-        quality_score: float = 100.0
+        quality_score: float = 100.0,
+        change_source: str = "USER"
     ) -> ProjectVersion:
         """
         Creates and stores a immutable snapshot version of project files.
@@ -58,6 +60,7 @@ class VersionManager:
             files_snapshot=dict(files_map),
             changed_files=changed_files or list(files_map.keys()),
             repair_reason=repair_reason,
+            change_source=change_source,
             created_at=time.time(),
             test_result=test_result or {},
             quality_score=quality_score

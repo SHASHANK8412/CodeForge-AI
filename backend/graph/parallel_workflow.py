@@ -43,6 +43,11 @@ from backend.memory.memory_manager import memory_manager
 from backend.execution.project_runner import global_project_runner
 from backend.agents.debug_agent import global_debug_agent
 
+from backend.services.project_assembler import global_project_assembler
+from backend.services.project_validator import global_project_validator
+from backend.services.project_tester import global_project_tester
+from backend.services.project_exporter import global_project_exporter
+
 
 
 _logger = logging.getLogger("aiforge.performance")
@@ -321,48 +326,45 @@ async def assembly_node(state: ProjectState) -> dict:
     _logger.info("✔ Project Assembly & File Integrity Verification started")
     _fire_lifecycle("agent_started", "assembly")
     plan_json = state.get("plan", {})
-    arch_json = state.get("architecture", {})
     proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
 
-    assembled = global_structured_project_builder.assemble_real_project(
-        project_name=proj_name,
-        plan_json=plan_json if isinstance(plan_json, dict) else {},
-        arch_json=arch_json if isinstance(arch_json, dict) else {},
-        frontend_code=str(state.get("frontend", "")),
-        backend_code=str(state.get("backend", "")),
-        database_code=str(state.get("database", "")),
-        testing_code=str(state.get("tests", "")),
-        docs_code=str(state.get("documentation", ""))
-    )
+    agent_outputs = {
+        "frontend": state.get("frontend", ""),
+        "backend": state.get("backend", ""),
+        "database": state.get("database", ""),
+        "testing": state.get("tests", ""),
+        "documentation": state.get("documentation", "")
+    }
 
-    files_manifest = assembled.get("manifest", {})
-    valid_files: Dict[str, str] = {}
-    invalid_records: List[Dict[str, Any]] = []
+    assembled = global_project_assembler.assemble_project(agent_outputs, project_name=proj_name)
+    files_map = assembled["files"]
+    manifest = assembled["manifest"]
 
-    for path, content in files_manifest.items():
-        rep = global_file_integrity_validator.validate_file_representation(path, content)
-        if rep.is_valid:
-            valid_files[path] = content
-        else:
-            invalid_records.append(rep.model_dump())
-            _logger.warning(f"FileIntegrityGate Warning: [{rep.status}] File '{path}' rejected: {rep.error_message}")
+    # Write project safely to disk
+    written_path = global_project_assembler.write_project_to_disk(proj_name, files_map)
 
-    duplicate_report = global_duplicate_detector.detect_duplicates(valid_files)
-    written_path = global_structured_project_builder.write_project_to_disk(proj_name, valid_files)
+    # Run the validator immediately after assembly
+    val_report = global_project_validator.validate_project(files_map, manifest)
+
+    # For auto-repair triggers in route_after_testing or debugger
+    exec_res = {"exit_code": 0, "status": "PASS"}
+    if val_report.get("status") == "FAIL":
+        exec_res = {"exit_code": 1, "status": "FAIL", "stderr": "\n".join(val_report.get("errors", []))}
 
     _fire_lifecycle("agent_completed", "assembly")
     return {
         "project_path": str(written_path),
-        "files": valid_files,
-        "assembly_manifest": assembled,
-        "duplicate_report": duplicate_report,
-        "invalid_file_records": invalid_records,
-        "file_integrity_status": "PASSED" if not invalid_records else "FAILED_REMEDIATED",
+        "files": files_map,
+        "assembly_manifest": manifest,
+        "validation_report": val_report,
+        "validation_status": val_report,
+        "execution_results": exec_res,
         "current_step": "assembly",
         "stream_events": [
-            "✔ File Integrity Gate: Passed",
+            "✔ Project Assembled successfully",
             f"✔ Files written to disk at {written_path}",
-            f"✔ Total valid source files: {len(valid_files)}",
+            f"✔ Total valid source files: {len(files_map)}",
+            f"✔ Validation Status: {val_report['status']} (Score: {val_report['score']}/100)"
         ]
     }
 
@@ -424,7 +426,7 @@ def _count_tests_by_section(raw_text: str) -> Dict[str, int]:
 
 
 async def testing_node(state: ProjectState) -> dict:
-    _logger.info("✔ [5/14] Testing Agent generating test suites...")
+    _logger.info("✔ [5/14] Testing Agent generating and executing test suites...")
     _fire_lifecycle("agent_started", "testing")
     testing_prompt = global_prompt_builder.build_testing_prompt(
         backend_code=str(state.get("backend", "")),
@@ -437,42 +439,83 @@ async def testing_node(state: ProjectState) -> dict:
     agent_timers["testing"] = timer.elapsed
     workflow_profiler.record_agent_time("testing", timer.elapsed)
 
-    section_counts = _count_tests_by_section(raw_tests)
-    total_tests = sum(section_counts.values())
+    # Extract test files and write to files map and disk
+    from backend.validation.code_extractor import extract_files_from_agent_output
+    extracted_tests = extract_files_from_agent_output(raw_tests, agent_name="testing")
+    
+    # If no test files were extracted, default to tests/test_main.py
+    if not extracted_tests:
+        extracted_tests["tests/test_main.py"] = raw_tests
 
+    files_map = dict(state.get("files", {}) or {})
+    proj_path_str = state.get("project_path", "")
+
+    for p, c in extracted_tests.items():
+        clean_p = p.replace("\\", "/").strip("/")
+        files_map[clean_p] = c
+
+    # Write the updated files (including tests) to disk
+    if proj_path_str:
+        plan_json = state.get("plan", {})
+        proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
+        global_project_assembler.write_project_to_disk(proj_name, files_map)
+
+    # Run Project Tester
+    test_run_res = global_project_tester.run_tests(proj_path_str)
+
+    # Format test report markdown
     report_lines = [
         "# Automated Test Suite Report",
         "",
-        "**Status**: Static generation only — not executed. No pass/fail or coverage data "
-        "exists until these tests are actually run.",
-        f"**Total test functions generated**: `{total_tests}`",
+        f"**Status**: {test_run_res['overall_status']}",
+        f"**Message**: {test_run_res['message']}",
+        f"**Passed**: `{test_run_res['passed']}` / `{test_run_res['total']}`",
         "",
-        "## Test Suite Breakdown",
-        "",
-        "| Test Suite Type | Test Functions Generated |",
-        "|---|---|",
+        "## Failures",
+        ""
     ]
-    for section in TEST_SECTION_HEADERS:
-        report_lines.append(f"| {section} | {section_counts.get(section, 0)} |")
+    if test_run_res["failures"]:
+        for f in test_run_res["failures"]:
+            report_lines.append(f"- {f}")
+    else:
+        report_lines.append("No test failures detected.")
     report_md = "\n".join(report_lines) + "\n"
 
-    exec_results = state.get("execution_results", {})
-    project_spec = state.get("project_spec", {})
-    architecture = state.get("architecture", {})
+    # Map test results back for existing routing logic
+    # route_after_testing checks test_results["success"]
+    is_success = (test_run_res["overall_status"] == "PASS")
+    mapped_test_results = {
+        "success": is_success,
+        "passed": test_run_res["passed"],
+        "failed": test_run_res["failed"],
+        "total": test_run_res["total"],
+        "output": test_run_res["output"],
+        "failures": test_run_res["failures"]
+    }
 
-    test_res = testing_agent.evaluate_execution_results(
-        exec_results=exec_results if isinstance(exec_results, dict) else {},
-        project_spec=project_spec if isinstance(project_spec, dict) else {},
-        architecture=architecture if isinstance(architecture, dict) else {}
-    )
+    # For auto-repair triggers
+    exec_res = dict(state.get("execution_results", {}) or {})
+    if not is_success:
+        exec_res = {
+            "exit_code": 1,
+            "status": "FAIL",
+            "stderr": "\n".join(test_run_res["failures"]) or "Test suite failed."
+        }
+    else:
+        exec_res = {
+            "exit_code": 0,
+            "status": "PASS"
+        }
 
     _fire_lifecycle("agent_completed", "testing", duration=timer.elapsed)
     return {
         "tests": raw_tests,
-        "test_results": test_res.model_dump(),
+        "files": files_map,
+        "test_results": mapped_test_results,
         "testing_report": report_md,
+        "execution_results": exec_res,
         "current_step": "testing",
-        "stream_events": [f"✔ Generated {total_tests} real test function(s) across 4 suites (Verification: {'PASS' if test_res.success else 'FAIL'})"]
+        "stream_events": [f"✔ Executed test suite: {test_run_res['passed']}/{test_run_res['total']} passed (Verification: {test_run_res['overall_status']})"]
     }
 
 
@@ -870,6 +913,18 @@ async def packaging_node(state: ProjectState) -> dict:
         arch_md = packaging_agent.generate_architecture_md(proj_name, plan_json if isinstance(plan_json, dict) else {}, arch_json if isinstance(arch_json, dict) else {})
         api_md = packaging_agent.generate_api_docs_md(proj_name)
 
+    files_map = dict(state.get("files", {}) or {})
+    zip_path = global_project_exporter.export_project(proj_name, files_map)
+
+    # Copy to standard zip path for backward compatibility
+    safe_name = "".join([c if c.isalnum() or c in " -_" else "_" for c in proj_name]).strip()
+    standard_zip_path = Path("generated_projects") / f"{safe_name}.zip"
+    try:
+        import shutil
+        shutil.copy2(zip_path, standard_zip_path)
+    except Exception as e:
+        _logger.error(f"Failed to copy zip: {e}")
+
     agent_timers["packaging"] = timer.elapsed
     _fire_lifecycle("agent_completed", "packaging", duration=timer.elapsed)
 
@@ -877,7 +932,11 @@ async def packaging_node(state: ProjectState) -> dict:
         "architecture_report": arch_md,
         "api_documentation": api_md,
         "current_step": "packaging",
-        "stream_events": ["✔ Project Bundled with Architecture & API Docs"]
+        "zip_path": str(zip_path),
+        "stream_events": [
+            "✔ Project Bundled with Architecture & API Docs",
+            f"✔ Exporter generated ZIP archive: {zip_path.name}"
+        ]
     }
 
 
