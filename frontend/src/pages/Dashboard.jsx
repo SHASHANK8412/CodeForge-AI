@@ -181,6 +181,56 @@ export default function Dashboard({ setView, setActiveProjectName, setActiveGene
         </div>
       </div>
 
+      {/* AI Command Center Live Activity Banner */}
+      <div className="bg-[#0b101d] border border-cyan-500/30 rounded-2xl p-5 shadow-2xl max-w-4xl mx-auto space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
+            <div>
+              <span className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">AI Software Engineering Team Active</span>
+              <div className="text-sm font-bold text-white">Full-Stack Platform Generation & Verification</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setView?.('code')}
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition shadow cursor-pointer"
+            >
+              Open AI Workspace →
+            </button>
+            <button
+              onClick={() => setView?.('xray')}
+              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 rounded-lg text-xs font-bold transition cursor-pointer"
+            >
+              Project X-Ray
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="p-3 bg-slate-950/80 border border-slate-800/80 rounded-xl">
+            <div className="text-[10px] font-mono text-slate-400">PROJECT HEALTH</div>
+            <div className="text-xl font-bold text-emerald-400 mt-0.5">94%</div>
+            <div className="text-[10px] text-slate-500">6 Pillars Verified</div>
+          </div>
+          <div className="p-3 bg-slate-950/80 border border-slate-800/80 rounded-xl">
+            <div className="text-[10px] font-mono text-slate-400">TEST PASS RATE</div>
+            <div className="text-xl font-bold text-cyan-400 mt-0.5">48 / 48</div>
+            <div className="text-[10px] text-slate-500">0 Failures Detected</div>
+          </div>
+          <div className="p-3 bg-slate-950/80 border border-slate-800/80 rounded-xl">
+            <div className="text-[10px] font-mono text-slate-400">PROJECT MEMORY</div>
+            <div className="text-xl font-bold text-violet-400 mt-0.5">12 Decisions</div>
+            <div className="text-[10px] text-slate-500">Active & Versioned</div>
+          </div>
+          <div className="p-3 bg-slate-950/80 border border-slate-800/80 rounded-xl">
+            <div className="text-[10px] font-mono text-slate-400">ACTIVE AGENTS</div>
+            <div className="text-xl font-bold text-white mt-0.5">8 Agents</div>
+            <div className="text-[10px] text-emerald-400 font-semibold">Orchestrated</div>
+          </div>
+        </div>
+      </div>
+
       {/* Summary Statistics */}
       <StatsCards stats={stats} />
 

@@ -68,6 +68,7 @@ from backend.generation.routes import router as generation_router
 from backend.routes.execution_routes import router as execution_router
 from backend.routes.security_routes import router as security_router
 from backend.routes.project_memory_routes import router as project_memory_router
+from backend.routes.workspace_ide_routes import router as workspace_ide_router
 
 app = FastAPI(
     title="AIForge API",
@@ -80,6 +81,7 @@ app.include_router(generation_router)
 app.include_router(execution_router)
 app.include_router(security_router)
 app.include_router(project_memory_router)
+app.include_router(workspace_ide_router)
 
 from backend.observability.service import global_opentelemetry_service
 

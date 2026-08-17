@@ -33732,7 +33732,7 @@
     ],
     "events": [
       {
-        "id": "evt_j_l6Fni6N_s",
+        "id": "evt_TpOGPpAgIRQ",
         "type": "approval_rejected",
         "agent": null,
         "message": "Human rejected architecture stage. Revising with feedback: Please add PostgreSQL schema with roles....",
@@ -33740,10 +33740,10 @@
           "feedback": "Please add PostgreSQL schema with roles.",
           "stage": "architecture"
         },
-        "timestamp": "2026-08-17T13:15:10.252641+00:00"
+        "timestamp": "2026-08-17T13:26:10.415552+00:00"
       },
       {
-        "id": "evt_rdjA7yEKWWs",
+        "id": "evt_yJJkRAvw4Fo",
         "type": "approval_approved",
         "agent": null,
         "message": "Human approved architecture stage. Resuming workflow...",
@@ -33751,13 +33751,13 @@
           "notes": "Approved for parallel generation.",
           "stage": "architecture"
         },
-        "timestamp": "2026-08-17T13:15:10.358164+00:00"
+        "timestamp": "2026-08-17T13:26:10.523042+00:00"
       }
     ],
     "started_at": null,
     "completed_at": null,
     "error": null,
-    "created_at": "2026-08-17T13:15:09.868882+00:00"
+    "created_at": "2026-08-17T13:26:10.024333+00:00"
   },
   "test-proj-rest-002": {
     "generation_id": "test-proj-rest-002",
@@ -33969,7 +33969,7 @@
     ],
     "events": [
       {
-        "id": "evt_KGkDScOQaCA",
+        "id": "evt_r3BQAYFCJlw",
         "type": "approval_rejected",
         "agent": null,
         "message": "Human rejected architecture stage. Revising with feedback: Add tag support....",
@@ -33977,10 +33977,10 @@
           "feedback": "Add tag support.",
           "stage": "architecture"
         },
-        "timestamp": "2026-08-17T13:15:10.824941+00:00"
+        "timestamp": "2026-08-17T13:26:10.997710+00:00"
       },
       {
-        "id": "evt_U0mECJTgy2I",
+        "id": "evt_BlwLiVuU_q8",
         "type": "approval_approved",
         "agent": null,
         "message": "Human approved architecture stage. Resuming workflow...",
@@ -33988,12 +33988,12 @@
           "notes": "All good.",
           "stage": "architecture"
         },
-        "timestamp": "2026-08-17T13:15:10.933370+00:00"
+        "timestamp": "2026-08-17T13:26:11.111989+00:00"
       }
     ],
     "started_at": null,
     "completed_at": null,
     "error": null,
-    "created_at": "2026-08-17T13:15:10.409826+00:00"
+    "created_at": "2026-08-17T13:26:10.575373+00:00"
   }
 }

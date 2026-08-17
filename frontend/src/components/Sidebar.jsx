@@ -159,8 +159,9 @@ function Sidebar({ currentView, setView }) {
     const coreTabs = [
         { key: "dashboard", label: "Dashboard", icon: <FaHome size={14} /> },
         { key: "create", label: "New Project", icon: <FaPlus size={14} /> },
-        { key: "project-overview", label: "Project Memory", icon: <FaFolderOpen size={14} /> },
         { key: "code", label: "Workspace", icon: <FaCode size={14} /> },
+        { key: "xray", label: "Project X-Ray", icon: <FaBrain size={14} /> },
+        { key: "project-overview", label: "Project Memory", icon: <FaFolderOpen size={14} /> },
         { key: "metrics", label: "AI Review", icon: <FaChartBar size={14} /> },
         { key: "observability", label: "DevOps", icon: <FaBrain size={14} /> },
         { key: "deploy", label: "Deployments", icon: <FaRocket size={14} /> },

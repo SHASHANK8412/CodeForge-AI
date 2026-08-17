@@ -25,7 +25,10 @@ import {
   applyFix,
   fetchSnapshots,
   rollbackSnapshot,
-  runAutonomousRepair
+  runAutonomousRepair,
+  fetchProjectProblems,
+  fetchProjectChanges,
+  fetchAgentTimeline
 } from '../services/project';
 import { fetchGenerationStatus, fetchGitOverview } from '../services/workspace';
 
@@ -71,6 +74,9 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
   const [generationStatus, setGenerationStatus] = useState(null);
   const [gitOverview, setGitOverview] = useState(null);
   const [activeAgent, setActiveAgent] = useState(null);
+  const [problems, setProblems] = useState([]);
+  const [changes, setChanges] = useState([]);
+  const [timeline, setTimeline] = useState([]);
 
   // Export prompts
   const [exportPrompt, setExportPrompt] = useState(false);
@@ -110,9 +116,25 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
     }
   };
 
+  const loadWorkspaceDetails = async () => {
+    try {
+      const [probs, chngs, tl] = await Promise.all([
+        fetchProjectProblems(generationId),
+        fetchProjectChanges(generationId),
+        fetchAgentTimeline(generationId)
+      ]);
+      if (probs && probs.length) setProblems(probs);
+      if (chngs) setChanges(chngs);
+      if (tl) setTimeline(tl);
+    } catch (err) {
+      console.warn('Workspace details unavailable:', err);
+    }
+  };
+
   useEffect(() => {
     loadFiles();
     loadSnapshots();
+    loadWorkspaceDetails();
   }, [generationId]);
 
   useEffect(() => {
@@ -498,8 +520,10 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
   return (
     <div className="h-full w-full bg-[#090d16] text-slate-100 font-sans flex flex-col min-h-0 min-w-0 overflow-hidden select-none">
       <WorkspaceHeader
-        projectName={projectData?.project_name || 'FoodDelivery AI'}
+        projectName={projectData?.project_name || 'AIForge Application'}
         generationId={generationId}
+        status={generationStatus?.status || 'READY'}
+        hasUnsavedChanges={Object.keys(unsavedChanges).length > 0}
         onBackToGeneration={handleBackToGeneration}
         onRun={handleRun}
         onTest={handleTest}
@@ -507,6 +531,9 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
         onQualityReport={handleQualityReport}
         onDeploy={handleDeploy}
         onDownload={handleDownloadZipTrigger}
+        onOpenCommandPalette={() => setPaletteOpen(true)}
+        onOpenMemory={() => setView ? setView('overview') : window.location.href = '/projects'}
+        onAutoRepair={handleRunAutoRepair}
       />
 
       <div className="flex-1 flex min-h-0 min-w-0 overflow-hidden relative">
@@ -571,13 +598,15 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
               activeTab={bottomTab}
               onTabChange={setBottomTab}
               terminalOutput={terminalOutput}
-              terminalStatus={isRunning ? 'running' : 'idle'}
               onClearTerminal={() => setTerminalOutput('')}
-              problems={reviewData?.issues || []}
+              problems={problems.length > 0 ? problems : (reviewData?.issues || [])}
               testResult={testModalData}
-              gitOverview={gitOverview}
-              reviewData={reviewData}
+              changes={changes}
+              timeline={timeline}
               onOpenProblem={(issue) => handleSelectFinding(issue.file || issue.path, issue.line || issue.line_number || 1)}
+              onOpenDiff={(ch) => handleSelectionAction('fix', ch.path)}
+              onRunTests={handleTest}
+              onDebugWithAI={handleRunAutoRepair}
             />
           </div>
         </div>

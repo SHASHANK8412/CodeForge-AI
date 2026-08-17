@@ -146,3 +146,30 @@ export async function runAutonomousRepair(projectId) {
   return res.data;
 }
 
+export async function fetchProjectProblems(projectId) {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/project/${projectId}/problems`, { timeout: 10000 });
+    return res.data?.problems || [];
+  } catch (err) {
+    return [];
+  }
+}
+
+export async function fetchProjectChanges(projectId) {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/project/${projectId}/changes`, { timeout: 10000 });
+    return res.data?.changes || [];
+  } catch (err) {
+    return [];
+  }
+}
+
+export async function fetchAgentTimeline(projectId) {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/project/${projectId}/timeline`, { timeout: 10000 });
+    return res.data?.events || [];
+  } catch (err) {
+    return [];
+  }
+}
+

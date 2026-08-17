@@ -19,6 +19,7 @@ import QualityCenter from "./pages/QualityCenter";
 import DeploymentCenter from "./pages/DeploymentCenter";
 import ProjectDetails from "./pages/ProjectDetails";
 import ProjectOverviewPage from "./pages/ProjectOverviewPage";
+import ProjectXRayPage from "./pages/ProjectXRayPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -117,6 +118,11 @@ function AppContent() {
                 {(view === "project-overview" || view === "project-memory") && (
                     <ProtectedRoute onRedirectLogin={() => setView("login")}>
                         <ProjectOverviewPage projectId={activeProjectName || activeGenerationId} setView={setView} setActiveProjectName={setActiveProjectName} setActiveGenerationId={setActiveGenerationId} />
+                    </ProtectedRoute>
+                )}
+                {view === "xray" && (
+                    <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                        <ProjectXRayPage projectId={activeProjectName || activeGenerationId} setView={setView} />
                     </ProtectedRoute>
                 )}
                 {view === "metrics" && (
