@@ -131,7 +131,15 @@ class GenerationStore:
             return {}
 
     def _save(self, data: Dict[str, Any]) -> None:
-        self._path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        for attempt in range(3):
+            try:
+                self._path.parent.mkdir(parents=True, exist_ok=True)
+                self._path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+                return
+            except OSError:
+                if attempt == 2:
+                    pass
+                time.sleep(0.05)
 
     def _read(self) -> Dict[str, Any]:
         """Load under lock."""
