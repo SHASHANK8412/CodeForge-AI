@@ -173,7 +173,7 @@ export async function fetchLessons() {
  * Fetches dashboard trend metrics.
  */
 export async function fetchMetrics() {
-    const response = await fetch(`${API}/metrics`);
+    const response = await fetch(`${API}/reflection/metrics`);
     if (!response.ok) {
         throw new Error(`Failed to fetch metrics: ${response.status}`);
     }

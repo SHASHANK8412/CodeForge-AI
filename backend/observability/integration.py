@@ -28,7 +28,10 @@ class TelemetryMultiSystemBridge:
     def correlate_flight_recorder(self, project_id: str, event_type: str, trace_id: str):
         _logger.info(f"[TelemetryBridge] Correlating Flight Recorder '{event_type}' with trace '{trace_id}'")
         try:
-            global_flight_recorder.record_event(project_id, "OpenTelemetry", event_type, {"trace_id": trace_id})
+            global_flight_recorder.record_event(
+                trace_id, project_id, "OpenTelemetry", "OpenTelemetry", event_type,
+                reason=f"trace_id={trace_id}"
+            )
         except Exception as e:
             _logger.warning(f"Failed to record telemetry event: {e}")
 

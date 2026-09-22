@@ -46,6 +46,7 @@ export default function DebugActivityPanel({
     TYPE_ERROR: 'bg-purple-900/60 text-purple-300 border-purple-500/40',
     RUNTIME_ERROR: 'bg-amber-900/60 text-amber-300 border-amber-500/40',
     TEST_ASSERTION_ERROR: 'bg-rose-950/80 text-rose-200 border-rose-600/50',
+    ASSERTION_FAILURE: 'bg-rose-950/80 text-rose-200 border-rose-600/50',
     DEPENDENCY_ERROR: 'bg-orange-900/60 text-orange-300 border-orange-500/40',
     CONFIGURATION_ERROR: 'bg-yellow-900/60 text-yellow-300 border-yellow-500/40',
     DATABASE_ERROR: 'bg-red-900/60 text-red-300 border-red-500/40',
