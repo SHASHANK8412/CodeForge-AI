@@ -225,5 +225,83 @@
     "estimated_cost": 0.000456,
     "duration_seconds": 0.001,
     "created_at": "2026-09-22 10:41:06"
+  },
+  {
+    "id": "run_5bd2b23f",
+    "user_id": "user_default",
+    "project_id": "aiforge-fooddelivery-ai",
+    "mode": "AGENT",
+    "prompt": "Say hello in one short sentence.",
+    "status": "COMPLETED",
+    "model_id": "claude-3-5-sonnet",
+    "response_text": "Synthesized intelligent reasoning for: 'Say hello in one short sentence....' using Claude 3.5 Sonnet.\n\n**Verified Sourced References**:\n- `RFC-104-Order-Pipeline.md:L12-L24`: The Order Processing Pipeline consumes order events from Kafka topic 'orders.created' and dispatches matching courier di...\n- `RFC-104-Order-Pipeline.md:L45-L58`: Database transaction isolation uses Serializable level for ledger write models and Read Committed for telemetry analytic...\n",
+    "steps": [
+      {
+        "step_id": "stp_155a46",
+        "title": "Understanding prompt & retrieving semantic memories",
+        "stage": "UNDERSTAND",
+        "status": "COMPLETED",
+        "tool_used": null,
+        "output_summary": null,
+        "duration_seconds": 0.2
+      },
+      {
+        "step_id": "stp_9ba10a",
+        "title": "Planning multi-step execution in AGENT mode",
+        "stage": "PLAN",
+        "status": "COMPLETED",
+        "tool_used": null,
+        "output_summary": null,
+        "duration_seconds": 0.3
+      },
+      {
+        "step_id": "stp_74baa6",
+        "title": "Executed 3 tools in sandbox",
+        "stage": "EXECUTION",
+        "status": "COMPLETED",
+        "tool_used": "web_search",
+        "output_summary": null,
+        "duration_seconds": 0.4
+      },
+      {
+        "step_id": "stp_45b6dc",
+        "title": "Verified invariants & generated sourced citations",
+        "stage": "VERIFICATION",
+        "status": "COMPLETED",
+        "tool_used": null,
+        "output_summary": null,
+        "duration_seconds": 0.2
+      },
+      {
+        "step_id": "stp_0f74bf",
+        "title": "Final response deliverable synthesized",
+        "stage": "RESPONSE",
+        "status": "COMPLETED",
+        "tool_used": null,
+        "output_summary": null,
+        "duration_seconds": 0.3
+      }
+    ],
+    "citations": [
+      {
+        "source": "RFC-104-Order-Pipeline.md",
+        "ref": "RFC-104-Order-Pipeline.md:L12-L24",
+        "snippet": "The Order Processing Pipeline consumes order events from Kafka topic 'orders.created' and dispatches matching courier di..."
+      },
+      {
+        "source": "RFC-104-Order-Pipeline.md",
+        "ref": "RFC-104-Order-Pipeline.md:L45-L58",
+        "snippet": "Database transaction isolation uses Serializable level for ledger write models and Read Committed for telemetry analytic..."
+      }
+    ],
+    "tools_used": [
+      "web_search",
+      "code_execution",
+      "data_analyzer"
+    ],
+    "total_tokens": 52,
+    "estimated_cost": 0.000456,
+    "duration_seconds": 0.032,
+    "created_at": "2026-09-22 10:59:51"
   }
 ]

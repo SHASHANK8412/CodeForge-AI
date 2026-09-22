@@ -234,5 +234,129 @@
     ],
     "verifiable_anchor_ref": "0x413e37488edd426888faa6358c438027",
     "created_at": "2026-08-30 16:49:07"
+  },
+  {
+    "id": "wf_439c0d5c",
+    "name": "Autonomous Flow: Continuous container vulnerability ",
+    "goal_description": "Continuous container vulnerability scan and patch gating",
+    "trigger_type": "MANUAL",
+    "trigger_event": "USER_INTENT_DISPATCH",
+    "status": "COMPLETED",
+    "autonomy_level": "LEVEL_2_APPROVAL_REQUIRED",
+    "progress_percent": 100,
+    "steps_dag": [
+      {
+        "id": "s1",
+        "title": "Autonomous Goal Decomposition: 'Continuous container vulnerability scan '",
+        "step_type": "RESEARCH",
+        "assigned_agent": "Research Specialist Agent",
+        "status": "COMPLETED",
+        "duration_seconds": 0.4,
+        "output_summary": "Parsed requirements and mapped multi-agent execution DAG.",
+        "requires_approval": false,
+        "is_approved": true,
+        "remediation_action": null
+      },
+      {
+        "id": "s2",
+        "title": "Execute Specialist Agents & Sandbox Testing",
+        "step_type": "CODE_ANALYSIS",
+        "assigned_agent": "Lead Coding Agent",
+        "status": "COMPLETED",
+        "duration_seconds": 0.6,
+        "output_summary": "Verified code AST bounds and executed test runner in sandbox vNode-22.",
+        "requires_approval": false,
+        "is_approved": true,
+        "remediation_action": null
+      },
+      {
+        "id": "s3",
+        "title": "Zero-Trust Security Verification Gate",
+        "step_type": "APPROVAL_GATE",
+        "assigned_agent": "Defensive Security Agent",
+        "status": "COMPLETED",
+        "duration_seconds": 0.3,
+        "output_summary": "Validated zero-trust RBAC permissions and verified zero high-risk exposure.",
+        "requires_approval": true,
+        "is_approved": true,
+        "remediation_action": "Confirm artifact production approval"
+      },
+      {
+        "id": "s4",
+        "title": "Synthesize Deliverable & Anchor Ledger Block",
+        "step_type": "VERIFICATION",
+        "assigned_agent": "Consensus Verification Judge",
+        "status": "COMPLETED",
+        "duration_seconds": 0.2,
+        "output_summary": "Anchored cryptographic SHA-256 certificate to verifiable ledger.",
+        "requires_approval": false,
+        "is_approved": true,
+        "remediation_action": null
+      }
+    ],
+    "verifiable_anchor_ref": "0x06c8c6913c7c4f488723b69d5aec858e",
+    "created_at": "2026-09-22 11:21:40"
+  },
+  {
+    "id": "wf_5d494d55",
+    "name": "Autonomous Flow: Continuous container vulnerability ",
+    "goal_description": "Continuous container vulnerability scan and patch gating",
+    "trigger_type": "MANUAL",
+    "trigger_event": "USER_INTENT_DISPATCH",
+    "status": "COMPLETED",
+    "autonomy_level": "LEVEL_2_APPROVAL_REQUIRED",
+    "progress_percent": 100,
+    "steps_dag": [
+      {
+        "id": "s1",
+        "title": "Autonomous Goal Decomposition: 'Continuous container vulnerability scan '",
+        "step_type": "RESEARCH",
+        "assigned_agent": "Research Specialist Agent",
+        "status": "COMPLETED",
+        "duration_seconds": 0.4,
+        "output_summary": "Parsed requirements and mapped multi-agent execution DAG.",
+        "requires_approval": false,
+        "is_approved": true,
+        "remediation_action": null
+      },
+      {
+        "id": "s2",
+        "title": "Execute Specialist Agents & Sandbox Testing",
+        "step_type": "CODE_ANALYSIS",
+        "assigned_agent": "Lead Coding Agent",
+        "status": "COMPLETED",
+        "duration_seconds": 0.6,
+        "output_summary": "Verified code AST bounds and executed test runner in sandbox vNode-22.",
+        "requires_approval": false,
+        "is_approved": true,
+        "remediation_action": null
+      },
+      {
+        "id": "s3",
+        "title": "Zero-Trust Security Verification Gate",
+        "step_type": "APPROVAL_GATE",
+        "assigned_agent": "Defensive Security Agent",
+        "status": "COMPLETED",
+        "duration_seconds": 0.3,
+        "output_summary": "Validated zero-trust RBAC permissions and verified zero high-risk exposure.",
+        "requires_approval": true,
+        "is_approved": true,
+        "remediation_action": "Confirm artifact production approval"
+      },
+      {
+        "id": "s4",
+        "title": "Synthesize Deliverable & Anchor Ledger Block",
+        "step_type": "VERIFICATION",
+        "assigned_agent": "Consensus Verification Judge",
+        "status": "COMPLETED",
+        "duration_seconds": 0.2,
+        "output_summary": "Anchored cryptographic SHA-256 certificate to verifiable ledger.",
+        "requires_approval": false,
+        "is_approved": true,
+        "remediation_action": null
+      }
+    ],
+    "verifiable_anchor_ref": "0xafda4b76a6ca4a71a70212a22cddf9ae",
+    "created_at": "2026-09-22 11:47:59"
   }
 ]

@@ -1,0 +1,4 @@
+{
+  "error": "Missing module",
+  "solution": "pip install"
+}

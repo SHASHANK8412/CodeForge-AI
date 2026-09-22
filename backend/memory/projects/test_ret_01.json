@@ -4,10 +4,10 @@
   "framework": "FullStack",
   "quality_score": 97.0,
   "tags": [
-    "create",
     "e-commerce",
     "dashboard",
-    "fullstack"
+    "fullstack",
+    "create"
   ],
   "knowledge": {
     "ui_components": [
@@ -16,5 +16,5 @@
       }
     ]
   },
-  "indexed_at": "2026-08-01T12:37:01Z"
+  "indexed_at": "2026-09-22T05:35:54Z"
 }

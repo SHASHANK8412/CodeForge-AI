@@ -34173,5 +34173,539 @@
     "completed_at": "2026-08-09T14:00:00.000Z",
     "error": null,
     "created_at": "2026-08-09T14:00:00.000Z"
+  },
+  "aiforge-59225e58": {
+    "generation_id": "aiforge-59225e58",
+    "project_id": "aiforge-59225e58",
+    "user_id": "usr_shashank_default",
+    "prompt": "Project TaskForge AI",
+    "status": "completed",
+    "current_agent": "deployment",
+    "progress": 100,
+    "agents": [
+      {
+        "name": "planner",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "architect",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "frontend",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "backend",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "database",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "assembly",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "reviewer",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "documentation",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "build_validation",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "dependency_manager",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "security_scan",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "performance",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "execution_validation",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "testing",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "debug",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "patch",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "packaging",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "deployment",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      }
+    ],
+    "events": [],
+    "started_at": "2026-08-09T14:00:00.000Z",
+    "completed_at": "2026-08-09T14:00:00.000Z",
+    "error": null,
+    "created_at": "2026-08-09T14:00:00.000Z"
+  },
+  "aiforge-b726f3a3": {
+    "generation_id": "aiforge-b726f3a3",
+    "project_id": "aiforge-b726f3a3",
+    "user_id": "usr_shashank_default",
+    "prompt": "Project TaskForge AI",
+    "status": "completed",
+    "current_agent": "deployment",
+    "progress": 100,
+    "agents": [
+      {
+        "name": "planner",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "architect",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "frontend",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "backend",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "database",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "assembly",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "reviewer",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "documentation",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "build_validation",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "dependency_manager",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "security_scan",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "performance",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "execution_validation",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "testing",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "debug",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "patch",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "packaging",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "deployment",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      }
+    ],
+    "events": [],
+    "started_at": "2026-08-09T14:00:00.000Z",
+    "completed_at": "2026-08-09T14:00:00.000Z",
+    "error": null,
+    "created_at": "2026-08-09T14:00:00.000Z"
+  },
+  "aiforge-8d3a160b": {
+    "generation_id": "aiforge-8d3a160b",
+    "project_id": "aiforge-8d3a160b",
+    "user_id": "usr_shashank_default",
+    "prompt": "Project TaskForge AI",
+    "status": "completed",
+    "current_agent": "deployment",
+    "progress": 100,
+    "agents": [
+      {
+        "name": "planner",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "architect",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "frontend",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "backend",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "database",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "assembly",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "reviewer",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "documentation",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "build_validation",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "dependency_manager",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "security_scan",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "performance",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "execution_validation",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "testing",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "debug",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "patch",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "packaging",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      },
+      {
+        "name": "deployment",
+        "status": "completed",
+        "started_at": "2026-08-09T14:00:00.000Z",
+        "completed_at": "2026-08-09T14:00:00.000Z",
+        "duration": 1.2,
+        "retry_count": 0,
+        "error": null
+      }
+    ],
+    "events": [],
+    "started_at": "2026-08-09T14:00:00.000Z",
+    "completed_at": "2026-08-09T14:00:00.000Z",
+    "error": null,
+    "created_at": "2026-08-09T14:00:00.000Z"
   }
 }
