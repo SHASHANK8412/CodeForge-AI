@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   FaCheckCircle,
   FaTimesCircle,
@@ -51,7 +51,41 @@ const NODES = [
   { id: 'deployment', label: 'Deployment Agent', icon: FaCloudUploadAlt, x: 375, y: 970, role: 'Ships the build to the target environment' },
 ];
 
-const NODE_W = 150; // px, matches the box width below
+const EDGES = [
+  ['planner', 'architect'],
+  ['architect', 'hitl_arch'],
+  ['hitl_arch', 'frontend'], ['hitl_arch', 'backend'], ['hitl_arch', 'database'],
+  ['frontend', 'assembly'], ['backend', 'assembly'], ['database', 'assembly'],
+  ['assembly', 'reviewer'],
+  ['reviewer', 'build_validation'], ['reviewer', 'dependency_manager'], ['reviewer', 'security_scan'], ['reviewer', 'performance'],
+  ['build_validation', 'execution_validation'], ['dependency_manager', 'execution_validation'], ['security_scan', 'execution_validation'], ['performance', 'execution_validation'],
+  ['execution_validation', 'testing'],
+  ['testing', 'documentation'], ['testing', 'debug_loop'],
+  ['documentation', 'packaging'], ['debug_loop', 'packaging'],
+  ['packaging', 'deployment'],
+];
+
+const NODE_W = 150;
+const NODE_H = 74;
+const nodeById = Object.fromEntries(NODES.map((n) => [n.id, n]));
+const centerX = (n) => n.x + NODE_W / 2;
+
+function curvePath(from, to) {
+  const x1 = centerX(from);
+  const y1 = from.y + NODE_H;
+  const x2 = centerX(to);
+  const y2 = to.y;
+  const midY = (y1 + y2) / 2;
+  return `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
+}
+
+const STATUS_COLOR = {
+  running: '#22d3ee',
+  completed: '#10b981',
+  failed: '#f43f5e',
+  idle: '#334155',
+  waiting: '#334155',
+};
 
 export default function AgentOrchestrationGraph({
   generationStatus = null,
@@ -86,6 +120,14 @@ export default function AgentOrchestrationGraph({
     return (agent.status || 'waiting').toLowerCase();
   };
 
+  // Precompute once per render pass so both the SVG edges and the node cards agree.
+  const statusById = useMemo(() => {
+    const map = {};
+    NODES.forEach((n) => { map[n.id] = getNodeStatus(n.id); });
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generationStatus]);
+
   const getNodeBadge = (status) => {
     if (status === 'running') {
       return (
@@ -112,7 +154,6 @@ export default function AgentOrchestrationGraph({
       );
     }
     if (status === 'idle') {
-      // No generation is running at all - distinct from "queued behind a live run".
       return (
         <span className="text-[9px] font-mono font-semibold text-slate-600 bg-slate-900/60 px-1.5 py-0.5 rounded">
           IDLE
@@ -126,84 +167,122 @@ export default function AgentOrchestrationGraph({
     );
   };
 
+  const passedCount = Object.values(statusById).filter((s) => s === 'completed').length;
+
   return (
     <div className="bg-[#090d16] border border-slate-800/90 rounded-2xl p-4 font-sans select-none relative overflow-hidden shadow-2xl">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-800/80 pb-3 mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500/20 to-indigo-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.25)]">
             <FaRobot className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-sm font-extrabold text-white">Autonomous Software Factory — Agent Org Chart</h3>
+            <h3 className="text-sm font-extrabold text-white tracking-tight">Autonomous Software Factory — Agent Org Chart</h3>
             <p className="text-[11px] text-slate-400">Live LangGraph pipeline: plan → build → review → secure → test → self-heal → ship</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 text-[10px] font-mono">
-          <span className="flex items-center gap-1 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-400" /> Passed</span>
-          <span className="flex items-center gap-1 text-cyan-400"><span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" /> Running</span>
-          <span className="flex items-center gap-1 text-rose-400"><span className="w-2 h-2 rounded-full bg-rose-400" /> Failed</span>
-          <span className="flex items-center gap-1 text-amber-400"><span className="w-2 h-2 rounded-full bg-amber-400" /> Retry Loop</span>
+        <div className="flex items-center gap-3">
+          {generationStatus?.agents && (
+            <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-1 rounded-lg">
+              {passedCount}/{NODES.length} PASSED
+            </span>
+          )}
+          <div className="flex items-center gap-2.5 text-[10px] font-mono">
+            <span className="flex items-center gap-1 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-400" /> Passed</span>
+            <span className="flex items-center gap-1 text-cyan-400"><span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" /> Running</span>
+            <span className="flex items-center gap-1 text-rose-400"><span className="w-2 h-2 rounded-full bg-rose-400" /> Failed</span>
+            <span className="flex items-center gap-1 text-amber-400"><span className="w-2 h-2 rounded-full bg-amber-400" /> Retry Loop</span>
+          </div>
         </div>
       </div>
 
       {/* Visual Workflow Graph */}
-      <div className="relative w-full h-[1050px] bg-[#060911] border border-slate-800/60 rounded-xl p-4 overflow-auto custom-scrollbar">
+      <div
+        className="relative w-full h-[1050px] bg-[#060911] border border-slate-800/60 rounded-xl p-4 overflow-auto custom-scrollbar"
+        style={{
+          backgroundImage: 'radial-gradient(circle, rgba(100,116,139,0.16) 1px, transparent 1px)',
+          backgroundSize: '22px 22px',
+        }}
+      >
         <div className="relative" style={{ width: '900px', height: '1030px' }}>
-          <svg className="absolute inset-0 w-full h-full pointer-events-none stroke-slate-700/60 stroke-[1.5] fill-none">
-            <path d="M 450 75 L 450 110" markerEnd="url(#arrow)" />
-            <path d="M 450 155 L 450 190" markerEnd="url(#arrow)" />
+          <svg className="absolute inset-0 w-full h-full pointer-events-none fill-none">
+            {EDGES.map(([fromId, toId]) => {
+              const from = nodeById[fromId];
+              const to = nodeById[toId];
+              const fromStatus = statusById[fromId];
+              const toStatus = statusById[toId];
+              const active = fromStatus === 'completed' || fromStatus === 'success';
+              const isRunning = toStatus === 'running';
+              const isFailed = toStatus === 'failed';
+              const color = isFailed ? STATUS_COLOR.failed : isRunning ? STATUS_COLOR.running : active ? STATUS_COLOR.completed : STATUS_COLOR.idle;
 
-            <path d="M 450 235 L 150 280" markerEnd="url(#arrow)" />
-            <path d="M 450 235 L 450 280" markerEnd="url(#arrow)" />
-            <path d="M 450 235 L 750 280" markerEnd="url(#arrow)" />
-
-            <path d="M 150 325 L 450 370" markerEnd="url(#arrow)" />
-            <path d="M 450 325 L 450 370" markerEnd="url(#arrow)" />
-            <path d="M 750 325 L 450 370" markerEnd="url(#arrow)" />
-
-            <path d="M 450 415 L 450 450" markerEnd="url(#arrow)" />
-
-            <path d="M 450 495 L 110 540" markerEnd="url(#arrow)" />
-            <path d="M 450 495 L 330 540" markerEnd="url(#arrow)" />
-            <path d="M 450 495 L 570 540" markerEnd="url(#arrow)" />
-            <path d="M 450 495 L 790 540" markerEnd="url(#arrow)" />
-
-            <path d="M 110 585 L 450 630" markerEnd="url(#arrow)" />
-            <path d="M 330 585 L 450 630" markerEnd="url(#arrow)" />
-            <path d="M 570 585 L 450 630" markerEnd="url(#arrow)" />
-            <path d="M 790 585 L 450 630" markerEnd="url(#arrow)" />
-
-            <path d="M 450 675 L 450 710" markerEnd="url(#arrow)" />
-
-            <path d="M 430 755 L 150 800" markerEnd="url(#arrow)" />
-            <path d="M 470 755 L 750 800" markerEnd="url(#arrow)" />
-
-            <path d="M 150 845 L 450 890" markerEnd="url(#arrow)" />
-            <path d="M 750 845 L 450 890" markerEnd="url(#arrow)" />
-
-            <path d="M 450 935 L 450 970" markerEnd="url(#arrow)" />
+              return (
+                <path
+                  key={`${fromId}-${toId}`}
+                  d={curvePath(from, to)}
+                  stroke={color}
+                  strokeWidth={active || isRunning ? 2 : 1.5}
+                  strokeOpacity={active || isRunning || isFailed ? 0.9 : 0.45}
+                  strokeDasharray={isRunning ? '6 6' : undefined}
+                  className={isRunning ? 'animate-dash-flow' : ''}
+                  markerEnd={isFailed ? 'url(#arrow-failed)' : isRunning ? 'url(#arrow-running)' : active ? 'url(#arrow-passed)' : 'url(#arrow-idle)'}
+                />
+              );
+            })}
 
             {/* Retry loop: debug_loop back to testing */}
-            <path d="M 800 800 C 870 730, 850 630, 525 705" strokeDasharray="4" stroke="#f59e0b" markerEnd="url(#arrow-loop)" />
+            <path
+              d="M 825 837 C 900 780, 880 700, 525 747"
+              strokeDasharray="4 5"
+              stroke="#f59e0b"
+              strokeWidth={2}
+              className={statusById.debug_loop === 'running' ? 'animate-dash-flow' : ''}
+              markerEnd="url(#arrow-loop)"
+            />
 
             <defs>
-              <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" />
-              </marker>
-              <marker id="arrow-loop" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b" />
-              </marker>
+              {[
+                ['arrow-idle', STATUS_COLOR.idle],
+                ['arrow-passed', STATUS_COLOR.completed],
+                ['arrow-running', STATUS_COLOR.running],
+                ['arrow-failed', STATUS_COLOR.failed],
+                ['arrow-loop', '#f59e0b'],
+              ].map(([id, color]) => (
+                <marker key={id} id={id} viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill={color} />
+                </marker>
+              ))}
             </defs>
           </svg>
 
           {/* Interactive Node Cards */}
           {NODES.map((node) => {
             const Icon = node.icon;
-            const status = getNodeStatus(node.id);
+            const status = statusById[node.id];
             const isSelected = selectedNode?.id === node.id;
-            const isActive = activeAgentName === node.id;
+            // Status is the authoritative live signal; activeAgentName can lag behind it
+            // once a run finishes, so it only ever adds emphasis, never overrides status.
+            const isActive = status === 'running' || (activeAgentName === node.id && status !== 'completed' && status !== 'failed');
+
+            const cardTone =
+              status === 'failed'
+                ? 'bg-gradient-to-br from-rose-950/50 to-slate-950/95 border-rose-600/60'
+                : isActive
+                ? 'bg-gradient-to-br from-cyan-950/50 to-slate-950/95 border-cyan-400/70 animate-node-glow'
+                : status === 'completed'
+                ? 'bg-gradient-to-br from-emerald-950/20 to-slate-950/95 border-emerald-700/40 hover:border-emerald-500/60'
+                : 'bg-slate-950/90 border-slate-800 hover:border-slate-600';
+
+            const iconTone =
+              status === 'failed'
+                ? 'bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/40'
+                : isActive
+                ? 'bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/50'
+                : status === 'completed'
+                ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-600/30'
+                : 'bg-slate-900 text-slate-500 ring-1 ring-slate-800';
 
             return (
               <div
@@ -213,18 +292,12 @@ export default function AgentOrchestrationGraph({
                   onSelectNode?.(node);
                 }}
                 style={{ left: `${node.x}px`, top: `${node.y}px`, width: `${NODE_W}px` }}
-                className={`absolute p-2.5 rounded-xl border transition-all duration-200 cursor-pointer shadow-lg z-10 ${
-                  isSelected
-                    ? 'bg-indigo-600/25 border-cyan-400 ring-2 ring-cyan-500/30'
-                    : isActive || status === 'running'
-                    ? 'bg-slate-900/90 border-cyan-500/60 shadow-cyan-500/10'
-                    : status === 'failed'
-                    ? 'bg-rose-950/40 border-rose-700/60'
-                    : 'bg-slate-950/90 border-slate-800 hover:border-slate-700 hover:bg-slate-900'
+                className={`absolute p-2.5 rounded-xl border transition-all duration-200 cursor-pointer shadow-lg z-10 hover:scale-[1.03] hover:shadow-xl ${
+                  isSelected ? 'ring-2 ring-cyan-400/60 border-cyan-400' : cardTone
                 }`}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <div className="p-1 rounded bg-slate-900 text-cyan-400">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${iconTone}`}>
                     <Icon className="w-3 h-3" />
                   </div>
                   {getNodeBadge(status)}
