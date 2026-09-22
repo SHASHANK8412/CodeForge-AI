@@ -89,6 +89,7 @@ function ChatBox() {
             sender: message.role === "assistant" ? "ai" : "user",
             text: message.content,
             metadata: message.metadata || {},
+            timestamp: message.timestamp,
         }));
 
     const loadConversation = async (conversationId) => {
@@ -692,7 +693,17 @@ function ChatBox() {
 
                         {messages.map((msg, index) => (
                             <div key={index} className="space-y-4">
-                                <Message sender={msg.sender} text={msg.text} />
+                                <Message
+                                    sender={msg.sender}
+                                    text={msg.text}
+                                    metadata={msg.metadata}
+                                    timestamp={msg.timestamp}
+                                    onRegenerate={
+                                        msg.sender === "ai" && !loading && messages[index - 1]?.sender === "user"
+                                            ? () => handleSend(messages[index - 1].text)
+                                            : undefined
+                                    }
+                                />
                                 {msg.filesDict && (
                                     <div className="space-y-4">
                                         <MemoryPanel
