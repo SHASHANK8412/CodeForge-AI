@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ProjectHeader from '../components/generation/ProjectHeader';
+import AgentOrchestrationGraph from '../components/generation/AgentOrchestrationGraph';
 import AgentPipeline from '../components/generation/AgentPipeline';
 import AgentCard from '../components/generation/AgentCard';
 import AgentLogs from '../components/generation/AgentLogs';
@@ -408,6 +409,9 @@ export default function GenerationDashboard({
           totalCount={totalCount}
           progress={progress}
         />
+
+        {/* Live Agent Org Chart - the full autonomous software factory pipeline */}
+        <AgentOrchestrationGraph generationStatus={generation} activeAgentName={currentAgent} />
 
         {/* Main 2-Column Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
