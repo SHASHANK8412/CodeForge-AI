@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 # --- What-If Engineering Simulator ---
 class SimulationRequest(BaseModel):
     project_id: str
-    proposed_change: str = Field(..., example="What happens if I switch PostgreSQL to MongoDB?")
+    proposed_change: str = Field(..., json_schema_extra={"example": "What happens if I switch PostgreSQL to MongoDB?"})
 
 
 class SimulationResult(BaseModel):

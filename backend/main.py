@@ -45,11 +45,22 @@ root_logger.addHandler(stream_handler)
 logging.getLogger("uvicorn.access").disabled = True
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from time import perf_counter
 from pydantic import BaseModel
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Start SRE scheduler within active loop context
+    try:
+        from backend.dashboard.monitoring_dashboard import global_scheduler
+        global_scheduler.start()
+    except Exception as e:
+        root_logger.warning(f"Could not start global_scheduler during lifespan startup: {e}")
+    yield
 
 from backend.graph.workflow import graph
 from backend.graph.parallel_workflow import parallel_graph as project_graph
@@ -91,7 +102,8 @@ from backend.routes.sprint_routes import router as sprint_routes
 app = FastAPI(
     title="AIForge API",
     description="Multi-Agent AI Software Engineer Backend",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 app.include_router(auth_router)
 app.include_router(observability_router)
@@ -414,11 +426,6 @@ def register_routers() -> None:
 register_routers()
 
 
-@app.on_event("startup")
-async def startup_event():
-    # Start SRE scheduler within active loop context
-    from backend.dashboard.monitoring_dashboard import global_scheduler
-    global_scheduler.start()
 
 
 class PromptRequest(BaseModel):

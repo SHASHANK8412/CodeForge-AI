@@ -78,8 +78,8 @@ class DiffRequest(BaseModel):
 def _validate_safe_path(rel_path: str) -> str:
     """Ensures relative path does not escape sandbox and is not a secret file."""
     clean_p = rel_path.replace("\\", "/").strip().lstrip("/")
-    if ".." in clean_p or clean_p.startswith("/") or is_secret_or_excluded_file(clean_p):
-        raise HTTPException(status_code=400, detail=f"Access denied or invalid file path: {rel_path}")
+    if ".." in clean_p or ".." in rel_path or clean_p.startswith("/") or is_secret_or_excluded_file(clean_p):
+        raise HTTPException(status_code=400, detail=f"Access denied: Path traversal or invalid file path '{rel_path}'")
     return clean_p
 
 
@@ -191,10 +191,25 @@ def get_workspace_file_content(project_id: str, path: str = Query(...)) -> Dict[
 
 @router.put("/{project_id}/file")
 def save_workspace_file(project_id: str, req: SaveFileRequest) -> Dict[str, Any]:
-    """Saves user modifications, updates incremental index, and records snapshot delta."""
+    """Saves user modifications, updates incremental index, validates syntax, and records snapshot delta."""
     clean_p = _validate_safe_path(req.path)
     files_map = _get_project_files_map(project_id)
     files_map[clean_p] = req.content
+
+    # Syntax validation
+    validation_errors: List[str] = []
+    if clean_p.endswith(".py"):
+        import ast
+        try:
+            ast.parse(req.content)
+        except SyntaxError as se:
+            validation_errors.append(f"Syntax error: {se}")
+    elif clean_p.endswith(".json"):
+        import json
+        try:
+            json.loads(req.content)
+        except Exception as je:
+            validation_errors.append(f"Syntax error: {je}")
 
     # 1. Update on disk if directory exists
     proj_dir = GENERATED_PROJECTS_DIR / project_id
@@ -217,19 +232,24 @@ def save_workspace_file(project_id: str, req: SaveFileRequest) -> Dict[str, Any]
         project_id=project_id,
         files_map=files_map,
         repair_reason=f"User edited {clean_p}",
-        changed_files=[clean_p]
+        changed_files=[clean_p],
+        change_source="USER"
     )
 
     _logger.info(f"Saved file '{clean_p}' for project '{project_id}' ({len(req.content)} chars)")
 
     return {
-        "status": "SUCCESS",
+        "success": True,
+        "status": "VALIDATION REQUIRED",
         "project_id": project_id,
         "path": clean_p,
         "file_hash": new_hash,
         "size": len(req.content.encode("utf-8")),
+        "validation_errors": validation_errors,
+        "changed_files": [clean_p],
         "message": f"File '{clean_p}' saved and incrementally indexed."
     }
+
 
 
 # ---------------------------------------------------------------------------

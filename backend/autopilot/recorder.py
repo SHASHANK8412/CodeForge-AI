@@ -47,19 +47,58 @@ class FlightRecorderStore:
 
     def record_event(
         self,
-        generation_id: str,
-        project_id: str,
-        stage: str,
-        agent: str,
-        event_type: str,
+        *args,
+        generation_id: Optional[str] = None,
+        project_id: Optional[str] = None,
+        stage: Optional[str] = None,
+        agent: Optional[str] = None,
+        event_type: Optional[str] = None,
         decision: Optional[str] = None,
         reason: Optional[str] = None,
         files_changed: Optional[List[str]] = None,
         quality_before: Optional[float] = None,
         quality_after: Optional[float] = None,
         test_before: Optional[int] = None,
-        test_after: Optional[int] = None
+        test_after: Optional[int] = None,
+        system: Optional[str] = None,
+        details: Optional[Any] = None,
+        **kwargs
     ) -> FlightRecorderEvent:
+        # Handle positional arguments
+        if len(args) >= 5:
+            generation_id = args[0]
+            project_id = args[1]
+            stage = args[2]
+            agent = args[3]
+            event_type = args[4]
+            if len(args) > 5 and decision is None:
+                decision = args[5]
+            if len(args) > 6 and reason is None:
+                reason = str(args[6])
+        elif len(args) in (3, 4):
+            # Shorthand convention: (project_id, agent_or_system, event_type, [details])
+            project_id = args[0]
+            agent = args[1]
+            stage = args[1]
+            event_type = args[2]
+            if len(args) == 4 and details is None:
+                details = args[3]
+
+        if system and not agent:
+            agent = system
+        if not stage:
+            stage = agent or "SYSTEM"
+        if not agent:
+            agent = stage or "system"
+        if not project_id:
+            project_id = "default"
+        if not generation_id:
+            generation_id = f"gen_{project_id}"
+        if not event_type:
+            event_type = kwargs.get("action", "unknown_event")
+        if details is not None and not reason:
+            reason = json.dumps(details) if isinstance(details, (dict, list)) else str(details)
+
         evt_id = f"fre_{secrets.token_urlsafe(8)}"
         evt = FlightRecorderEvent(
             id=evt_id,

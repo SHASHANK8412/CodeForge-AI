@@ -50,14 +50,14 @@ class ErrorClassifier:
     def classify(self, log_output: str) -> str:
         """Classifies error log into standard category."""
         if not log_output or not log_output.strip():
-            return "unknown_error"
+            return "UNKNOWN_ERROR"
 
         for pattern, category in self.rules:
             if re.search(pattern, log_output, re.IGNORECASE):
                 _logger.info(f"[ErrorClassifier] Matched rule '{pattern}' -> '{category}'")
-                return category.lower()
+                return category.upper()
 
-        return "runtime_error"
+        return "RUNTIME_ERROR"
 
     def classify_detailed(self, log_output: str) -> Dict[str, Any]:
         """Provides structured classification with severity and description."""
