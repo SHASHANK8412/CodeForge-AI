@@ -1,104 +1,94 @@
 import logging
 from typing import Dict, Any, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends, status
 from pydantic import BaseModel, Field
 
-from backend.memory.manager import central_memory_manager
+from backend.auth.dependencies import get_current_user
+from backend.memory.memory_manager import global_memory_manager
 
 logger = logging.getLogger("aiforge.routes.memory")
 
-router = APIRouter(tags=["Memory & Project Management"])
+router = APIRouter(prefix="/api/projects", tags=["Project Memory & Decisions"])
 
 
-class MemorySaveRequest(BaseModel):
-    project_id: str = Field(min_length=1)
-    name: str = "Untitled Project"
-    prompt: str = ""
-    tech_stack: Dict[str, Any] = Field(default_factory=dict)
-    architecture: Dict[str, Any] = Field(default_factory=dict)
-    database_schema: str = ""
-    generated_files: Dict[str, str] = Field(default_factory=dict)
-    user_preferences: Dict[str, Any] = Field(default_factory=dict)
-    commit_message: str = "Automated AIForge Save"
+class SearchMemoryRequest(BaseModel):
+    query: str = Field(min_length=1)
+    top_k: int = 5
 
 
-class MemoryUpdateRequest(BaseModel):
-    name: Optional[str] = None
-    prompt: Optional[str] = None
-    tech_stack: Optional[Dict[str, Any]] = None
-    architecture: Optional[Dict[str, Any]] = None
-    database_schema: Optional[str] = None
-    generated_files: Optional[Dict[str, str]] = None
-    user_preferences: Optional[Dict[str, Any]] = None
+# ---------------------------------------------------------------------------
+# Endpoints
+# ---------------------------------------------------------------------------
+
+@router.get("/{project_id}/memory")
+def get_project_memory(
+    project_id: str,
+    memory_type: Optional[str] = None,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Returns persistent memory items and architectural decisions for a project.
+    Only project owners can access project memory.
+    """
+    memories = global_memory_manager.long_term.get_memories(project_id, memory_type=memory_type)
+    decisions = global_memory_manager.get_decisions(project_id)
+
+    return {
+        "status": "success",
+        "project_id": project_id,
+        "memories_count": len(memories),
+        "decisions_count": len(decisions),
+        "memories": [m.model_dump() for m in memories],
+        "decisions": [d.model_dump() for d in decisions]
+    }
 
 
-class ResumeRequest(BaseModel):
-    project_id: str
-    new_prompt: str
+@router.post("/{project_id}/memory/search")
+def search_project_memory(
+    project_id: str,
+    req: SearchMemoryRequest,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Performs relevant search across saved project memories and decisions.
+    """
+    results = global_memory_manager.search(project_id, req.query, top_k=req.top_k)
+    return {
+        "status": "success",
+        "project_id": project_id,
+        "query": req.query,
+        "results_count": len(results),
+        "results": [r.model_dump() for r in results]
+    }
 
 
-@router.post("/memory/save")
-@router.post("/api/memory/save")
-def save_memory(req: MemorySaveRequest):
-    """Saves or updates long-term memory and creates a version snapshot."""
-    record = central_memory_manager.save_project(req.project_id, req.model_dump())
-    return {"status": "success", "project": record}
-
-
-@router.get("/memory/projects")
-@router.get("/api/memory/projects")
-def list_projects():
-    """Lists all stored long-term memory projects."""
-    return central_memory_manager.list_projects()
-
-
-@router.get("/memory/project/{project_id}")
-@router.get("/api/memory/project/{project_id}")
-def get_project(project_id: str):
-    """Retrieves long-term memory for a specific project."""
-    record = central_memory_manager.get_project(project_id)
-    if not record:
-        raise HTTPException(status_code=404, detail=f"Project '{project_id}' not found in long-term memory.")
-    versions = central_memory_manager.version_control.list_versions(project_id)
-    return {"status": "success", "project": record, "versions": versions}
-
-
-@router.put("/memory/project/{project_id}")
-@router.put("/api/memory/project/{project_id}")
-def update_project(project_id: str, req: MemoryUpdateRequest):
-    """Updates fields of an existing project in long-term memory."""
-    updates = {k: v for k, v in req.model_dump().items() if v is not None}
-    record = central_memory_manager.update_project(project_id, updates)
-    if not record:
-        raise HTTPException(status_code=404, detail=f"Project '{project_id}' not found.")
-    return {"status": "success", "project": record}
-
-
-@router.delete("/memory/project/{project_id}")
-@router.delete("/api/memory/project/{project_id}")
-def delete_project(project_id: str):
-    """Deletes a project from long-term memory."""
-    success = central_memory_manager.delete_project(project_id)
+@router.delete("/{project_id}/memory/{memory_id}")
+def delete_project_memory(
+    project_id: str,
+    memory_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Deletes a specific memory record.
+    """
+    success = global_memory_manager.delete(project_id, memory_id)
     if not success:
-        raise HTTPException(status_code=404, detail=f"Project '{project_id}' not found.")
-    return {"status": "success", "message": f"Deleted project '{project_id}' successfully."}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Memory record '{memory_id}' not found for project '{project_id}'."
+        )
+    return {"status": "success", "message": f"Memory '{memory_id}' deleted successfully."}
 
 
-@router.get("/memory/search")
-@router.get("/api/memory/search")
-def search_memory(query: str = Query(..., min_length=1), top_k: int = 5):
-    """Performs semantic relevance search across saved project memories."""
-    results = central_memory_manager.search_projects(query, top_k=top_k)
-    return {"query": query, "count": len(results), "projects": results}
-
-
-@router.post("/memory/resume")
-@router.post("/api/memory/resume")
-def resume_project(req: ResumeRequest):
-    """Resumes an existing project by bumping its version (v1 -> v2) and loading past memory."""
-    try:
-        record = central_memory_manager.resume_project(req.project_id, req.new_prompt)
-        return {"status": "success", "project": record}
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+@router.get("/{project_id}/explain")
+def explain_project_decision(
+    project_id: str,
+    topic: str = Query(..., description="Decision topic or question, e.g., 'PostgreSQL' or 'FastAPI'"),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Provides explainability on why a specific architectural choice was made by an agent.
+    """
+    explanation = global_memory_manager.explain_decision(project_id, topic)
+    return {"status": "success", **explanation}

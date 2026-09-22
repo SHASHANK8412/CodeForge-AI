@@ -42,40 +42,71 @@ class RAGPipeline(RetrievalAwareAgentMixin):
         self.evidence_comparator = EvidenceComparator()
 
     def process_and_index_document(
-        self, filepath: str, domain: RetrievalDomain = RetrievalDomain.DOCUMENT, metadata: Optional[Dict[str, Any]] = None
+        self,
+        filepath: str,
+        domain: RetrievalDomain = RetrievalDomain.DOCUMENT,
+        metadata: Optional[Dict[str, Any]] = None,
+        project_id: str = "default_project"
     ) -> Dict[str, Any]:
-        """Loads, structure-chunks, redacts secrets, embeds, and indexes document."""
+        """Loads, structure-chunks, redacts secrets, embeds, and indexes document under project_id."""
         path = Path(filepath)
         if not path.exists():
             raise FileNotFoundError(f"File not found: {filepath}")
+
+        meta = metadata or {}
+        meta["project_id"] = project_id
 
         content = path.read_text(encoding="utf-8", errors="ignore")
         source_rec, chunk_recs = self.ingestion.ingest_document(
             filepath_or_name=path.name,
             content=content,
             domain=domain,
-            metadata=metadata
+            metadata=meta
         )
+
+        # Index into vector_store with project_id
+        from backend.rag.splitter import global_text_splitter
+        from backend.rag.embedding_service import global_embedding_service
+        from backend.rag.vector_store import global_vector_store
+
+        raw_chunks = global_text_splitter.split_markdown(content, path.name) if path.suffix.lower() == ".md" else global_text_splitter.split_text(content)
+        chunk_dicts = []
+        embeddings = []
+        for idx, c_dict in enumerate(raw_chunks):
+            c_text = c_dict if isinstance(c_dict, str) else c_dict.get("text", "")
+            chunk_dicts.append({
+                "id": f"{project_id}_{path.name}_chunk_{idx}",
+                "text": c_text,
+                "source": path.name,
+                "heading": c_dict.get("heading", "") if isinstance(c_dict, dict) else "",
+                "document_type": meta.get("document_type", "DOCUMENTATION")
+            })
+            embeddings.append(global_embedding_service.embed_document(c_text))
+
+        global_vector_store.add_documents(chunk_dicts, embeddings, project_id=project_id)
+
         return {
             "filename": path.name,
+            "project_id": project_id,
             "source_id": source_rec.source_id,
             "chunks_count": len(chunk_recs),
             "status": "success"
         }
 
-    def retrieve_context(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
-        """Backwards compatible top_k context retrieval."""
+    def retrieve_context(self, query: str, top_k: int = 5, project_id: str = "default_project") -> List[Dict[str, Any]]:
+        """Backwards compatible top_k context retrieval for project_id."""
         decision = self.decision_engine.analyze(query, has_documents=bool(self.ingestion.sources))
         if not decision.required:
             return []
 
-        candidates = self.hybrid_retriever.retrieve(query, decision, top_k=top_k * 2)
+        candidates = self.hybrid_retriever.retrieve(query, decision, top_k=top_k * 2, project_id=project_id)
         reranked = self.reranker.rerank(candidates, query, decision, top_k=top_k)
 
         results = []
         for c in reranked:
             results.append({
                 "id": c.chunk_id,
+                "project_id": getattr(c, "project_id", project_id),
                 "text": c.text,
                 "source": c.metadata.get("source") or c.metadata.get("path") or c.source_id,
                 "score": c.score,
@@ -129,10 +160,10 @@ class RAGPipeline(RetrievalAwareAgentMixin):
         raw_answer = f"According to indexed sources:\n\n" + "\n\n".join(snippets)
         return self.validate_and_format_response(raw_answer, grounding_ctx)
 
-    def get_context_string_for_agent(self, agent_name: str, query: str = "") -> str:
-        """Retrieves and formats RAG context string for a specific agent step."""
+    def get_context_string_for_agent(self, agent_name: str, query: str = "", project_id: str = "default_project") -> str:
+        """Retrieves and formats RAG context string for a specific agent step and project_id."""
         try:
-            chunks = self.retrieve_context(query or f"Best practices for {agent_name}", top_k=3)
+            chunks = self.retrieve_context(query or f"Best practices for {agent_name}", top_k=3, project_id=project_id)
             if not chunks:
                 return f"[RAG Context for {agent_name}]: No domain documentation indexed."
             snippets = [f"- {c['source']}: {c['text'][:250]}" for c in chunks]

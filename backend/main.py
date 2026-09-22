@@ -1,7 +1,9 @@
 import sys
 from pathlib import Path
+from typing import Optional, Dict, Any, List
 
 # Ensure repository root is in sys.path so absolute imports of the 'backend' package work
+
 # when running uvicorn directly from inside the backend directory.
 _repo_root = Path(__file__).resolve().parent.parent
 if str(_repo_root) not in sys.path:
@@ -9,28 +11,56 @@ if str(_repo_root) not in sys.path:
 
 import logging
 
-# Centralized Logging Configuration: silence repetitive terminal polling logs & write to file
+# Centralized Logging Configuration: inject correlation IDs into logs and silence repetitive polling logs
+from contextvars import ContextVar
+import secrets
+
+correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="system")
+
+class CorrelationIdFilter(logging.Filter):
+    def filter(self, record):
+        record.correlation_id = correlation_id_var.get()
+        return True
+
 _log_dir = _repo_root / "backend" / "logs"
 _log_dir.mkdir(parents=True, exist_ok=True)
 _log_file = _log_dir / "aiforge.log"
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    handlers=[
-        logging.FileHandler(_log_file, encoding="utf-8"),
-        logging.StreamHandler()
-    ]
-)
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter("%(asctime)s | %(levelname)s | [%(correlation_id)s] | %(name)s | %(message)s")
+
+file_handler = logging.FileHandler(_log_file, encoding="utf-8")
+file_handler.addFilter(CorrelationIdFilter())
+file_handler.setFormatter(formatter)
+root_logger.addHandler(file_handler)
+
+stream_handler = logging.StreamHandler()
+stream_handler.addFilter(CorrelationIdFilter())
+stream_handler.setFormatter(formatter)
+root_logger.addHandler(stream_handler)
 
 # Mute repetitive terminal logs for uvicorn access, httpx, httpcore, and SRE health checks
 logging.getLogger("uvicorn.access").disabled = True
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
-from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from time import perf_counter
 from pydantic import BaseModel
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Start SRE scheduler within active loop context
+    try:
+        from backend.dashboard.monitoring_dashboard import global_scheduler
+        global_scheduler.start()
+    except Exception as e:
+        root_logger.warning(f"Could not start global_scheduler during lifespan startup: {e}")
+    yield
 
 from backend.graph.workflow import graph
 from backend.graph.parallel_workflow import parallel_graph as project_graph
@@ -43,15 +73,149 @@ from backend.routes.project import router as project_router
 from backend.dashboard.monitoring_dashboard import router as monitoring_router
 from backend.dashboard.learning_dashboard import router as learning_router
 from backend.dashboard.evolution_dashboard import router as evolution_router
+from backend.auth.routes import router as auth_router
+from backend.observability.routes import router as observability_router
+from backend.generation.routes import router as generation_router
+from backend.routes.execution_routes import router as execution_router, execution_api_router
+from backend.routes.security_routes import router as security_router
+from backend.routes.project_memory_routes import router as project_memory_router
+from backend.routes.workspace_ide_routes import router as workspace_ide_router
+from backend.routes.ai_memory_routes import router as ai_memory_router
+from backend.routes.agent_mode_routes import router as agent_mode_router
+from backend.routes.command_center_routes import router as command_center_router
+from backend.routes.canvas_routes import router as canvas_router
+from backend.routes.task_routes import router as task_router
+from backend.routes.research_routes import router as research_router
+from backend.routes.workflow_routes import router as workflow_router
+from backend.routes.analytics_routes import router as analytics_router
+from backend.routes.mission_control_routes import router as mission_control_router
+from backend.routes.sentinel_routes import router as sentinel_router
+from backend.routes.ai_core_routes import router as ai_core_router
+from backend.routes.knowledge_graph_routes import router as knowledge_graph_router
+from backend.routes.multi_agent_routes import router as multi_agent_router
+from backend.routes.cyber_copilot_routes import router as cyber_copilot_router
+from backend.routes.verifiable_routes import router as verifiable_router
+from backend.routes.autonomous_workflow_routes import router as autonomous_workflow_router
+from backend.routes.ai_os_routes import router as ai_os_router
+from backend.routes.sprint_routes import router as sprint_routes
+
 app = FastAPI(
     title="AIForge API",
     description="Multi-Agent AI Software Engineer Backend",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
+app.include_router(auth_router)
+app.include_router(observability_router)
+app.include_router(generation_router)
+app.include_router(execution_router)
+app.include_router(execution_api_router)
+app.include_router(security_router)
+app.include_router(project_memory_router)
+app.include_router(workspace_ide_router)
+app.include_router(ai_memory_router)
+app.include_router(agent_mode_router)
+app.include_router(command_center_router)
+app.include_router(canvas_router)
+app.include_router(task_router)
+app.include_router(research_router)
+app.include_router(workflow_router)
+app.include_router(analytics_router)
+app.include_router(mission_control_router)
+app.include_router(sentinel_router)
+app.include_router(ai_core_router)
+app.include_router(knowledge_graph_router)
+app.include_router(multi_agent_router)
+app.include_router(cyber_copilot_router)
+app.include_router(verifiable_router)
+app.include_router(autonomous_workflow_router)
+app.include_router(ai_os_router)
+app.include_router(sprint_routes)
+
+from backend.observability.service import global_opentelemetry_service
+
+@app.middleware("http")
+async def opentelemetry_fastapi_middleware(request: Request, call_next):
+    start_time = perf_counter()
+    trace_id = f"trace_{secrets.token_urlsafe(6)}"
+    corr_id = request.headers.get("X-Correlation-ID") or f"req_{secrets.token_hex(6)}"
+
+    token = correlation_id_var.set(corr_id)
+    try:
+        response = await call_next(request)
+    finally:
+        correlation_id_var.reset(token)
+
+    duration_ms = round((perf_counter() - start_time) * 1000, 2)
+    path = request.url.path
+    method = request.method
+
+    # Do not flood telemetry on static/health polls
+    if not path.startswith(("/health", "/metrics", "/favicon")):
+        try:
+            headers = dict(request.headers)
+            global_opentelemetry_service.record_trace(
+                project_id="aiforge-demo",
+                http_method=method,
+                route=path,
+                status_code=response.status_code,
+                headers=headers
+            )
+        except Exception:
+            pass
+
+    response.headers["X-Trace-ID"] = trace_id
+    response.headers["X-Correlation-ID"] = corr_id
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
+
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    corr_id = correlation_id_var.get()
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "success": False,
+            "error": {
+                "code": f"HTTP_{exc.status_code}",
+                "message": exc.detail,
+                "request_id": corr_id,
+                "details": []
+            },
+            "detail": exc.detail
+        }
+    )
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    corr_id = correlation_id_var.get()
+    logging.exception(f"Unhandled server error: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "error": {
+                "code": "INTERNAL_SERVER_ERROR",
+                "message": "An unexpected server error occurred.",
+                "request_id": corr_id,
+                "details": []
+            },
+            "detail": "An unexpected server error occurred."
+        }
+    )
+
+
+
 
 from fastapi.middleware.gzip import GZipMiddleware
 
-# Allow frontend (React/Vite) to connect seamlessly without CORS origin errors
+# Restrict CORS to explicit trusted frontend origins for security
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -61,12 +225,10 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
-        "*"
     ],
-    allow_origin_regex=r"https?://.*",
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Correlation-ID", "X-Trace-ID"],
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
@@ -98,6 +260,9 @@ def register_routers() -> None:
     from backend.routes.workspace_routes import router as workspace_engine_router
     app.include_router(workspace_engine_router)
 
+    from backend.routes.github_routes import router as github_routes_router
+    app.include_router(github_routes_router)
+
     from backend.api.project import router as project_manager_router
     app.include_router(project_manager_router)
 
@@ -122,8 +287,8 @@ def register_routers() -> None:
     from backend.routes.upload import router as upload_router
     app.include_router(upload_router)
 
-    from backend.routes.memory import router as day18_memory_router
-    app.include_router(day18_memory_router)
+    from backend.routes.generate import router as generate_legacy_router
+    app.include_router(generate_legacy_router)
 
     from backend.routes.quality import router as day20_quality_router
     app.include_router(day20_quality_router)
@@ -139,9 +304,6 @@ def register_routers() -> None:
 
     from backend.routes.debugging import router as day24_debugging_router
     app.include_router(day24_debugging_router)
-
-    from backend.routes.learning import router as day25_learning_router
-    app.include_router(day25_learning_router)
 
     from backend.routes.project_manager import router as day26_pm_router
     app.include_router(day26_pm_router)
@@ -160,6 +322,56 @@ def register_routers() -> None:
 
     from backend.routes.self_healing_routes import router as day32_self_healing_router
     app.include_router(day32_self_healing_router)
+
+    from backend.routes.repair import router as day14_repair_router
+    app.include_router(day14_repair_router)
+
+    from backend.autopilot.routes import router as day15_autopilot_router, flight_router as day15_flight_router
+    app.include_router(day15_autopilot_router)
+    app.include_router(day15_flight_router)
+
+    from backend.intelligence.routes import sim_router, dna_router, bug_router, talk_router, cto_router
+    app.include_router(sim_router)
+    app.include_router(dna_router)
+    app.include_router(bug_router)
+    app.include_router(talk_router)
+    app.include_router(cto_router)
+
+    from backend.security.routes import security_router
+    app.include_router(security_router)
+
+    from backend.dna.routes import dna_router as day15_dna_router
+    app.include_router(day15_dna_router)
+
+    from backend.debate.routes import day16_debate_router
+    app.include_router(day16_debate_router)
+
+    from backend.browser_testing.routes import day17_browser_testing_router
+    app.include_router(day17_browser_testing_router)
+
+    from backend.performance.routes import day18_performance_router
+    app.include_router(day18_performance_router)
+
+    from backend.readiness.routes import day19_readiness_router
+    app.include_router(day19_readiness_router)
+
+    from backend.devops.routes import day20_devops_router
+    app.include_router(day20_devops_router)
+
+    from backend.incidents.routes import day21_incidents_router
+    app.include_router(day21_incidents_router)
+
+    from backend.memory.routes import day22_memory_router
+    app.include_router(day22_memory_router)
+
+    from backend.copilot.routes import day23_copilot_router
+    app.include_router(day23_copilot_router)
+
+    from backend.evolution.routes import day24_evolution_router
+    app.include_router(day24_evolution_router)
+
+    from backend.architecture_simulator.routes import day25_architect_router
+    app.include_router(day25_architect_router)
 
     from backend.routes.deployment_routes import router as day33_cicd_router
     app.include_router(day33_cicd_router)
@@ -185,9 +397,6 @@ def register_routers() -> None:
     from backend.routes.distributed_routes import router as day40_distributed_router
     app.include_router(day40_distributed_router)
 
-    from backend.routes.learning_routes import router as day41_learning_router
-    app.include_router(day41_learning_router)
-
     from backend.routes.consensus_routes import router as day43_consensus_router
     app.include_router(day43_consensus_router)
 
@@ -209,15 +418,14 @@ def register_routers() -> None:
     from v2.api.gateway import router as v2_gateway_router
     app.include_router(v2_gateway_router)
 
+    from backend.routes.ci_routes import router as ci_pipeline_router, ci_direct_router
+    app.include_router(ci_pipeline_router)
+    app.include_router(ci_direct_router)
+
 
 register_routers()
 
 
-@app.on_event("startup")
-async def startup_event():
-    # Start SRE scheduler within active loop context
-    from backend.dashboard.monitoring_dashboard import global_scheduler
-    global_scheduler.start()
 
 
 class PromptRequest(BaseModel):
@@ -234,40 +442,307 @@ def home():
     }
 
 
+import os
+
 @app.get("/health")
+@app.get("/api/health")
 def health():
+    ai_mode = os.environ.get("AI_MODE", "local")
     return {
         "status": "healthy",
-        "database": "connected",
-        "cache": "active"
+        "ai_mode": ai_mode,
+        "services": {
+            "database": "healthy",
+            "ollama": "healthy",
+            "langgraph": "healthy",
+            "cache": "healthy"
+        }
     }
 
 
+@app.get("/health/database")
+@app.get("/api/health/database")
+def database_health():
+    from backend.database.connection import check_db_health
+    return check_db_health()
+
+
+@app.get("/api/jobs/{job_id}")
+def get_job_status(job_id: str):
+    from backend.cache.service import global_cache_service
+    from fastapi import HTTPException
+    job = global_cache_service.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found")
+    return job
+
+
+@app.get("/api/jobs")
+def list_jobs(project_id: Optional[str] = None):
+    from backend.cache.service import global_cache_service
+    return global_cache_service.list_jobs(project_id=project_id)
+
+
+@app.get("/api/cache/metrics")
+def cache_metrics():
+    from backend.cache.service import global_cache_service
+    return global_cache_service.measure_performance()
+
+
+
+
+
 @app.get("/metrics")
-def metrics():
-    try:
-        from backend.services.reflection_service import ReflectionService
-        ref_metrics = ReflectionService().get_dashboard_metrics()
-        try:
-            import psutil
-            process = psutil.Process()
-            ref_metrics["memory_rss_mb"] = round(process.memory_info().rss / (1024 * 1024), 2)
-            ref_metrics["cpu_percent"] = psutil.cpu_percent(interval=None)
-            ref_metrics["active_threads"] = process.num_threads()
-        except Exception:
-            pass
-        return ref_metrics
-    except Exception:
-        return {
-            "projects_generated": 0,
-            "reflection_score": 85.0,
-            "knowledge_size": 0,
-            "top_lessons": [],
-            "common_bugs": [],
-            "improvement_rate": 0.0,
-            "average_test_score": 0.0,
-            "status": "operational"
-        }
+@app.get("/api/metrics")
+def prometheus_metrics():
+    from fastapi.responses import Response
+    from backend.monitoring.prometheus import global_prometheus_registry, CONTENT_TYPE_LATEST
+    payload = global_prometheus_registry.generate_metrics_payload()
+    return Response(content=payload, media_type=CONTENT_TYPE_LATEST)
+
+
+@app.get("/api/monitoring/overview")
+def monitoring_overview(project_id: str = "aiforge-demo"):
+    from backend.monitoring.service import global_monitoring_service
+    return global_monitoring_service.get_monitoring_overview(project_id=project_id)
+
+
+@app.get("/api/github/overview")
+def github_overview(project_id: str = "aiforge-demo"):
+    from backend.github.service import global_github_service
+    return global_github_service.get_pr_dashboard_overview(project_id=project_id)
+
+
+class GithubConnectRequest(BaseModel):
+    repo_url: str
+    project_id: str = "aiforge-demo"
+    token: Optional[str] = None
+
+
+@app.post("/api/github/connect")
+def github_connect(req: GithubConnectRequest):
+    from backend.github.repositories import global_repository_analyzer
+    return global_repository_analyzer.connect_repository(req.repo_url, project_id=req.project_id, token=req.token)
+
+
+class CopilotGithubRequest(BaseModel):
+    query: str
+    project_id: str = "aiforge-demo"
+    full_repo_name: str = "SHASHANK8412/CodeForge-AI"
+
+
+@app.post("/api/github/copilot")
+def github_copilot(req: CopilotGithubRequest):
+    from backend.github.service import global_github_service
+    return global_github_service.handle_copilot_github_query(req.project_id, req.query, full_repo_name=req.full_repo_name)
+
+
+@app.get("/api/kubernetes/status")
+def k8s_status(project_id: str = "aiforge-demo"):
+    from backend.kubernetes.service import global_kubernetes_service
+    return global_kubernetes_service.get_status(project_id=project_id)
+
+
+@app.post("/api/kubernetes/manifests")
+def k8s_generate_manifests(project_id: str = "aiforge-demo"):
+    from backend.kubernetes.service import global_kubernetes_service
+    return global_kubernetes_service.generate_manifests(project_id=project_id)
+
+
+class K8sDeployRequest(BaseModel):
+    project_id: str = "aiforge-demo"
+    image_tag: str = "v1.5"
+    simulate_failure: bool = False
+
+
+@app.post("/api/kubernetes/deploy")
+def k8s_deploy(req: K8sDeployRequest):
+    from backend.kubernetes.service import global_kubernetes_service
+    return global_kubernetes_service.deploy(project_id=req.project_id, image_tag=req.image_tag, simulate_failure=req.simulate_failure)
+
+
+class K8sScaleApiRequest(BaseModel):
+    project_id: str = "aiforge-demo"
+    component: str = "backend"
+    current_replicas: int = 3
+    desired_replicas: int = 5
+    user_approved: bool = True
+    reason: str = "Scaling requested via Dashboard"
+
+
+@app.post("/api/kubernetes/scale")
+def k8s_scale(req: K8sScaleApiRequest):
+    from backend.kubernetes.service import global_kubernetes_service
+    from backend.kubernetes.models import K8sScaleRequest
+    s_req = K8sScaleRequest(
+        project_id=req.project_id,
+        component=req.component,
+        current_replicas=req.current_replicas,
+        desired_replicas=req.desired_replicas,
+        reason=req.reason
+    )
+    return global_kubernetes_service.scale(s_req, user_approved=req.user_approved)
+
+
+@app.post("/api/kubernetes/rollback")
+def k8s_rollback(project_id: str = "aiforge-demo"):
+    from backend.kubernetes.service import global_kubernetes_service
+    return global_kubernetes_service.rollback(project_id=project_id)
+
+
+@app.get("/api/kubernetes/events")
+def k8s_events(project_id: str = "aiforge-demo"):
+    from backend.kubernetes.service import global_kubernetes_service
+    return global_kubernetes_service.get_events(project_id=project_id)
+
+
+@app.get("/api/infrastructure/overview")
+def infra_overview(project_id: str = "aiforge-demo", environment: str = "production", provider: str = "AWS"):
+    from backend.infrastructure.service import global_infrastructure_service
+    plan = global_infrastructure_service.plan(project_id=project_id, environment=environment, provider=provider)
+    cost = global_infrastructure_service.estimate(project_id=project_id, provider_name=provider)
+    sec = global_infrastructure_service.security_scan()
+    return {
+        "project_id": project_id,
+        "environment": environment,
+        "provider": provider,
+        "plan": plan.model_dump() if hasattr(plan, "model_dump") else plan.dict(),
+        "cost": cost.model_dump() if hasattr(cost, "model_dump") else cost.dict(),
+        "security": sec.model_dump() if hasattr(sec, "model_dump") else sec.dict()
+    }
+
+
+
+class InfraApplyRequest(BaseModel):
+    project_id: str = "aiforge-demo"
+    environment: str = "production"
+    user_approved: bool = True
+    simulate_destructive: bool = False
+
+
+@app.post("/api/infrastructure/apply")
+def infra_apply(req: InfraApplyRequest):
+    from backend.infrastructure.service import global_infrastructure_service
+    return global_infrastructure_service.apply(
+        project_id=req.project_id,
+        environment=req.environment,
+        user_approved=req.user_approved,
+        simulate_destructive=req.simulate_destructive
+    )
+
+
+@app.post("/api/infrastructure/drift")
+def infra_drift(project_id: str = "aiforge-demo", simulate_drift: bool = True):
+    from backend.infrastructure.service import global_infrastructure_service
+    res = global_infrastructure_service.detect_drift(project_id=project_id, simulate_drift=simulate_drift)
+    return res.model_dump() if hasattr(res, "model_dump") else res.dict()
+
+
+class CopilotInfraRequest(BaseModel):
+    query: str
+    project_id: str = "aiforge-demo"
+
+
+@app.post("/api/infrastructure/copilot")
+def infra_copilot(req: CopilotInfraRequest):
+    from backend.infrastructure.service import global_infrastructure_service
+    return global_infrastructure_service.handle_copilot_infra_query(req.query, project_id=req.project_id)
+
+
+# ─────────────────────────────────────────────────────────
+# Day 33: AI FinOps & Infrastructure Cost Intelligence
+# ─────────────────────────────────────────────────────────
+
+@app.get("/api/finops/overview")
+def finops_overview(project_id: str = "aiforge-demo", provider: str = "AWS", environment: str = "production"):
+    from backend.finops.service import global_finops_service
+    bd = global_finops_service.analyze_cost(project_id, provider, environment)
+    budget = global_finops_service.calculate_budget(
+        project_id, environment, monthly_limit=250.0, current_estimate=bd.total_monthly_estimate
+    )
+    forecast = global_finops_service.forecast_cost(project_id, bd.total_monthly_estimate)
+    waste = global_finops_service.detect_waste(project_id)
+    recs = global_finops_service.generate_recommendations(project_id)
+    trend = global_finops_service.build_trend(project_id)
+    return {
+        "project_id": project_id,
+        "provider": provider,
+        "environment": environment,
+        "breakdown": bd.model_dump(),
+        "budget": budget.model_dump(),
+        "forecast": forecast.model_dump(),
+        "waste": [w.model_dump() for w in waste],
+        "recommendations": [r.model_dump() for r in recs],
+        "trend": trend,
+    }
+
+
+@app.get("/api/finops/recommendations")
+def finops_recommendations(project_id: str = "aiforge-demo", policy: str = "BALANCED"):
+    from backend.finops.service import global_finops_service
+    recs = global_finops_service.generate_recommendations(project_id, policy=policy)
+    return {"project_id": project_id, "policy": policy, "recommendations": [r.model_dump() for r in recs]}
+
+
+@app.get("/api/finops/budget")
+def finops_budget(project_id: str = "aiforge-demo", monthly_limit: float = 250.0, environment: str = "production"):
+    from backend.finops.service import global_finops_service
+    bd = global_finops_service.analyze_cost(project_id, "AWS", environment)
+    budget = global_finops_service.calculate_budget(
+        project_id, environment, monthly_limit, current_estimate=bd.total_monthly_estimate
+    )
+    return budget.model_dump()
+
+
+class FinOpsCompareRequest(BaseModel):
+    project_id: str = "aiforge-demo"
+    question: str = "Which architecture should I choose?"
+
+
+@app.post("/api/finops/compare")
+def finops_compare(req: FinOpsCompareRequest):
+    from backend.finops.service import global_finops_service
+    comparison = global_finops_service.compare_architectures(req.project_id, req.question)
+    return comparison.model_dump()
+
+
+class FinOpsCopilotRequest(BaseModel):
+    project_id: str = "aiforge-demo"
+    question: str
+
+
+@app.post("/api/finops/copilot")
+def finops_copilot(req: FinOpsCopilotRequest):
+    from backend.finops.service import global_finops_service
+    return global_finops_service.answer_copilot(req.project_id, req.question)
+
+
+@app.get("/api/finops/kubernetes")
+def finops_kubernetes(
+    project_id: str = "aiforge-demo",
+    service_count: int = 1,
+    avg_rps: float = 10.0,
+    scaling_needed: bool = False,
+    multi_region: bool = False,
+):
+    from backend.finops.service import global_finops_service
+    return global_finops_service.evaluate_kubernetes(
+        project_id, service_count, avg_rps, scaling_needed, multi_region
+    )
+
+
+@app.get("/api/finops/anomaly")
+def finops_anomaly(project_id: str = "aiforge-demo", baseline: float = 150.0, observed: float = 420.0):
+    from backend.finops.service import global_finops_service
+    anomaly = global_finops_service.detect_anomaly(project_id, baseline, observed)
+    return anomaly.model_dump()
+
+
+@app.get("/api/finops/simulate")
+def finops_simulate(project_id: str = "aiforge-demo", scenario: str = "add_kubernetes", current_monthly: float = 184.0):
+    from backend.finops.service import global_finops_service
+    return global_finops_service.simulate_cost_change(project_id, scenario, current_monthly)
+
 
 
 @app.get("/system/metrics")
@@ -392,6 +867,8 @@ def get_project_file_tree(project_id: str):
 
 
 @app.post("/generate")
+@app.post("/api/generate")
+@app.post("/api/project/generate")
 async def generate(request: PromptRequest):
     started_at = perf_counter()
     try:

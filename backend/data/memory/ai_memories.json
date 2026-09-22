@@ -1,0 +1,88 @@
+[
+  {
+    "id": "mem-pers-1",
+    "user_id": "default_user",
+    "scope": "PERSONAL",
+    "project_id": null,
+    "category": "Tech Stack",
+    "title": "Preferred Full-Stack Architecture",
+    "content": "User prefers React with Tailwind CSS on frontend, and FastAPI with PostgreSQL & SQLAlchemy on backend.",
+    "importance": "CRITICAL",
+    "source": "User",
+    "tags": [
+      "FastAPI",
+      "React",
+      "Tailwind",
+      "PostgreSQL"
+    ],
+    "pinned": true,
+    "created_at": "2026-08-20 10:00:00",
+    "updated_at": "2026-08-20 10:00:00",
+    "last_used_at": "2026-08-30 15:47:27",
+    "usage_count": 24
+  },
+  {
+    "id": "mem-pers-2",
+    "user_id": "default_user",
+    "scope": "PERSONAL",
+    "project_id": null,
+    "category": "Preferences",
+    "title": "Coding & Design Conventions",
+    "content": "Always write clean, modular functional React code with strict PropTypes/TypeScript, async/await for async operations, and meaningful error handling.",
+    "importance": "HIGH",
+    "source": "User",
+    "tags": [
+      "Conventions",
+      "Code Quality",
+      "Clean Code"
+    ],
+    "pinned": true,
+    "created_at": "2026-08-21 11:30:00",
+    "updated_at": "2026-08-21 11:30:00",
+    "last_used_at": "2026-08-30 15:47:27",
+    "usage_count": 18
+  },
+  {
+    "id": "mem-proj-1",
+    "user_id": "default_user",
+    "scope": "PROJECT",
+    "project_id": "aiforge-fooddelivery-ai",
+    "category": "Architecture",
+    "title": "FoodDelivery AI JWT & Role-Based Access",
+    "content": "Authentication uses RS256 JWT tokens with Customer, Restaurant Owner, and Courier roles. Tokens expire in 60 minutes with auto-refresh.",
+    "importance": "HIGH",
+    "source": "Architecture Decision",
+    "tags": [
+      "Auth",
+      "JWT",
+      "RBAC",
+      "FoodDelivery"
+    ],
+    "pinned": false,
+    "created_at": "2026-08-25 14:15:00",
+    "updated_at": "2026-08-25 14:15:00",
+    "last_used_at": "2026-08-30 15:45:43",
+    "usage_count": 11
+  },
+  {
+    "id": "mem-proj-2",
+    "user_id": "default_user",
+    "scope": "PROJECT",
+    "project_id": "aiforge-fooddelivery-ai",
+    "category": "Tasks",
+    "title": "Stripe Webhook & Order Dispatch State Machine",
+    "content": "Order status transitions: PENDING -> PAID -> KITCHEN_PREPARING -> READY_FOR_PICKUP -> OUT_FOR_DELIVERY -> DELIVERED. Webhooks handle payment intents.",
+    "importance": "HIGH",
+    "source": "Conversation",
+    "tags": [
+      "Stripe",
+      "Orders",
+      "State Machine"
+    ],
+    "pinned": false,
+    "created_at": "2026-08-28 16:45:00",
+    "updated_at": "2026-08-28 16:45:00",
+    "last_used_at": "2026-08-30 15:47:27",
+    "usage_count": 6
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "annotations": {"list": []},
+  "title": "LLM Performance",
+  "uid": "aiforge-llm-perf",
+  "tags": ["aiforge", "llm"],
+  "panels": [
+    {
+      "id": 1,
+      "title": "LLM Calls Total",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [{"expr": "sum(llm_calls_total)"}]
+    },
+    {
+      "id": 2,
+      "title": "Cache Hit Rate (%)",
+      "type": "gauge",
+      "datasource": "Prometheus",
+      "targets": [{"expr": "sum(cache_hits_total) / (sum(cache_hits_total) + sum(cache_misses_total)) * 100"}]
+    }
+  ]
+}

@@ -135,6 +135,66 @@ export async function fetchDeploymentHistory(generationId) {
   }
 }
 
+export async function fetchDeploymentPlan(generationId) {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/api/projects/${generationId}/deployment/plan`, {}, { timeout: 15000 });
+    return res.data;
+  } catch (err) {
+    console.error('Plan error:', err);
+    return null;
+  }
+}
+
+export async function executeApprovedDeployment(generationId, providers = ['Vercel', 'Render']) {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/api/projects/${generationId}/deployment/deploy`, {
+      approved: true,
+      providers
+    }, { timeout: 25000 });
+    return res.data;
+  } catch (err) {
+    console.error('Execute deploy error:', err);
+    throw err;
+  }
+}
+
+export async function diagnoseDeploymentFailure(generationId, logs = [], errorMessage = '') {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/api/projects/${generationId}/deployment/diagnose`, {
+      logs,
+      error_message: errorMessage
+    }, { timeout: 15000 });
+    return res.data;
+  } catch (err) {
+    console.error('Diagnose error:', err);
+    return null;
+  }
+}
+
+export async function rollbackDeployment(generationId, targetVersion = 'v1') {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/api/projects/${generationId}/deployment/rollback`, {
+      target_version: targetVersion
+    }, { timeout: 10000 });
+    return res.data;
+  } catch (err) {
+    console.error('Rollback error:', err);
+    return null;
+  }
+}
+
+export async function updateEnvironmentVariables(generationId, envVars) {
+  try {
+    const res = await axios.put(`${API_BASE_URL}/api/projects/${generationId}/deployment/env`, {
+      env_vars: envVars
+    }, { timeout: 10000 });
+    return res.data;
+  } catch (err) {
+    console.error('Update env error:', err);
+    return null;
+  }
+}
+
 export function subscribeToDeploymentSSE(generationId, onEvent, onError) {
   const url = `${API_BASE_URL}/api/projects/${generationId}/deployment/stream`;
   let eventSource = null;

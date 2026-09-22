@@ -1,0 +1,6 @@
+{
+  "file": "frontend/src/components/Card.jsx",
+  "category": "UI_COMPONENT",
+  "summary": "React Component (Card.jsx)",
+  "snippet": "export default function Card() {}"
+}

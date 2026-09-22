@@ -1,8 +1,8 @@
 """
-AIForge Quality Recovery Day 14 — Performance & Reliability Data Models
+AIForge Quality Recovery & Day 18 Autonomous Performance Engineer Models
 ========================================================================
 Typed data models for execution policy, tracing, metrics, caching, 
-resilience, checkpoints, and error taxonomy.
+resilience, checkpoints, error taxonomy, and Day 18 Performance Engineering.
 """
 
 import time
@@ -108,7 +108,7 @@ class RequestTrace(BaseModel):
     model_calls: int = 0
     tool_calls: int = 0
     cache_hits: int = 0
-    errors: List[Dict[str, Any]] = Field(default_factory=list)
+    errors: List[Dict[str, Any]] = Field(default_factory=dict)
 
 
 class ProgressEvent(BaseModel):
@@ -140,3 +140,71 @@ class WorkflowCheckpoint(BaseModel):
     created_at: float = Field(default_factory=time.time)
     version: str = "1.0"
     repository_fingerprint: str = ""
+
+
+# =========================================================================
+# Day 18 — Autonomous Performance Engineer Models
+# =========================================================================
+
+class PerformanceSnapshot(BaseModel):
+    snapshot_id: str
+    project_id: str
+    generation_id: str = "aiforge-demo"
+    version: int = 1
+    timestamp: str = ""
+    api_latency_ms: float = 420.0
+    p95_latency_ms: float = 610.0
+    throughput_req_sec: float = 84.0
+    error_rate_percent: float = 0.0
+    bundle_size_mb: float = 2.8
+    db_query_count: int = 34
+    db_latency_ms: float = 240.0
+    memory_usage_mb: float = 412.0
+    cpu_usage_percent: float = 18.5
+
+
+class PerformanceBottleneck(BaseModel):
+    bottleneck_id: str
+    name: str  # e.g., "N+1 database queries"
+    severity: str  # CRITICAL, HIGH, MEDIUM, LOW
+    affected_files: List[str] = Field(default_factory=list)
+    impact_summary: str
+    evidence: str  # e.g., "34 queries/request"
+    recommendation: str
+    risk: str = "MEDIUM"
+
+
+class OptimizationPlan(BaseModel):
+    plan_id: str
+    bottleneck_id: str
+    title: str
+    patch_summary: str
+    affected_files: List[str] = Field(default_factory=list)
+    proposed_code_changes: Dict[str, str] = Field(default_factory=dict)
+    expected_latency_reduction_percent: float = 50.0
+
+
+class PerformanceDiff(BaseModel):
+    baseline_snapshot: PerformanceSnapshot
+    optimized_snapshot: PerformanceSnapshot
+    latency_improvement_percent: float = 0.0
+    db_query_reduction_percent: float = 0.0
+    bundle_size_reduction_percent: float = 0.0
+    unit_tests_status: str = "PASS"
+    security_status: str = "PASS"
+    browser_status: str = "PASS"
+    decision: str = "KEEP"  # KEEP, ROLLBACK
+
+
+class PerformanceReport(BaseModel):
+    project_id: str
+    overall_performance_score: float = 88.0
+    latest_snapshot: PerformanceSnapshot
+    bottlenecks: List[PerformanceBottleneck] = Field(default_factory=list)
+    applied_optimizations_count: int = 0
+    created_at: str = ""
+
+
+class PerformanceHistory(BaseModel):
+    project_id: str
+    snapshots: List[PerformanceSnapshot] = Field(default_factory=list)

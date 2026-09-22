@@ -202,6 +202,15 @@ class ModelRouter:
     Maps canonical intents and agent roles to generation profiles and optimal installed models.
     """
 
+    def select_model(
+        self,
+        intent_or_task: str,
+        agent_name: str = "",
+        prompt: str = "",
+        override_model: Optional[str] = None
+    ) -> ModelSelection:
+        return self.select(intent_or_task, agent_name=agent_name, prompt=prompt, user_override=override_model)
+
     def select(
         self,
         intent_or_task: str,

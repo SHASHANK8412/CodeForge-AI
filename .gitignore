@@ -20,5 +20,7 @@ backend/vector_store/
 backend/memory/vector_store.json
 v2/logs/
 *.log
+scratch/
+.pytest_cache/
 
 

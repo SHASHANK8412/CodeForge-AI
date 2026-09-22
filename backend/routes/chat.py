@@ -52,6 +52,7 @@ def create_conversation(request: ConversationCreateRequest | None = None):
 
 from backend.services.generation_service import global_generation_pipeline
 from backend.config import DEBUG_ROUTING
+from backend.memory.ai_memory_service import global_ai_memory_service
 
 
 @router.post("/message")
@@ -68,11 +69,31 @@ async def chat_message(request: ChatMessageRequest):
         conversation = conversation_manager.create_conversation(title=generate_conversation_title(request.message))
         conversation_id = conversation.conversation_id
 
-    # Execute Canonical Generation Pipeline
+    # 1. Smart Memory Recall (if memory_enabled)
+    recalled_data = {"recalled_memories": [], "context_prompt": "", "total_recalled": 0, "memory_active": False}
+    effective_prompt = request.message
+
+    if request.memory_enabled:
+        recalled_data = global_ai_memory_service.smart_recall(
+            user_prompt=request.message,
+            project_id=request.project_id
+        )
+        if recalled_data["context_prompt"]:
+            effective_prompt = f"{recalled_data['context_prompt']}\n\nUser Request: {request.message}"
+
+    # 2. Execute Canonical Generation Pipeline
     gen_result = await global_generation_pipeline.generate(
-        user_prompt=request.message,
+        user_prompt=effective_prompt,
         conversation_id=conversation_id
     )
+
+    # 3. Detect Memory Suggestions
+    memory_suggestions = []
+    if request.memory_enabled:
+        memory_suggestions = global_ai_memory_service.generate_memory_suggestions(
+            user_prompt=request.message,
+            assistant_response=gen_result.response
+        )
 
     # Save ONLY clean accepted response into conversation memory
     msg_metadata = {
@@ -84,7 +105,9 @@ async def chat_message(request: ChatMessageRequest):
         "execution_time_seconds": gen_result.execution_time_seconds,
         "files": gen_result.files_map,
         "retry_count": gen_result.attempts - 1,
-        "validated": gen_result.validation_passed
+        "validated": gen_result.validation_passed,
+        "memory_active": recalled_data["memory_active"],
+        "recalled_memories": recalled_data["recalled_memories"]
     }
 
     conversation_manager.record_turn(
@@ -114,6 +137,11 @@ async def chat_message(request: ChatMessageRequest):
         "retry_count": gen_result.attempts - 1,
         "quality": gen_result.quality_metadata,
         "messages": [_message_payload(message) for message in messages],
+        "memory": {
+            "active": recalled_data["memory_active"],
+            "recalled": recalled_data["recalled_memories"],
+            "suggestions": memory_suggestions
+        }
     }
 
     if DEBUG_ROUTING:

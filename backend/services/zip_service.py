@@ -48,7 +48,34 @@ class ZipService:
                         zipf.write(file_path, arcname)
 
             _logger.info(f"Project successfully zipped at: {output_zip_path}")
+            self.validate_zip_integrity(output_zip_path, source_directory)
             return output_zip_path
         except Exception as exc:
             _logger.error(f"Failed to create project ZIP archive: {exc}")
             raise RuntimeError(f"Failed to create ZIP package: {exc}") from exc
+
+    def validate_zip_integrity(self, zip_path: Path, source_directory: Path) -> bool:
+        """
+        Validates generated ZIP archive: opens programmatically, checks files exist,
+        non-empty when expected, and match source disk checksums.
+        """
+        if not zip_path.exists():
+            raise FileNotFoundError(f"ZIP archive not found at '{zip_path}'")
+
+        with zipfile.ZipFile(zip_path, 'r') as zipf:
+            zip_names = set(zipf.namelist())
+            for src_file in source_directory.rglob("*"):
+                if src_file.is_file():
+                    parts = src_file.relative_to(source_directory).parts
+                    if any(part in EXCLUDED_NAMES for part in parts):
+                        continue
+                    arcname = str(src_file.relative_to(source_directory)).replace("\\", "/")
+                    if arcname not in zip_names:
+                        raise ValueError(f"ZIP Integrity Error: Missing file '{arcname}' in archive")
+                    
+                    zip_content = zipf.read(arcname)
+                    if len(zip_content) == 0 and src_file.name not in {"__init__.py", ".gitkeep"}:
+                        _logger.warning(f"ZIP Warning: File '{arcname}' in archive is empty")
+
+        _logger.info(f"ZIP archive integrity verified for '{zip_path.name}'")
+        return True

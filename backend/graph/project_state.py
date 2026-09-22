@@ -47,7 +47,14 @@ class ProjectState(TypedDict, total=False):
     # Prompt & Core Request inputs
     prompt: str
     user_prompt: str
-    user_request: str
+    # Day 12 Context & Memory Extensions
+    project_id: str
+    generation_id: str
+    technology_stack: Dict[str, Any]
+    agent_outputs: Dict[str, Any]
+    memory: List[Dict[str, Any]]
+    review_results: Dict[str, Any]
+    decisions: List[Dict[str, Any]]
 
     # Autonomous Engineering Project Metadata & Specs (Incremental Additions)
     project_name: str
@@ -97,9 +104,65 @@ class ProjectState(TypedDict, total=False):
     validation_report: Dict[str, Any]
     reflection_report: Dict[str, Any]
 
+    # Day 14 Repair Loop State
+    repair_attempt: int
+    max_repair_attempts: int
+    findings: List[Dict[str, Any]]
+    test_failures: List[Dict[str, Any]]
+    root_causes: List[str]
+    repairs: List[Dict[str, Any]]
+    snapshots: List[Dict[str, Any]]
+    repair_status: str
+
     # DevOps & Deployment fields
     deployment_files: Dict[str, str]
     deployment_report: Dict[str, Any]
     deployment_platform: str
     deployment_guide: str
+
+    # Execution & Self-Healing Engine state fields
+    execution_history: List[Dict[str, Any]]
+    error_category: str
+    diagnostic_result: Dict[str, Any]
+    repair_result: Dict[str, Any]
+
+    # Security & Dependency Intelligence Engine state fields
+    security_data: Dict[str, Any]
+    security_score: float
+    security_gate: str
+    security_repair_attempts: int
+
+    # Human-in-the-Loop (HITL) & Checkpoint Workflow state fields
+    approval_status: str  # "pending", "approved", "rejected", "none"
+    approval_required: bool
+    approval_stage: str  # "architecture", "final", "debug_escalation", None
+    approval_request: Dict[str, Any]
+    user_feedback: str
+    approval_history: List[Dict[str, Any]]
+    completed_agents: List[str]
+    agent_status: Dict[str, str]
+    workflow_progress: int
+    timestamps: Dict[str, str]
+    current_agent: str
+    generated_files: Dict[str, str]
+    execution_status: str
+
+    # Autonomous Debug -> Fix -> Retest Loop state fields
+    test_status: str  # "passed", "failed", "running", "retesting"
+    failed_tests: List[str]
+    error_messages: List[str]
+    stack_traces: List[str]
+    debug_analysis: str
+    proposed_fix: Dict[str, Any]
+    applied_fix: Dict[str, Any]
+    files_modified: List[str]
+    retry_count: int
+    max_retries: int
+    fix_history: List[Dict[str, Any]]
+    failure_history: List[Dict[str, Any]]
+    current_debug_cycle: int
+    human_intervention_required: bool
+    human_escalation_details: Dict[str, Any]
+
+
 

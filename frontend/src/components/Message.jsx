@@ -49,16 +49,44 @@ function CodeWrapper({ children, language }) {
     );
 }
 
-function Message({ sender, text, metadata }) {
+function Message({ sender, text, metadata, timestamp, onRegenerate }) {
     const isUser = sender === "user";
     const [msgCopied, setMsgCopied] = useState(false);
     const [feedback, setFeedback] = useState(null); // 'like' | 'dislike' | null
     const [debugOpen, setDebugOpen] = useState(false);
 
     const timeString = useMemo(() => {
-        const d = new Date();
-        return `Today • ${d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
-    }, []);
+        const d = timestamp ? new Date(timestamp) : new Date();
+        if (Number.isNaN(d.getTime())) return "";
+        const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+        const isToday = d.toDateString() === new Date().toDateString();
+        return isToday ? `Today • ${time}` : `${d.toLocaleDateString([], { month: "short", day: "numeric" })} • ${time}`;
+    }, [timestamp]);
+
+    const metadataPills = useMemo(() => {
+        const pills = [];
+        if (metadata?.agent) {
+            pills.push({ key: "agent", node: <span className="text-indigo-400 font-bold">{metadata.agent}</span> });
+        }
+        if (metadata?.model) {
+            pills.push({ key: "model", node: <span className="text-cyan-400">{metadata.model}</span> });
+        }
+        if (typeof metadata?.execution_time_seconds === "number") {
+            pills.push({ key: "time", node: <span className="text-amber-400">{metadata.execution_time_seconds.toFixed(1)}s</span> });
+        }
+        if (typeof metadata?.validated === "boolean") {
+            pills.push({
+                key: "validated",
+                node: metadata.validated
+                    ? <span className="text-emerald-400 font-bold">✓ Validated</span>
+                    : <span className="text-rose-400 font-bold">✗ Validation Failed</span>,
+            });
+        }
+        if (typeof metadata?.retry_count === "number" && metadata.retry_count > 0) {
+            pills.push({ key: "retry", node: <span className="text-purple-400">Retry: {metadata.retry_count}</span> });
+        }
+        return pills;
+    }, [metadata]);
 
     const copyEntireMessage = () => {
         navigator.clipboard.writeText(text);
@@ -145,15 +173,16 @@ function Message({ sender, text, metadata }) {
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-5 pt-3 border-t border-gray-800/40 text-[10px] text-gray-500">
                         {/* Execution Metadata Pills */}
                         <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] bg-[#0F172A] border border-gray-800/80 px-3 py-1.5 rounded-lg">
-                            <span className="text-indigo-400 font-bold">{metadata?.agent || "CodingAgent"}</span>
-                            <span className="text-gray-600">•</span>
-                            <span className="text-cyan-400">{metadata?.model || "Gemini 3.5 Flash"}</span>
-                            <span className="text-gray-600">•</span>
-                            <span className="text-amber-400">{metadata?.execution_time_seconds || 1.8}s</span>
-                            <span className="text-gray-600">•</span>
-                            <span className="text-emerald-400 font-bold">✓ Validation Passed</span>
-                            <span className="text-gray-600">•</span>
-                            <span className="text-purple-400">Retry: {metadata?.retry_count || 0}</span>
+                            {metadataPills.length > 0 ? (
+                                metadataPills.map((pill, i) => (
+                                    <span key={pill.key} className="flex items-center gap-2">
+                                        {i > 0 && <span className="text-gray-600">•</span>}
+                                        {pill.node}
+                                    </span>
+                                ))
+                            ) : (
+                                <span className="text-gray-600 italic">No execution metadata</span>
+                            )}
                             <span className="text-gray-600">•</span>
                             <button
                                 onClick={() => setDebugOpen(true)}
@@ -173,13 +202,16 @@ function Message({ sender, text, metadata }) {
                                 {msgCopied ? <FaCheckDouble className="text-emerald-400" /> : <FaCopy />}
                                 <span>{msgCopied ? "Copied" : "Copy"}</span>
                             </button>
-                            <button
-                                className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer"
-                                title="Regenerate this response"
-                            >
-                                <FaRedo size={9} />
-                                <span>Regenerate</span>
-                            </button>
+                            {onRegenerate && (
+                                <button
+                                    onClick={onRegenerate}
+                                    className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer"
+                                    title="Regenerate this response"
+                                >
+                                    <FaRedo size={9} />
+                                    <span>Regenerate</span>
+                                </button>
+                            )}
                         </div>
 
                         {/* Likes/Feedback Actions */}

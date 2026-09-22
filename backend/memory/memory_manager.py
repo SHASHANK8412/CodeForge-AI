@@ -1,117 +1,187 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from backend.config import CONVERSATION_HISTORY_TURNS
-from backend.memory.context_store import ContextStore
-from backend.memory.session_manager import SessionManager, ProjectSession
-from backend.memory.history import HistoryManager, HistoryEntry
+from backend.memory.models import ProjectMemory, DecisionRecord, MemoryType, ImportanceLevel
+from backend.memory.short_term import global_short_term_memory
+from backend.memory.long_term import global_long_term_memory
+from backend.memory.retrieval import global_memory_retriever
 
 logger = logging.getLogger("aiforge.memory.memory_manager")
 
 
 class MemoryManager:
     """
-    Centralized Memory Manager for AIForge V2:
-    - ContextStore: Structured agent stage outputs (planner, architect, frontend, backend, database, reviewer, testing, documentation).
-    - SessionManager: Multi-project session state, generated file registries, and current step tracking.
-    - HistoryManager: Chronological log of prompts, agent responses, execution times, and timestamps.
+    Unified Memory Manager providing access to:
+    - Short-term workflow state (current generation execution session)
+    - Long-term persistent project memories and architectural decisions across sessions
+    - Context-aware memory retrieval and ranking
     """
 
     def __init__(self):
-        self.context_store = ContextStore()
-        self.session_manager = SessionManager()
-        self.history_manager = HistoryManager()
+        self.short_term = global_short_term_memory
+        self.long_term = global_long_term_memory
+        self.retriever = global_memory_retriever
 
-    # --- Agent Output Operations ---
+    # --- Core Required API Methods ---
 
-    def save_agent_output(self, session_id: str, agent_name: str, output: Any) -> None:
-        """Stores or updates an agent's structured output in context store & updates session."""
-        self.context_store.set_agent_output(agent_name, output)
-        session = self.session_manager.get_or_create_session(session_id)
-        session.current_step = agent_name
+    def save(
+        self,
+        project_id: str,
+        memory_type: MemoryType | str,
+        key: str,
+        value: Any,
+        source_agent: str,
+        importance: ImportanceLevel | str = ImportanceLevel.MEDIUM,
+        generation_id: Optional[str] = None,
+        user_id: Optional[str] = None
+    ) -> ProjectMemory:
+        """Stores a memory record in long-term memory and short-term state."""
+        try:
+            mem = self.long_term.save_memory(
+                project_id=project_id,
+                memory_type=memory_type,
+                key=key,
+                value=value,
+                source_agent=source_agent,
+                importance=importance,
+                generation_id=generation_id,
+                user_id=user_id
+            )
+            self.short_term.set(f"mem_{key}", value)
+            return mem
+        except Exception as e:
+            logger.error(f"MemoryManager.save failed safely: {e}")
+            m_type = memory_type if isinstance(memory_type, MemoryType) else MemoryType(str(memory_type).split(".")[-1])
+            return ProjectMemory(
+                id="mem_err_fallback",
+                project_id=project_id,
+                memory_type=m_type,
+                key=key,
+                value=value,
+                source_agent=source_agent,
+                importance=ImportanceLevel.LOW,
+                created_at="",
+                updated_at=""
+            )
 
-        # If output contains generated file strings or dicts, update session generated_files map
-        if isinstance(output, str) and len(output) > 20:
-            filename = f"{agent_name}_output.code"
-            session.generated_files[filename] = output
-        elif isinstance(output, dict):
-            for k, v in output.items():
-                if isinstance(v, str) and (k.endswith((".py", ".jsx", ".js", ".sql", ".md")) or "/" in k):
-                    session.generated_files[k] = v
+    def save_decision(
+        self,
+        project_id: str,
+        decision: str,
+        reason: str,
+        agent: str,
+        importance: ImportanceLevel | str = ImportanceLevel.HIGH,
+        generation_id: Optional[str] = None
+    ) -> DecisionRecord:
+        """Stores an architectural decision record."""
+        try:
+            rec = self.long_term.save_decision(
+                project_id=project_id,
+                decision=decision,
+                reason=reason,
+                agent=agent,
+                importance=importance,
+                generation_id=generation_id
+            )
+            self.short_term.add_decision(rec.model_dump())
+            return rec
+        except Exception as e:
+            logger.error(f"MemoryManager.save_decision failed safely: {e}")
+            return DecisionRecord(
+                id="dec_err_fallback",
+                project_id=project_id,
+                decision=decision,
+                reason=reason,
+                agent=agent,
+                timestamp="",
+                importance=ImportanceLevel.HIGH
+            )
 
-        self.session_manager.update_session(session_id, current_step=agent_name)
-        logger.info(f"Memory saved for agent '{agent_name}' in session '{session_id}'")
+    def retrieve(
+        self,
+        project_id: str,
+        query: str = "",
+        agent_name: str = "",
+        limit: int = 10,
+        max_tokens: int = 2000,
+        generation_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Retrieves prioritized and ranked context string and memory objects."""
+        return self.retriever.retrieve_relevant_memory(
+            project_id=project_id,
+            query=query,
+            agent_name=agent_name,
+            limit=limit,
+            max_tokens=max_tokens,
+            generation_id=generation_id,
+            long_term_store=self.long_term
+        )
 
-    def get_agent_output(self, session_id: str, agent_name: str) -> Any:
-        """Retrieves an agent's stored output."""
-        return self.context_store.get_agent_output(agent_name)
+    def update(self, project_id: str, memory_id: str, updates: Dict[str, Any]) -> Optional[ProjectMemory]:
+        """Updates an existing memory record."""
+        return self.long_term.update_memory(project_id, memory_id, updates)
 
-    def update_agent_output(self, session_id: str, agent_name: str, output: Any) -> None:
-        """Updates or merges an agent's output in context store."""
-        self.context_store.update_agent_output(agent_name, output)
-        logger.info(f"Memory updated for agent '{agent_name}' in session '{session_id}'")
+    def delete(self, project_id: str, memory_id: str) -> bool:
+        """Deletes a memory record."""
+        return self.long_term.delete_memory(project_id, memory_id)
 
-    def delete_agent_output(self, session_id: str, agent_name: str) -> bool:
-        """Deletes an agent's output from context store."""
-        return self.context_store.delete_agent_output(agent_name)
+    def search(self, project_id: str, query: str, top_k: int = 5) -> List[ProjectMemory]:
+        """Searches long-term project memories."""
+        return self.long_term.search_memories(project_id, query, top_k=top_k)
 
-    # --- Complete Project Memory & Context ---
+    def summarize(self, project_id: str, max_items: int = 30) -> int:
+        """Prunes/summarizes older LOW/MEDIUM memories if total items exceed limit."""
+        return self.long_term.summarize_memories(project_id, max_items=max_items)
 
-    def get_project_memory(self, session_id: str) -> Dict[str, Any]:
-        """Returns complete project memory including context store, session info, and history."""
-        session = self.session_manager.get_session(session_id)
-        context = self.context_store.get_context()
-        history = [h.dict() for h in self.history_manager.get_history(session_id)]
+    def get_decisions(self, project_id: str) -> List[DecisionRecord]:
+        """Returns all architectural decisions for a project."""
+        return self.long_term.get_decisions(project_id)
+
+    def explain_decision(self, project_id: str, query_or_topic: str) -> Dict[str, Any]:
+        """
+        Returns a concise explanation for a decision made by an agent.
+        E.g., 'Why did AIForge choose PostgreSQL?'
+        """
+        decisions = self.get_decisions(project_id)
+        if not decisions:
+            return {
+                "project_id": project_id,
+                "topic": query_or_topic,
+                "explanation": f"No stored decision records found for project '{project_id}'."
+            }
+
+        q_lower = query_or_topic.lower()
+        matched_decision = None
+
+        for d in decisions:
+            if any(term in d.decision.lower() or term in d.reason.lower() for term in q_lower.split()):
+                matched_decision = d
+                break
+
+        if not matched_decision and decisions:
+            matched_decision = decisions[0]
 
         return {
-            "session_id": session_id,
-            "project_name": session.project_name if session else "Untitled Project",
-            "current_step": session.current_step if session else "none",
-            "context": context,
-            "generated_files": session.generated_files if session else {},
-            "history": history,
-            "shared_stack": self.context_store.extract_shared_stack()
+            "project_id": project_id,
+            "topic": query_or_topic,
+            "decision": matched_decision.decision,
+            "reason": matched_decision.reason,
+            "agent": matched_decision.agent,
+            "timestamp": matched_decision.timestamp,
+            "explanation": f"The {matched_decision.agent} selected {matched_decision.decision} because {matched_decision.reason}"
         }
 
-    # --- Duplicate Generation Prevention ---
+    # --- Short-Term Output Operations (Compatibility) ---
 
-    def is_file_generated(self, session_id: str, filename: str) -> bool:
-        """Checks if a file has already been generated in this session."""
-        session = self.session_manager.get_session(session_id)
-        if session and filename in session.generated_files:
-            return True
-        return False
+    def save_agent_output(self, session_id: str, agent_name: str, output: Any) -> None:
+        self.short_term.set_agent_output(agent_name, output)
 
-    def get_existing_files(self, session_id: str) -> Dict[str, str]:
-        """Returns all previously generated files for this session to prevent duplicate creation."""
-        session = self.session_manager.get_session(session_id)
-        if session:
-            return session.generated_files
-        return {}
-
-    # --- Session & History Helpers ---
-
-    def create_session(self, session_id: str, project_name: str = "Untitled Project") -> ProjectSession:
-        return self.session_manager.create_session(session_id, project_name)
-
-    def get_session(self, session_id: str) -> Optional[ProjectSession]:
-        return self.session_manager.get_session(session_id)
-
-    def delete_session(self, session_id: str) -> bool:
-        self.context_store.clear_context()
-        self.history_manager.clear_history(session_id)
-        return self.session_manager.delete_session(session_id)
-
-    def add_history(self, session_id: str, agent: str, user_prompt: str, llm_response: str, execution_time: float = 0.0):
-        return self.history_manager.add_history_entry(session_id, agent, user_prompt, llm_response, execution_time)
-
-    def get_history(self, session_id: str) -> List[HistoryEntry]:
-        return self.history_manager.get_history(session_id)
+    def get_agent_output(self, session_id: str, agent_name: str) -> Any:
+        return self.short_term.get_agent_output(agent_name)
 
 
-# Global Memory Manager Instance
-memory_manager = MemoryManager()
-global_memory_manager = memory_manager
+# Global Singleton
+global_memory_manager = MemoryManager()
+memory_manager = global_memory_manager

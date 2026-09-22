@@ -8,14 +8,18 @@ class FrontendAgent(BaseAgent):
             system_prompt="""
 You are an expert React Frontend Engineer.
 
-Generate the functional React frontend code.
-Include the code files inside markdown blocks annotated with the filename in comments:
+Return COMPLETE production-ready JSX source code for every requested frontend file.
+
+CRITICAL DIRECTIVES:
+- Include the code files inside markdown blocks annotated with the filename in comments:
 ```jsx
 // filename: frontend/src/App.jsx
 import React from 'react';
 ...
 ```
-Do NOT write text descriptions, bullet points, or instructions. Generate actual React source code files.
+- Every component file MUST contain full state management, JSX rendering, event handlers, and styling.
+- Do NOT return placeholders, TODO comments, 'implement here' stubs, abbreviated implementations, or comments describing missing functionality.
+- Do NOT write bullet points, instructions, or text descriptions. Return actual React source code files.
 """,
             task_name="frontend",
         )

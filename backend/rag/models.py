@@ -18,6 +18,20 @@ class RetrievalDomain(str, Enum):
     MIXED = "MIXED"
 
 
+class DocumentType(str, Enum):
+    REQUIREMENTS = "REQUIREMENTS"
+    ARCHITECTURE = "ARCHITECTURE"
+    API = "API"
+    DATABASE = "DATABASE"
+    CODE = "CODE"
+    DOCUMENTATION = "DOCUMENTATION"
+    TEST = "TEST"
+    SECURITY = "SECURITY"
+    USER_GUIDE = "USER_GUIDE"
+    FRAMEWORK = "FRAMEWORK"
+    PROJECT_MEMORY = "PROJECT_MEMORY"
+
+
 class QueryType(str, Enum):
     FACT_LOOKUP = "FACT_LOOKUP"
     CODE_SEARCH = "CODE_SEARCH"
@@ -39,7 +53,9 @@ class GroundingStatus(str, Enum):
 
 class SourceRecord(BaseModel):
     source_id: str
-    source_type: str  # e.g., 'pdf', 'txt', 'md', 'docx', 'repository'
+    project_id: str = "default_project"
+    source_type: str  # e.g., 'pdf', 'txt', 'md', 'docx', 'py', 'js', 'ts', 'json', 'sql'
+    document_type: DocumentType = DocumentType.DOCUMENTATION
     name: str
     version: str = "1.0"
     content_hash: str
@@ -51,13 +67,17 @@ class SourceRecord(BaseModel):
 class ChunkRecord(BaseModel):
     chunk_id: str
     source_id: str
-    domain: RetrievalDomain
+    project_id: str = "default_project"
+    domain: RetrievalDomain = RetrievalDomain.DOCUMENT
+    document_type: DocumentType = DocumentType.DOCUMENTATION
     text: str
     metadata: Dict[str, Any] = Field(default_factory=dict)
     content_hash: str
     position: int = 0
     token_count: int = 0
-    # Repository specific metadata
+    version: str = "1.0"
+    technology: Optional[str] = None
+    # Repository / Code specific metadata
     repository_id: Optional[str] = None
     path: Optional[str] = None
     symbol: Optional[str] = None
@@ -74,8 +94,9 @@ class ChunkRecord(BaseModel):
 class RetrievalDecision(BaseModel):
     required: bool
     domains: List[RetrievalDomain] = Field(default_factory=list)
+    document_types: List[DocumentType] = Field(default_factory=list)
     reason: str
-    query_type: QueryType
+    query_type: QueryType = QueryType.FACT_LOOKUP
     rewritten_queries: List[str] = Field(default_factory=list)
     subqueries: List[str] = Field(default_factory=list)
     target_files: List[str] = Field(default_factory=list)
@@ -85,7 +106,9 @@ class RetrievalDecision(BaseModel):
 class RetrievalCandidate(BaseModel):
     chunk_id: str
     source_id: str
-    domain: RetrievalDomain
+    project_id: str = "default_project"
+    domain: RetrievalDomain = RetrievalDomain.DOCUMENT
+    document_type: DocumentType = DocumentType.DOCUMENTATION
     score: float
     retrieval_method: str  # 'vector', 'keyword', 'symbol', 'structural', 'fast_path'
     text: str
@@ -99,14 +122,14 @@ class GroundingContext(BaseModel):
     coverage: float = 0.0
     confidence_category: str = "HIGH"
     retrieval_metadata: Dict[str, Any] = Field(default_factory=dict)
-    source_labels: Dict[str, str] = Field(default_factory=dict)  # chunk_id -> '[S1]'
+    source_labels: Dict[str, str] = Field(default_factory=dict)
 
 
 class Citation(BaseModel):
     source_id: str
     chunk_id: str
-    display: str  # e.g., '[S1] backend/routes/auth.py:42-78' or '[S2] architecture.pdf (Page 7)'
-    location: str  # file + lines or doc + page
+    display: str  # e.g., '[S1] docs/authentication.md (Section: JWT Authentication)'
+    location: str
 
 
 class GroundedResponse(BaseModel):
