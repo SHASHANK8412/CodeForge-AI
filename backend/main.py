@@ -278,9 +278,6 @@ def register_routers() -> None:
     from backend.routes.generate import router as generate_legacy_router
     app.include_router(generate_legacy_router)
 
-    from backend.routes.memory import router as day18_memory_router
-    app.include_router(day18_memory_router)
-
     from backend.routes.quality import router as day20_quality_router
     app.include_router(day20_quality_router)
 
@@ -295,9 +292,6 @@ def register_routers() -> None:
 
     from backend.routes.debugging import router as day24_debugging_router
     app.include_router(day24_debugging_router)
-
-    from backend.routes.learning import router as day25_learning_router
-    app.include_router(day25_learning_router)
 
     from backend.routes.project_manager import router as day26_pm_router
     app.include_router(day26_pm_router)
@@ -390,9 +384,6 @@ def register_routers() -> None:
 
     from backend.routes.distributed_routes import router as day40_distributed_router
     app.include_router(day40_distributed_router)
-
-    from backend.routes.learning_routes import router as day41_learning_router
-    app.include_router(day41_learning_router)
 
     from backend.routes.consensus_routes import router as day43_consensus_router
     app.include_router(day43_consensus_router)

@@ -1,69 +1,78 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import Sidebar from "./components/Sidebar";
 import TopNav from "./components/navigation/TopNav";
 import CommandPalette from "./components/navigation/CommandPalette";
-import ChatBox from "./components/ChatBox";
-import LiveCanvasPage from "./pages/LiveCanvasPage";
-import ProjectGenerator from "./pages/ProjectGenerator";
-import ReflectionDashboard from "./components/ReflectionDashboard";
 import MainLayout from "./layouts/MainLayout";
-import Dashboard from "./pages/Dashboard";
-import MissionControlPage from "./pages/MissionControlPage";
-import ProjectsPage from "./pages/ProjectsPage";
-import AgentsPage from "./pages/AgentsPage";
-import AIToolsPage from "./pages/AIToolsPage";
-import MemoryPage from "./pages/MemoryPage";
-import TasksPage from "./pages/TasksPage";
-import DeepResearchPage from "./pages/DeepResearchPage";
-import WorkflowsPage from "./pages/WorkflowsPage";
-import AutonomousWorkflowPage from "./pages/AutonomousWorkflowPage";
-import AnalyticsPage from "./pages/AnalyticsPage";
-import SavedOutputsPage from "./pages/SavedOutputsPage";
-import ActivityHistoryPage from "./pages/ActivityHistoryPage";
-import LearningDashboard from "./pages/LearningDashboard";
-import F1Website from "./components/F1Website";
-import SecurityCenter from "./pages/SecurityCenter";
-import SentinelPage from "./pages/SentinelPage";
-import CyberCopilotPage from "./pages/CyberCopilotPage";
-import VerifiableAiPage from "./pages/VerifiableAiPage";
-import AiOsControlCenterPage from "./pages/AiOsControlCenterPage";
-import ComputerAgentPage from "./pages/ComputerAgentPage";
-import IntelligencePlatformPage from "./pages/IntelligencePlatformPage";
-import KnowledgeGraphPage from "./pages/KnowledgeGraphPage";
-import MultiAgentPage from "./pages/MultiAgentPage";
-import LandingPage from "./pages/LandingPage";
-import CreateProject from "./pages/CreateProject";
-import GenerationDashboard from "./pages/GenerationDashboard";
-import CodeWorkspace from "./pages/CodeWorkspace";
-import QualityCenter from "./pages/QualityCenter";
-import DeploymentCenter from "./pages/DeploymentCenter";
-import ProjectDetails from "./pages/ProjectDetails";
-import ProjectOverviewPage from "./pages/ProjectOverviewPage";
-import ProjectXRayPage from "./pages/ProjectXRayPage";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import Settings from "./pages/Settings";
-import ApiKeys from "./pages/ApiKeys";
-import ObservabilityPage from "./pages/ObservabilityPage";
-import MonitoringPage from "./pages/MonitoringPage";
-import GitHubDashboardPage from "./pages/GitHubDashboardPage";
-import KubernetesDashboardPage from "./pages/KubernetesDashboardPage";
-import InfrastructureDashboardPage from "./pages/InfrastructureDashboardPage";
-import FinOpsDashboardPage from "./pages/FinOpsDashboardPage";
-import EvaluationCenter from "./pages/EvaluationCenter";
-import AutopilotDashboard from "./pages/AutopilotDashboard";
-import FlightRecorder from "./pages/FlightRecorder";
-import SimulatorPage from "./pages/SimulatorPage";
-import DnaGraphPage from "./pages/DnaGraphPage";
-import BugBountyPage from "./pages/BugBountyPage";
-import DebateArenaPage from "./pages/DebateArenaPage";
-import SoftwareAssistantPage from "./pages/SoftwareAssistantPage";
-import ExecutionValidationView from "./components/ExecutionValidationView";
-import CIPipelineDashboard from "./components/CIPipelineDashboard";
 import { AuthProvider } from "./auth/AuthProvider";
 import ProtectedRoute from "./auth/ProtectedRoute";
+
+// Route-level code splitting: each view is only fetched when it is first
+// navigated to, instead of all ~55 pages being bundled into one chunk.
+const ChatBox = lazy(() => import("./components/ChatBox"));
+const LiveCanvasPage = lazy(() => import("./pages/LiveCanvasPage"));
+const ProjectGenerator = lazy(() => import("./pages/ProjectGenerator"));
+const ReflectionDashboard = lazy(() => import("./components/ReflectionDashboard"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const MissionControlPage = lazy(() => import("./pages/MissionControlPage"));
+const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
+const AgentsPage = lazy(() => import("./pages/AgentsPage"));
+const AIToolsPage = lazy(() => import("./pages/AIToolsPage"));
+const MemoryPage = lazy(() => import("./pages/MemoryPage"));
+const TasksPage = lazy(() => import("./pages/TasksPage"));
+const DeepResearchPage = lazy(() => import("./pages/DeepResearchPage"));
+const AutonomousWorkflowPage = lazy(() => import("./pages/AutonomousWorkflowPage"));
+const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
+const SavedOutputsPage = lazy(() => import("./pages/SavedOutputsPage"));
+const ActivityHistoryPage = lazy(() => import("./pages/ActivityHistoryPage"));
+const LearningDashboard = lazy(() => import("./pages/LearningDashboard"));
+const F1Website = lazy(() => import("./components/F1Website"));
+const SentinelPage = lazy(() => import("./pages/SentinelPage"));
+const CyberCopilotPage = lazy(() => import("./pages/CyberCopilotPage"));
+const VerifiableAiPage = lazy(() => import("./pages/VerifiableAiPage"));
+const AiOsControlCenterPage = lazy(() => import("./pages/AiOsControlCenterPage"));
+const ComputerAgentPage = lazy(() => import("./pages/ComputerAgentPage"));
+const IntelligencePlatformPage = lazy(() => import("./pages/IntelligencePlatformPage"));
+const KnowledgeGraphPage = lazy(() => import("./pages/KnowledgeGraphPage"));
+const MultiAgentPage = lazy(() => import("./pages/MultiAgentPage"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const CreateProject = lazy(() => import("./pages/CreateProject"));
+const GenerationDashboard = lazy(() => import("./pages/GenerationDashboard"));
+const CodeWorkspace = lazy(() => import("./pages/CodeWorkspace"));
+const QualityCenter = lazy(() => import("./pages/QualityCenter"));
+const DeploymentCenter = lazy(() => import("./pages/DeploymentCenter"));
+const ProjectDetails = lazy(() => import("./pages/ProjectDetails"));
+const ProjectOverviewPage = lazy(() => import("./pages/ProjectOverviewPage"));
+const ProjectXRayPage = lazy(() => import("./pages/ProjectXRayPage"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Settings = lazy(() => import("./pages/Settings"));
+const ApiKeys = lazy(() => import("./pages/ApiKeys"));
+const ObservabilityPage = lazy(() => import("./pages/ObservabilityPage"));
+const MonitoringPage = lazy(() => import("./pages/MonitoringPage"));
+const GitHubDashboardPage = lazy(() => import("./pages/GitHubDashboardPage"));
+const KubernetesDashboardPage = lazy(() => import("./pages/KubernetesDashboardPage"));
+const InfrastructureDashboardPage = lazy(() => import("./pages/InfrastructureDashboardPage"));
+const FinOpsDashboardPage = lazy(() => import("./pages/FinOpsDashboardPage"));
+const EvaluationCenter = lazy(() => import("./pages/EvaluationCenter"));
+const AutopilotDashboard = lazy(() => import("./pages/AutopilotDashboard"));
+const FlightRecorder = lazy(() => import("./pages/FlightRecorder"));
+const SimulatorPage = lazy(() => import("./pages/SimulatorPage"));
+const DnaGraphPage = lazy(() => import("./pages/DnaGraphPage"));
+const BugBountyPage = lazy(() => import("./pages/BugBountyPage"));
+const DebateArenaPage = lazy(() => import("./pages/DebateArenaPage"));
+const SoftwareAssistantPage = lazy(() => import("./pages/SoftwareAssistantPage"));
+const ExecutionValidationView = lazy(() => import("./components/ExecutionValidationView"));
+const CIPipelineDashboard = lazy(() => import("./components/CIPipelineDashboard"));
+
+function PageLoader() {
+    return (
+        <div className="flex-1 flex items-center justify-center h-full w-full py-24 text-gray-500">
+            <div className="w-6 h-6 border-2 border-gray-700 border-t-indigo-500 rounded-full animate-spin" />
+        </div>
+    );
+}
 
 function AppContent() {
     const [view, setView] = useState("dashboard");
@@ -401,7 +410,9 @@ function AppContent() {
 function App() {
     return (
         <AuthProvider>
-            <AppContent />
+            <Suspense fallback={<PageLoader />}>
+                <AppContent />
+            </Suspense>
         </AuthProvider>
     );
 }

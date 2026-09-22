@@ -23,8 +23,10 @@ class CommandValidator:
                 _logger.warning(f"Security Warning: Command blacklisted -> '{c}'")
                 return False
 
-        # 2. Strict Command injection checks (block operators ; && || | ` $)
-        injection_operators = [";", "&&", "||", "|", "`", "$("]
+        # 2. Strict Command injection checks (block operators ; & && || | ` $)
+        # Note: a bare '&' also chains commands under cmd.exe (this tool runs via
+        # shell=True), not just '&&', so it must be blocked independently.
+        injection_operators = [";", "&", "||", "|", "`", "$(", "\n", "\r"]
         for op in injection_operators:
             if op in c:
                 _logger.warning(f"Security Warning: Command contains forbidden shell operator '{op}' -> '{c}'")
