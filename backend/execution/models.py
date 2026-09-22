@@ -192,6 +192,81 @@ class ExportResult(BaseModel):
     reason: str = Field(default="", description="Status or denial reason")
 
 
+class PipelineStep(str, Enum):
+    DOCKER_STARTING = "Starting Docker Sandbox"
+    PREPARING = "Preparing project"
+    INSTALLING_DEPENDENCIES = "Installing dependencies"
+    RUNNING_TESTS = "Running tests"
+    TESTS_PASSED = "Tests passed"
+    TESTS_FAILED = "Tests failed"
+    DEBUGGING = "Debugging"
+    APPLYING_FIX = "Applying fix"
+    RETESTING = "Retesting"
+    FINAL_RESULT = "Final result"
+
+
+class AutonomousValidationConfig(BaseModel):
+    __test__ = False
+    timeout_seconds: float = Field(default=30.0, description="Per-command execution timeout in seconds")
+    max_repair_attempts: int = Field(default=3, description="Maximum self-healing retry iterations")
+    max_output_bytes: int = Field(default=50000, description="Maximum captured stdout/stderr output size")
+    install_dependencies: bool = Field(default=True, description="Whether to execute dependency installation")
+    docker_enabled: bool = Field(default=False, description="Whether Docker isolation is enabled")
+    execution_backend: str = Field(default="local", description="Execution backend: 'local' or 'docker'")
+    memory_limit: str = Field(default="512m", description="Docker memory limit e.g. 512m")
+    cpu_limit: float = Field(default=1.0, description="Docker CPU limit e.g. 1.0")
+    network_mode: str = Field(default="none", description="Docker network mode e.g. none, bridge")
+    docker_image: Optional[str] = Field(default=None, description="Optional custom Docker image override")
+    environment_variables: Dict[str, str] = Field(default_factory=dict, description="Optional custom environment variables")
+
+
+class PipelineStepResult(BaseModel):
+    __test__ = False
+    step: PipelineStep = Field(description="Pipeline step enum")
+    status: str = Field(default="SUCCESS", description="SUCCESS, FAILED, SKIPPED, TIMEOUT")
+    command: str = Field(default="", description="Command executed if any")
+    stdout: str = Field(default="", description="Captured standard output")
+    stderr: str = Field(default="", description="Captured standard error")
+    exit_code: int = Field(default=0, description="Process exit code")
+    duration_ms: float = Field(default=0.0, description="Duration in milliseconds")
+    error_message: str = Field(default="", description="High level error message")
+
+
+class ProjectExecutionResult(BaseModel):
+    __test__ = False
+    status: ExecutionStatus = Field(default=ExecutionStatus.PASS, description="Execution status")
+    exit_code: int = Field(default=0, description="Process exit code")
+    command_executed: str = Field(default="", description="Exact command line executed")
+    stdout: str = Field(default="", description="Captured standard output")
+    stderr: str = Field(default="", description="Captured standard error")
+    execution_duration: float = Field(default=0.0, description="Execution duration in seconds")
+    duration_ms: float = Field(default=0.0, description="Execution duration in milliseconds")
+    timed_out: bool = Field(default=False, description="Whether process timed out")
+    stage: PipelineStep = Field(default=PipelineStep.RUNNING_TESTS, description="Current pipeline stage")
+    error_type: Optional[str] = Field(default=None, description="Classified error category")
+    container_id: Optional[str] = Field(default=None, description="Docker container ID if executed inside container")
+    backend_used: str = Field(default="local", description="Execution backend used: 'local' or 'docker'")
+
+
+class FinalValidationReport(BaseModel):
+    __test__ = False
+    project_name: str = Field(default="AIForgeProject", description="Target project name")
+    project_type: str = Field(default="python", description="Detected project language/framework")
+    overall_status: str = Field(default="VERIFIED", description="VERIFIED, FAILED_MAX_RETRIES, TIMEOUT, UNSUPPORTED")
+    total_duration_ms: float = Field(default=0.0, description="Total pipeline execution duration in milliseconds")
+    attempts_count: int = Field(default=1, description="Number of validation attempts completed")
+    max_attempts: int = Field(default=3, description="Configured maximum retry attempts")
+    steps: List[PipelineStepResult] = Field(default_factory=list, description="Ordered trace of pipeline steps")
+    test_summary: Optional[Dict[str, Any]] = Field(default=None, description="Detailed test result metrics")
+    applied_fixes: List[Dict[str, Any]] = Field(default_factory=list, description="List of repairs generated and applied")
+    files_modified: List[str] = Field(default_factory=list, description="List of relative file paths modified by repair")
+    is_production_ready: bool = Field(default=False, description="True if all tests and validations passed")
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="ISO timestamp")
+    backend_used: str = Field(default="local", description="Execution backend used: 'local' or 'docker'")
+    container_id: Optional[str] = Field(default=None, description="Docker container ID if executed inside container")
+
+
+
 
 
 

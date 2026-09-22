@@ -77,8 +77,16 @@ class ProjectRunner:
         py_files = list(project_path.glob("**/*.py"))
         if py_files:
             has_tests = any("test" in p.name.lower() for p in py_files)
-            if has_tests and shutil.which("pytest"):
-                return [sys.executable, "-m", "pytest"], "python"
+            if has_tests:
+                has_pytest = bool(shutil.which("pytest"))
+                if not has_pytest:
+                    try:
+                        import pytest  # noqa: F401
+                        has_pytest = True
+                    except ImportError:
+                        has_pytest = False
+                if has_pytest:
+                    return [sys.executable, "-m", "pytest"], "python"
             return [sys.executable, "-m", "compileall", "-e", "."], "python"
 
         return [], "unknown"

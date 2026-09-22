@@ -38,6 +38,7 @@ class ErrorClassifier:
             (r"TypeError|AttributeError", "TYPE_ERROR"),
             (r"npm ERR! code ERESOLVE|Could not resolve dependency|pip install|package not found|requirements\.txt", "DEPENDENCY_ERROR"),
             (r"psycopg2\.OperationalError|FATAL: database|connection to server at.*failed|sqlalchemy\.exc|OperationalError.*db", "DATABASE_ERROR"),
+            (r"Address already in use|port.*in use|EADDRINUSE|errno 98", "PORT_CONFLICT"),
             (r"vite:.*error|Failed to compile|webpack.*error|Babel.*error|RollupError", "FRONTEND_BUILD_ERROR"),
             (r"uvicorn.*error|Application startup failed|FastAPI.*startup|Lifespan error", "BACKEND_ERROR"),
             (r"FAILED tests/|AssertionError|test_.*failed|assert False|assert 0 ==", "TEST_ASSERTION_ERROR"),
@@ -47,16 +48,16 @@ class ErrorClassifier:
         ]
 
     def classify(self, log_output: str) -> str:
-        """Classifies error log into standard uppercase category."""
+        """Classifies error log into standard category."""
         if not log_output or not log_output.strip():
-            return "UNKNOWN_ERROR"
+            return "unknown_error"
 
         for pattern, category in self.rules:
             if re.search(pattern, log_output, re.IGNORECASE):
                 _logger.info(f"[ErrorClassifier] Matched rule '{pattern}' -> '{category}'")
-                return category
+                return category.lower()
 
-        return "RUNTIME_ERROR"
+        return "runtime_error"
 
     def classify_detailed(self, log_output: str) -> Dict[str, Any]:
         """Provides structured classification with severity and description."""

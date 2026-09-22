@@ -92,11 +92,16 @@ export const submitProjectGeneration = async (payload) => {
   }
 };
 
-export const sendMessage = async (message, sessionId = 'default') => {
+export const sendMessage = async (message, sessionId = 'default', memoryEnabled = true, projectId = null) => {
   try {
-    return await api.post('/chat', { prompt: message, session_id: sessionId });
+    return await api.post('/chat/message', { 
+      message: message, 
+      conversation_id: sessionId,
+      memory_enabled: memoryEnabled,
+      project_id: projectId
+    });
   } catch (err) {
-    return { reply: "AIForge agent received your prompt." };
+    return { response: "AIForge agent received your prompt with memory context." };
   }
 };
 

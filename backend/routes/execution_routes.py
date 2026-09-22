@@ -136,3 +136,149 @@ async def get_project_validation_endpoint(project_id: str):
     dummy_files = {"backend/main.py": "from fastapi import FastAPI\napp = FastAPI()\n", "README.md": "# App"}
     report = global_validation_pipeline.run_pipeline(dummy_files)
     return report.model_dump()
+
+
+from fastapi.responses import StreamingResponse
+import asyncio
+import json
+from backend.execution.autonomous_execution_engine import (
+    global_autonomous_execution_engine,
+    AutonomousValidationConfig,
+    FinalValidationReport,
+    PipelineStepResult
+)
+
+# Store for autonomous reports
+autonomous_reports_store: Dict[str, Dict[str, Any]] = {}
+
+
+class AutonomousValidateRequest(BaseModel):
+    files: Optional[Dict[str, str]] = None
+    timeout_seconds: float = 30.0
+    max_repair_attempts: int = 3
+    max_output_bytes: int = 50000
+    install_dependencies: bool = True
+    docker_enabled: bool = False
+    execution_backend: Optional[str] = "local"
+    memory_limit: Optional[str] = "512m"
+    cpu_limit: Optional[float] = 1.0
+    network_mode: Optional[str] = "none"
+    docker_image: Optional[str] = None
+
+
+@router.post("/{project_id}/autonomous-validate")
+async def run_autonomous_validation_endpoint(project_id: str, req: AutonomousValidateRequest):
+    """
+    Executes the full closed-loop autonomous validation and self-healing pipeline for a project.
+    """
+    files_map = req.files or {"backend/main.py": "def get_status(): return {'status': 'OK'}\n"}
+    config = AutonomousValidationConfig(
+        timeout_seconds=req.timeout_seconds,
+        max_repair_attempts=req.max_repair_attempts,
+        max_output_bytes=req.max_output_bytes,
+        install_dependencies=req.install_dependencies,
+        docker_enabled=req.docker_enabled or (req.execution_backend == "docker"),
+        execution_backend=req.execution_backend or ("docker" if req.docker_enabled else "local"),
+        memory_limit=req.memory_limit or "512m",
+        cpu_limit=req.cpu_limit if req.cpu_limit is not None else 1.0,
+        network_mode=req.network_mode or "none",
+        docker_image=req.docker_image
+    )
+
+    report = global_autonomous_execution_engine.execute_and_validate(
+        files_manifest=files_map,
+        project_name=project_id,
+        config=config
+    )
+    report_dict = report.model_dump()
+    autonomous_reports_store[project_id] = report_dict
+
+    return {
+        "status": "success",
+        "project_id": project_id,
+        "report": report_dict
+    }
+
+
+@router.post("/{project_id}/autonomous-validate/stream")
+async def stream_autonomous_validation_endpoint(project_id: str, req: AutonomousValidateRequest):
+    """
+    Server-Sent Events (SSE) streaming endpoint for real-time validation tracking:
+    Preparing -> Installing dependencies -> Running tests -> Debugging -> Applying fix -> Retesting -> Final result.
+    """
+    files_map = req.files or {"backend/main.py": "def get_status(): return {'status': 'OK'}\n"}
+    config = AutonomousValidationConfig(
+        timeout_seconds=req.timeout_seconds,
+        max_repair_attempts=req.max_repair_attempts,
+        max_output_bytes=req.max_output_bytes,
+        install_dependencies=req.install_dependencies,
+        docker_enabled=req.docker_enabled or (req.execution_backend == "docker"),
+        execution_backend=req.execution_backend or ("docker" if req.docker_enabled else "local"),
+        memory_limit=req.memory_limit or "512m",
+        cpu_limit=req.cpu_limit if req.cpu_limit is not None else 1.0,
+        network_mode=req.network_mode or "none",
+        docker_image=req.docker_image
+    )
+
+    event_queue: asyncio.Queue = asyncio.Queue()
+    loop = asyncio.get_running_loop()
+
+    def on_step_callback(step_result: PipelineStepResult):
+        loop.call_soon_threadsafe(
+            event_queue.put_nowait,
+            {"type": "step", "data": step_result.model_dump()}
+        )
+
+    async def run_in_background():
+        try:
+            report = await asyncio.to_thread(
+                global_autonomous_execution_engine.execute_and_validate,
+                files_manifest=files_map,
+                project_name=project_id,
+                config=config,
+                step_callback=on_step_callback
+            )
+            report_dict = report.model_dump()
+            autonomous_reports_store[project_id] = report_dict
+            await event_queue.put({"type": "complete", "data": report_dict})
+        except Exception as exc:
+            await event_queue.put({"type": "error", "message": str(exc)})
+
+    asyncio.create_task(run_in_background())
+
+    async def sse_generator():
+        while True:
+            item = await event_queue.get()
+            yield f"data: {json.dumps(item)}\n\n"
+            if item.get("type") in ("complete", "error"):
+                break
+
+    return StreamingResponse(sse_generator(), media_type="text/event-stream")
+
+
+@router.get("/{project_id}/autonomous-report")
+async def get_autonomous_report_endpoint(project_id: str):
+    if project_id in autonomous_reports_store:
+        return autonomous_reports_store[project_id]
+    raise HTTPException(status_code=404, detail=f"No validation report found for project '{project_id}'")
+
+
+# Secondary router mounted at /api/execution for direct service access
+execution_api_router = APIRouter(prefix="/api/execution", tags=["execution_engine"])
+
+
+@execution_api_router.post("/validate")
+async def api_validate(req: AutonomousValidateRequest, project_id: str = "default_project"):
+    return await run_autonomous_validation_endpoint(project_id, req)
+
+
+@execution_api_router.post("/validate/stream")
+async def api_validate_stream(req: AutonomousValidateRequest, project_id: str = "default_project"):
+    return await stream_autonomous_validation_endpoint(project_id, req)
+
+
+@execution_api_router.get("/report/{project_id}")
+async def api_get_report(project_id: str):
+    return await get_autonomous_report_endpoint(project_id)
+
+

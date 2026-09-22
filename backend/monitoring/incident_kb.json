@@ -2478,5 +2478,13 @@
     "success": false,
     "duration_seconds": 0.8008303642272949,
     "confidence": 0.6
+  },
+  {
+    "signature": "api_downtime",
+    "root_cause": "PostgreSQL unavailable",
+    "strategy": "Restart Backend Process",
+    "success": true,
+    "duration_seconds": 0.802440881729126,
+    "confidence": 0.96
   }
 ]

@@ -65,10 +65,28 @@ from backend.dashboard.evolution_dashboard import router as evolution_router
 from backend.auth.routes import router as auth_router
 from backend.observability.routes import router as observability_router
 from backend.generation.routes import router as generation_router
-from backend.routes.execution_routes import router as execution_router
+from backend.routes.execution_routes import router as execution_router, execution_api_router
 from backend.routes.security_routes import router as security_router
 from backend.routes.project_memory_routes import router as project_memory_router
 from backend.routes.workspace_ide_routes import router as workspace_ide_router
+from backend.routes.ai_memory_routes import router as ai_memory_router
+from backend.routes.agent_mode_routes import router as agent_mode_router
+from backend.routes.command_center_routes import router as command_center_router
+from backend.routes.canvas_routes import router as canvas_router
+from backend.routes.task_routes import router as task_router
+from backend.routes.research_routes import router as research_router
+from backend.routes.workflow_routes import router as workflow_router
+from backend.routes.analytics_routes import router as analytics_router
+from backend.routes.mission_control_routes import router as mission_control_router
+from backend.routes.sentinel_routes import router as sentinel_router
+from backend.routes.ai_core_routes import router as ai_core_router
+from backend.routes.knowledge_graph_routes import router as knowledge_graph_router
+from backend.routes.multi_agent_routes import router as multi_agent_router
+from backend.routes.cyber_copilot_routes import router as cyber_copilot_router
+from backend.routes.verifiable_routes import router as verifiable_router
+from backend.routes.autonomous_workflow_routes import router as autonomous_workflow_router
+from backend.routes.ai_os_routes import router as ai_os_router
+from backend.routes.sprint_routes import router as sprint_routes
 
 app = FastAPI(
     title="AIForge API",
@@ -79,9 +97,28 @@ app.include_router(auth_router)
 app.include_router(observability_router)
 app.include_router(generation_router)
 app.include_router(execution_router)
+app.include_router(execution_api_router)
 app.include_router(security_router)
 app.include_router(project_memory_router)
 app.include_router(workspace_ide_router)
+app.include_router(ai_memory_router)
+app.include_router(agent_mode_router)
+app.include_router(command_center_router)
+app.include_router(canvas_router)
+app.include_router(task_router)
+app.include_router(research_router)
+app.include_router(workflow_router)
+app.include_router(analytics_router)
+app.include_router(mission_control_router)
+app.include_router(sentinel_router)
+app.include_router(ai_core_router)
+app.include_router(knowledge_graph_router)
+app.include_router(multi_agent_router)
+app.include_router(cyber_copilot_router)
+app.include_router(verifiable_router)
+app.include_router(autonomous_workflow_router)
+app.include_router(ai_os_router)
+app.include_router(sprint_routes)
 
 from backend.observability.service import global_opentelemetry_service
 
@@ -377,6 +414,10 @@ def register_routers() -> None:
 
     from v2.api.gateway import router as v2_gateway_router
     app.include_router(v2_gateway_router)
+
+    from backend.routes.ci_routes import router as ci_pipeline_router, ci_direct_router
+    app.include_router(ci_pipeline_router)
+    app.include_router(ci_direct_router)
 
 
 register_routers()

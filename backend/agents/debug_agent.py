@@ -171,9 +171,9 @@ class DebugAgent(BaseAgent):
 
         # 1. Classify Error using standardized classifier
         from backend.execution.error_classifier import global_error_classifier
-        error_type = test_results.get("failure_category") or global_error_classifier.classify(combined_output)
-        if error_type == "NONE" or not error_type:
-            error_type = global_error_classifier.classify(combined_output)
+        error_type = (test_results.get("failure_category") or global_error_classifier.classify(combined_output) or "").upper()
+        if error_type in ("NONE", "UNKNOWN_ERROR", ""):
+            error_type = global_error_classifier.classify(combined_output).upper()
 
         root_cause = "General execution or test assertion failure."
         diagnosis = "Execution or test suite failure observed."
@@ -213,8 +213,8 @@ class DebugAgent(BaseAgent):
                 if "requirements.txt" not in files_to_modify:
                     files_to_modify.append("requirements.txt")
 
-        elif error_type in ("TEST_ASSERTION_ERROR", "test_failure") or failures or failed_tests:
-            error_type = "TEST_ASSERTION_ERROR"
+        elif error_type in ("TEST_ASSERTION_ERROR", "ASSERTION_FAILURE", "test_failure") or failures or failed_tests:
+            error_type = "ASSERTION_FAILURE"
             test_name = failed_tests[0] if failed_tests else (failures[0] if failures else "test")
             if isinstance(test_name, dict):
                 test_name = test_name.get("test_name", "test_suite")

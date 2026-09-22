@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { FaCommentAlt, FaBrain, FaFileAlt, FaPlus, FaRobot, FaCog, FaMoon, FaSun, FaDownload } from "react-icons/fa";
+import { FaCommentAlt, FaBrain, FaFileAlt, FaPlus, FaRobot, FaCog, FaMoon, FaSun, FaDownload, FaCheck, FaTimes, FaExternalLinkAlt } from "react-icons/fa";
 import InputBar from "./InputBar";
 import Loading from "./Loading";
 import Message from "./Message";
@@ -9,12 +9,15 @@ import ObservabilityDashboard from "./ObservabilityDashboard";
 import FileExplorerTree from "./FileExplorerTree";
 import MemoryPanel from "./MemoryPanel";
 import KnowledgeBaseDashboard from "./KnowledgeBaseDashboard";
+import AgentExecutionPanel from "./chat/AgentExecutionPanel";
 import { sendMessage } from "../services/api";
 import { createConversation, getConversationHistory } from "../services/conversationApi";
 import { generatePlan } from "../services/plannerApi";
 import { queryRagDocuments, uploadRagDocuments } from "../services/ragApi";
 import { getActiveSessionId, setActiveSessionId } from "../utils/chatStorage";
 import { fetchMetrics } from "../services/projectApi";
+import { createMemory } from "../services/aiMemoryApi";
+import { runAgent } from "../services/aiCoreApi";
 import toast from "react-hot-toast";
 
 function formatStructuredResponse(response) {
@@ -58,8 +61,23 @@ function ChatBox() {
     const [ragStatus, setRagStatus] = useState("");
     const [ragError, setRagError] = useState("");
 
+    // AI Memory State
+    const [isMemoryActive, setIsMemoryActive] = useState(true);
+    const [recalledMemories, setRecalledMemories] = useState([
+        { title: "Preferred Full-Stack Architecture", category: "Tech Stack", scope: "PERSONAL", content: "React + Tailwind on frontend, FastAPI + PostgreSQL on backend" },
+        { title: "Coding & Design Conventions", category: "Preferences", scope: "PERSONAL", content: "Clean functional React, async/await, robust error handling" },
+        { title: "FoodDelivery AI JWT & RBAC", category: "Architecture", scope: "PROJECT", content: "RS256 JWT auth with Customer, Restaurant, and Courier roles" }
+    ]);
+    const [showMemoryInspector, setShowMemoryInspector] = useState(false);
+    const [pendingSuggestion, setPendingSuggestion] = useState(null);
+
+    // Next-Gen AI Agent Core State
+    const [activeAgentMode, setActiveAgentMode] = useState("AGENT");
+    const [lastAgentRun, setLastAgentRun] = useState(null);
+    const [isAgentRunning, setIsAgentRunning] = useState(false);
+
     // Top Header / Model Controls
-    const [activeModel, setActiveModel] = useState("Gemini 3.5");
+    const [activeModel, setActiveModel] = useState("claude-3-5-sonnet");
     const [isDarkMode, setIsDarkMode] = useState(true);
     const [metrics, setMetrics] = useState(null);
 
@@ -247,7 +265,36 @@ function ChatBox() {
                 return;
             }
 
-            const response = await sendMessage(text, activeConversationId);
+            if (activeAgentMode !== "CHAT") {
+                setIsAgentRunning(true);
+                const agentRun = await runAgent({
+                    prompt: text,
+                    mode: activeAgentMode,
+                    modelId: activeModel
+                });
+                setLastAgentRun(agentRun);
+                setIsAgentRunning(false);
+
+                setMessages((current) => [
+                    ...current,
+                    {
+                        sender: "ai",
+                        text: agentRun.response_text || "",
+                        agentRun: agentRun
+                    }
+                ]);
+                loadMetricsDashboard();
+                return;
+            }
+
+            const response = await sendMessage(text, activeConversationId, isMemoryActive);
+
+            if (response?.memory?.recalled?.length) {
+                setRecalledMemories(response.memory.recalled);
+            }
+            if (response?.memory?.suggestions?.length) {
+                setPendingSuggestion(response.memory.suggestions[0]);
+            }
 
             if (response?.conversation) {
                 setSessionId(response.conversation.conversation_id);
@@ -373,50 +420,165 @@ function ChatBox() {
                 </div>
             </div>
 
-            {/* Mode Switches */}
-            <div className="flex gap-2 px-6 py-3 border-b border-gray-800 bg-[#0F172A]/50">
-                <button
-                    onClick={() => {
-                        setPlannerMode(false);
-                        setDocumentMode(false);
-                    }}
-                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                        !plannerMode && !documentMode
-                            ? "bg-[#6366F1] text-white shadow"
-                            : "bg-[#1E293B] text-gray-400 hover:text-white"
-                    }`}
-                >
-                    <FaCommentAlt size={11} /> General Chat
-                </button>
+            {/* Mode Switches & AI Memory Controls */}
+            <div className="flex flex-wrap items-center justify-between gap-2 px-6 py-3 border-b border-gray-800 bg-[#0F172A]/50 relative">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                        onClick={() => {
+                            setPlannerMode(false);
+                            setDocumentMode(false);
+                        }}
+                        className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                            !plannerMode && !documentMode
+                                ? "bg-[#6366F1] text-white shadow"
+                                : "bg-[#1E293B] text-gray-400 hover:text-white"
+                        }`}
+                    >
+                        <FaCommentAlt size={11} /> General Chat
+                    </button>
 
-                <button
-                    onClick={() => {
-                        setPlannerMode(true);
-                        setDocumentMode(false);
-                    }}
-                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                        plannerMode
-                            ? "bg-[#6366F1] text-white shadow"
-                            : "bg-[#1E293B] text-gray-400 hover:text-white"
-                    }`}
-                >
-                    <FaBrain size={11} /> Plan Generator
-                </button>
+                    <button
+                        onClick={() => {
+                            setPlannerMode(true);
+                            setDocumentMode(false);
+                        }}
+                        className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                            plannerMode
+                                ? "bg-[#6366F1] text-white shadow"
+                                : "bg-[#1E293B] text-gray-400 hover:text-white"
+                        }`}
+                    >
+                        <FaBrain size={11} /> Plan Generator
+                    </button>
 
-                <button
-                    onClick={() => {
-                        setDocumentMode((curr) => !curr);
-                        setPlannerMode(false);
-                    }}
-                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                        documentMode
-                            ? "bg-[#6366F1] text-white shadow"
-                            : "bg-[#1E293B] text-gray-400 hover:text-white"
-                    }`}
-                >
-                    <FaFileAlt size={11} /> Document Grounding (RAG)
-                </button>
+                    <button
+                        onClick={() => {
+                            setDocumentMode((curr) => !curr);
+                            setPlannerMode(false);
+                        }}
+                        className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                            documentMode
+                                ? "bg-[#6366F1] text-white shadow"
+                                : "bg-[#1E293B] text-gray-400 hover:text-white"
+                        }`}
+                    >
+                        <FaFileAlt size={11} /> Document Grounding (RAG)
+                    </button>
+                </div>
+
+                {/* Interactive AI Memory Indicator & Inspector */}
+                <div className="relative">
+                    <button
+                        onClick={() => setShowMemoryInspector(!showMemoryInspector)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition border cursor-pointer ${
+                            isMemoryActive
+                                ? "bg-violet-500/15 text-violet-300 border-violet-500/40 hover:bg-violet-500/25 shadow-sm"
+                                : "bg-[#1E293B] text-gray-500 border-gray-800 hover:text-gray-300"
+                        }`}
+                        title="Inspect memories currently active in this session"
+                    >
+                        <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                        <FaBrain className={isMemoryActive ? "text-violet-400" : "text-gray-500"} size={12} />
+                        <span>{isMemoryActive ? `Memory active (${recalledMemories.length})` : "Memory disabled"}</span>
+                    </button>
+
+                    {showMemoryInspector && (
+                        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-[#0F1117] border border-[#242833] rounded-2xl p-4 shadow-2xl z-50 text-xs space-y-3 animate-fade-in text-[#F5F7FA]">
+                            <div className="flex items-center justify-between pb-2 border-b border-[#242833]">
+                                <div className="flex items-center gap-2">
+                                    <FaBrain className="text-[#8D5CF6]" size={13} />
+                                    <span className="font-bold text-white">Active Memory Context</span>
+                                </div>
+                                <button
+                                    onClick={() => setShowMemoryInspector(false)}
+                                    className="text-gray-500 hover:text-white p-1"
+                                >
+                                    <FaTimes size={11} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-1">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                                    Memories Used for Response:
+                                </span>
+                                {recalledMemories.length === 0 ? (
+                                    <div className="text-[11px] text-gray-500 italic py-2">
+                                        No specific memories triggered for this prompt.
+                                    </div>
+                                ) : (
+                                    <div className="max-h-48 overflow-y-auto space-y-2 custom-scrollbar pr-1">
+                                        {recalledMemories.map((m, idx) => (
+                                            <div key={idx} className="p-2 bg-[#151821] border border-[#242833] rounded-xl text-left space-y-0.5">
+                                                <div className="flex items-center justify-between gap-1">
+                                                    <span className="font-bold text-violet-300 truncate text-[11px]">
+                                                        ✓ {m.title}
+                                                    </span>
+                                                    <span className="text-[9px] font-mono px-1 rounded bg-[#08090D] text-gray-400">
+                                                        {m.scope || "PERSONAL"}
+                                                    </span>
+                                                </div>
+                                                <p className="text-[10px] text-gray-400 line-clamp-2 leading-relaxed">
+                                                    {m.content}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="pt-2 border-t border-[#242833] flex items-center justify-between text-[11px]">
+                                <label className="flex items-center gap-2 cursor-pointer select-none">
+                                    <input
+                                        type="checkbox"
+                                        checked={isMemoryActive}
+                                        onChange={(e) => setIsMemoryActive(e.target.checked)}
+                                        className="rounded bg-[#08090D] border-[#242833] text-[#8D5CF6]"
+                                    />
+                                    <span className="text-gray-300 font-semibold">Enable for chat</span>
+                                </label>
+
+                                <span className="text-[10px] text-[#8D5CF6] font-mono font-bold">
+                                    AIForge OS Memory
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
+
+            {/* Automatic Memory Suggestion Banner */}
+            {pendingSuggestion && (
+                <div className="bg-gradient-to-r from-violet-900/40 to-indigo-900/40 border-b border-violet-500/30 px-6 py-2.5 flex items-center justify-between gap-3 text-xs animate-fade-in">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <span className="p-1 rounded bg-violet-500/20 text-violet-300 shrink-0">
+                            <FaBrain size={12} />
+                        </span>
+                        <div className="truncate">
+                            <span className="font-bold text-white">Save this to memory? </span>
+                            <span className="text-violet-200">"{pendingSuggestion.title}"</span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                        <button
+                            onClick={async () => {
+                                await createMemory(pendingSuggestion);
+                                toast.success("Saved to AI Memory!", { icon: "🧠" });
+                                setPendingSuggestion(null);
+                            }}
+                            className="px-3 py-1 bg-[#8D5CF6] hover:bg-[#7c4ee4] text-white rounded-lg text-[11px] font-bold transition shadow cursor-pointer"
+                        >
+                            Remember
+                        </button>
+                        <button
+                            onClick={() => setPendingSuggestion(null)}
+                            className="px-2 py-1 text-gray-400 hover:text-white transition cursor-pointer text-[11px]"
+                        >
+                            Dismiss
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Document Grounding Uploader & RAG Dashboard */}
             <RagUploadPanel
@@ -468,6 +630,18 @@ function ChatBox() {
                                 {metrics?.average_test_score ? `${metrics.average_test_score}%` : "96%"}
                             </div>
                         </div>
+                    </div>
+
+                    {/* Next-Gen AI Agent Core Execution Panel */}
+                    <div className="mb-6">
+                        <AgentExecutionPanel
+                            activeMode={activeAgentMode}
+                            onSelectMode={setActiveAgentMode}
+                            activeModel={activeModel}
+                            onSelectModel={setActiveModel}
+                            lastRun={lastAgentRun}
+                            isRunning={isAgentRunning}
+                        />
                     </div>
 
                     {messages.length === 0 && (

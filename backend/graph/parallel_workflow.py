@@ -854,11 +854,23 @@ async def execution_validation_node(state: ProjectState) -> dict:
     }
     history.append(attempt_record)
 
+    from backend.execution.autonomous_execution_engine import global_autonomous_execution_engine
+    auto_report = None
+    try:
+        auto_report = global_autonomous_execution_engine.execute_and_validate(
+            files_manifest=files_manifest,
+            project_name=str(state.get("project_name") or state.get("project_id") or "AIForgeApp"),
+            source_dir=project_path if project_path else None
+        ).model_dump()
+    except Exception as exc:
+        _logger.warning(f"Autonomous validation engine execution note: {exc}")
+
     _fire_lifecycle("agent_completed", "execution_validation", duration=timer.elapsed)
     return {
         "execution_results": exec_dict,
         "execution_history": history,
         "validation_report": val_report.model_dump(),
+        "autonomous_validation_report": auto_report,
         "quality_score": val_report.quality_scores,
         "commands": existing_commands + [cmd_str],
         "status": new_status,

@@ -4,14 +4,21 @@
     --color-bg-base: #08090D;
     --color-surface-card: #0F1117;
     --color-surface-elevated: #151821;
+    --color-surface-hover: #1E2330;
     --color-border-dark: #242833;
+    --color-border-subtle: #1C202B;
     --color-text-primary: #F5F7FA;
     --color-text-secondary: #9AA1B2;
+    --color-text-muted: #64748B;
     --color-accent-violet: #8D5CF6;
     --color-accent-blue: #6366F1;
+    --color-accent-cyan: #06B6D4;
+    --color-accent-emerald: #10B981;
+    --color-accent-amber: #F59E0B;
+    --color-accent-rose: #F43F5E;
     
-    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, monospace;
 }
 
 html,
@@ -30,6 +37,41 @@ body,
 ::selection {
     background: rgba(141, 92, 246, 0.35);
     color: #fff;
+}
+
+/* Glassmorphism & premium panel effects */
+.glass-panel {
+    background: rgba(15, 17, 23, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(36, 40, 51, 0.7);
+}
+
+.glass-card {
+    background: rgba(21, 24, 33, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(36, 40, 51, 0.8);
+}
+
+.glass-dropdown {
+    background: rgba(15, 17, 23, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(36, 40, 51, 0.9);
+}
+
+/* Subtle glow effects */
+.glow-violet {
+    box-shadow: 0 0 25px -5px rgba(141, 92, 246, 0.25);
+}
+
+.glow-cyan {
+    box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.25);
+}
+
+.glow-emerald {
+    box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.25);
 }
 
 /* Slim scrollbars matching developer platform aesthetics */
@@ -71,6 +113,19 @@ body,
     animation: fade-in 0.2s ease-out forwards;
 }
 
+@keyframes pulse-subtle {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.animate-pulse-subtle {
+    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 @keyframes spin-slow {
     from {
         transform: rotate(0deg);
@@ -89,3 +144,4 @@ body,
     padding-top: 8px;
     padding-bottom: 8px;
 }
+

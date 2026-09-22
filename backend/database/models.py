@@ -247,3 +247,21 @@ class ProjectVersionSnapshotModel(Base):
     )
 
 
+class GitHubRepositoryModel(Base):
+    __tablename__ = "github_repositories"
+
+    id = Column(String(64), primary_key=True, index=True)
+    project_id = Column(String(64), unique=True, index=True, nullable=False)
+    github_repo_id = Column(String(64), default="")
+    repo_name = Column(String(255), nullable=False)
+    repo_url = Column(String(512), nullable=False)
+    owner = Column(String(128), default="")
+    default_branch = Column(String(64), default="main")
+    visibility = Column(String(32), default="private")
+    last_commit_sha = Column(String(64), default="")
+    last_sync_time = Column(String(64), default=lambda: datetime.now().isoformat())
+    status = Column(String(64), default="published", index=True)
+    created_at = Column(String(64), default=lambda: datetime.now().isoformat())
+    updated_at = Column(String(64), default=lambda: datetime.now().isoformat())
+
+

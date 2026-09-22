@@ -61,7 +61,7 @@ class ProjectDetector:
             # Detect Commands
             build_cmd = "npm run build" if "build" in scripts else "npm run build"
             test_cmd = "npm test" if "test" in scripts else "npx vitest run"
-            start_cmd = "npm run dev" if "dev" in scripts else ("npm start" if "start" in scripts else "node index.js")
+            start_cmd = "npm run dev" if ("dev" in scripts or framework in ("vite", "react")) else ("npm start" if "start" in scripts else "node index.js")
 
             entry = "src/App.jsx"
             if "src/main.jsx" in paths:
