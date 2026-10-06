@@ -127,17 +127,13 @@ class PersistentCheckpointSaver(BaseCheckpointSaver):
             for v in v_map.values()
         ]
 
-        def _load_channel(k: str, v: Any) -> Any:
-            blob_key = (thread_id, checkpoint_ns, k, v)
-            if blob_key in self.blobs:
-                return self.serde.loads_typed(self.blobs[blob_key])
-            return None
-
-        channel_values = {
-            k: _load_channel(k, v)
-            for k, v in checkpoint_.get("channel_versions", {}).items()
-            if _load_channel(k, v) is not None
-        }
+        # put() stores ("empty", b"") for channels with no value at this version (same
+        # convention as LangGraph's InMemorySaver); that marker is not a serde type.
+        channel_values = {}
+        for k, v in checkpoint_.get("channel_versions", {}).items():
+            blob = self.blobs.get((thread_id, checkpoint_ns, k, v))
+            if blob is not None and blob[0] != "empty":
+                channel_values[k] = self.serde.loads_typed(blob)
 
         checkpoint_["channel_values"] = channel_values
 
