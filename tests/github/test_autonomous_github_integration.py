@@ -22,6 +22,7 @@ Covers:
 """
 
 import os
+import subprocess
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -59,6 +60,22 @@ class TestAutonomousGitHubIntegration:
     def mock_repo_store(self, tmp_path):
         store_file = tmp_path / "test_repos.json"
         return GitHubRepoStore(storage_file=store_file)
+
+    @pytest.fixture
+    def local_remote(self, tmp_path):
+        """A real bare git repo standing in for GitHub, so publishing genuinely commits and pushes."""
+        bare = tmp_path / "remote.git"
+        subprocess.run(["git", "init", "--bare", "-b", "main", str(bare)], check=True, capture_output=True)
+
+        def fake_create_repository(self, name, description="", private=True, org=None, token=None):
+            return {
+                "id": 1, "name": name, "html_url": f"https://github.com/test-owner/{name}",
+                "clone_url": str(bare), "owner": {"login": "test-owner"},
+                "default_branch": "main", "simulated": False,
+            }
+
+        with patch.object(GitHubAPIService, "create_repository", fake_create_repository):
+            yield bare
 
     # -------------------------------------------------------------------------
     # 1. Git Initialization
@@ -281,7 +298,7 @@ class TestAutonomousGitHubIntegration:
     # -------------------------------------------------------------------------
     # 14. Full Publish Workflow & Structured Return Payload
     # -------------------------------------------------------------------------
-    def test_full_publish_workflow(self, mock_repo_store, temp_workspace):
+    def test_full_publish_workflow(self, mock_repo_store, temp_workspace, local_remote):
         publisher = AutonomousGitHubPublisher(repo_store=mock_repo_store)
 
         clean_files = {
@@ -296,8 +313,14 @@ class TestAutonomousGitHubIntegration:
             repo_name="ecommerce-v2",
             description="Autonomous eCommerce API",
             private=True,
+            token="test-token-not-real",
             working_dir=temp_workspace
         )
+
+        # The commit really reached the remote
+        pushed = subprocess.run(["git", "--git-dir", str(local_remote), "log", "--oneline", "main"],
+                                capture_output=True, text=True, check=True).stdout
+        assert "feat: generate project" in pushed
 
         # Validate structured result fields per requirement
         assert result["status"] == "published"
@@ -326,7 +349,7 @@ class TestAutonomousGitHubIntegration:
     # -------------------------------------------------------------------------
     # 15. Incremental Sync / Versioning Updates
     # -------------------------------------------------------------------------
-    def test_incremental_sync_updates(self, mock_repo_store, temp_workspace):
+    def test_incremental_sync_updates(self, mock_repo_store, temp_workspace, local_remote):
         publisher = AutonomousGitHubPublisher(repo_store=mock_repo_store)
 
         # Initial publish
@@ -334,6 +357,7 @@ class TestAutonomousGitHubIntegration:
         publisher.publish_project(
             project_id="sync_demo",
             files_manifest=initial_files,
+            token="test-token-not-real",
             working_dir=temp_workspace
         )
 
@@ -359,7 +383,7 @@ class TestAutonomousGitHubIntegration:
     # -------------------------------------------------------------------------
     # 16. REST API Endpoints Verification
     # -------------------------------------------------------------------------
-    def test_rest_api_endpoints(self):
+    def test_rest_api_endpoints(self, local_remote):
         client = TestClient(app)
 
         # 1. Connect
@@ -381,6 +405,7 @@ class TestAutonomousGitHubIntegration:
             "project_id": "api_test_project",
             "repo_name": "api-test-repo",
             "private": True,
+            "token": "test-token-not-real",
             "files": {
                 "main.py": "print('API published')",
                 "requirements.txt": "fastapi\n"

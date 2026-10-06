@@ -196,57 +196,34 @@ async def export_to_github(req: GitHubExportRequest):
     _validate_export_or_raise(req.project_id, files, req.state)
 
 
-    token = req.access_token or os.getenv("GITHUB_TOKEN")
-    repo_name = req.repo_name or f"aiforge-{req.project_id.lower().replace(' ', '-')}"
-    safe_repo = "".join([c if c.isalnum() or c in "-_" else "_" for c in repo_name]).strip("_")
-
-    if not token:
-        # Simulate clean verified export response if token not provided for local environment
-        repo_url = f"https://github.com/aiforge-org/{safe_repo}"
-        _logger.info(f"GitHub Export (Simulated): Repository created at {repo_url}")
-        return {
-            "success": True,
-            "repository_name": safe_repo,
-            "repository_url": repo_url,
-            "committed_files": len(files),
-            "status": "PUBLIC_REPOSITORY_INITIALIZED"
-        }
+    # This route used to create an empty repo and report the files as pushed without pushing
+    # anything; the publisher actually commits and pushes (and secret-scans first).
+    from backend.github.github_api_service import GitHubAuthError, GitHubRepoExistsError
+    from backend.github.publisher import SecurityViolationError, global_github_publisher
 
     try:
-        import urllib.request
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github.v3+json",
-            "User-Agent": "AIForge-Software-Engineer"
-        }
+        result = global_github_publisher.publish_project(
+            project_id=req.project_id,
+            files_manifest=files,
+            repo_name=req.repo_name,
+            private=req.private,
+            token=req.access_token,
+        )
+    except GitHubAuthError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+    except GitHubRepoExistsError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except SecurityViolationError as exc:
+        raise HTTPException(status_code=400, detail={"error": "SECURITY_VIOLATION", "message": str(exc)})
+    except Exception as exc:
+        _logger.error(f"Failed to export to GitHub: {exc}")
+        raise HTTPException(status_code=502, detail=f"GitHub export failed: {exc}")
 
-        # 1. Create GitHub Repository
-        create_payload = json.dumps({
-            "name": safe_repo,
-            "description": f"Autonomously generated project: {req.project_id}",
-            "private": req.private,
-            "auto_init": True
-        }).encode("utf-8")
-
-        url = "https://api.github.com/user/repos"
-        request = urllib.request.Request(url, data=create_payload, headers=headers, method="POST")
-
-        try:
-            with urllib.request.urlopen(request) as response:
-                repo_info = json.loads(response.read().decode())
-                html_url = repo_info.get("html_url", f"https://github.com/{safe_repo}")
-        except Exception as api_err:
-            _logger.warning(f"GitHub API Repository creation fallback: {api_err}")
-            html_url = f"https://github.com/{safe_repo}"
-
-        return {
-            "success": True,
-            "repository_name": safe_repo,
-            "repository_url": html_url,
-            "committed_files": len(files),
-            "status": "COMMITTED_AND_PUSHED"
-        }
-
-    except Exception as e:
-        _logger.error(f"Failed to export to GitHub: {e}")
-        raise HTTPException(status_code=400, detail=f"GitHub authentication or push failed: {str(e)}")
+    return {
+        "success": True,
+        "repository_name": result["repository"]["name"],
+        "repository_url": result["repository"]["url"],
+        "committed_files": len(files),
+        "commit": result["commit"],
+        "status": "COMMITTED_AND_PUSHED",
+    }

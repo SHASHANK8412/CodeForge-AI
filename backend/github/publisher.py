@@ -315,6 +315,11 @@ The workflow automatically executes on every push and pull request:
                 findings=secret_findings
             )
 
+        # Without a token the API layer "creates" a simulated repo and the push is skipped;
+        # reporting that as published would claim a repository that doesn't exist.
+        if not (token or self.github_api.token):
+            raise GitHubAuthError("GitHub export needs a token: set GITHUB_TOKEN or pass one in the request.")
+
         # 2. Technology Detection
         project_cfg = self.detector.detect(files_manifest)
 
@@ -335,6 +340,8 @@ The workflow automatically executes on every push and pull request:
                 if clean_rel == ".env" or clean_rel.endswith(".key"):
                     continue  # Strictly avoid writing raw environment secret files
                 dest = (project_dir / clean_rel).resolve()
+                if project_dir not in dest.parents:
+                    raise ValueError(f"Refusing to write '{rel_path}' outside the project directory.")
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 dest.write_text(content, encoding="utf-8")
 
@@ -400,9 +407,10 @@ The workflow automatically executes on every push and pull request:
             # 9. Configure Remote & Push
             self.git.remote_add(project_dir, "origin", remote_url)
 
+            if repo_info.get("simulated"):
+                raise GitHubAuthError("GitHub repository creation was simulated; nothing was pushed.")
             push_res = self.git.push(project_dir, remote="origin", branch="main", set_upstream=True)
-            # In simulated mode without real remote credentials, push is considered clean
-            if not push_res.success and not repo_info.get("simulated"):
+            if not push_res.success:
                 raise RuntimeError(f"Git push to remote failed: {push_res.stderr}")
 
             # 10. Persist Metadata
@@ -495,7 +503,9 @@ The workflow automatically executes on every push and pull request:
         self.git.add(target_dir)
         self.git.commit(target_dir, message=safe_msg)
         commit_sha = self.git.get_latest_commit_sha(target_dir)
-        self.git.push(target_dir, remote="origin", branch=meta.default_branch)
+        push_res = self.git.push(target_dir, remote="origin", branch=meta.default_branch)
+        if not push_res.success:
+            raise RuntimeError(f"Git push to remote failed: {push_res.stderr}")
 
         # Update metadata
         meta.last_commit_sha = commit_sha[:8] if commit_sha else meta.last_commit_sha

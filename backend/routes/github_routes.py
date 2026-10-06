@@ -37,7 +37,6 @@ from backend.github.publisher import (
     SecurityViolationError,
     PrePublishValidationError
 )
-from backend.memory.project_memory import global_project_memory_store
 
 logger = logging.getLogger("aiforge.routes.github")
 
@@ -121,31 +120,9 @@ class SyncProjectRequest(BaseModel):
 # -----------------------------------------------------------------------------
 
 def _resolve_project_files(project_id: str, client_files: Optional[Dict[str, str]]) -> Dict[str, str]:
-    """Resolves project files from client payload, generated_projects directory, or memory."""
-    if client_files and len(client_files) > 0:
-        return client_files
-
-    project_dir = GENERATED_PROJECTS_DIR / project_id
-    if project_dir.exists():
-        disk_files = {}
-        for p in project_dir.rglob("*"):
-            if p.is_file() and ".git" not in p.parts and "node_modules" not in p.parts and "__pycache__" not in p.parts:
-                try:
-                    rel = str(p.relative_to(project_dir)).replace("\\", "/")
-                    disk_files[rel] = p.read_text(encoding="utf-8", errors="replace")
-                except Exception:
-                    pass
-        if disk_files:
-            return disk_files
-
-    mem_files = global_project_memory_store.get_all_generated_files()
-    if mem_files and len(mem_files) > 0:
-        return mem_files
-
-    return {
-        "main.py": f"# {project_id}\ndef main():\n    print('AIForge generated project')\n\nif __name__ == '__main__':\n    main()\n",
-        "README.md": f"# {project_id}\n\nAutonomously generated with AIForge.\n"
-    }
+    """Same rules as ZIP export: this project's real files only, never another project's or a stub."""
+    from backend.routes.export import _resolve_project_files as resolve_export_files
+    return resolve_export_files(project_id, client_files)
 
 
 # -----------------------------------------------------------------------------
@@ -239,8 +216,13 @@ def github_publish_project_endpoint(req: PublishProjectRequest):
     if not files:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"No files found for project '{req.project_id}'.")
 
-    # If project already exists in generated_projects on disk, use it as working dir
-    working_dir = GENERATED_PROJECTS_DIR / req.project_id if (GENERATED_PROJECTS_DIR / req.project_id).exists() else None
+    # If project already exists in generated_projects on disk, use it as working dir - but only
+    # if it really is inside generated_projects ("..", absolute paths etc. would point the git
+    # init/commit/push at some other directory, such as this repository).
+    working_dir = None
+    candidate = (GENERATED_PROJECTS_DIR / req.project_id).resolve()
+    if candidate.is_dir() and GENERATED_PROJECTS_DIR.resolve() in candidate.parents:
+        working_dir = candidate
 
     try:
         res = global_github_publisher.publish_project(
