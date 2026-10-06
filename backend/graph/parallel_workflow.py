@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, List, Optional
 from langgraph.graph import StateGraph, END
 
 from backend.graph.project_state import ProjectState
-from backend.agents.planner_agent import PlannerAgent
+from backend.agents.planner_agent import DEFAULT_PROJECT_NAME, PlannerAgent, project_name_from_prompt
 from backend.agents.architect_agent import ArchitectAgent
 from backend.agents.frontend_agent import FrontendAgent
 from backend.agents.backend_agent import BackendAgent
@@ -125,6 +125,8 @@ async def planner_node(state: ProjectState) -> dict:
 
     cached_plan = global_cache_service.get("planner", prompt)
     if cached_plan:
+        if cached_plan.get("project_name") in (None, "", DEFAULT_PROJECT_NAME):
+            cached_plan = {**cached_plan, "project_name": project_name_from_prompt(prompt)}
         _fire_lifecycle("agent_completed", "planner", duration=0.0)
         return {
             "prompt": prompt,
@@ -139,6 +141,8 @@ async def planner_node(state: ProjectState) -> dict:
 
     session_id = gen_id
     plan_json = planner.parse_plan_json(raw_plan, allow_fallback=True)
+    if plan_json.get("project_name") in (None, "", DEFAULT_PROJECT_NAME):
+        plan_json["project_name"] = project_name_from_prompt(prompt)
     global_cache_service.set("planner", prompt, plan_json)
     memory_manager.save_agent_output(session_id, "planner", plan_json)
     agent_timers["planner"] = timer.elapsed

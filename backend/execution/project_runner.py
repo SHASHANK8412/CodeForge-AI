@@ -8,6 +8,7 @@ Classifies error types and returns structured ExecutionResult objects.
 import sys
 import os
 import shutil
+import tempfile
 import json
 import logging
 from pathlib import Path
@@ -86,11 +87,36 @@ class ProjectRunner:
                     except ImportError:
                         has_pytest = False
                 if has_pytest:
-                    return [sys.executable, "-m", "pytest"], "python"
+                    return self._isolated_pytest_command(project_path), "python"
             return [sys.executable, "-m", "compileall", "-e", "."], "python"
 
         return [], "unknown"
 
+    @staticmethod
+    def _isolated_pytest_command(project_path: Path) -> List[str]:
+        """
+        Run a generated project's tests against that project, not this platform.
+
+        Generated projects live inside the AIForge repository, and AIForge's root may be on
+        sys.path. A generated backend/ without __init__.py is a namespace package, which loses
+        to AIForge's own regular `backend` package, so `from backend.routes import app` imported
+        the platform instead. Making the project's top-level code folders regular packages lets
+        them win (cwd comes first on sys.path), and an empty config plus --rootdir keeps
+        AIForge's pytest.ini out of the run.
+        """
+        skip = {"node_modules", "frontend", ".git", ".venv", "venv", "__pycache__", "dist", "build"}
+        for folder in project_path.iterdir():
+            if (folder.is_dir() and folder.name not in skip and not folder.name.startswith(".")
+                    and any(folder.glob("*.py")) and not (folder / "__init__.py").exists()):
+                (folder / "__init__.py").write_text("", encoding="utf-8")
+
+        cmd = [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", "--rootdir", str(project_path)]
+        if not any((project_path / name).exists() for name in ("pytest.ini", "pyproject.toml", "setup.cfg", "tox.ini")):
+            empty_ini = Path(tempfile.gettempdir()) / "aiforge_isolated_pytest.ini"
+            if not empty_ini.exists():
+                empty_ini.write_text("[pytest]\n", encoding="utf-8")
+            cmd += ["-c", str(empty_ini)]
+        return cmd
 
     def run_project(
         self,

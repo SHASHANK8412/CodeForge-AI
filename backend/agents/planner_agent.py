@@ -7,6 +7,21 @@ from backend.schemas.agent_contract import ProjectSpec
 
 _logger = logging.getLogger("aiforge.planner_agent")
 
+DEFAULT_PROJECT_NAME = "AIForge Application"
+_NAME_FILLER = {
+    "a", "an", "the", "build", "create", "make", "develop", "generate", "write", "me", "my", "please",
+    "simple", "basic", "full", "stack", "fullstack", "with", "and", "for", "using", "that", "which", "to", "of",
+}
+
+
+def project_name_from_prompt(prompt: str) -> str:
+    """
+    A readable project name from the user's prompt, for plans that did not name the project.
+    The name picks the output folder, so different prompts must not collapse onto one default.
+    """
+    words = [w for w in re.findall(r"[A-Za-z0-9]+", prompt or "") if w.lower() not in _NAME_FILLER]
+    return " ".join(w.capitalize() for w in words[:4]) or DEFAULT_PROJECT_NAME
+
 
 class PlannerAgent(BaseAgent):
 
@@ -140,7 +155,7 @@ Rules:
 
         # 4. Construct Pydantic ProjectSpec model with schema validation
         spec_kwargs = {
-            "project_name": parsed_data.get("project_name") or "AIForge Application",
+            "project_name": parsed_data.get("project_name") or DEFAULT_PROJECT_NAME,
             "domain": parsed_data.get("domain") or "Web Application",
             "type": parsed_data.get("type") or "Full Stack Web App",
             "executive_summary": parsed_data.get("executive_summary") or "",
