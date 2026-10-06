@@ -43,23 +43,23 @@ class RecoveryEngine:
         strat_lower = strategy.lower()
         if "database" in strat_lower or "db" in strat_lower:
             # Simulate database container reset
-            _logger.info("[RECOVERY] Executing: docker restart aiforge-postgres")
+            _logger.info("[RECOVERY][SIMULATED] Would execute: docker restart aiforge-postgres")
             time.sleep(1.0)
         elif "cache" in strat_lower or "clear" in strat_lower:
             # Simulate Redis flush
-            _logger.info("[RECOVERY] Executing: redis-cli FLUSHALL")
+            _logger.info("[RECOVERY][SIMULATED] Would execute: redis-cli FLUSHALL")
             time.sleep(0.2)
         elif "scale" in strat_lower or "replica" in strat_lower:
             # Simulate Scaling replicas up
-            _logger.info("[RECOVERY] Executing: kubectl scale deployment/backend --replicas=3")
+            _logger.info("[RECOVERY][SIMULATED] Would execute: kubectl scale deployment/backend --replicas=3")
             time.sleep(1.5)
         elif "secret" in strat_lower or "rotate" in strat_lower:
             # Simulate key rotation
-            _logger.info("[RECOVERY] Generating new crypt keys and rewriting env configuration")
+            _logger.info("[RECOVERY][SIMULATED] Would generate new crypt keys and rewriting env configuration")
             time.sleep(0.5)
         else:
             # Default Restart Container
-            _logger.info("[RECOVERY] Executing: docker restart aiforge-backend")
+            _logger.info("[RECOVERY][SIMULATED] Would execute: docker restart aiforge-backend")
             time.sleep(0.8)
 
         duration = time.time() - start_time
