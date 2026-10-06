@@ -14,34 +14,9 @@ export default function TopNav({
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(3);
-  
-  const [notifications, setNotifications] = useState([
-    {
-      id: "n-1",
-      title: "Empirical Test Suite Passed",
-      desc: "48/48 unit & integration tests completed with 0 regressions.",
-      time: "5m ago",
-      type: "success",
-      unread: true
-    },
-    {
-      id: "n-2",
-      title: "Security SAST Scan Clean",
-      desc: "Zero high-severity CVEs detected in backend dependencies.",
-      time: "25m ago",
-      type: "security",
-      unread: true
-    },
-    {
-      id: "n-3",
-      title: "Multi-Agent Orchestrator Ready",
-      desc: "Claude 3.7 Sonnet & DeepSeek R1 models synced to workspace.",
-      time: "1h ago",
-      type: "info",
-      unread: true
-    }
-  ]);
+  // No notification feed exists in the backend yet; don't invent entries.
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
 
   const userMenuRef = useRef(null);
   const notificationRef = useRef(null);

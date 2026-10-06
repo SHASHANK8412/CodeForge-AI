@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { listGenerations } from "../../services/generation";
 import { 
   FaBolt, FaLightbulb, FaFileAlt, FaBug, FaSearch, FaBrain, 
   FaPaperPlane, FaMicrochip
@@ -8,6 +9,25 @@ export default function AICommandCenter({ onLaunchPrompt, setView }) {
   const [promptInput, setPromptInput] = useState("");
   const [selectedModel, setSelectedModel] = useState("claude-3.7");
   const [activeMode, setActiveMode] = useState("generate");
+  const [genStats, setGenStats] = useState(null);
+  const [genStatsError, setGenStatsError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    listGenerations()
+      .then(({ generations = [] }) => {
+        if (cancelled) return;
+        const count = (...statuses) => generations.filter((g) => statuses.includes(g.status)).length;
+        setGenStats({
+          total: generations.length,
+          completed: count("completed"),
+          failed: count("failed", "cancelled"),
+          active: generations.length - count("completed", "failed", "cancelled"),
+        });
+      })
+      .catch(() => !cancelled && setGenStatsError(true));
+    return () => { cancelled = true; };
+  }, []);
 
   const models = [
     { id: "claude-3.7", name: "Claude 3.7 Sonnet (Reasoning)", badge: "Primary" },
@@ -210,43 +230,23 @@ export default function AICommandCenter({ onLaunchPrompt, setView }) {
         </form>
       </div>
 
-      {/* Live System Telemetry Banner */}
+      {/* Generation stats from GET /api/generations */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-        <div className="p-4 bg-[#0F1117]/90 border border-[#242833] rounded-2xl space-y-1 hover:border-[#8D5CF6]/40 transition">
-          <div className="text-[10px] font-mono text-[#64748B] uppercase tracking-wider flex items-center justify-between">
-            <span>Project Health</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+        {[
+          { label: "Generations", value: genStats?.total, note: "All runs", tone: "text-white", dot: "bg-white" },
+          { label: "Completed", value: genStats?.completed, note: "Finished pipeline runs", tone: "text-emerald-400", dot: "bg-emerald-400" },
+          { label: "In Progress", value: genStats?.active, note: "Running or awaiting approval", tone: "text-cyan-400", dot: "bg-cyan-400" },
+          { label: "Failed", value: genStats?.failed, note: "Failed or cancelled", tone: "text-rose-400", dot: "bg-rose-400" },
+        ].map((card) => (
+          <div key={card.label} className="p-4 bg-[#0F1117]/90 border border-[#242833] rounded-2xl space-y-1 hover:border-[#8D5CF6]/40 transition">
+            <div className="text-[10px] font-mono text-[#64748B] uppercase tracking-wider flex items-center justify-between">
+              <span>{card.label}</span>
+              <span className={`w-1.5 h-1.5 rounded-full ${card.dot}`} />
+            </div>
+            <div className={`text-xl font-bold ${card.tone}`}>{genStats ? card.value : "—"}</div>
+            <div className="text-[10px] text-[#9AA1B2]">{genStatsError ? "Backend unreachable" : card.note}</div>
           </div>
-          <div className="text-xl font-bold text-emerald-400">96.4%</div>
-          <div className="text-[10px] text-[#9AA1B2]">6 Core Pillars Verified</div>
-        </div>
-
-        <div className="p-4 bg-[#0F1117]/90 border border-[#242833] rounded-2xl space-y-1 hover:border-[#06B6D4]/40 transition">
-          <div className="text-[10px] font-mono text-[#64748B] uppercase tracking-wider flex items-center justify-between">
-            <span>Test Suite</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-          </div>
-          <div className="text-xl font-bold text-cyan-400">48 / 48 Passed</div>
-          <div className="text-[10px] text-[#9AA1B2]">0 Failures • 100% Coverage</div>
-        </div>
-
-        <div className="p-4 bg-[#0F1117]/90 border border-[#242833] rounded-2xl space-y-1 hover:border-[#8D5CF6]/40 transition">
-          <div className="text-[10px] font-mono text-[#64748B] uppercase tracking-wider flex items-center justify-between">
-            <span>Project Memory</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
-          </div>
-          <div className="text-xl font-bold text-violet-400">12 Decisions</div>
-          <div className="text-[10px] text-[#9AA1B2]">Versioned Knowledge Graph</div>
-        </div>
-
-        <div className="p-4 bg-[#0F1117]/90 border border-[#242833] rounded-2xl space-y-1 hover:border-emerald-500/40 transition">
-          <div className="text-[10px] font-mono text-[#64748B] uppercase tracking-wider flex items-center justify-between">
-            <span>Active Agents</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-white" />
-          </div>
-          <div className="text-xl font-bold text-white">8 Agents Live</div>
-          <div className="text-[10px] text-emerald-400 font-semibold">Consensus Synchronized</div>
-        </div>
+        ))}
       </div>
     </div>
   );
