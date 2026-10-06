@@ -44,7 +44,10 @@ class ProjectTester:
             }
 
         # 1. Detect if tests exist
-        test_files = list(proj_path.glob("**/test_*.py")) + list(proj_path.glob("**/*test*.js")) + list(proj_path.glob("**/*spec*.js"))
+        test_files = [
+            p for p in list(proj_path.glob("**/test_*.py")) + list(proj_path.glob("**/*test*.js")) + list(proj_path.glob("**/*spec*.js"))
+            if not {".venv", "node_modules"} & set(p.relative_to(proj_path).parts)
+        ]
         has_tests = len(test_files) > 0
         logger.info(f"[TESTER] Detected {len(test_files)} test file(s).")
 

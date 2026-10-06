@@ -62,7 +62,7 @@ class ProjectRunner:
 
         # Python tests come first: the tester parses pytest output, and full-stack projects
         # carry a package.json as well.
-        py_files = [p for p in project_path.glob("**/*.py") if "node_modules" not in p.parts]
+        py_files = [p for p in project_path.glob("**/*.py") if not {"node_modules", ".venv"} & set(p.parts)]
         if py_files and any(p.name.startswith("test_") or p.name.endswith("_test.py") for p in py_files):
             has_pytest = bool(shutil.which("pytest"))
             if not has_pytest:
@@ -164,6 +164,17 @@ class ProjectRunner:
         # Create dummy artifact pointing to existing dir
         artifact = CodeArtifact(filename="main.py", language=lang, content="")
 
+        # Python projects run against their own dependencies (<project>/.venv), which are put on
+        # the import path after the project itself; AIForge's interpreter still runs pytest.
+        extra_path = []
+        if lang == "python":
+            from backend.execution.project_env import ensure_project_env, site_packages
+            env_res = ensure_project_env(proj_path)
+            if not env_res["ok"]:
+                _logger.warning("ProjectRunner: dependency install failed for %s", proj_path)
+            if site_packages(proj_path):
+                extra_path.append(str(site_packages(proj_path)))
+
         # Execute using SandboxExecutor inside proj_path
         exec_res = global_sandbox_executor.execute(
             artifacts=[artifact],
@@ -171,7 +182,8 @@ class ProjectRunner:
             command_override=cmd,
             execution_type=ExecutionType.PROJECT_TEST,
             cwd=str(proj_path),
-            limits=self.limits
+            limits=self.limits,
+            extra_pythonpath=extra_path
         )
 
         return exec_res

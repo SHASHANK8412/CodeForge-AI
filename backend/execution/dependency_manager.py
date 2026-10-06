@@ -90,6 +90,22 @@ class DependencyManager:
 
         pm = package_manager or (self.detect_package_managers(target_dir)[0] if self.detect_package_managers(target_dir) else "pip")
 
+        if pm == "pip":
+            # Into <project>/.venv, never into AIForge's own environment (see project_env.py).
+            from backend.execution.project_env import ENV_DIRNAME, ensure_project_env
+            started = time.time()
+            env_res = ensure_project_env(target_dir)
+            return DependencyResult(
+                success=env_res["ok"],
+                package_manager="pip",
+                command=f"{ENV_DIRNAME}: pip install -r requirements.txt",
+                duration_seconds=round(time.time() - started, 2),
+                stdout=env_res["log"] if env_res["ok"] else "",
+                stderr="" if env_res["ok"] else env_res["log"],
+                cached=env_res["cached"],
+                error_type=None if env_res["ok"] else "InstallFailed",
+            )
+
         # Determine manifest file to hash
         manifest_file = None
         if pm in ["npm", "pnpm", "yarn"]:

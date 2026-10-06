@@ -12,6 +12,7 @@ Orchestrates end-to-end Live Preview lifecycle:
 8. Project RUN_REPORT.md Generation
 """
 
+import sys
 import time
 import asyncio
 import logging
@@ -97,6 +98,11 @@ class PreviewManager:
         session.status = "STARTING"
         if config.backend_command:
             be_cmd = config.backend_command.replace("{PORT}", str(bindings["backend"].port))
+            # Run the backend with the project's own environment when its dependencies include uvicorn.
+            from backend.execution.project_env import env_python, site_packages
+            venv_libs = site_packages(project_path)
+            if venv_libs and (venv_libs / "uvicorn").is_dir():
+                be_cmd = be_cmd.replace(f'"{sys.executable}"', f'"{env_python(project_path)}"')
             self.log_event(session, f"Starting backend service on port {bindings['backend'].port}...")
             global_process_manager.start_process(
                 project_id=project_id,

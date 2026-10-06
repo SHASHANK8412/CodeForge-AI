@@ -41,7 +41,8 @@ class SandboxExecutor:
         command_override: Optional[List[str]] = None,
         execution_type: ExecutionType = ExecutionType.RUN,
         cwd: Optional[str] = None,
-        limits: Optional[ExecutionLimits] = None
+        limits: Optional[ExecutionLimits] = None,
+        extra_pythonpath: Optional[List[str]] = None
     ) -> ExecutionResult:
         if not artifacts and not command_override:
             return ExecutionResult(
@@ -58,7 +59,7 @@ class SandboxExecutor:
         if cwd and os.path.exists(cwd):
             work_dir = cwd
             main_file_path = os.path.join(work_dir, artifacts[0].filename) if artifacts else os.path.join(work_dir, "main.py")
-            return self._run_subprocess(work_dir, main_file_path, language, command_override, execution_type, active_limits, start_time)
+            return self._run_subprocess(work_dir, main_file_path, language, command_override, execution_type, active_limits, start_time, extra_pythonpath)
 
         with tempfile.TemporaryDirectory(prefix="aiforge_sandbox_") as tmpdir:
             main_file_path = None
@@ -73,7 +74,7 @@ class SandboxExecutor:
             if not main_file_path and artifacts:
                 main_file_path = os.path.join(tmpdir, artifacts[0].filename)
 
-            return self._run_subprocess(tmpdir, main_file_path or os.path.join(tmpdir, "main.py"), language, command_override, execution_type, active_limits, start_time)
+            return self._run_subprocess(tmpdir, main_file_path or os.path.join(tmpdir, "main.py"), language, command_override, execution_type, active_limits, start_time, extra_pythonpath)
 
     def _run_subprocess(
         self,
@@ -83,11 +84,12 @@ class SandboxExecutor:
         command_override: Optional[List[str]],
         execution_type: ExecutionType,
         active_limits: ExecutionLimits,
-        start_time: float
+        start_time: float,
+        extra_pythonpath: Optional[List[str]] = None
     ) -> ExecutionResult:
         cmd = self._resolve_trusted_command(language, work_dir, main_file_path, command_override)
         isolated_env = self._build_isolated_environment()
-        isolated_env["PYTHONPATH"] = os.path.abspath(work_dir)
+        isolated_env["PYTHONPATH"] = os.pathsep.join([os.path.abspath(work_dir)] + list(extra_pythonpath or []))
 
         try:
             proc = subprocess.run(
