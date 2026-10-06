@@ -9,6 +9,7 @@ Inspects generated project file manifests or disk structures to detect:
 """
 
 import json
+import sys
 import logging
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
@@ -25,6 +26,13 @@ class DetectedProjectConfig(BaseModel):
     start_command: str = "npm run dev"
     entry_point: str = "src/App.jsx"
     confidence: float = 1.0
+    # Full-stack layout (frontend/ + backend/), used by live preview and local deploys.
+    is_fullstack: bool = False
+    frontend_framework: Optional[str] = None
+    backend_framework: Optional[str] = None
+    frontend_command: Optional[str] = None
+    backend_command: Optional[str] = None
+    health_check_url: str = "/health"
 
 
 class ProjectDetector:
@@ -33,6 +41,38 @@ class ProjectDetector:
     """
 
     def detect(self, files_manifest: Dict[str, str]) -> DetectedProjectConfig:
+        return self._annotate_services(self._detect_primary(files_manifest), files_manifest)
+
+    @staticmethod
+    def _annotate_services(cfg: DetectedProjectConfig, files: Dict[str, str]) -> DetectedProjectConfig:
+        """Describe the frontend and backend services, including how to start each one.
+        {PORT} in a command is replaced with the allocated port."""
+        fe_pkg = next((p for p in ("frontend/package.json", "package.json") if p in files), None)
+        if fe_pkg:
+            try:
+                pkg = json.loads(files[fe_pkg] or "{}")
+            except ValueError:
+                pkg = {}
+            deps = {**pkg.get("dependencies", {}), **pkg.get("devDependencies", {})}
+            scripts = pkg.get("scripts", {})
+            cfg.frontend_framework = next((f for f in ("vite", "next", "react", "vue", "svelte") if f in deps), "node")
+            if "dev" in scripts:
+                cfg.frontend_command = "npm run dev -- --port {PORT}"
+            elif "start" in scripts:
+                cfg.frontend_command = "npm start"
+
+        be_main = next((p for p in ("backend/main.py", "main.py") if p in files), None)
+        if be_main:
+            req = files.get(be_main.replace("main.py", "requirements.txt"), "") + files.get(be_main, "")
+            lowered = req.lower()
+            cfg.backend_framework = "fastapi" if "fastapi" in lowered else "flask" if "flask" in lowered else "python"
+            if cfg.backend_framework == "fastapi":
+                cfg.backend_command = f'"{sys.executable}" -m uvicorn main:app --host 127.0.0.1 --port {{PORT}}'
+
+        cfg.is_fullstack = bool(cfg.frontend_framework and cfg.backend_framework)
+        return cfg
+
+    def _detect_primary(self, files_manifest: Dict[str, str]) -> DetectedProjectConfig:
         paths = set(files_manifest.keys())
 
         # 1. JavaScript / TypeScript Projects

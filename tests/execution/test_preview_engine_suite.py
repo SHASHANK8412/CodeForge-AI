@@ -72,8 +72,7 @@ class TestLivePreviewEngine:
         res = global_contract_validator.validate_codebase_contract(manifest)
         assert res.passed is True or len(res.violations) >= 0
 
-    @pytest.mark.asyncio
-    async def test_preview_manager_e2e(self, tmp_path):
+    def test_preview_manager_e2e(self, tmp_path):
         proj_dir = tmp_path / "LivePreviewTestApp"
         proj_dir.mkdir(parents=True, exist_ok=True)
         (proj_dir / "backend").mkdir(parents=True, exist_ok=True)
@@ -85,7 +84,7 @@ class TestLivePreviewEngine:
             "backend/requirements.txt": (proj_dir / "backend" / "requirements.txt").read_text()
         }
 
-        session = await global_preview_manager.start_preview_async("LivePreviewTestApp", proj_dir, manifest)
+        session = asyncio.run(global_preview_manager.start_preview_async("LivePreviewTestApp", proj_dir, manifest))
         assert session.project_id == "LivePreviewTestApp"
         assert session.frontend_url is not None
         assert session.backend_url is not None

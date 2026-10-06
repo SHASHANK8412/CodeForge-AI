@@ -60,17 +60,17 @@ class TestErrorClassifier:
     def test_syntax_error_classification(self):
         classifier = ErrorClassifier()
         cat = classifier.classify("SyntaxError: invalid syntax (main.py, line 12)")
-        assert cat == "syntax_error"
+        assert cat == "SYNTAX_ERROR"
 
     def test_import_error_classification(self):
         classifier = ErrorClassifier()
         cat = classifier.classify("ModuleNotFoundError: No module named 'requests'")
-        assert cat == "import_error"
+        assert cat == "IMPORT_ERROR"
 
     def test_port_conflict_classification(self):
         classifier = ErrorClassifier()
         cat = classifier.classify("OSError: [Errno 98] Address already in use: 8000")
-        assert cat == "port_conflict"
+        assert cat == "PORT_CONFLICT"
 
 
 class TestSandboxedExecutionManager:
@@ -101,7 +101,7 @@ class TestDiagnosticAndRepairAgents:
             "stderr": "ModuleNotFoundError: No module named 'jwt'"
         }
         diag = agent.diagnose_failure(exec_report, {"backend/auth.py": "import jwt"})
-        assert diag.error_category == "import_error"
+        assert diag.error_category == "IMPORT_ERROR"
         assert "jwt" in diag.root_cause.lower() or "import" in diag.root_cause.lower()
 
     def test_repair_agent_code_patch(self):

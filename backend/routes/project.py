@@ -1195,21 +1195,8 @@ Output MUST be a single valid JSON block:
         else:
             review_data = json.loads(raw_res)
     except Exception as e:
-        review_data = {
-            "status": "PASS",
-            "score": 95,
-            "issues": [
-                {
-                    "severity": "LOW",
-                    "file": "README.md",
-                    "line": 1,
-                    "category": "DOCUMENTATION",
-                    "title": "Missing details",
-                    "description": "Deployment instructions could be more detailed.",
-                    "suggested_fix": "Add detailed step-by-step startup guide."
-                }
-            ]
-        }
+        # The review didn't run; don't report a passing score for it.
+        review_data = {"status": "ERROR", "score": None, "issues": [], "error": f"Review failed: {e}"}
     return review_data
 
 @router.post("/api/project/{project_id}/review")

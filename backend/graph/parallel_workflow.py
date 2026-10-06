@@ -1404,8 +1404,8 @@ async def health_check_node(state: ProjectState) -> dict:
         
         # 2. Run diagnostic/repair
         from backend.routes.project import review_project_route_internal, propose_fix_route, apply_fix_route, ProposeFixRequest, ApplyFixRequest
-        reviews = review_project_route_internal(project_id)
-        critical_issues = [r for r in reviews if r.get("severity") in ("CRITICAL", "HIGH")]
+        review = await review_project_route_internal(project_id)
+        critical_issues = [r for r in review.get("issues", []) if r.get("severity") in ("CRITICAL", "HIGH")]
         
         if critical_issues:
             issue = critical_issues[0]
@@ -1414,7 +1414,7 @@ async def health_check_node(state: ProjectState) -> dict:
                 line=issue.get("line", 1),
                 category=issue.get("category", "SYNTAX"),
                 title="Health check failure correction",
-                description=issue["message"],
+                description=issue.get("description") or issue.get("message", ""),
                 suggested_fix="Correct the source configuration"
             )
             try:

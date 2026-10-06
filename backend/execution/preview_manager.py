@@ -109,7 +109,7 @@ class PreviewManager:
 
         # 5. Start Frontend Process (if present)
         if config.frontend_command:
-            fe_cmd = f"{config.frontend_command} --port {bindings['frontend'].port}" if "run dev" in config.frontend_command else config.frontend_command
+            fe_cmd = config.frontend_command.replace("{PORT}", str(bindings["frontend"].port))
             self.log_event(session, f"Starting frontend service on port {bindings['frontend'].port}...")
             global_process_manager.start_process(
                 project_id=project_id,
