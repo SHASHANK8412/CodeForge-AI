@@ -212,8 +212,7 @@ export default function DeploymentCenter({ generationId = 'aiforge-demo', setVie
                 <div className="p-2 bg-slate-950 rounded border border-slate-800 text-purple-400">DB: Neon Postgres</div>
               </div>
               <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px] text-slate-400">
-                <span>Verified Test Suite: 48/48 Passed</span>
-                <span className="text-emerald-400 font-bold">Readiness: {readiness.score || 94}%</span>
+                <span className="text-emerald-400 font-bold">Readiness: {readiness.score != null ? `${readiness.score}%` : '—'}</span>
               </div>
             </div>
 

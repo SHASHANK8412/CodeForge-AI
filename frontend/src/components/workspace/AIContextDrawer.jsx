@@ -31,8 +31,8 @@ export default function AIContextDrawer({
   const [contextData, setContextData] = useState({
     relatedFiles: [],
     memories: [],
-    ragChunksCount: 8,
-    recentActivity: 'Verified 48/48 test suite assertions'
+    ragChunksCount: null,
+    recentActivity: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -65,8 +65,8 @@ export default function AIContextDrawer({
         setContextData({
           relatedFiles: related.slice(0, 4),
           memories: mems.slice(0, 4),
-          ragChunksCount: 8,
-          recentActivity: 'Verified 48/48 automated test suite assertions'
+          ragChunksCount: null,
+          recentActivity: ''
         });
       } catch (err) {
         console.warn('Context fetch fallback:', err);
@@ -209,7 +209,7 @@ export default function AIContextDrawer({
         <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1">
           <div className="flex items-center justify-between text-[10px] font-mono">
             <span className="text-slate-400 uppercase font-bold">RAG Vector Context</span>
-            <span className="text-cyan-400 font-bold">{contextData.ragChunksCount} Chunks Loaded</span>
+            <span className="text-cyan-400 font-bold">{contextData.ragChunksCount != null ? `${contextData.ragChunksCount} Chunks Loaded` : 'No RAG context'}</span>
           </div>
           <p className="text-[10px] text-slate-400 leading-relaxed">
             Project codebase AST nodes and documentation embedded in ChromaDB vector store.
@@ -225,7 +225,7 @@ export default function AIContextDrawer({
             onClick={() => onOpenTimeline?.()}
             className="p-2.5 rounded-xl bg-slate-900/40 border border-slate-800 hover:border-amber-500/40 transition cursor-pointer text-[10px] text-slate-300 leading-relaxed"
           >
-            {contextData.recentActivity}
+            {contextData.recentActivity || 'No recent activity recorded.'}
           </div>
         </div>
       </div>

@@ -88,58 +88,8 @@ CMD ["nginx", "-g", "daemon off;"]`
   }
 ];
 
-const INITIAL_ACTIVITIES = [
-  {
-    id: "act-1",
-    title: "FoodDelivery AI Engine Generated",
-    type: "project",
-    status: "success",
-    timestamp: "10 mins ago",
-    description: "48/48 unit & integration tests passed. Deployed to edge runner.",
-    actionLink: "code",
-    actionLabel: "Open Workspace"
-  },
-  {
-    id: "act-2",
-    title: "Deep Security SAST Audit Completed",
-    type: "security",
-    status: "success",
-    timestamp: "45 mins ago",
-    description: "Reviewer Agent scanned 14 modules. 0 critical vulnerabilities found.",
-    actionLink: "security",
-    actionLabel: "View Audit"
-  },
-  {
-    id: "act-3",
-    title: "Multi-Agent Debate Arena Session",
-    type: "debate",
-    status: "info",
-    timestamp: "2 hours ago",
-    description: "Architect Agent & Security Agent debated database connection pool sizing.",
-    actionLink: "debate",
-    actionLabel: "View Debate"
-  },
-  {
-    id: "act-4",
-    title: "DNA Dependency Graph Indexed",
-    type: "dna",
-    status: "success",
-    timestamp: "Yesterday",
-    description: "Parsed 128 AST symbols and mapped inter-module dependency topology.",
-    actionLink: "dna",
-    actionLabel: "Explore DNA"
-  },
-  {
-    id: "act-5",
-    title: "Autopilot Flight Mission #42",
-    type: "autopilot",
-    status: "success",
-    timestamp: "2 days ago",
-    description: "Automated refactoring loop resolved 6 typing warnings in backend routers.",
-    actionLink: "autopilot",
-    actionLabel: "Flight Logs"
-  }
-];
+// Starts empty: the log should only ever contain things that actually happened.
+const INITIAL_ACTIVITIES = [];
 
 export function getSavedOutputs() {
   try {

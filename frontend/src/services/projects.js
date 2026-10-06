@@ -12,35 +12,8 @@ export async function fetchProjects({ page = 1, pageSize = 12, search = '', stat
     return res.data;
   } catch (err) {
     console.warn('Failed to fetch projects list:', err);
-    return {
-      projects: [
-        {
-          generation_id: 'aiforge-fooddelivery-ai',
-          project_name: 'FoodDelivery AI',
-          description: 'Full-stack food delivery application with authentication, CRUD, and ordering workflow.',
-          status: 'LIVE',
-          quality_score: 96.0,
-          tests_passed: 48,
-          tests_total: 48,
-          stack: ['React', 'FastAPI', 'PostgreSQL', 'Tailwind CSS'],
-          updated_at: 'Just now',
-          created_at: 'Aug 9, 2026',
-          is_archived: false
-        }
-      ],
-      page: 1,
-      page_size: 12,
-      total: 1,
-      stats: {
-        total_projects: 1,
-        completed: 1,
-        building: 0,
-        deployed: 1,
-        avg_quality_score: 96.0,
-        total_tests_passed: 48,
-        successful_deployments: 1
-      }
-    };
+    const error = err?.response?.data?.detail || err?.message || 'Request failed';
+    return { projects: [], page, page_size: pageSize, total: 0, error, stats: { total_projects: 0, completed: 0, building: 0, deployed: 0, avg_quality_score: null, total_tests_passed: null, successful_deployments: 0 } };
   }
 }
 
@@ -50,32 +23,8 @@ export async function fetchProjectDetails(generationId) {
     return res.data;
   } catch (err) {
     console.warn(`Failed to fetch project details for ${generationId}:`, err);
-    const nowStr = new Date().toLocaleTimeString();
-    return {
-      generation_id: generationId,
-      project_name: 'FoodDelivery AI',
-      description: 'Autonomous multi-agent software application built with AIForge.',
-      status: 'LIVE',
-      quality_score: 96.0,
-      tests: { passed: 48, total: 48 },
-      stack: ['React', 'FastAPI', 'PostgreSQL', 'Tailwind CSS'],
-      created_at: 'August 9, 2026',
-      updated_at: '12 minutes ago',
-      activity: [
-        { timestamp: nowStr, message: 'Deployment successful (Live on Edge CDN)' },
-        { timestamp: nowStr, message: '48/48 empirical pytest suite assertions passed' },
-        { timestamp: nowStr, message: 'Reviewer Agent AST and SAST security audit completed' },
-        { timestamp: nowStr, message: 'Backend REST endpoints and FastAPI routers generated' },
-        { timestamp: nowStr, message: 'Frontend React components and state containers generated' },
-        { timestamp: nowStr, message: 'Architect Agent system specification defined' },
-        { timestamp: nowStr, message: 'Planner Agent task breakdown created' }
-      ],
-      versions: [
-        { version: 'v3', status: 'LIVE', timestamp: 'Aug 9, 12:30', quality_score: 96.0, tests: '48/48' },
-        { version: 'v2', status: 'TESTED', timestamp: 'Aug 9, 11:15', quality_score: 94.0, tests: '48/48' },
-        { version: 'v1', status: 'GENERATED', timestamp: 'Aug 9, 09:00', quality_score: 90.0, tests: '46/48' }
-      ]
-    };
+    const error = err?.response?.data?.detail || err?.message || 'Request failed';
+    return { generation_id: generationId, project_name: generationId, description: '', status: 'UNAVAILABLE', error, quality_score: null, tests: null, stack: {}, created_at: null, updated_at: null, activity: [], versions: [] };
   }
 }
 
@@ -85,7 +34,8 @@ export async function renameProject(generationId, newName) {
     return res.data;
   } catch (err) {
     console.error('Rename project error:', err);
-    return { success: true };
+    const error = err?.response?.data?.detail || err?.message || 'Request failed';
+    return { success: false, error };
   }
 }
 
@@ -95,7 +45,8 @@ export async function duplicateProject(generationId) {
     return res.data;
   } catch (err) {
     console.error('Duplicate project error:', err);
-    return { success: true, new_generation_id: `${generationId}-copy` };
+    const error = err?.response?.data?.detail || err?.message || 'Request failed';
+    return { success: false, error };
   }
 }
 
@@ -105,7 +56,8 @@ export async function archiveProject(generationId) {
     return res.data;
   } catch (err) {
     console.error('Archive project error:', err);
-    return { success: true };
+    const error = err?.response?.data?.detail || err?.message || 'Request failed';
+    return { success: false, error };
   }
 }
 
@@ -115,6 +67,7 @@ export async function deleteProject(generationId) {
     return res.data;
   } catch (err) {
     console.error('Delete project error:', err);
-    return { success: true };
+    const error = err?.response?.data?.detail || err?.message || 'Request failed';
+    return { success: false, error };
   }
 }

@@ -19,41 +19,16 @@ export default function AutonomousMissionsPanel({
 }) {
   const [selectedMission, setSelectedMission] = useState(null);
 
-  const defaultMissions = [
-    {
-      id: 'mission-1',
-      title: 'Full E-Commerce Platform Generation',
-      status: 'COMPLETED',
-      progress: 100,
-      steps: [
-        { label: 'Analyze requirements & user prompt', status: 'COMPLETED', agent: 'Planner' },
-        { label: 'Inspect architecture & design contracts', status: 'COMPLETED', agent: 'Architect' },
-        { label: 'User architecture approval', status: 'COMPLETED', agent: 'Human-in-the-Loop' },
-        { label: 'Parallel UI & backend implementation', status: 'COMPLETED', agent: 'Frontend + Backend + DB' },
-        { label: 'Quality & security review scan', status: 'COMPLETED', agent: 'Reviewer' },
-        { label: 'Automated pytest execution (48/48 passed)', status: 'COMPLETED', agent: 'Testing' },
-        { label: 'Generate API docs & assembly export', status: 'COMPLETED', agent: 'Documentation' }
-      ],
-      affected_files: ['backend/main.py', 'backend/routes/products.py', 'frontend/src/App.jsx', 'database/schema.sql']
-    },
-    {
-      id: 'mission-2',
-      title: 'Add Wishlist & User Favorites API',
-      status: 'IN_PROGRESS',
-      progress: 75,
-      steps: [
-        { label: 'Analyze wishlist requirement & schema', status: 'COMPLETED', agent: 'Planner' },
-        { label: 'Design POST /wishlist & GET /wishlist contracts', status: 'COMPLETED', agent: 'Architect' },
-        { label: 'Implement backend router and SQLAlchemy model', status: 'COMPLETED', agent: 'Backend' },
-        { label: 'Build WishlistCard.jsx React component', status: 'RUNNING', agent: 'Frontend' },
-        { label: 'Execute integration tests', status: 'WAITING', agent: 'Testing' }
-      ],
-      affected_files: ['backend/routes/wishlist.py', 'frontend/src/components/Wishlist.jsx']
-    }
-  ];
-
-  const missionList = missions || defaultMissions;
+  const missionList = missions || [];
   const current = selectedMission || missionList[0];
+
+  if (!current) {
+    return (
+      <div className="bg-[#090d16] border border-slate-800/90 rounded-2xl p-5 font-sans text-xs text-slate-400 shadow-2xl">
+        No missions yet. Missions appear here once a generation has run.
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#090d16] border border-slate-800/90 rounded-2xl p-5 font-sans select-none shadow-2xl">

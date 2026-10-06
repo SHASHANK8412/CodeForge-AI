@@ -144,9 +144,6 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
                             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
                                 {projectProfile?.latest_version || "v1"}
                             </span>
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3" /> 48/48 Passing
-                            </span>
                         </div>
                         <p className="text-xs text-gray-400 mt-0.5">
                             Persistent Project Memory & Codebase Intelligence Hub
@@ -228,7 +225,7 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
                             <div className="bg-[#131b2e] border border-gray-800 rounded-xl p-4">
                                 <span className="text-xs text-gray-400 font-medium">Total Files Indexed</span>
                                 <div className="mt-2 flex items-baseline gap-2">
-                                    <span className="text-2xl font-bold text-white">{projectProfile?.files_count || 18}</span>
+                                    <span className="text-2xl font-bold text-white">{projectProfile?.files_count ?? '—'}</span>
                                     <span className="text-xs text-emerald-400">100% Incremental</span>
                                 </div>
                             </div>
@@ -237,7 +234,7 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
                                 <span className="text-xs text-gray-400 font-medium">Active Decisions</span>
                                 <div className="mt-2 flex items-baseline gap-2">
                                     <span className="text-2xl font-bold text-indigo-400">
-                                        {projectProfile?.active_memories?.length || 8}
+                                        {projectProfile?.active_memories?.length ?? 0}
                                     </span>
                                     <span className="text-xs text-gray-400">Preserved</span>
                                 </div>
@@ -246,8 +243,8 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
                             <div className="bg-[#131b2e] border border-gray-800 rounded-xl p-4">
                                 <span className="text-xs text-gray-400 font-medium">Quality & Tests</span>
                                 <div className="mt-2 flex items-baseline gap-2">
-                                    <span className="text-2xl font-bold text-emerald-400">48 / 48</span>
-                                    <span className="text-xs text-gray-400">Score 98%</span>
+                                    <span className="text-2xl font-bold text-gray-500">—</span>
+                                    <span className="text-xs text-gray-400">See the Quality Report for test results</span>
                                 </div>
                             </div>
                         </div>
@@ -258,10 +255,7 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
                                 <GitBranch className="w-4 h-4 text-indigo-400" /> Project Version Lineage
                             </h2>
                             <div className="space-y-3">
-                                {(projectProfile?.versions || [
-                                    { version_id: "v2", repair_reason: "Added Wishlist & User Favorites", created_at: Date.now() / 1000 - 3600, changed_files: ["backend/routes/wishlist.py", "frontend/components/Wishlist.jsx"] },
-                                    { version_id: "v1", repair_reason: "Initial E-Commerce Core Application", created_at: Date.now() / 1000 - 86400, changed_files: ["backend/main.py", "frontend/src/App.jsx", "tests/test_api.py"] }
-                                ]).map((ver, idx) => (
+                                {(projectProfile?.versions || []).map((ver, idx) => (
                                     <div key={ver.version_id || idx} className="p-4 bg-gray-900/60 border border-gray-800/80 rounded-lg flex items-center justify-between">
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2">
@@ -301,12 +295,7 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
 
                         {/* Search Results / Indexed Files */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {(searchResults.length > 0 ? searchResults : [
-                                { path: "backend/routes/products.py", language: "python", symbols: ["get_products", "create_product", "delete_product"], routes: [{ method: "GET", path: "/api/products" }] },
-                                { path: "frontend/components/ProductList.jsx", language: "javascript", symbols: ["ProductList", "useProductFilter"], components: ["ProductList"] },
-                                { path: "backend/models/product.py", language: "python", symbols: ["Product", "ProductCreateSchema", "ProductResponseSchema"], models: ["Product"] },
-                                { path: "tests/test_products.py", language: "python", symbols: ["test_get_products", "test_product_pagination"] }
-                            ]).map((file) => (
+                            {searchResults.map((file) => (
                                 <div key={file.path} className="bg-[#131b2e] border border-gray-800 rounded-xl p-4 space-y-3">
                                     <div className="flex items-center justify-between">
                                         <span className="font-mono text-xs text-indigo-400 font-semibold">{file.path}</span>
@@ -351,12 +340,7 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
                         </div>
 
                         <div className="space-y-3">
-                            {(projectProfile?.active_memories || [
-                                { id: "m1", key: "backend_framework", value: "FastAPI REST Server", memory_type: "ARCHITECTURE", importance: "CRITICAL", source: "ARCHITECT", status: "ACTIVE" },
-                                { id: "m2", key: "database_persistence", value: "PostgreSQL 16 with SQLAlchemy ORM", memory_type: "DATABASE", importance: "HIGH", source: "USER_DECISION", status: "ACTIVE" },
-                                { id: "m3", key: "authentication_scheme", value: "JWT Bearer Token Authentication", memory_type: "DECISION", importance: "CRITICAL", source: "SECURITY", status: "ACTIVE" },
-                                { id: "m4", key: "frontend_framework", value: "React 18 + Vite + Tailwind CSS", memory_type: "ARCHITECTURE", importance: "HIGH", source: "ARCHITECT", status: "ACTIVE" }
-                            ]).map((mem) => (
+                            {(projectProfile?.active_memories || []).map((mem) => (
                                 <div key={mem.id} className="p-4 bg-[#131b2e] border border-gray-800 rounded-xl flex items-center justify-between">
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-2">
