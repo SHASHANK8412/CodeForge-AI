@@ -34,6 +34,7 @@ import json
 import logging
 import secrets
 import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -136,9 +137,12 @@ class GenerationStore:
                 self._path.parent.mkdir(parents=True, exist_ok=True)
                 self._path.write_text(json.dumps(data, indent=2), encoding="utf-8")
                 return
-            except OSError:
+            except OSError as e:
+                # Windows can briefly lock the file (antivirus, indexer, OneDrive); retry, and
+                # never fail silently: a lost write means a run's status is never recorded.
                 if attempt == 2:
-                    pass
+                    _logger.error("GenerationStore: could not write %s: %s", self._path, e)
+                    return
                 time.sleep(0.05)
 
     def _read(self) -> Dict[str, Any]:

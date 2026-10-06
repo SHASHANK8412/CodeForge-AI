@@ -7,7 +7,7 @@ against excessive request flooding.
 
 import time
 import logging
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 from fastapi import HTTPException, status
 
 _logger = logging.getLogger("aiforge.security.rate_limiter")

@@ -112,11 +112,11 @@ class TestSecurityFoundation:
             ".env": "AWS_SECRET_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE"
         }
 
-        report = agent.analyze_project("proj_test", files, "user_1")
+        report = agent.scan_project("proj_test", files)
 
         assert report.security_score < 100.0
-        assert report.decision in ("BLOCK", "WARN")
-        assert len(report.secrets) > 0
+        assert report.gate_status == "FAILED"
+        assert len(report.findings) >= 2  # the command injection and the leaked AWS key
 
     def test_false_positive_marking(self):
         service = SecurityService()

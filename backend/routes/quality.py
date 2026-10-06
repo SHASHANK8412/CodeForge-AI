@@ -55,9 +55,6 @@ def optimize_project(project_id: str):
     }
 
 
-    return global_quality_benchmarker.benchmark_pipeline(project_id, stage_timings)
-
-
 @router.get("/api/projects/{generation_id}/quality")
 def get_project_quality_center_data(generation_id: str):
     """

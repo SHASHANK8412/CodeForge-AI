@@ -8,7 +8,7 @@ import contextvars
 import time
 from time import perf_counter
 from threading import Lock
-from typing import Iterable
+from typing import Iterable, Optional
 
 from ollama import Client, AsyncClient  # type: ignore[attr-defined]
 
@@ -613,4 +613,4 @@ class LLMService:
 
 
 global_llm_service = LLMService()
-
+

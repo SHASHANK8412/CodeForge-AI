@@ -31,7 +31,7 @@ from backend.agents.security_agent import SecurityAgent
 from backend.agents.performance_agent import PerformanceAgent
 from backend.agents.project_packaging_agent import ProjectPackagingAgent
 
-from backend.generators.project_generator import ProjectGenerator
+from backend.generators.project_generator import GENERATED_PROJECTS_DIR, ProjectGenerator
 from backend.review.self_heal import SelfHealOrchestrator
 from backend.utils.timer import Timer
 from backend.graph.profiler import workflow_profiler
@@ -577,28 +577,9 @@ async def testing_node(state: ProjectState) -> dict:
         global_project_assembler.write_project_to_disk(proj_name, files_map)
         test_run_res = global_project_tester.run_tests(proj_path_str)
     else:
-        exec_state = state.get("execution_results", {}) or {}
-        if exec_state.get("status") == "PASS" or exec_state.get("exit_code") == 0:
-            test_run_res = {
-                "overall_status": "PASS",
-                "message": "All execution results passed successfully.",
-                "passed": 1,
-                "failed": 0,
-                "total": 1,
-                "output": exec_state.get("stdout", "1 passed"),
-                "failures": []
-            }
-        else:
-            eval_res = global_testing_agent.evaluate_test_results(exec_state)
-            test_run_res = {
-                "overall_status": "PASS" if eval_res.get("success") else "FAIL",
-                "message": eval_res.get("summary", "Tests failed"),
-                "passed": eval_res.get("passed", 0),
-                "failed": eval_res.get("failed", 1),
-                "total": eval_res.get("total", 1),
-                "output": eval_res.get("output", ""),
-                "failures": eval_res.get("failures", [])
-            }
+        # Nothing was written to disk, so there is nothing to test; report that rather than
+        # inferring a pass from earlier stages.
+        test_run_res = global_project_tester.run_tests("")
 
     # Format test report markdown
 

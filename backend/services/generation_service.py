@@ -30,6 +30,7 @@ API RESPONSE (Typed GenerationResult)
 """
 
 import json
+import os
 import time
 import logging
 from typing import Dict, Any, Optional
@@ -42,6 +43,7 @@ from backend.models.model_router import global_model_router
 from backend.quality.output_validator import global_output_validator
 from backend.quality.regeneration_controller import global_regeneration_controller
 from backend.quality.response_cleaner import global_response_cleaner
+from backend.quality.safe_fallback import get_safe_fallback_response
 from backend.context.context_manager import global_context_manager
 from backend.reasoning.complexity_analyzer import global_complexity_analyzer
 from backend.reasoning.strategy_selector import global_strategy_selector
@@ -209,8 +211,8 @@ class AIForgeGenerationPipeline:
                 context_result=context_result
             )
             if task_plan:
-                plan_steps_str = "\n".join([f"- Step {s.id}: {s.description}" for s.description in task_plan.steps])
-                plan_text = json.dumps({"goal": task_plan.goal, "steps": [s.description for s.description in task_plan.steps]}, indent=2)
+                plan_steps_str = "\n".join([f"- Step {s.id}: {s.description}" for s in task_plan.steps])
+                plan_text = json.dumps({"goal": task_plan.goal, "steps": [s.description for s in task_plan.steps]}, indent=2)
             else:
                 _logger.warning("[AIForge Pipeline] TaskPlan generation failed; falling back gracefully to STANDARD strategy")
                 strategy_val = "STANDARD"
@@ -218,7 +220,7 @@ class AIForgeGenerationPipeline:
         # Build effective prompt for specialized agents
         effective_prompt = normalized_prompt
         if task_plan:
-            plan_header = f"Internal Task Plan:\nGoal: {task_plan.goal}\nExecution Steps:\n" + "\n".join([f"{s.id}. {s.description}" for s.description in task_plan.steps])
+            plan_header = f"Internal Task Plan:\nGoal: {task_plan.goal}\nExecution Steps:\n" + "\n".join([f"{s.id}. {s.description}" for s in task_plan.steps])
             if context_result.formatted_context:
                 effective_prompt = f"{context_result.formatted_context}\n\n{plan_header}\n\nCurrent User Request:\n{normalized_prompt}"
             else:
