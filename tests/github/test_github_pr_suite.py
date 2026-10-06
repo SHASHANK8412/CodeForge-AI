@@ -132,7 +132,6 @@ class TestGitHubPRSuite:
         res = client.get("/api/github/overview?project_id=aiforge-demo")
         assert res.status_code == 200
         data = res.json()
-        assert data["connected_repository"] == "SHASHANK8412/CodeForge-AI"
-        assert data["active_branch"] == "aiforge/fix-checkout-timeout"
-        assert len(data["open_prs"]) >= 1
-        assert data["ci_overall_status"] == "SUCCESS"
+        # Not published to GitHub: report nothing rather than sample data.
+        assert data["connected_repository"] is None
+        assert data["open_prs"] == [] and data["ci_overall_status"] is None

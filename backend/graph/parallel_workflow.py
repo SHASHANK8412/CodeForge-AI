@@ -1278,63 +1278,47 @@ def _read_project_files(project_dir: Path) -> dict[str, str]:
 
 
 async def github_sync_node(state: ProjectState) -> dict:
+    """
+    Report the project's GitHub status. Publishing is an explicit user action (Export -> GitHub,
+    /api/github/publish), so this node never pushes on its own and never claims a push that did
+    not happen.
+    """
     _logger.info("✔ [15/18] Starting GitHub integration node...")
     _fire_lifecycle("agent_started", "github_sync")
-    
-    project_path_str = state.get("project_path", "")
-    project_id = state.get("project_id", state.get("project_name", "aiforge-demo"))
-    project_dir = Path(project_path_str) if project_path_str else (GENERATED_PROJECTS_DIR / project_id)
-    
-    from backend.routes.github_routes import git_init_endpoint, GitInitRequest, git_commit_endpoint, GitCommitRequest, git_push_endpoint, GitPushRequest, git_branch_endpoint, GitBranchRequest
-    from backend.github.service import global_github_service
-    
-    # 1. Run local git init and output stack-appropriate .gitignore
-    git_init_endpoint(GitInitRequest(project_id=project_id))
-    
-    # 2. Extract repository details
-    repo_overview = global_github_service.get_pr_dashboard_overview(project_id)
-    repo_name = repo_overview.get("connected_repository", f"SHASHANK8412/aiforge-{project_id}")
-    
-    # 3. Commit changes (run scan block verification inside)
-    try:
-        git_commit_endpoint(GitCommitRequest(project_id=project_id, message="feat: initial project generation"))
-    except Exception as e:
-        _logger.warning(f"Git commit notice: {e}")
-        
-    # 4. Spawns branch and push
-    try:
-        git_branch_endpoint(GitBranchRequest(project_id=project_id, branch_name="main"))
-        git_push_endpoint(GitPushRequest(project_id=project_id, remote_url=f"https://github.com/{repo_name}"))
-    except Exception as e:
-        _logger.warning(f"Git push notice: {e}")
-        
+
+    from backend.github.repo_store import global_github_repo_store
+    project_id = str(state.get("project_id") or state.get("project_name") or "")
+    meta = global_github_repo_store.get(project_id) if project_id else None
+
     _fire_lifecycle("agent_completed", "github_sync")
+    if meta:
+        return {
+            "github": {"connected_repository": meta.repo_url, "status": "PUBLISHED"},
+            "current_step": "github_sync",
+            "stream_events": [f"✔ Project is published on GitHub: {meta.repo_url}"],
+        }
     return {
-        "github": {
-            "connected_repository": repo_name,
-            "branch": "main",
-            "status": "PUSHED"
-        },
+        "github": {"connected_repository": None, "status": "NOT_PUBLISHED"},
         "current_step": "github_sync",
-        "stream_events": [f"✔ Git Repository Initialized and pushed to GitHub: https://github.com/{repo_name}"]
+        "stream_events": ["ℹ Not published to GitHub yet — use Export → GitHub to create a repository"],
     }
 
 
 async def ci_check_node(state: ProjectState) -> dict:
     _logger.info("✔ [16/18] Starting CI workflow verification node...")
     _fire_lifecycle("agent_started", "ci_check")
-    
-    test_res = state.get("test_results", {}) or {}
-    tests_passed = test_res.get("success", True)
-    ci_status = "SUCCESS" if tests_passed else "FAILED"
-    
+
+    # Mirrors the generated project's own test run; no remote CI is triggered from here.
+    test_res = state.get("test_results") or {}
+    if not test_res:
+        ci_status = "NOT_RUN"
+    else:
+        ci_status = "SUCCESS" if test_res.get("success") else "FAILED"
+
     _fire_lifecycle("agent_completed", "ci_check")
     return {
         "current_step": "ci_check",
-        "stream_events": [
-            "✔ CI Triggered: GitHub Actions deploy workflow started...",
-            f"✔ CI Pipeline checks completed with status: {ci_status}"
-        ]
+        "stream_events": [f"✔ Local test gate: {ci_status}"],
     }
 
 

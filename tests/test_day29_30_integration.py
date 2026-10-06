@@ -45,7 +45,6 @@ async def test_langgraph_master_orchestrator_nodes_execution(monkeypatch, tmp_pa
     # 1. Mock deployment provider & git push cmd to run instantly
     from backend.deployment.providers.local_docker_provider import global_local_docker_provider
     from backend.deployment.providers.base_provider import ProviderDeploymentResult
-    from backend.routes import github_routes
 
     def mock_deploy(*args, **kwargs):
         return ProviderDeploymentResult(
@@ -58,7 +57,6 @@ async def test_langgraph_master_orchestrator_nodes_execution(monkeypatch, tmp_pa
             stderr=""
         )
     monkeypatch.setattr(global_local_docker_provider, "deploy", mock_deploy)
-    monkeypatch.setattr(github_routes, "_run_git_cmd", lambda project_dir, cmd: "Everything up-to-date")
 
     # 2. Mock health check HTTP probing client
     class MockResponse:
@@ -89,7 +87,8 @@ async def test_langgraph_master_orchestrator_nodes_execution(monkeypatch, tmp_pa
     # A. Execute github sync node
     sync_res = await github_sync_node(initial_state)
     assert sync_res["current_step"] == "github_sync"
-    assert sync_res["github"]["status"] == "PUSHED"
+    # Nothing was exported to GitHub, so the node must not claim a push.
+    assert sync_res["github"]["status"] == "NOT_PUBLISHED"
     
     # B. Execute CI pipeline check
     ci_res = await ci_check_node(initial_state)
@@ -126,7 +125,6 @@ async def test_health_check_auto_repair_recovery_loop(monkeypatch):
 
     from backend.deployment.providers.local_docker_provider import global_local_docker_provider
     from backend.deployment.providers.base_provider import ProviderDeploymentResult
-    from backend.routes import github_routes
     from backend.routes import project
 
     # A. Configure deployment mock to report success
@@ -141,7 +139,6 @@ async def test_health_check_auto_repair_recovery_loop(monkeypatch):
             stderr=""
         )
     monkeypatch.setattr(global_local_docker_provider, "deploy", mock_deploy)
-    monkeypatch.setattr(github_routes, "_run_git_cmd", lambda project_dir, cmd: "Everything up-to-date")
 
     # B. Mock health check HTTP probing: fail first 2 times, then succeed
     call_count = 0
@@ -159,8 +156,8 @@ async def test_health_check_auto_repair_recovery_loop(monkeypatch):
     monkeypatch.setattr(httpx.AsyncClient, "get", mock_get_latched)
 
     # C. Mock project reviews to trigger fix proposals
-    def mock_reviews(*args, **kwargs):
-        return [{"file": "backend/main.py", "line": 1, "severity": "CRITICAL", "message": "Syntax error"}]
+    async def mock_reviews(*args, **kwargs):
+        return {"issues": [{"file": "backend/main.py", "line": 1, "severity": "CRITICAL", "message": "Syntax error"}]}
     monkeypatch.setattr(project, "review_project_route_internal", mock_reviews)
 
     async def mock_propose(*args, **kwargs):

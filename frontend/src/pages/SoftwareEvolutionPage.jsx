@@ -28,7 +28,7 @@ export default function SoftwareEvolutionPage({ projectId = 'aiforge-demo' }) {
       if (histRes?.history) setHistory(histRes.history);
     } catch (err) {
       console.warn('Failed to load evolution data:', err);
-    } fontally {
+    } finally {
       setLoading(false);
     }
   };

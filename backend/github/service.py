@@ -130,39 +130,28 @@ class GitHubService:
         return {"adr_filepath": adr_filepath, "pr": pr_dict}
 
     def list_open_pull_requests(self, project_id: str = "aiforge-demo") -> List[PullRequest]:
-        p1 = PullRequest(
-            id="pr_42",
-            number=42,
-            project_id=project_id,
-            title="Fix checkout transaction database pool timeout",
-            body="Autonomous fix for checkout database pool exhaustion.",
-            head_branch="aiforge/fix-checkout-timeout",
-            base_branch="main",
-            state="open",
-            html_url="https://github.com/SHASHANK8412/CodeForge-AI/pull/42",
-            ci_status=CIStatusEnum.SUCCESS,
-            review_status=ReviewDecisionEnum.APPROVE,
-            test_summary="52/52 PASS",
-            security_summary="PASS",
-            browser_summary="24/24 PASS",
-            performance_summary="P95 improved"
-        )
-        return [p1]
+        """Open PRs are not tracked locally; return none rather than invent any."""
+        return []
 
     def get_pr_dashboard_overview(self, project_id: str = "aiforge-demo") -> Dict[str, Any]:
-        prs = self.list_open_pull_requests(project_id=project_id)
-        prs_dicts = [p.model_dump() if hasattr(p, "model_dump") else p.dict() for p in prs]
+        """
+        The project's real GitHub state as far as AIForge knows it: the repository it was
+        published to (if any). CI and PR status are not tracked, so they are reported as None.
+        """
+        from backend.github.repo_store import global_github_repo_store
+        meta = global_github_repo_store.get(project_id)
         return {
             "project_id": project_id,
-            "connected_repository": "SHASHANK8412/CodeForge-AI",
-            "active_branch": "aiforge/fix-checkout-timeout",
-            "open_prs_count": len(prs),
-            "open_prs": prs_dicts,
-            "ci_overall_status": "SUCCESS",
-            "security_gate_status": "PASS",
+            "connected_repository": (f"{meta.owner}/{meta.repo_name}" if meta.owner else meta.repo_name) if meta else None,
+            "repo_url": meta.repo_url if meta else None,
+            "active_branch": meta.default_branch if meta else None,
+            "open_prs_count": 0,
+            "open_prs": [],
+            "ci_overall_status": None,
+            "security_gate_status": None,
             "recent_commits": [
-                {"sha": "9af8c96", "message": "feat(day28-29): Redis Caching & Prometheus Observability", "author": "AIForge Agent"}
-            ]
+                {"sha": meta.last_commit_sha[:7], "message": meta.last_commit_message, "author": None}
+            ] if meta and meta.last_commit_sha else [],
         }
 
 

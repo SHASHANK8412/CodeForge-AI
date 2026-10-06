@@ -49,29 +49,13 @@ export default function GitHubDashboardPage() {
   const [successMessage, setSuccessMessage] = useState(null);
 
   const [data, setData] = useState({
-    connected_repository: 'SHASHANK8412/CodeForge-AI',
-    active_branch: 'main',
-    open_prs_count: 1,
-    ci_overall_status: 'SUCCESS',
-    security_gate_status: 'PASS',
-    open_prs: [
-      {
-        number: 42,
-        title: 'Fix checkout transaction database pool timeout',
-        head_branch: 'aiforge/fix-checkout-timeout',
-        base_branch: 'main',
-        html_url: 'https://github.com/SHASHANK8412/CodeForge-AI/pull/42',
-        ci_status: 'SUCCESS',
-        review_status: 'APPROVE',
-        test_summary: '52/52 PASS',
-        security_summary: 'PASS',
-        browser_summary: '24/24 PASS',
-        performance_summary: 'P95 improved'
-      }
-    ],
-    recent_commits: [
-      { sha: '9af8c96', message: 'feat: generate project', author: 'AIForge Agent' }
-    ]
+    connected_repository: null,
+    active_branch: null,
+    open_prs_count: 0,
+    ci_overall_status: null,
+    security_gate_status: null,
+    open_prs: [],
+    recent_commits: []
   });
 
   const fetchRepoMetadata = async () => {
@@ -405,8 +389,8 @@ export default function GitHubDashboardPage() {
             <span className="text-[10px] font-bold uppercase tracking-wider">Active Feature Branch</span>
             <GitBranch size={15} className="text-[#8D5CF6]" />
           </div>
-          <div className="text-xs font-mono font-bold text-cyan-400 truncate mt-1">{data.active_branch}</div>
-          <div className="text-[10px] text-emerald-400">Default Branch Protected (`main`)</div>
+          <div className="text-xs font-mono font-bold text-cyan-400 truncate mt-1">{data.active_branch ?? '—'}</div>
+          <div className="text-[10px] text-[#9AA1B2]">{data.connected_repository ?? 'Not published to GitHub yet'}</div>
         </div>
 
         <div className="bg-[#0F1117] border border-[#242833] rounded-xl p-5 space-y-2">
@@ -414,8 +398,8 @@ export default function GitHubDashboardPage() {
             <span className="text-[10px] font-bold uppercase tracking-wider">Open Pull Requests</span>
             <GitPullRequest size={15} className="text-emerald-400" />
           </div>
-          <div className="text-2xl font-black text-white mt-1">{data.open_prs_count}</div>
-          <div className="text-[10px] text-[#9AA1B2]">Ready for Human Code Review</div>
+          <div className="text-2xl font-black text-white mt-1">{data.open_prs_count ?? 0}</div>
+          <div className="text-[10px] text-[#9AA1B2]">Opened by AIForge</div>
         </div>
 
         <div className="bg-[#0F1117] border border-[#242833] rounded-xl p-5 space-y-2">
@@ -423,7 +407,7 @@ export default function GitHubDashboardPage() {
             <span className="text-[10px] font-bold uppercase tracking-wider">GitHub Actions CI</span>
             <CheckCircle2 size={15} className="text-emerald-400" />
           </div>
-          <div className="text-2xl font-black text-emerald-400 mt-1">{data.ci_overall_status}</div>
+          <div className="text-2xl font-black text-emerald-400 mt-1">{data.ci_overall_status ?? '—'}</div>
           <div className="text-[10px] text-[#9AA1B2]">.github/workflows/aiforge-ci.yml</div>
         </div>
 
@@ -432,8 +416,8 @@ export default function GitHubDashboardPage() {
             <span className="text-[10px] font-bold uppercase tracking-wider">Pre-Publish Security Gate</span>
             <Shield size={15} className="text-[#8D5CF6]" />
           </div>
-          <div className="text-2xl font-black text-emerald-400 mt-1">{data.security_gate_status}</div>
-          <div className="text-[10px] text-emerald-400">Zero Secrets Leaked</div>
+          <div className="text-2xl font-black text-emerald-400 mt-1">{data.security_gate_status ?? '—'}</div>
+          <div className="text-[10px] text-[#9AA1B2]">Runs when publishing</div>
         </div>
       </div>
 
@@ -447,7 +431,10 @@ export default function GitHubDashboardPage() {
           </h3>
 
           <div className="flex flex-col gap-3">
-            {data.open_prs.map(pr => (
+            {(data.open_prs || []).length === 0 && (
+              <p className="text-xs text-[#9AA1B2]">No pull requests opened by AIForge for this project.</p>
+            )}
+            {(data.open_prs || []).map(pr => (
               <div key={pr.number} className="bg-[#08090D] border border-[#242833] rounded-lg p-4 space-y-3">
                 <div className="flex justify-between items-start gap-4">
                   <div>
@@ -462,7 +449,7 @@ export default function GitHubDashboardPage() {
                     </a>
                   </div>
                   <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-mono font-bold shrink-0">
-                    AI APPROVED
+                    {pr.review_status ?? "OPEN"}
                   </span>
                 </div>
 

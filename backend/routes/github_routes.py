@@ -405,8 +405,11 @@ def git_branch_endpoint(req: GitBranchRequest):
 @router.post("/api/github/pull-request")
 def git_pull_request_endpoint(req: GitPullRequestRequest):
     """Creates a Pull Request from head branch to base branch."""
-    repo_overview = global_github_service.get_pr_dashboard_overview(req.project_id)
-    repo_name = repo_overview.get("connected_repository", "SHASHANK8412/CodeForge-AI")
+    repo_name = global_github_service.get_pr_dashboard_overview(req.project_id).get("connected_repository")
+    if not repo_name:
+        raise HTTPException(status_code=400, detail="Project is not published to GitHub yet; publish it before opening a pull request.")
+    if not os.getenv("GITHUB_TOKEN"):
+        raise HTTPException(status_code=400, detail="GITHUB_TOKEN is not configured.")
 
     try:
         pr = global_pr_generator.create_pull_request(

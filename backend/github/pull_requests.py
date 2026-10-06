@@ -77,12 +77,11 @@ class PullRequestGenerator:
 
         try:
             gh_pr = repo.create_pull(title=title, body=body, head=head_branch, base=base_branch)
-            pr_num = getattr(gh_pr, "number", 42)
-            url = getattr(gh_pr, "html_url", f"https://github.com/{full_repo_name}/pull/{pr_num}")
         except Exception as e:
-            _logger.warning(f"[PRGenerator] GitHub API pull request fallback ({e})")
-            pr_num = 42
-            url = f"https://github.com/{full_repo_name}/pull/42"
+            # Surface the failure; a made-up PR number would look like a real pull request.
+            raise RuntimeError(f"GitHub rejected the pull request on '{full_repo_name}': {e}") from e
+        pr_num = gh_pr.number
+        url = gh_pr.html_url
 
         pr = PullRequest(
             id=f"pr_{pr_num}",
