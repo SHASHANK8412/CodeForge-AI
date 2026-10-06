@@ -2,91 +2,10 @@
 const SAVED_OUTPUTS_KEY = "aiforge_saved_outputs";
 const ACTIVITY_LOG_KEY = "aiforge_activity_log";
 
-const INITIAL_SAVED_OUTPUTS = [
-  {
-    id: "out-1",
-    title: "FastAPI JWT Authentication & Rate Limiting Middleware",
-    category: "Coding",
-    type: "code",
-    language: "python",
-    tags: ["FastAPI", "Security", "JWT", "Middleware"],
-    created_at: "2 hours ago",
-    summary: "Production-ready async JWT verification and token bucket rate limiter for FastAPI endpoints.",
-    content: `from fastapi import Request, HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-import jwt
-import time
-
-security = HTTPBearer()
-SECRET_KEY = "aiforge-super-secret-production-key"
-ALGORITHM = "HS256"
-
-async def verify_jwt_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=401, detail="Invalid authentication token")`
-  },
-  {
-    id: "out-2",
-    title: "Microservices Architecture Specification (RFC-104)",
-    category: "Writing",
-    type: "architecture",
-    language: "markdown",
-    tags: ["Architecture", "System Design", "Microservices", "Event-Driven"],
-    created_at: "Yesterday",
-    summary: "Event-driven system design with Kafka event broker, PostgreSQL write-models, and Elasticsearch read-models.",
-    content: `# RFC-104: Event-Driven Order Processing Engine
-
-## 1. System Overview
-- **Ingress Gateway**: Cloudflare Edge + Envoy API Gateway
-- **Auth Provider**: Decentralized JWT with RS256 signing
-- **Event Bus**: Apache Kafka / Redpanda with Avro schema registry
-- **State Store**: PostgreSQL (ACID Write-Model) & Redis (Cache)
-- **Search & Analytics**: OpenSearch cluster for real-time telemetry`
-  },
-  {
-    id: "out-3",
-    title: "Multi-Agent Consensus & Debate Evaluation Prompt",
-    category: "Research",
-    type: "prompt",
-    language: "text",
-    tags: ["Prompts", "Multi-Agent", "Consensus", "Evaluation"],
-    created_at: "3 days ago",
-    summary: "High-accuracy dual-agent verification prompt for SAST security analysis and algorithmic time complexity audit.",
-    content: `You are the Lead Verification Judge in a multi-agent debate.
-Evaluate the code proposed by Agent A (Speed-Optimized) vs Agent B (Memory-Optimized).
-1. Prove time complexity $O(N)$ vs $O(N \log N)$ empirically.
-2. Identify edge cases (empty collections, concurrency races, integer overflows).
-3. Synthesize a unified optimal implementation with zero performance compromises.`
-  },
-  {
-    id: "out-4",
-    title: "Docker Multi-Stage Production Build Optimization",
-    category: "Productivity",
-    type: "code",
-    language: "dockerfile",
-    tags: ["Docker", "DevOps", "CI/CD", "Optimization"],
-    created_at: "5 days ago",
-    summary: "Ultra-lean 42MB Alpine container image for React + Vite static bundle served via Nginx with Brotli compression.",
-    content: `# Stage 1: Build
-FROM node:22-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --prefer-offline --no-audit
-COPY . .
-RUN npm run build
-
-# Stage 2: Serve
-FROM nginx:alpine-slim
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]`
-  }
-];
+// Saved outputs start empty. Earlier versions seeded four sample snippets into localStorage;
+// those ids are dropped on read so they don't pose as the user's own saved work.
+const INITIAL_SAVED_OUTPUTS = [];
+const SAMPLE_OUTPUT_IDS = new Set(["out-1", "out-2", "out-3", "out-4"]);
 
 // Starts empty: the log should only ever contain things that actually happened.
 const INITIAL_ACTIVITIES = [];
@@ -98,7 +17,10 @@ export function getSavedOutputs() {
       localStorage.setItem(SAVED_OUTPUTS_KEY, JSON.stringify(INITIAL_SAVED_OUTPUTS));
       return INITIAL_SAVED_OUTPUTS;
     }
-    return JSON.parse(raw);
+    const items = JSON.parse(raw);
+    const own = Array.isArray(items) ? items.filter((item) => !SAMPLE_OUTPUT_IDS.has(item?.id)) : [];
+    if (own.length !== (items?.length ?? 0)) localStorage.setItem(SAVED_OUTPUTS_KEY, JSON.stringify(own));
+    return own;
   } catch (err) {
     console.error("Error reading saved outputs from localStorage:", err);
     return INITIAL_SAVED_OUTPUTS;

@@ -4,6 +4,7 @@ import {
     Search, GitBranch, Terminal, RefreshCw, FileCode, ArrowRight, 
     Sparkles, Plus, Trash2, Sliders, HardDrive, Compass, BookOpen
 } from "lucide-react";
+import { BACKEND_URL } from '../config/backend';
 
 export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView, setActiveProjectName, setActiveGenerationId }) {
     const [activeTab, setActiveTab] = useState("overview"); // "overview" | "codebase" | "memory" | "impact"
@@ -30,7 +31,7 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
 
     const loadProjects = async () => {
         try {
-            const res = await fetch("/api/project-memory");
+            const res = await fetch(`${BACKEND_URL}/api/project-memory`);
             if (res.ok) {
                 const data = await res.json();
                 setProjectList(data);
@@ -46,7 +47,7 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
     const loadProjectProfile = async (pId) => {
         setIsLoading(true);
         try {
-            const res = await fetch(`/api/project-memory/${pId}`);
+            const res = await fetch(`${BACKEND_URL}/api/project-memory/${pId}`);
             if (res.ok) {
                 const data = await res.json();
                 setProjectProfile(data);
@@ -65,7 +66,7 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
             return;
         }
         try {
-            const res = await fetch(`/api/projects/${selectedProject}/codebase/search?query=${encodeURIComponent(query)}`);
+            const res = await fetch(`${BACKEND_URL}/api/projects/${selectedProject}/codebase/search?query=${encodeURIComponent(query)}`);
             if (res.ok) {
                 const data = await res.json();
                 setSearchResults(data);
@@ -79,7 +80,7 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
         if (!impactPrompt.trim()) return;
         setLoadingImpact(true);
         try {
-            const res = await fetch(`/api/projects/${selectedProject}/codebase/impact`, {
+            const res = await fetch(`${BACKEND_URL}/api/projects/${selectedProject}/codebase/impact`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ targets: [], prompt: impactPrompt })
@@ -99,7 +100,7 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
         if (!impactPrompt.trim()) return;
         setModifyingProject(true);
         try {
-            const res = await fetch(`/api/projects/${selectedProject}/modify`, {
+            const res = await fetch(`${BACKEND_URL}/api/projects/${selectedProject}/modify`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ prompt: impactPrompt })
@@ -119,7 +120,7 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
 
     const handleDeleteMemory = async (memId) => {
         try {
-            const res = await fetch(`/api/projects/${selectedProject}/memory/${memId}`, { method: "DELETE" });
+            const res = await fetch(`${BACKEND_URL}/api/projects/${selectedProject}/memory/${memId}`, { method: "DELETE" });
             if (res.ok) {
                 loadProjectProfile(selectedProject);
             }

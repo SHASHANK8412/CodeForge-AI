@@ -1,404 +1,263 @@
-import React, { useState } from 'react';
-import { FaArrowLeft, FaPlus, FaCheck, FaCog, FaChevronDown, FaChevronUp, FaSpinner } from 'react-icons/fa';
+import React, { useEffect, useMemo, useState } from 'react';
+import { FaArrowLeft, FaArrowRight, FaSpinner, FaShieldAlt, FaVial, FaTools, FaUserCheck } from 'react-icons/fa';
 import { createGeneration } from '../services/generation';
+import { fetchInstalledModels } from '../services/models';
+
+const PENDING_PROMPT_KEY = 'aiforge_pending_prompt';
+
+const EXAMPLES = [
+  {
+    label: 'Task tracker',
+    name: 'Task Tracker',
+    text: 'Build a task tracker. Users can create projects, add tasks with a title, due date and priority, mark tasks done, and filter by status.',
+  },
+  {
+    label: 'Recipe box',
+    name: 'Recipe Box',
+    text: 'Build a recipe box. Users can add recipes with ingredients and steps, search by ingredient, and delete recipes.',
+  },
+  {
+    label: 'Expense tracker',
+    name: 'Expense Tracker',
+    text: 'Build an expense tracker. Users record expenses with an amount, category and date, and see monthly totals per category.',
+  },
+];
+
+const STACK_CHOICES = {
+  frontend: [['React', 'React (Vite)'], ['Vue', 'Vue'], ['HTML/JS', 'Vanilla JS']],
+  backend: [['FastAPI', 'FastAPI'], ['Express', 'Express'], ['Django', 'Django']],
+  database: [['SQLite', 'SQLite'], ['PostgreSQL', 'PostgreSQL'], ['MongoDB', 'MongoDB']],
+};
+
+const FEATURES = [
+  { key: 'authentication', label: 'User accounts', hint: 'Sign-up, login and protected routes' },
+  { key: 'docker', label: 'Docker setup', hint: 'Dockerfile and docker-compose' },
+  { key: 'documentation', label: 'README & API docs', hint: 'Setup and endpoint reference' },
+];
+
+const ALWAYS_ON = [
+  { Icon: FaUserCheck, text: 'You approve the architecture before code is written' },
+  { Icon: FaShieldAlt, text: 'Code review and a security scan on every file' },
+  { Icon: FaVial, text: 'Generated tests are run against the code' },
+  { Icon: FaTools, text: 'Failing tests trigger debug → patch → re-test' },
+];
+
+/** A readable project name from the first words of the description. */
+function suggestName(text) {
+  const filler = new Set(['a', 'an', 'the', 'build', 'create', 'make', 'me', 'simple', 'my', 'new']);
+  // "Build a recipe box where users can..." -> "Recipe Box": stop at the first clause break.
+  const head = text.split(/[.,;:]|\s(?:where|with|that|which|for|to|so|using|in)\s/i)[0] || '';
+  const words = (head.match(/[A-Za-z0-9]+/g) || []).filter((w) => !filler.has(w.toLowerCase()));
+  return words.slice(0, 3).map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
+}
+
+function Switch({ checked, onChange, label }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={`relative h-5 w-9 shrink-0 rounded-full transition cursor-pointer ${checked ? 'bg-accent-violet' : 'bg-surface-hover'}`}
+    >
+      <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${checked ? 'left-[18px]' : 'left-0.5'}`} />
+    </button>
+  );
+}
 
 export default function CreateProject({ setView, onGenerateSuccess }) {
-  const [projectName, setProjectName] = useState('TaskForge AI');
-  const [description, setDescription] = useState(() => {
-    const pending = sessionStorage.getItem("aiforge_pending_prompt");
-    if (pending) {
-      sessionStorage.removeItem("aiforge_pending_prompt");
-      return pending;
-    }
-    return 'Build a modern real-time task manager SaaS. Users can register, log in, create boards and lists, drag and drop tasks, invite team members, assign work, track status, and view basic velocity charts. Backed by a secure database.';
-  });
+  // Read the prompt handed over from the dashboard without consuming it here: React runs state
+  // initializers twice in development, so removing it in the initializer would lose it.
+  const [description, setDescription] = useState(() => sessionStorage.getItem(PENDING_PROMPT_KEY) || '');
+  useEffect(() => { sessionStorage.removeItem(PENDING_PROMPT_KEY); }, []);
 
-  const [stack, setStack] = useState({
-    frontend: 'React',
-    backend: 'FastAPI',
-    database: 'PostgreSQL',
-    styling: 'Tailwind CSS'
-  });
-
-  const [options, setOptions] = useState({
-    authentication: true,
-    testing: true,
-    documentation: true,
-    docker: true,
-    readme_generation: true,
-    security_review: true,
-    local_llm: true,
-    model: 'qwen2.5-coder',
-    rag: true,
-    code_review: true,
-    auto_repair: true
-  });
-
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [projectName, setProjectName] = useState('');
+  const [stack, setStack] = useState({ frontend: 'React', backend: 'FastAPI', database: 'SQLite' });
+  const [features, setFeatures] = useState({ authentication: false, docker: true, documentation: true });
+  const [engine, setEngine] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [nameError, setNameError] = useState(false);
 
-  const handleBack = () => {
-    if (setView) setView('dashboard');
-    else window.location.href = '/';
-  };
+  useEffect(() => {
+    let cancelled = false;
+    fetchInstalledModels().then((res) => !cancelled && setEngine(res));
+    return () => { cancelled = true; };
+  }, []);
 
-  const handleSuggestion = (promptText, defaultName) => {
-    setDescription(promptText);
-    setProjectName(defaultName);
-  };
+  const suggestedName = useMemo(() => suggestName(description), [description]);
+  const effectiveName = projectName.trim() || suggestedName;
+  const canSubmit = description.trim().length >= 15 && !submitting;
 
-  const handleSubmit = async () => {
+  const handleBack = () => (setView ? setView('dashboard') : (window.location.href = '/'));
+
+  const handleSubmit = async (e) => {
+    e?.preventDefault();
     setErrorMessage('');
-    setNameError(false);
-
-    if (!projectName || projectName.trim().length === 0) {
-      setNameError(true);
-      setErrorMessage('Project Name cannot be empty.');
+    if (description.trim().length < 15) {
+      setErrorMessage('Describe the app in a sentence or two so the planner has something to work with.');
       return;
     }
-
-    if (!description || description.trim().length === 0) {
-      setErrorMessage('Please describe what software project you want AIForge to build.');
-      return;
-    }
-
     setSubmitting(true);
 
-    const payload = {
-      project_name: projectName.trim(),
-      description: description.trim(),
-      frontend: stack.frontend,
-      backend: stack.backend,
-      database: stack.database,
-      styling: stack.styling,
-      authentication: options.authentication,
-      testing: options.testing,
-      documentation: options.documentation,
-      docker: options.docker,
-      security_review: options.security_review,
-      local_llm: options.local_llm,
-      model: options.model,
-      rag: options.rag,
-      code_review: options.code_review,
-      auto_repair: options.auto_repair
-    };
-
-    const enabledOptions = Object.entries(payload)
-      .filter(([key, value]) => value === true && !['frontend', 'backend', 'database', 'styling'].includes(key))
-      .map(([key]) => key.replace(/_/g, ' '));
+    const included = FEATURES.filter((f) => features[f.key]).map((f) => f.label.toLowerCase());
     const prompt = [
-      `Project name: ${payload.project_name}.`,
-      `Tech stack: ${payload.frontend} frontend, ${payload.backend} backend, ${payload.database} database, ${payload.styling} styling.`,
-      enabledOptions.length ? `Include: ${enabledOptions.join(', ')}.` : '',
-      `Requirements: ${payload.description}`,
+      effectiveName ? `Project name: ${effectiveName}.` : '',
+      `Tech stack: ${stack.frontend} frontend, ${stack.backend} backend, ${stack.database} database.`,
+      included.length ? `Include: ${included.join(', ')}.` : '',
+      `Requirements: ${description.trim()}`,
     ].filter(Boolean).join(' ');
-    const projectId = payload.project_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'project';
+    const projectId = effectiveName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'project';
 
     try {
       const res = await createGeneration(projectId, prompt);
       setSubmitting(false);
-      if (onGenerateSuccess) {
-        onGenerateSuccess(res.generation_id, projectName);
-      } else if (setView) {
-        setView('build');
-      }
+      if (onGenerateSuccess) onGenerateSuccess(res.generation_id, effectiveName);
+      else if (setView) setView('build');
     } catch (err) {
       setSubmitting(false);
-      setErrorMessage(`Could not start generation: ${err.message}. Ensure the backend server is running.`);
+      setErrorMessage(`Could not start the run: ${err.message}. Check that the backend is running.`);
     }
   };
 
-  const suggestions = [
-    {
-      label: "🛒 E-Commerce App",
-      name: "ShopAI SaaS",
-      text: "Build an e-commerce platform with stripe payment gateway integration. Include user registration, shopping carts, checkout forms, order details pages, product catalog searching, and merchant admin panel dashboards."
-    },
-    {
-      label: "📄 Resume Analyzer",
-      name: "CVForge AI",
-      text: "Build an AI resume analyzer SaaS. Users upload PDF resumes, parsing extracts metadata, and custom models rate skills alignment against job descriptions, recommending corrections and optimizations."
-    },
-    {
-      label: "💬 Real-Time Chat",
-      name: "TalkRoom",
-      text: "Build a real-time collaborative chat application utilizing websockets. Users can create private rooms, invite guests, send text/markdown, view presence status indicators, and browse past messages."
-    }
-  ];
-
   return (
-    <div className="min-h-screen bg-[#08090D] text-[#F5F7FA] font-sans p-6">
-      {/* Context Top Header */}
-      <div className="flex items-center gap-3 border-b border-[#242833] pb-4 mb-6">
+    <div className="min-h-full bg-bg-base p-4 font-sans text-text-primary sm:p-6 lg:p-8">
+      <div className="mx-auto max-w-6xl">
         <button
           onClick={handleBack}
-          className="text-[#9AA1B2] hover:text-[#F5F7FA] p-1.5 rounded-md hover:bg-[#151821] transition"
+          className="mb-6 inline-flex items-center gap-2 rounded-lg px-2 py-1 text-xs text-text-secondary transition hover:bg-surface-elevated hover:text-text-primary cursor-pointer"
         >
-          <FaArrowLeft size={12} />
+          <FaArrowLeft size={10} /> Dashboard
         </button>
-        <div className="text-xs text-[#9AA1B2]">
-          <span className="hover:underline cursor-pointer" onClick={handleBack}>AIForge</span> / <span className="text-[#F5F7FA] font-bold">New Project</span>
-        </div>
-      </div>
 
-      <div className="max-w-3xl mx-auto py-4 space-y-6">
-        {/* Title */}
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight text-[#F5F7FA]">Build something amazing.</h1>
-          <p className="text-xs text-[#9AA1B2]">Tell AIForge what software application you want. Multiple specialized agents will coordinate, plan, build, review, and deploy it.</p>
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">New project</h1>
+          <p className="mt-1.5 max-w-2xl text-sm text-text-secondary">
+            Describe the app you want. The more concrete the features and data, the better the generated code.
+          </p>
         </div>
 
-        {/* Prompt Card */}
-        <div className="bg-[#0F1117] border border-[#242833] rounded-xl p-5 space-y-4">
-          <div className="space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#9AA1B2]">Application Requirements</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe your application here..."
-              rows={6}
-              className="w-full bg-[#08090D] border border-[#242833] rounded-lg p-3 text-xs text-[#F5F7FA] placeholder-[#9AA1B2]/40 focus:border-[#8D5CF6] focus:ring-1 focus:ring-[#8D5CF6] outline-none font-mono resize-none leading-relaxed transition"
-            />
-          </div>
-
-          {/* Quick Suggestions */}
-          <div className="space-y-1.5">
-            <span className="block text-[10px] uppercase font-bold text-[#9AA1B2]/60">Quick Examples</span>
-            <div className="flex flex-wrap gap-2">
-              {suggestions.map((item, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSuggestion(item.text, item.name)}
-                  className="bg-[#151821] hover:bg-[#1f2330] border border-[#242833] text-xs py-1.5 px-3 rounded-md text-[#9AA1B2] hover:text-[#F5F7FA] transition cursor-pointer"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#9AA1B2]">Project Name</label>
-              <input
-                type="text"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                placeholder="e.g. food delivery saas"
-                className={`w-full bg-[#08090D] border rounded-lg px-3 py-2 text-xs text-[#F5F7FA] placeholder-[#9AA1B2]/40 outline-none focus:border-[#8D5CF6] transition ${
-                  nameError ? "border-red-500" : "border-[#242833]"
-                }`}
+        <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-6">
+            {/* Description */}
+            <section className="rounded-2xl border border-border-dark bg-surface-card p-5">
+              <label htmlFor="project-description" className="text-sm font-medium">What should it do?</label>
+              <textarea
+                id="project-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={7}
+                placeholder="e.g. A reading list app. Users add books with title, author and status (to read, reading, finished), rate finished books and see what they read this year."
+                className="mt-3 block w-full resize-y rounded-xl border border-border-dark bg-bg-base px-4 py-3 text-sm leading-relaxed text-text-primary placeholder:text-text-muted outline-none transition focus:border-accent-violet/70 focus:ring-4 focus:ring-accent-violet/10"
               />
-            </div>
-            <div className="space-y-2 flex flex-col justify-end">
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="text-xs text-text-muted">Start from an example:</span>
+                {EXAMPLES.map((ex) => (
+                  <button
+                    key={ex.label}
+                    type="button"
+                    onClick={() => { setDescription(ex.text); setProjectName(ex.name); }}
+                    className="rounded-full border border-border-dark bg-surface-elevated px-3 py-1 text-xs text-text-secondary transition hover:border-accent-violet/50 hover:text-text-primary cursor-pointer"
+                  >
+                    {ex.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Name + stack */}
+            <section className="grid gap-5 rounded-2xl border border-border-dark bg-surface-card p-5 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <label htmlFor="project-name" className="text-sm font-medium">Project name <span className="font-normal text-text-muted">(optional)</span></label>
+                <input
+                  id="project-name"
+                  type="text"
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  placeholder={suggestedName || 'Named from your description'}
+                  className="mt-2 block w-full rounded-xl border border-border-dark bg-bg-base px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted outline-none transition focus:border-accent-violet/70 focus:ring-4 focus:ring-accent-violet/10"
+                />
+              </div>
+              {Object.entries(STACK_CHOICES).map(([key, choices]) => (
+                <div key={key}>
+                  <span className="text-sm font-medium capitalize">{key}</span>
+                  <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label={key}>
+                    {choices.map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        role="radio"
+                        aria-checked={stack[key] === value}
+                        onClick={() => setStack({ ...stack, [key]: value })}
+                        className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
+                          stack[key] === value
+                            ? 'border-accent-violet/60 bg-accent-violet/15 text-text-primary'
+                            : 'border-border-dark bg-bg-base text-text-secondary hover:text-text-primary'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </section>
+
+            {/* Features */}
+            <section className="rounded-2xl border border-border-dark bg-surface-card p-5">
+              <span className="text-sm font-medium">Also include</span>
+              <ul className="mt-3 divide-y divide-border-subtle">
+                {FEATURES.map((f) => (
+                  <li key={f.key} className="flex items-center justify-between gap-4 py-3">
+                    <div>
+                      <p className="text-sm text-text-primary">{f.label}</p>
+                      <p className="text-xs text-text-muted">{f.hint}</p>
+                    </div>
+                    <Switch label={f.label} checked={features[f.key]} onChange={(v) => setFeatures({ ...features, [f.key]: v })} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+
+          {/* Summary */}
+          <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
+            <div className="rounded-2xl border border-border-dark bg-surface-card p-5">
+              <p className="text-xs uppercase tracking-wider text-text-muted">You're building</p>
+              <p className="mt-1 truncate text-lg font-semibold">{effectiveName || 'Untitled project'}</p>
+              <p className="mt-1 text-xs text-text-secondary">{stack.frontend} · {stack.backend} · {stack.database}</p>
+
               <button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="w-full flex items-center justify-center gap-2 bg-[#8D5CF6] hover:bg-[#7c4ee4] disabled:bg-[#8D5CF6]/50 text-white rounded-lg py-2.5 px-4 text-xs font-bold transition shadow-lg shadow-violet-500/25 active:scale-95"
+                type="submit"
+                disabled={!canSubmit}
+                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent-violet px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-accent-violet/25 transition hover:bg-[#7c4ee4] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none cursor-pointer"
               >
-                {submitting ? (
-                  <>
-                    <FaSpinner className="animate-spin" />
-                    <span>Analyzing requirements...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Generate Project</span>
-                    <span>→</span>
-                  </>
-                )}
+                {submitting ? <><FaSpinner className="animate-spin" size={12} /> Starting…</> : <>Start generation <FaArrowRight size={11} /></>}
               </button>
+              {errorMessage && <p className="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">{errorMessage}</p>}
+
+              <p className="mt-4 text-[11px] leading-relaxed text-text-muted">
+                {engine === null
+                  ? 'Checking local models…'
+                  : engine.ollama_online
+                    ? <>Runs locally: <span className="font-mono text-text-secondary">{engine.planning_model}</span> plans, <span className="font-mono text-text-secondary">{engine.coding_model}</span> writes code. Expect several minutes per stage on CPU.</>
+                    : <span className="text-rose-300">Ollama is not reachable, so the run will fail. Start Ollama first.</span>}
+              </p>
             </div>
-          </div>
-        </div>
 
-        {/* Error Dialog */}
-        {errorMessage && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs rounded-lg p-4 flex items-center justify-between">
-            <span>{errorMessage}</span>
-            <button onClick={handleSubmit} className="underline hover:text-white font-bold ml-4">Retry</button>
-          </div>
-        )}
-
-        {/* Advanced Settings Accordion */}
-        <div className="bg-[#0F1117] border border-[#242833] rounded-xl overflow-hidden">
-          <button
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="w-full p-4 flex items-center justify-between text-xs font-bold text-[#F5F7FA] hover:bg-[#151821]/40 transition border-b border-transparent"
-          >
-            <div className="flex items-center gap-2.5">
-              <FaCog size={13} className="text-[#8D5CF6]" />
-              <span>Advanced Engineering Configuration</span>
+            <div className="rounded-2xl border border-border-dark bg-surface-card p-5">
+              <p className="text-xs uppercase tracking-wider text-text-muted">Every run includes</p>
+              <ul className="mt-3 space-y-3">
+                {ALWAYS_ON.map(({ Icon, text }) => (
+                  <li key={text} className="flex gap-3 text-xs text-text-secondary">
+                    <Icon size={12} className="mt-0.5 shrink-0 text-violet-300" />
+                    {text}
+                  </li>
+                ))}
+              </ul>
             </div>
-            {showAdvanced ? <FaChevronUp size={11} /> : <FaChevronDown size={11} />}
-          </button>
-
-          {showAdvanced && (
-            <div className="p-5 border-t border-[#242833] space-y-6 animate-fade-in">
-              {/* Tech Stack Selectors */}
-              <div className="space-y-3">
-                <span className="block text-xs font-bold uppercase tracking-wider text-[#9AA1B2]">Target Tech Stack</span>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="space-y-1">
-                    <span className="block text-[10px] text-[#9AA1B2] font-mono">FRONTEND</span>
-                    <select
-                      value={stack.frontend}
-                      onChange={(e) => setStack({ ...stack, frontend: e.target.value })}
-                      className="w-full bg-[#08090D] border border-[#242833] rounded-md px-2 py-1.5 text-xs text-[#F5F7FA] outline-none focus:border-[#8D5CF6]"
-                    >
-                      <option value="React">React (Vite)</option>
-                      <option value="Next.js">Next.js</option>
-                      <option value="Vue">Vue</option>
-                      <option value="HTML/JS">Vanilla JS</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="block text-[10px] text-[#9AA1B2] font-mono">BACKEND</span>
-                    <select
-                      value={stack.backend}
-                      onChange={(e) => setStack({ ...stack, backend: e.target.value })}
-                      className="w-full bg-[#08090D] border border-[#242833] rounded-md px-2 py-1.5 text-xs text-[#F5F7FA] outline-none focus:border-[#8D5CF6]"
-                    >
-                      <option value="FastAPI">FastAPI (Python)</option>
-                      <option value="Express">Express (Node)</option>
-                      <option value="Django">Django (Python)</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="block text-[10px] text-[#9AA1B2] font-mono">DATABASE</span>
-                    <select
-                      value={stack.database}
-                      onChange={(e) => setStack({ ...stack, database: e.target.value })}
-                      className="w-full bg-[#08090D] border border-[#242833] rounded-md px-2 py-1.5 text-xs text-[#F5F7FA] outline-none focus:border-[#8D5CF6]"
-                    >
-                      <option value="PostgreSQL">PostgreSQL</option>
-                      <option value="SQLite">SQLite</option>
-                      <option value="MongoDB">MongoDB</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="block text-[10px] text-[#9AA1B2] font-mono">STYLING</span>
-                    <select
-                      value={stack.styling}
-                      onChange={(e) => setStack({ ...stack, styling: e.target.value })}
-                      className="w-full bg-[#08090D] border border-[#242833] rounded-md px-2 py-1.5 text-xs text-[#F5F7FA] outline-none focus:border-[#8D5CF6]"
-                    >
-                      <option value="Tailwind CSS">Tailwind CSS</option>
-                      <option value="Vanilla CSS">Vanilla CSS</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Engine Toggles */}
-              <div className="space-y-3">
-                <span className="block text-xs font-bold uppercase tracking-wider text-[#9AA1B2]">Engine Checkpoints & Gates</span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex items-start justify-between bg-[#08090D] border border-[#242833] p-3 rounded-lg">
-                    <div>
-                      <span className="block text-xs font-bold text-[#F5F7FA]">User Authentication</span>
-                      <span className="block text-[10px] text-[#9AA1B2] mt-0.5">Generate routes, JWT authorization models.</span>
-                    </div>
-                    <button
-                      onClick={() => setOptions({ ...options, authentication: !options.authentication })}
-                      className={`px-3 py-1 text-[10px] font-bold rounded-md border transition ${
-                        options.authentication 
-                          ? "bg-[#8D5CF6]/10 text-[#8D5CF6] border-[#8D5CF6]/30" 
-                          : "bg-transparent text-[#9AA1B2] border-[#242833]"
-                      }`}
-                    >
-                      {options.authentication ? "Enabled" : "Disabled"}
-                    </button>
-                  </div>
-
-                  <div className="flex items-start justify-between bg-[#08090D] border border-[#242833] p-3 rounded-lg">
-                    <div>
-                      <span className="block text-xs font-bold text-[#F5F7FA]">Test Pipeline Generators</span>
-                      <span className="block text-[10px] text-[#9AA1B2] mt-0.5">Draft pytest and unit testing frameworks.</span>
-                    </div>
-                    <button
-                      onClick={() => setOptions({ ...options, testing: !options.testing })}
-                      className={`px-3 py-1 text-[10px] font-bold rounded-md border transition ${
-                        options.testing 
-                          ? "bg-[#8D5CF6]/10 text-[#8D5CF6] border-[#8D5CF6]/30" 
-                          : "bg-transparent text-[#9AA1B2] border-[#242833]"
-                      }`}
-                    >
-                      {options.testing ? "Enabled" : "Disabled"}
-                    </button>
-                  </div>
-
-                  <div className="flex items-start justify-between bg-[#08090D] border border-[#242833] p-3 rounded-lg">
-                    <div>
-                      <span className="block text-xs font-bold text-[#F5F7FA]">DevSecOps Review</span>
-                      <span className="block text-[10px] text-[#9AA1B2] mt-0.5">Scans credentials and checks for path traversals.</span>
-                    </div>
-                    <button
-                      onClick={() => setOptions({ ...options, security_review: !options.security_review })}
-                      className={`px-3 py-1 text-[10px] font-bold rounded-md border transition ${
-                        options.security_review 
-                          ? "bg-[#8D5CF6]/10 text-[#8D5CF6] border-[#8D5CF6]/30" 
-                          : "bg-transparent text-[#9AA1B2] border-[#242833]"
-                      }`}
-                    >
-                      {options.security_review ? "Enabled" : "Disabled"}
-                    </button>
-                  </div>
-
-                  <div className="flex items-start justify-between bg-[#08090D] border border-[#242833] p-3 rounded-lg">
-                    <div>
-                      <span className="block text-xs font-bold text-[#F5F7FA]">Autonomous Repair Loops</span>
-                      <span className="block text-[10px] text-[#9AA1B2] mt-0.5">Heals building failures up to 3 repair sessions.</span>
-                    </div>
-                    <button
-                      onClick={() => setOptions({ ...options, auto_repair: !options.auto_repair })}
-                      className={`px-3 py-1 text-[10px] font-bold rounded-md border transition ${
-                        options.auto_repair 
-                          ? "bg-[#8D5CF6]/10 text-[#8D5CF6] border-[#8D5CF6]/30" 
-                          : "bg-transparent text-[#9AA1B2] border-[#242833]"
-                      }`}
-                    >
-                      {options.auto_repair ? "Enabled" : "Disabled"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* LLM Engine Selection */}
-              <div className="space-y-3 pt-2">
-                <span className="block text-xs font-bold uppercase tracking-wider text-[#9AA1B2]">LLM Model Spec</span>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <span className="block text-[10px] text-[#9AA1B2] font-mono">SELECTED MODEL</span>
-                    <select
-                      value={options.model}
-                      onChange={(e) => setOptions({ ...options, model: e.target.value })}
-                      className="w-full bg-[#08090D] border border-[#242833] rounded-md px-2 py-1.5 text-xs text-[#F5F7FA] outline-none focus:border-[#8D5CF6] mt-1"
-                    >
-                      <option value="qwen2.5-coder">Qwen 2.5 Coder (Ollama)</option>
-                      <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                      <option value="gpt-4o-mini">GPT-4o Mini</option>
-                    </select>
-                  </div>
-                  <div>
-                    <span className="block text-[10px] text-[#9AA1B2] font-mono">AGENT KNOWLEDGE GRAPH (RAG)</span>
-                    <div className="flex items-center gap-2 mt-2">
-                      <input
-                        type="checkbox"
-                        checked={options.rag}
-                        onChange={(e) => setOptions({ ...options, rag: e.target.checked })}
-                        className="rounded bg-[#08090D] border-[#242833] text-[#8D5CF6] focus:ring-[#8D5CF6]"
-                      />
-                      <span className="text-xs text-[#9AA1B2]">Enable codebase context vectors</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+          </aside>
+        </form>
       </div>
     </div>
   );

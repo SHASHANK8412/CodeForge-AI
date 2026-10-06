@@ -22,6 +22,7 @@ import {
   Cloud,
   HardDrive,
 } from "lucide-react";
+import { BACKEND_URL } from '../config/backend';
 
 const PROVIDERS = ["AWS", "AZURE", "GCP", "LOCAL"];
 const ENVIRONMENTS = ["production", "staging", "dev"];
@@ -357,9 +358,9 @@ export default function FinOpsDashboardPage() {
     setLoading(true);
     try {
       const [ovRes, k8sRes, cmpRes] = await Promise.all([
-        fetch(`/api/finops/overview?project_id=${projectId}&provider=${provider}&environment=${environment}`),
-        fetch(`/api/finops/kubernetes?project_id=${projectId}&service_count=2&avg_rps=25`),
-        fetch(`/api/finops/compare`, {
+        fetch(`${BACKEND_URL}/api/finops/overview?project_id=${projectId}&provider=${provider}&environment=${environment}`),
+        fetch(`${BACKEND_URL}/api/finops/kubernetes?project_id=${projectId}&service_count=2&avg_rps=25`),
+        fetch(`${BACKEND_URL}/api/finops/compare`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ project_id: projectId, question: "Which architecture should I choose?" }),
@@ -379,7 +380,7 @@ export default function FinOpsDashboardPage() {
     if (!copilotQuestion.trim()) return;
     setCopilotLoading(true);
     try {
-      const res = await fetch("/api/finops/copilot", {
+      const res = await fetch(`${BACKEND_URL}/api/finops/copilot`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ project_id: projectId, question: copilotQuestion }),

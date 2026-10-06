@@ -21,6 +21,7 @@ import {
     History
 } from "lucide-react";
 import axios from "axios";
+import { BACKEND_URL } from '../config/backend';
 
 const CI_STAGES = [
     { id: "dependencies", label: "Dependencies", icon: Cpu, desc: "Package manager resolution & installation" },
@@ -99,7 +100,7 @@ export default function CIPipelineDashboard() {
 
     const fetchHistory = async () => {
         try {
-            const res = await axios.get(`/api/projects/${projectId}/ci/history`);
+            const res = await axios.get(`${BACKEND_URL}/api/projects/${projectId}/ci/history`);
             if (res.data?.history) {
                 setRunHistory(res.data.history);
             }
@@ -131,7 +132,7 @@ export default function CIPipelineDashboard() {
         };
 
         try {
-            const res = await axios.post(`/api/projects/${projectId}/ci/run`, payload);
+            const res = await axios.post(`${BACKEND_URL}/api/projects/${projectId}/ci/run`, payload);
             if (res.data && res.data.result) {
                 const report = res.data.result;
                 setCiResult(report);

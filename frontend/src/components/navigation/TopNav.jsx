@@ -4,6 +4,7 @@ import {
   FaPlus, FaBolt, FaCheckCircle, FaTrash, FaBars, FaShieldAlt
 } from "react-icons/fa";
 import { useAuth } from "../../auth/useAuth";
+import { BACKEND_URL } from "../../config/backend";
 
 export default function TopNav({ 
   onOpenCommandPalette, 
@@ -17,6 +18,19 @@ export default function TopNav({
   // No notification feed exists in the backend yet; don't invent entries.
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
+
+  // Real backend reachability, re-checked every 30 s (null while the first check runs).
+  const [backendOnline, setBackendOnline] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    const check = () =>
+      fetch(`${BACKEND_URL}/health`, { signal: AbortSignal.timeout(8000) })
+        .then((r) => !cancelled && setBackendOnline(r.ok))
+        .catch(() => !cancelled && setBackendOnline(false));
+    check();
+    const id = setInterval(check, 30000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
 
   const userMenuRef = useRef(null);
   const notificationRef = useRef(null);
@@ -59,18 +73,27 @@ export default function TopNav({
           <FaBars size={14} />
         </button>
 
-        <div className="hidden sm:flex items-center gap-2 text-xs font-semibold">
-          <span className="text-[#9AA1B2]">AIForge OS</span>
+        <div className="hidden sm:flex items-center gap-2 whitespace-nowrap text-xs font-semibold">
+          <span className="text-[#9AA1B2]">AIForge</span>
           <span className="text-[#64748B]">/</span>
           <span className="text-white capitalize font-bold">
-            {currentView === "dashboard" ? "Command Center" : currentView.replace(/-/g, " ")}
+            {currentView === "dashboard" ? "Dashboard" : currentView.replace(/-/g, " ")}
           </span>
         </div>
 
         {/* Live Agent Status Indicator */}
-        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[11px] font-medium text-emerald-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Multi-Agent Engine Online</span>
+        <div
+          className={`hidden xl:flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full border text-[11px] font-medium ${
+            backendOnline === null
+              ? "bg-surface-elevated border-border-dark text-text-muted"
+              : backendOnline
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+          }`}
+          title={`Backend: ${BACKEND_URL}`}
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${backendOnline === null ? "bg-text-muted" : backendOnline ? "bg-emerald-400" : "bg-rose-400"}`} />
+          <span>{backendOnline === null ? "Connecting…" : backendOnline ? "Backend online" : "Backend offline"}</span>
         </div>
       </div>
 

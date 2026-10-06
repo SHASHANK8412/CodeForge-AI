@@ -16,6 +16,7 @@ import {
   ChevronRight,
   X
 } from 'lucide-react';
+import { BACKEND_URL } from '../config/backend';
 
 export default function InfrastructureDashboardPage() {
   const { projectId = 'aiforge-demo' } = useParams();
@@ -59,7 +60,7 @@ export default function InfrastructureDashboardPage() {
   const fetchOverview = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/infrastructure/overview?project_id=${projectId}&environment=${environment}&provider=${provider}`);
+      const res = await fetch(`${BACKEND_URL}/api/infrastructure/overview?project_id=${projectId}&environment=${environment}&provider=${provider}`);
       if (res.ok) {
         const data = await res.json();
         setInfraData(data);
@@ -78,7 +79,7 @@ export default function InfrastructureDashboardPage() {
   const handleApply = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/infrastructure/apply', {
+      const res = await fetch(`${BACKEND_URL}/api/infrastructure/apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: projectId, environment, user_approved: true })
@@ -96,7 +97,7 @@ export default function InfrastructureDashboardPage() {
   const handleDetectDrift = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/infrastructure/drift?project_id=${projectId}`, { method: 'POST' });
+      const res = await fetch(`${BACKEND_URL}/api/infrastructure/drift?project_id=${projectId}`, { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         setDriftResult(data);

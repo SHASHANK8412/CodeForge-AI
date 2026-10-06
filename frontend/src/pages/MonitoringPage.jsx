@@ -13,6 +13,7 @@ import {
   Layers,
   Database
 } from 'lucide-react';
+import { BACKEND_URL } from '../config/backend';
 
 export default function MonitoringPage() {
   const { projectId = 'aiforge-demo' } = useParams();
@@ -43,7 +44,7 @@ export default function MonitoringPage() {
   const fetchMetrics = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/monitoring/overview?project_id=${projectId}`);
+      const res = await fetch(`${BACKEND_URL}/api/monitoring/overview?project_id=${projectId}`);
       if (res.ok) {
         const data = await res.json();
         setMetrics(data);

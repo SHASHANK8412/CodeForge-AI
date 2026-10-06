@@ -16,6 +16,7 @@ import {
   ChevronRight,
   X
 } from 'lucide-react';
+import { BACKEND_URL } from '../config/backend';
 
 export default function KubernetesDashboardPage() {
   const { projectId = 'aiforge-demo' } = useParams();
@@ -58,12 +59,12 @@ export default function KubernetesDashboardPage() {
   const fetchK8sStatus = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/kubernetes/status?project_id=${projectId}`);
+      const res = await fetch(`${BACKEND_URL}/api/kubernetes/status?project_id=${projectId}`);
       if (res.ok) {
         const result = await res.json();
         setK8sData(result);
       }
-      const evRes = await fetch(`/api/kubernetes/events?project_id=${projectId}`);
+      const evRes = await fetch(`${BACKEND_URL}/api/kubernetes/events?project_id=${projectId}`);
       if (evRes.ok) {
         const evs = await evRes.json();
         setEvents(evs);
@@ -82,7 +83,7 @@ export default function KubernetesDashboardPage() {
   const handleDeploy = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/kubernetes/deploy', {
+      const res = await fetch(`${BACKEND_URL}/api/kubernetes/deploy`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: projectId, image_tag: 'v1.5' })
@@ -100,7 +101,7 @@ export default function KubernetesDashboardPage() {
   const handleRollback = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/kubernetes/rollback?project_id=${projectId}`, { method: 'POST' });
+      const res = await fetch(`${BACKEND_URL}/api/kubernetes/rollback?project_id=${projectId}`, { method: 'POST' });
       const data = await res.json();
       alert(`Rollback Result: ${data.message}`);
       fetchK8sStatus();
@@ -114,7 +115,7 @@ export default function KubernetesDashboardPage() {
   const handleApproveScaling = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/kubernetes/scale', {
+      const res = await fetch(`${BACKEND_URL}/api/kubernetes/scale`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

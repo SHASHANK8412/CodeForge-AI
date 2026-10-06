@@ -72,6 +72,23 @@ function buildLogsFromEvents(events = []) {
 // Component
 // ---------------------------------------------------------------------------
 
+/**
+ * The two human gates are not pipeline agents, so derive their state: a gate is done once it was
+ * approved (or the stage after it has started), and waiting while the run is paused at it.
+ */
+function withApprovalGates(agentsMap, generation, events) {
+  const started = (name) => ['running', 'completed', 'failed', 'retrying'].includes(agentsMap[name]?.status);
+  const paused = generation?.status === 'waiting_for_approval' || generation?.approval_required;
+  const stage = generation?.approval_stage;
+  const approvals = events.filter((e) => e.type === 'approval_approved').length;
+  const gate = (done, waiting) => ({ status: done ? 'completed' : waiting ? 'waiting_for_approval' : 'waiting' });
+  return {
+    ...agentsMap,
+    human_approval: gate(approvals >= 1 || started('frontend') || started('backend'), paused && stage !== 'final'),
+    final_approval: gate(started('packaging') || generation?.status === 'completed', paused && stage === 'final'),
+  };
+}
+
 export default function GenerationDashboard({
   generationId,
   setView,
@@ -114,8 +131,10 @@ export default function GenerationDashboard({
   // ----- Apply a single live event -----
   const applyEvent = useCallback((evt) => {
     setEvents((prev) => {
-      // De-duplicate by event id if present
-      if (evt.id && prev.find((e) => e.id === evt.id)) return prev;
+      // SSE payloads may not carry an id, so fall back to a content key; the stream also
+      // replays history on reconnect, which must not repeat lines in the log.
+      const key = evt.id || `${evt.type}|${evt.agent || ''}|${evt.timestamp || evt.message || ''}`;
+      if (prev.some((e) => (e.id || `${e.type}|${e.agent || ''}|${e.timestamp || e.message || ''}`) === key)) return prev;
       return [...prev, evt];
     });
 
@@ -176,22 +195,18 @@ export default function GenerationDashboard({
         applySnapshot(snap);
         setConnectionMode((m) => m === 'sse' ? 'sse' : 'polling');
       },
+      // Every event is applied once here; the per-type callbacks below only drive the modals.
       onEvent: (evt) => {
         if (evt.type !== 'snapshot') applyEvent(evt);
       },
-      onAgentStarted: (_, evt) => applyEvent({ ...evt, type: 'agent_started' }),
-      onAgentCompleted: (_, evt) => applyEvent({ ...evt, type: 'agent_completed' }),
-      onAgentFailed: (_, evt) => applyEvent({ ...evt, type: 'agent_failed' }),
-      onGenerationCompleted: (evt) => {
-        applyEvent({ ...evt, type: 'generation_completed' });
+      onGenerationCompleted: () => {
         if (!completedFiredRef.current) {
           completedFiredRef.current = true;
           setShowCompleteModal(true);
         }
         setGeneration((prev) => prev ? { ...prev, status: 'completed', progress: 100 } : prev);
       },
-      onGenerationFailed: (evt) => {
-        applyEvent({ ...evt, type: 'generation_failed' });
+      onGenerationFailed: () => {
         if (!completedFiredRef.current) {
           completedFiredRef.current = true;
           setShowFailModal(true);
@@ -276,7 +291,7 @@ export default function GenerationDashboard({
   const status = generation?.status || 'queued';
   const progress = generation?.progress ?? 0;
   const currentAgent = generation?.current_agent || null;
-  const agentsMap = buildAgentsMap(generation?.agents || []);
+  const agentsMap = withApprovalGates(buildAgentsMap(generation?.agents || []), generation, events);
   const completedCount = Object.values(agentsMap).filter((a) => a.status === 'completed').length;
   const totalCount = (generation?.agents || []).length || AGENT_ORDER.length;
   const logs = buildLogsFromEvents(events);

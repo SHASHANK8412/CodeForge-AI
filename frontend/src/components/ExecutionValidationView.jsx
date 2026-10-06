@@ -17,6 +17,7 @@ import {
     ExternalLink
 } from "lucide-react";
 import axios from "axios";
+import { BACKEND_URL } from '../config/backend';
 
 const PIPELINE_STEPS = [
     { id: "Starting Docker Sandbox", label: "Docker Sandbox", icon: Server, emoji: "🐳", desc: "Initialize container with CPU/RAM caps" },
@@ -123,7 +124,7 @@ export default function ExecutionValidationView({ defaultProject = "python_fasta
 
         try {
             // Direct REST endpoint validation
-            const response = await axios.post(`/api/projects/${projectId}/autonomous-validate`, payload);
+            const response = await axios.post(`${BACKEND_URL}/api/projects/${projectId}/autonomous-validate`, payload);
             if (response.data && response.data.report) {
                 const rep = response.data.report;
                 setFinalReport(rep);

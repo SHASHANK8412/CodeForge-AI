@@ -17,6 +17,7 @@ import {
   XCircle,
   Terminal
 } from 'lucide-react';
+import { BACKEND_URL } from '../config/backend';
 
 export default function GitHubDashboardPage() {
   const { projectId = 'aiforge-demo' } = useParams();
@@ -60,7 +61,7 @@ export default function GitHubDashboardPage() {
 
   const fetchRepoMetadata = async () => {
     try {
-      const res = await fetch(`/api/github/repository/${projectId}`);
+      const res = await fetch(`${BACKEND_URL}/api/github/repository/${projectId}`);
       if (res.ok) {
         const json = await res.json();
         if (json.connected) {
@@ -75,7 +76,7 @@ export default function GitHubDashboardPage() {
   const fetchOverview = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/github/overview?project_id=${projectId}`);
+      const res = await fetch(`${BACKEND_URL}/api/github/overview?project_id=${projectId}`);
       if (res.ok) {
         const result = await res.json();
         setData(result);
@@ -98,7 +99,7 @@ export default function GitHubDashboardPage() {
     setSuccessMessage(null);
 
     try {
-      const res = await fetch('/api/github/publish', {
+      const res = await fetch(`${BACKEND_URL}/api/github/publish`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -134,7 +135,7 @@ export default function GitHubDashboardPage() {
     setSuccessMessage(null);
 
     try {
-      const res = await fetch('/api/github/sync', {
+      const res = await fetch(`${BACKEND_URL}/api/github/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -163,7 +164,7 @@ export default function GitHubDashboardPage() {
 
     setLoading(true);
     try {
-      const res = await fetch('/api/github/copilot', {
+      const res = await fetch(`${BACKEND_URL}/api/github/copilot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: copilotQuery, project_id: projectId })
