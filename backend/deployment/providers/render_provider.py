@@ -7,7 +7,7 @@ Handles async backend web service deployments (FastAPI, Express, Django, Docker)
 import time
 import logging
 from typing import Dict, Any
-from backend.deployment.providers.base_provider import BaseDeploymentProvider
+from backend.deployment.providers.base_provider import BaseDeploymentProvider, undeployed_result
 
 _logger = logging.getLogger("aiforge.deployment.providers.render")
 
@@ -34,16 +34,11 @@ class RenderProvider(BaseDeploymentProvider):
         return {"render.yaml": yaml_content}
 
     async def deploy(self, project_id: str, config: Dict[str, Any]) -> Dict[str, Any]:
-        _logger.info(f"RenderProvider: Deploying web service for '{project_id}'...")
-        slug = project_id.lower().replace("_", "-").replace(" ", "-")
-        return {
-            "provider": self.name,
-            "status": "LIVE",
-            "url": f"https://{slug}-api.onrender.com",
-            "health_endpoint": "/health",
-            "deployed_at": time.time(),
-            "start_command": "uvicorn backend.main:app --host 0.0.0.0 --port 8000"
-        }
+        _logger.info(f"RenderProvider: deploy requested for '{project_id}'")
+        return undeployed_result(
+            self.name, self.display_name, "RENDER_API_KEY",
+            "Push the project to GitHub and create a Render Blueprint from the generated render.yaml.",
+        )
 
 
 global_render_provider = RenderProvider()

@@ -18,6 +18,10 @@ export default function DeploymentCenter({ generationId = 'aiforge-demo', setVie
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedProvider, setSelectedProvider] = useState('vercel');
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [deploymentPlan, setDeploymentPlan] = useState(null);
+  const [isDeploying, setIsDeploying] = useState(false);
 
   useEffect(() => {
     let intervalId = null;
@@ -78,8 +82,8 @@ export default function DeploymentCenter({ generationId = 'aiforge-demo', setVie
     );
   }
 
-  const projectName = data?.project_name || 'FoodDelivery AI';
-  const status = data?.status || 'LIVE';
+  const projectName = data?.project_name || 'Untitled Project';
+  const status = data?.status || 'NOT_DEPLOYED';
   const readiness = data?.readiness || {};
   const providers = data?.providers || [];
   const envVars = data?.env_vars || [];
@@ -90,11 +94,6 @@ export default function DeploymentCenter({ generationId = 'aiforge-demo', setVie
   const workflow = data?.workflow || [];
   const logs = data?.logs || [];
   const history = data?.history || [];
-
-  const [showApprovalModal, setShowApprovalModal] = useState(false);
-  const [showPlanModal, setShowPlanModal] = useState(false);
-  const [deploymentPlan, setDeploymentPlan] = useState(null);
-  const [isDeploying, setIsDeploying] = useState(false);
 
   const handleOpenDeployModal = async () => {
     const plan = await fetchDeploymentPlan(generationId);

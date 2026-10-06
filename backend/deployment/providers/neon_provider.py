@@ -7,7 +7,7 @@ Handles database provisioning, migration verification, and connection pooling.
 import time
 import logging
 from typing import Dict, Any
-from backend.deployment.providers.base_provider import BaseDeploymentProvider
+from backend.deployment.providers.base_provider import BaseDeploymentProvider, undeployed_result
 
 _logger = logging.getLogger("aiforge.deployment.providers.neon")
 
@@ -27,16 +27,11 @@ class NeonPostgresProvider(BaseDeploymentProvider):
         }
 
     async def deploy(self, project_id: str, config: Dict[str, Any]) -> Dict[str, Any]:
-        _logger.info(f"NeonPostgresProvider: Connecting database for '{project_id}'...")
-        slug = project_id.lower().replace("_", "-").replace(" ", "-")
-        return {
-            "provider": self.name,
-            "status": "LIVE",
-            "connection_endpoint": f"ep-{slug}-pooler.us-east-2.aws.neon.tech",
-            "database_name": f"aiforge_{slug}_db",
-            "ssl_mode": "require",
-            "deployed_at": time.time()
-        }
+        _logger.info(f"NeonPostgresProvider: deploy requested for '{project_id}'")
+        return undeployed_result(
+            self.name, self.display_name, "NEON_API_KEY",
+            "Create a project in the Neon console and set its connection string as DATABASE_URL.",
+        )
 
 
 global_neon_provider = NeonPostgresProvider()

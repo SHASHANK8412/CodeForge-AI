@@ -114,7 +114,7 @@ export default function AutopilotDashboard({ generationId = 'aiforge-demo', setV
     setActionLoading(false);
   };
 
-  const progress = autopilotData?.progress || (autopilotData?.status === 'completed' ? 100 : 78);
+  const progress = autopilotData?.progress ?? (autopilotData?.status === 'completed' ? 100 : 0);
   const status = (autopilotData?.status || 'completed').toUpperCase();
   const currentAgent = autopilotData?.current_agent || 'deployment';
   const decisions = autopilotData?.decisions || [];

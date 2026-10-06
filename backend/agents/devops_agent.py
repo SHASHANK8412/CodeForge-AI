@@ -361,20 +361,24 @@ docker-compose up --build -d
         except Exception as e:
             _logger.warning(f"Failed to record deployment in project memory: {e}")
 
+        results = [r for r in (fe_res, be_res, db_res) if r]
+        all_live = all(r.get("status") == "LIVE" for r in results)
+
         return {
-            "status": "LIVE",
+            "status": "LIVE" if all_live else "NOT_DEPLOYED",
             "project_id": project_id,
             "duration_seconds": elapsed,
             "frontend_url": fe_res.get("url"),
             "backend_url": be_res.get("url"),
             "database": db_res,
+            "provider_results": results,
+            # No health probe runs here, so don't report one.
             "health_check": {
                 "endpoint": plan.spec.health_check_endpoint,
-                "status": "HEALTHY",
-                "http_status": 200
+                "status": "NOT_CHECKED",
             },
-            "deployed_providers": plan.providers,
-            "deployed_at": time.time()
+            "deployed_providers": [r["provider"] for r in results if r.get("status") == "LIVE"],
+            "deployed_at": time.time() if all_live else None,
         }
 
 

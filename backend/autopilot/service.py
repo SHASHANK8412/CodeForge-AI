@@ -54,10 +54,10 @@ class AutopilotService:
         if not rec:
             return {
                 "generation_id": generation_id,
-                "project_id": "aiforge-demo",
-                "status": "completed",
-                "current_agent": "deployment",
-                "progress": 100,
+                "project_id": None,
+                "status": "not_found",
+                "current_agent": None,
+                "progress": 0,
                 "autonomy_level": "BALANCED",
                 "decisions": global_decision_manager.get_decisions(generation_id),
                 "pending_approval": None

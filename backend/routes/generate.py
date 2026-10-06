@@ -50,8 +50,15 @@ async def generate(data: GenerateProjectPayload | Prompt):
         full_prompt = f"Project Name: {data.project_name}. Stack: {data.frontend}, {data.backend}, {data.database}, {data.styling}. Description: {data.description}"
         gen_id = f"aiforge-{uuid.uuid4().hex[:8]}"
 
-        # Initialize generation tracking state
-        now_str = datetime.now().strftime("%H:%M:%S")
+        # Legacy synchronous path. The UI uses POST /api/generations (the LangGraph pipeline);
+        # record only what this call actually produced.
+        gen_result = await global_generation_pipeline.generate(
+            user_prompt=full_prompt,
+            session_id=gen_id
+        )
+
+        safe_name = "".join([c if c.isalnum() or c in " -_" else "_" for c in data.project_name]).strip()
+
         GENERATIONS_DB[gen_id] = {
             "generation_id": gen_id,
             "project_name": data.project_name,
@@ -61,45 +68,11 @@ async def generate(data: GenerateProjectPayload | Prompt):
                 "database": data.database,
                 "styling": data.styling
             },
-            "status": "COMPLETED",
+            "status": "COMPLETED" if gen_result.validation_passed else "COMPLETED_WITH_WARNINGS",
             "progress": 100,
-            "current_agent": "completed",
-            "agents": [
-                {"name": "planner", "status": "completed", "summary": "Requirements & task graph generated", "timestamp": now_str},
-                {"name": "architect", "status": "completed", "summary": "System architecture & API specs defined", "timestamp": now_str},
-                {"name": "frontend", "status": "completed", "summary": f"{data.frontend} components & views generated", "timestamp": now_str},
-                {"name": "backend", "status": "completed", "summary": f"{data.backend} REST API endpoints generated", "timestamp": now_str},
-                {"name": "database", "status": "completed", "summary": f"{data.database} schema & migration scripts created", "timestamp": now_str},
-                {"name": "reviewer", "status": "completed", "summary": "15/15 Quality gates passed", "timestamp": now_str},
-                {"name": "testing", "status": "completed", "summary": "Pytest suite executed (48/48 passed)", "timestamp": now_str},
-                {"name": "documentation", "status": "completed", "summary": "Technical README & API docs written", "timestamp": now_str}
-            ],
-            "logs": [
-                f"{now_str}  [Planner] Analyzing prompt requirements for {data.project_name}",
-                f"{now_str}  [Planner] Development task breakdown complete",
-                f"{now_str}  [Architect] Designing system architecture: {data.frontend} + {data.backend} + {data.database}",
-                f"{now_str}  [Frontend] Generating responsive React interface components",
-                f"{now_str}  [Backend] Creating FastAPI endpoints & Pydantic models",
-                f"{now_str}  [Database] Building relational schema and migrations",
-                f"{now_str}  [Reviewer] Inspecting AST, SAST security vulnerabilities, and code quality",
-                f"{now_str}  [Testing] Executing automated test suite: 48/48 passed",
-                f"{now_str}  [Documentation] Generating project README and OpenAPI specifications",
-                f"{now_str}  [System] Project generation complete and validated."
-            ],
-            "quality_score": 96.0,
-            "tests_passed": 48,
-            "tests_failed": 0
+            "quality_score": gen_result.quality_score,
+            "validation_passed": gen_result.validation_passed,
         }
-
-        # Start generation pipeline
-        gen_result = await global_generation_pipeline.generate(
-            user_prompt=full_prompt,
-            session_id=gen_id
-        )
-
-        safe_name = "".join([c if c.isalnum() or c in " -_" else "_" for c in data.project_name]).strip()
-
-        GENERATIONS_DB[gen_id]["quality_score"] = gen_result.quality_score
 
         return {
             "success": True,
@@ -187,7 +160,7 @@ def cancel_generation(generation_id: str):
     if generation_id in GENERATIONS_DB:
         GENERATIONS_DB[generation_id]["status"] = "CANCELLED"
         now_str = datetime.now().strftime("%H:%M:%S")
-        GENERATIONS_DB[generation_id]["logs"].append(f"{now_str}  [System] Generation cancelled by user.")
+        GENERATIONS_DB[generation_id].setdefault("logs", []).append(f"{now_str}  [System] Generation cancelled by user.")
         return {"success": True, "status": "CANCELLED"}
     return {"success": True, "status": "CANCELLED"}
 
