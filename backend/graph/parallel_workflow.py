@@ -766,6 +766,13 @@ async def dependency_manager_node(state: ProjectState) -> dict:
 
     agent_timers["dependency_manager"] = timer.elapsed
 
+    # Write the Python requirements now, not only at deployment: the testing stage installs them
+    # into the project's sandbox, so without the file generated tests can't import fastapi & co.
+    from backend.execution.project_env import requirements_file
+    project_path = state.get("project_path", "")
+    if project_path and Path(project_path).is_dir() and deps_files.get("requirements.txt")             and requirements_file(Path(project_path)) is None:
+        (Path(project_path) / "requirements.txt").write_text(deps_files["requirements.txt"], encoding="utf-8")
+
     _fire_lifecycle("agent_completed", "dependency_manager", duration=timer.elapsed)
     return {
         "deployment_files": deps_files,

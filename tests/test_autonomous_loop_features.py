@@ -142,3 +142,12 @@ def test_github_publish_blocked_by_secret_scan(monkeypatch, project_dir):
 
     monkeypatch.setattr(publisher.global_github_publisher, "publish_project", blocked)
     assert _sync({"project_id": "unpublished-xyz", "project_path": str(project_dir)})["status"] == "BLOCKED"
+
+
+def test_dependency_stage_writes_requirements_before_testing(tmp_path):
+    from backend.graph.parallel_workflow import dependency_manager_node
+    state = {"project_path": str(tmp_path), "plan": {"project_name": "habits"},
+             "backend": "from fastapi import FastAPI\nfrom passlib.context import CryptContext\n", "frontend": ""}
+    run(dependency_manager_node(state))
+    reqs = (tmp_path / "requirements.txt").read_text(encoding="utf-8").lower()
+    assert "fastapi" in reqs and "passlib" in reqs
