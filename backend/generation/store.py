@@ -347,6 +347,25 @@ class GenerationStore:
     def list_all(self) -> List[Dict[str, Any]]:
         return list(self._read().values())
 
+    def mark_interrupted(self) -> int:
+        """
+        Close runs that were executing when the server stopped. They ran as in-process tasks,
+        so they can never finish and would otherwise show as "in progress" forever. Runs paused
+        for approval are kept: their graph state is checkpointed and can resume.
+        """
+        stale = 0
+        with self._lock:
+            data = self._load()
+            for rec in data.values():
+                if rec.get("status") in ("queued", "planning", "running", "building"):
+                    rec["status"] = "failed"
+                    rec["error"] = rec.get("error") or "Interrupted: the server stopped while this run was in progress."
+                    rec["completed_at"] = rec.get("completed_at") or _now_iso()
+                    stale += 1
+            if stale:
+                self._save(data)
+        return stale
+
     def get_events(
         self, gen_id: str, offset: int = 0, limit: int = 200
     ) -> List[Dict[str, Any]]:

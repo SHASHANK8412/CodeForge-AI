@@ -61,6 +61,13 @@ async def lifespan(app: FastAPI):
         global_scheduler.start()
     except Exception as e:
         root_logger.warning(f"Could not start global_scheduler during lifespan startup: {e}")
+    try:
+        from backend.generation.store import global_generation_store
+        stale = global_generation_store.mark_interrupted()
+        if stale:
+            root_logger.info(f"Closed {stale} generation(s) interrupted by the previous shutdown")
+    except Exception as e:
+        root_logger.warning(f"Could not close interrupted generations: {e}")
     yield
 
 from backend.graph.workflow import graph
@@ -218,22 +225,16 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 from fastapi.middleware.gzip import GZipMiddleware
 
-# Restrict CORS to explicit trusted frontend origins for security
+# Restrict CORS to explicit trusted frontend origins for security.
+# Comma-separated CORS_ORIGINS (e.g. a Vercel frontend URL) replaces the default, which allows
+# only this machine (localhost / 127.0.0.1 on any port, so Vite's fallback ports work too).
+_cors_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    # Comma-separated CORS_ORIGINS overrides the local-dev defaults (e.g. a Vercel frontend URL).
-    allow_origins=[o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()] or [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-    ],
+    allow_origins=_cors_origins,
+    allow_origin_regex=None if _cors_origins else r"http://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-Correlation-ID", "X-Trace-ID"],
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)

@@ -145,6 +145,7 @@ def _safe_status_response(rec: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "generation_id": rec.get("generation_id"),
         "project_id": rec.get("project_id"),
+        "prompt": rec.get("prompt"),
         "status": rec.get("status"),
         "current_agent": rec.get("current_agent"),
         "progress": rec.get("progress", 0),
