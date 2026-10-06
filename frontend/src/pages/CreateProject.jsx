@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaArrowLeft, FaPlus, FaCheck, FaCog, FaChevronDown, FaChevronUp, FaSpinner } from 'react-icons/fa';
-import { submitProjectGeneration } from '../services/api';
+import { createGeneration } from '../services/generation';
 
 export default function CreateProject({ setView, onGenerateSuccess }) {
   const [projectName, setProjectName] = useState('TaskForge AI');
@@ -85,25 +85,28 @@ export default function CreateProject({ setView, onGenerateSuccess }) {
       auto_repair: options.auto_repair
     };
 
-    try {
-      const res = await submitProjectGeneration(payload);
-      setSubmitting(false);
+    const enabledOptions = Object.entries(payload)
+      .filter(([key, value]) => value === true && !['frontend', 'backend', 'database', 'styling'].includes(key))
+      .map(([key]) => key.replace(/_/g, ' '));
+    const prompt = [
+      `Project name: ${payload.project_name}.`,
+      `Tech stack: ${payload.frontend} frontend, ${payload.backend} backend, ${payload.database} database, ${payload.styling} styling.`,
+      enabledOptions.length ? `Include: ${enabledOptions.join(', ')}.` : '',
+      `Requirements: ${payload.description}`,
+    ].filter(Boolean).join(' ');
+    const projectId = payload.project_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'project';
 
-      if (res.success) {
-        const generationId = res.generation_id || `aiforge-${Date.now()}`;
-        if (onGenerateSuccess) {
-          onGenerateSuccess(generationId, projectName);
-        } else if (setView) {
-          setView('build');
-        } else {
-          window.location.href = `/projects/${generationId}/build`;
-        }
-      } else {
-        setErrorMessage(res.error || 'AIForge could not start the project generation.');
+    try {
+      const res = await createGeneration(projectId, prompt);
+      setSubmitting(false);
+      if (onGenerateSuccess) {
+        onGenerateSuccess(res.generation_id, projectName);
+      } else if (setView) {
+        setView('build');
       }
     } catch (err) {
       setSubmitting(false);
-      setErrorMessage('API request failed. Ensure the backend server is running.');
+      setErrorMessage(`Could not start generation: ${err.message}. Ensure the backend server is running.`);
     }
   };
 

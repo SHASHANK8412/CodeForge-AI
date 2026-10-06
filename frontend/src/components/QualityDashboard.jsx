@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState, useEffect } from 'react';
 import { FaShieldAlt, FaTachometerAlt, FaCode, FaCheckCircle, FaExclamationTriangle, FaMagic, FaChartBar, FaFileAlt } from 'react-icons/fa';
 
@@ -10,7 +11,7 @@ export default function QualityDashboard({ projectId = 'sample_proj' }) {
   const fetchQualityReport = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/quality-report/${projectId}`);
+      const res = await fetch(`${BACKEND_URL}/api/quality-report/${projectId}`);
       if (res.ok) {
         const data = await res.json();
         setReport(data);
@@ -44,7 +45,7 @@ export default function QualityDashboard({ projectId = 'sample_proj' }) {
 
   const fetchBenchmark = async () => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/benchmark/${projectId}`);
+      const res = await fetch(`${BACKEND_URL}/api/benchmark/${projectId}`);
       if (res.ok) {
         const data = await res.json();
         setBenchmark(data);
@@ -65,7 +66,7 @@ export default function QualityDashboard({ projectId = 'sample_proj' }) {
   const handleAutoFix = async () => {
     setFixing(true);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/optimize/${projectId}`, {
+      const res = await fetch(`${BACKEND_URL}/api/optimize/${projectId}`, {
         method: 'POST'
       });
       if (res.ok) {

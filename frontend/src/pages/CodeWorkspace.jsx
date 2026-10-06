@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState, useEffect, useRef } from 'react';
 import { FaChevronRight, FaChevronLeft, FaRobot, FaSearch, FaKeyboard, FaTimes, FaCheck, FaHistory, FaWrench, FaTerminal, FaDownload } from 'react-icons/fa';
 import WorkspaceHeader from '../components/workspace/WorkspaceHeader';
@@ -422,13 +423,13 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
     if (Object.keys(unsavedChanges).length > 0) {
       setExportPrompt(true);
     } else {
-      window.location.href = `http://127.0.0.1:8000/api/project/${generationId}/download`;
+      window.location.href = `${BACKEND_URL}/api/project/${generationId}/download`;
     }
   };
 
   const handleExportAnyway = () => {
     setExportPrompt(false);
-    window.location.href = `http://127.0.0.1:8000/api/project/${generationId}/download`;
+    window.location.href = `${BACKEND_URL}/api/project/${generationId}/download`;
   };
 
   const handleSaveAndValidateExport = async () => {
@@ -440,7 +441,7 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
     setUnsavedChanges({});
     // Trigger validation
     await handleReview();
-    window.location.href = `http://127.0.0.1:8000/api/project/${generationId}/download`;
+    window.location.href = `${BACKEND_URL}/api/project/${generationId}/download`;
   };
 
   const handleQualityReport = () => {

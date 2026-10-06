@@ -1,6 +1,7 @@
+import { BACKEND_URL } from '../config/backend';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = `${BACKEND_URL}`;
 
 export async function fetchProjectFiles(generationId) {
   try {
@@ -53,7 +54,7 @@ export async function runProject(generationId) {
       exit_code: 0,
       stdout: `$ npm install\n$ npm run dev\n[Vite] Server started successfully at http://localhost:5173\n[FastAPI] Application startup complete at http://localhost:8000`,
       stderr: '',
-      urls: { frontend: 'http://localhost:5173', backend: 'http://localhost:8000' }
+      urls: { frontend: 'http://localhost:5173', backend: `${BACKEND_URL}` }
     };
   }
 }

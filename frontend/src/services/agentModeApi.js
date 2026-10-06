@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 /**
  * AIForge AI Agent Mode API Service
  * ==================================
@@ -7,7 +8,7 @@
 
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API_BASE = import.meta.env.VITE_API_URL || `${BACKEND_URL}`;
 const LOCAL_AGENTS_KEY = "aiforge_agent_definitions";
 const LOCAL_TASKS_KEY = "aiforge_agent_task_runs";
 

@@ -1,4 +1,5 @@
-const API = "http://127.0.0.1:8000";
+import { BACKEND_URL } from '../config/backend';
+const API = `${BACKEND_URL}`;
 
 /**
  * Calls the end-to-end project generation pipeline and waits for the full

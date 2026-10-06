@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState, useEffect } from 'react';
 import { FaShieldAlt, FaCheckCircle, FaTimesCircle, FaWrench, FaTools, FaCode, FaFileCode, FaPlay, FaRegClock, FaChartPie } from 'react-icons/fa';
 
@@ -11,7 +12,7 @@ export default function EvaluationDashboard({ initialRequirement = "Build a todo
     setEvaluating(true);
     setErrorMsg('');
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/evaluate', {
+      const res = await fetch(`${BACKEND_URL}/api/evaluate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

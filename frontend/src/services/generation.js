@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 /**
  * frontend/src/services/generation.js
  * =====================================
@@ -20,7 +21,7 @@
  * Returns a { disconnect } object to clean up on component unmount.
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const API_BASE = import.meta.env.VITE_API_URL || `${BACKEND_URL}`;
 
 /** Returns the JWT token stored by the auth flow. */
 function _getAuthHeader() {

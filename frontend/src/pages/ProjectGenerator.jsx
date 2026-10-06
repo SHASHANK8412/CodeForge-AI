@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -315,7 +316,7 @@ function ProjectGenerator() {
                                     <span className="text-2xl font-black text-gray-200">{project?.assembly_manifest?.total_files ?? Object.keys(project?.files || {}).length ?? 0}</span>
                                 </div>
                                 <a
-                                    href={`http://127.0.0.1:8000/api/project/${encodeURIComponent(generatedProjectName)}/download`}
+                                    href={`${BACKEND_URL}/api/project/${encodeURIComponent(generatedProjectName)}/download`}
                                     download
                                     className="flex items-center gap-2 bg-[#10B981] hover:bg-emerald-600 text-white font-bold py-2.5 px-5 rounded-xl text-xs transition active:scale-95 shadow-lg shadow-emerald-500/10 cursor-pointer"
                                 >

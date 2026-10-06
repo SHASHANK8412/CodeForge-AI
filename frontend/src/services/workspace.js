@@ -1,7 +1,8 @@
+import { BACKEND_URL } from '../config/backend';
 import axios from 'axios';
 import { getGeneration } from './generation';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || `${BACKEND_URL}`;
 
 export async function fetchGenerationStatus(generationId) {
   try {

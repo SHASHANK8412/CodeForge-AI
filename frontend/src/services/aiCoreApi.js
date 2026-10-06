@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 /**
  * AIForge Next-Gen AI Agent Core — Client API Service
  * ===================================================
@@ -7,7 +8,7 @@
 
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API_BASE = import.meta.env.VITE_API_URL || `${BACKEND_URL}`;
 
 const DEFAULT_RUN = {
   id: "run_demo_agent",

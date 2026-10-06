@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState, useEffect } from 'react';
 import { FaBook, FaTrash, FaCheckCircle, FaProjectDiagram } from 'react-icons/fa';
 import UploadBox from '../components/UploadBox';
@@ -12,7 +13,7 @@ export default function KnowledgeBase() {
 
   const fetchDocuments = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/documents');
+      const res = await fetch(`${BACKEND_URL}/api/documents`);
       if (res.ok) {
         const data = await res.json();
         setDocuments(data || []);
@@ -33,7 +34,7 @@ export default function KnowledgeBase() {
 
   const handleDeleteDocument = async (filename) => {
     try {
-      await fetch(`http://127.0.0.1:8000/api/documents/${filename}`, {
+      await fetch(`${BACKEND_URL}/api/documents/${filename}`, {
         method: 'DELETE',
       });
       fetchDocuments();
@@ -47,7 +48,7 @@ export default function KnowledgeBase() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/query', {
+      const res = await fetch(`${BACKEND_URL}/query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question }),

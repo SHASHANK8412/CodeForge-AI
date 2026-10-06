@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 /**
  * frontend/src/services/browser_testing.js
  * =========================================
@@ -8,7 +9,7 @@
  * - Diagnose & Repair Browser Test Failures
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const API_BASE = import.meta.env.VITE_API_URL || `${BACKEND_URL}`;
 
 function _getAuthHeader() {
   const token = localStorage.getItem('aiforge_jwt');

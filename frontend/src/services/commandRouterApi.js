@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 /**
  * AIForge Universal Command Center Service
  * ========================================
@@ -6,7 +7,7 @@
 
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API_BASE = import.meta.env.VITE_API_URL || `${BACKEND_URL}`;
 const RECENT_COMMANDS_KEY = "aiforge_recent_command_history";
 
 export function getRecentCommands() {

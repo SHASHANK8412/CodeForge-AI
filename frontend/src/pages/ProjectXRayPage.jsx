@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState, useEffect } from 'react';
 import {
   FaSearch,
@@ -17,7 +18,7 @@ import {
 import axios from 'axios';
 import { fetchProjectFiles } from '../services/project';
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = `${BACKEND_URL}`;
 
 export default function ProjectXRayPage({ projectId = 'aiforge-demo', setView }) {
   const [profile, setProfile] = useState(null);

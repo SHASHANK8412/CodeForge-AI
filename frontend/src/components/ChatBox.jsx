@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import { useEffect, useRef, useState } from "react";
 import { FaCommentAlt, FaBrain, FaFileAlt, FaPlus, FaRobot, FaCog, FaMoon, FaSun, FaDownload, FaCheck, FaTimes, FaExternalLinkAlt } from "react-icons/fa";
 import InputBar from "./InputBar";
@@ -734,7 +735,7 @@ function ChatBox() {
                                         <div className="flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-800">
                                             <span className="text-xs font-semibold text-indigo-300">📦 Generated Production Artifacts</span>
                                             <a
-                                                href={`http://127.0.0.1:8000/download/aiforge_project`}
+                                                href={`${BACKEND_URL}/download/aiforge_project`}
                                                 download
                                                 className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg transition active:scale-95 shadow cursor-pointer"
                                             >

@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 /**
  * AIForge 3-Day Sprint (Days 2 & 3) API Client Service
  * ===================================================
@@ -5,7 +6,7 @@
 
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API_BASE = import.meta.env.VITE_API_URL || `${BACKEND_URL}`;
 
 export async function fetchBrowserSessions() {
   try {

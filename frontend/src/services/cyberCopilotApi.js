@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 /**
  * AIForge Phase 4: Defensive AI Cybersecurity Copilot API Service
  * ===============================================================
@@ -5,7 +6,7 @@
 
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API_BASE = import.meta.env.VITE_API_URL || `${BACKEND_URL}`;
 
 const DEFAULT_OVERVIEW = {
   security_posture_score: 88,

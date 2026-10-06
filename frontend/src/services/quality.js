@@ -1,7 +1,8 @@
+import { BACKEND_URL } from '../config/backend';
 import axios from 'axios';
 import { calculateWeightedQualityScore, getScoreClassification } from '../utils/qualityScore';
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = `${BACKEND_URL}`;
 
 export async function fetchQualityReport(generationId) {
   try {

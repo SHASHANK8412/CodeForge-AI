@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 /**
  * AIForge Phase 7: Autonomous AI Operating System (AIForge OS) API Service
  * =======================================================================
@@ -5,7 +6,7 @@
 
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API_BASE = import.meta.env.VITE_API_URL || `${BACKEND_URL}`;
 
 const DEFAULT_OVERVIEW = {
   system_health: "99.4%",

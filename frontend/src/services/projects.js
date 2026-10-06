@@ -1,6 +1,7 @@
+import { BACKEND_URL } from '../config/backend';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = `${BACKEND_URL}`;
 
 export async function fetchProjects({ page = 1, pageSize = 12, search = '', status = 'all', sort = 'recently_updated' } = {}) {
   try {
