@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 from typing import Optional, Dict, Any, List
@@ -218,13 +219,16 @@ from fastapi.middleware.gzip import GZipMiddleware
 # Restrict CORS to explicit trusted frontend origins for security
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
+    # Comma-separated CORS_ORIGINS overrides the local-dev defaults (e.g. a Vercel frontend URL).
+    allow_origins=[o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()] or [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
