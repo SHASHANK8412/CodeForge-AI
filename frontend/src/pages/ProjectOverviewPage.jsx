@@ -30,7 +30,7 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
 
     const loadProjects = async () => {
         try {
-            const res = await fetch("/api/projects");
+            const res = await fetch("/api/project-memory");
             if (res.ok) {
                 const data = await res.json();
                 setProjectList(data);
@@ -46,7 +46,7 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
     const loadProjectProfile = async (pId) => {
         setIsLoading(true);
         try {
-            const res = await fetch(`/api/projects/${pId}`);
+            const res = await fetch(`/api/project-memory/${pId}`);
             if (res.ok) {
                 const data = await res.json();
                 setProjectProfile(data);

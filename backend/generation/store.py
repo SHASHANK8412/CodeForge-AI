@@ -344,6 +344,9 @@ class GenerationStore:
         data = self._read()
         return [r for r in data.values() if r.get("user_id") == user_id]
 
+    def list_all(self) -> List[Dict[str, Any]]:
+        return list(self._read().values())
+
     def get_events(
         self, gen_id: str, offset: int = 0, limit: int = 200
     ) -> List[Dict[str, Any]]:

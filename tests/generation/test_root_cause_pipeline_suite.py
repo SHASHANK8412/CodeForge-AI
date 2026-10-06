@@ -25,7 +25,10 @@ client = TestClient(app)
 class TestPipelineDataFlow:
     """Verifies that generated files preserve complete source content across all pipeline stages."""
 
-    def test_stage_1_to_8_e2e_data_flow(self, tmp_path):
+    def test_stage_1_to_8_e2e_data_flow(self, tmp_path, monkeypatch):
+        # Serve the API from this test's own generated-projects root.
+        import backend.routes.export as export_routes
+        monkeypatch.setattr(export_routes, "GENERATED_ROOT", tmp_path.resolve())
         # 1. Raw LLM Generated Code
         raw_backend_output = (
             "```python\n"

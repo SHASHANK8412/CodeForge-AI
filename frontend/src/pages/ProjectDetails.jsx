@@ -38,11 +38,11 @@ export default function ProjectDetails({ generationId = 'aiforge-fooddelivery-ai
     }
   };
 
-  const name = data?.project_name || 'FoodDelivery AI';
-  const score = data?.quality_score || 96.0;
-  const testsPassed = data?.tests?.passed || 48;
-  const testsTotal = data?.tests?.total || 48;
-  const stack = data?.stack || ['React', 'FastAPI', 'PostgreSQL', 'Tailwind CSS'];
+  const name = data?.project_name || generationId;
+  const score = data?.quality_score ?? '—';
+  const testsPassed = data?.tests?.passed ?? '—';
+  const testsTotal = data?.tests?.total ?? '—';
+  const stack = data?.stack || [];
   const activity = data?.activity || [];
   const versions = data?.versions || [];
 

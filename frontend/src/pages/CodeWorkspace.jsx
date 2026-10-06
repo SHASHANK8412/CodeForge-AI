@@ -312,8 +312,8 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
 
     const res = await runProject(generationId);
     setIsRunning(false);
-    setExitCode(res.exit_code || 0);
-    setTerminalOutput(res.stdout || '$ Server started successfully on http://localhost:8000');
+    setExitCode(res.exit_code ?? 1);
+    setTerminalOutput([res.stdout, res.stderr].filter(Boolean).join('\n') || '(no output)');
   };
 
   const handleTest = async () => {
@@ -321,8 +321,8 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
     setTerminalOutput(`$ python -m pytest\nExecuting automated unit and integration tests...`);
 
     const res = await testProject(generationId);
-    setExitCode(res.failed > 0 ? 1 : 0);
-    setTerminalOutput(res.output || '48 passed in 0.42s');
+    setExitCode(res.status === 'PASS' ? 0 : 1);
+    setTerminalOutput(res.output || '(no output)');
     setTestModalData(res);
   };
 
@@ -332,7 +332,9 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
     const res = await reviewProject(generationId);
     setReviewModalData(res);
     setReviewData(res);
-    setTerminalOutput(`Structured Review finished. Quality score: ${res.overall_score}. ${res.issues?.length || 0} issues detected.`);
+    setTerminalOutput(res.error
+      ? `Review failed: ${res.error}`
+      : `Structured Review finished. Quality score: ${res.overall_score ?? '—'}. ${res.issues?.length || 0} issues detected.`);
   };
 
   // Selection actions from the Monaco popup menu
@@ -655,7 +657,7 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
                 <>
                   <AgentPanel generation={generationStatus} onAgentSelect={setActiveAgent} />
                   <ProjectInfo
-                    projectName={projectData?.project_name || 'FoodDelivery AI'}
+                    projectName={projectData?.project_name || generationId}
                     qualityScore={reviewData?.overall_score || 0}
                     testsPassed={testModalData?.passed || 0}
                     totalTests={testModalData?.total || 0}

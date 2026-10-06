@@ -266,7 +266,7 @@ class GenerationManager:
                     repair_reason=prompt,
                     changed_files=changed_list or list(final_files.keys()),
                     test_result=final_state.get("test_results", {}),
-                    quality_score=final_state.get("quality_score", 100.0)
+                    quality_score=final_state.get("quality_score")
                 )
 
             _store.set_output(gen_id, project_path, len(final_files))

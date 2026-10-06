@@ -890,7 +890,7 @@ from backend.execution.models import MemoryRecord
 
 from backend.execution.failure_classifier import classify_test_failure, FailureCategory
 from backend.agents.repair_agent import global_repair_agent
-from backend.quality.version_manager import global_version_manager
+from backend.quality.version_manager import global_version_manager, overall_quality_score
 from backend.quality.gates import evaluate_quality_gates, GateStatus
 
 MAX_REPAIR_ATTEMPTS = int(os.getenv("MAX_REPAIR_ATTEMPTS", 3))
@@ -1110,8 +1110,8 @@ async def final_approval_node(state: ProjectState) -> dict:
 
     files_map = dict(state.get("files", {}) or {})
     test_res = dict(state.get("test_results", {}) or {})
-    review_res = dict(state.get("review", {}) or {}) if isinstance(state.get("review"), dict) else {"summary": str(state.get("review", "15/15 Quality gates verified"))}
-    quality_score = state.get("quality_score", {})
+    review_res = dict(state.get("review", {}) or {}) if isinstance(state.get("review"), dict) else {"summary": str(state.get("review") or "")}
+    quality_score = overall_quality_score(state.get("quality_score"))
     fixes = list(state.get("fixes", []) or [])
     fix_history = list(state.get("fix_history", []) or [])
     failure_history = list(state.get("failure_history", []) or [])
@@ -1129,7 +1129,7 @@ async def final_approval_node(state: ProjectState) -> dict:
             "files_generated": list(files_map.keys()),
             "files_count": len(files_map),
             "tests_passed": test_res.get("passed", 0),
-            "tests_failed": test_res.get("failed", 1),
+            "tests_failed": test_res.get("failed", 0),
             "test_success": False,
             "failed_tests": state.get("failed_tests", []),
             "stack_traces": state.get("stack_traces", []),
@@ -1138,7 +1138,7 @@ async def final_approval_node(state: ProjectState) -> dict:
             "failure_history": failure_history,
             "root_causes": state.get("root_causes", []),
             "reviewer_summary": review_res,
-            "quality_score": quality_score or 75.0,
+            "quality_score": quality_score,
             "fixes_applied": len(fixes),
             "deployment_readiness": "NEEDS_MANUAL_GUIDANCE",
             "agents_ready": ["Debug Agent", "Patch Agent"],
@@ -1157,12 +1157,12 @@ async def final_approval_node(state: ProjectState) -> dict:
             "files_count": len(files_map),
             "tests_passed": test_res.get("passed", 0),
             "tests_failed": test_res.get("failed", 0),
-            "test_success": test_res.get("success", True),
+            "test_success": test_res.get("success"),
             "test_failures": test_res.get("failures", []),
             "reviewer_summary": review_res,
-            "quality_score": quality_score or 96.0,
+            "quality_score": quality_score,
             "fixes_applied": len(fixes),
-            "deployment_readiness": "READY FOR EXPORT",
+            "deployment_readiness": "READY FOR EXPORT" if test_res.get("success") else "TESTS NOT PASSING",
             "agents_ready": ["Project Packaging Agent", "Deployment Agent", "Live Deploy Agent"],
             "requested_by": "Testing & Reviewer Agents",
             "status": state.get("approval_status", "pending"),

@@ -64,6 +64,85 @@ from backend.generators.project_generator import GENERATED_PROJECTS_DIR
 PROJECT_METADATA_STORE: dict[str, dict] = {}
 
 
+def _fmt_time(ts: Optional[float]) -> Optional[str]:
+    return datetime.fromtimestamp(ts).strftime("%b %d, %H:%M") if ts else None
+
+
+def _infer_stack(pdir: Path) -> list:
+    """Technologies actually present in the generated files."""
+    stack = []
+    pkg = pdir / "frontend" / "package.json"
+    if pkg.exists():
+        text = pkg.read_text(encoding="utf-8", errors="ignore").lower()
+        stack += [name for key, name in (('"react"', "React"), ('"vue"', "Vue"), ('"vite"', "Vite"), ("tailwind", "Tailwind CSS")) if key in text]
+    elif (pdir / "frontend").is_dir():
+        stack.append("Frontend")
+    backend_text = " ".join(
+        f.read_text(encoding="utf-8", errors="ignore").lower()[:4000]
+        for f in list((pdir / "backend").glob("*.py"))[:20] + list((pdir / "backend").glob("requirements*.txt"))
+    ) if (pdir / "backend").is_dir() else ""
+    for key, name in (("fastapi", "FastAPI"), ("flask", "Flask"), ("django", "Django")):
+        if key in backend_text:
+            stack.append(name)
+    if any(pdir.glob("database/*.sql")) or "sqlalchemy" in backend_text:
+        stack.append("SQL")
+    return stack
+
+
+def _project_summary(pdir: Path, generations: list) -> Dict[str, Any]:
+    """Everything AIForge actually knows about one generated project; unknown values are None."""
+    from backend.quality.version_manager import global_version_manager
+    from backend.routes.deployment import DEPLOYMENT_STATE_DB
+
+    gen_id = pdir.name
+    meta = PROJECT_METADATA_STORE.get(gen_id, {})
+    target = pdir.resolve()
+    runs = sorted(
+        (r for r in generations if r.get("project_path") and Path(r["project_path"]).resolve() == target),
+        key=lambda r: r.get("created_at") or "",
+    )
+    latest_run = runs[-1] if runs else None
+    versions = global_version_manager.get_history(latest_run["project_id"]) if latest_run else []
+    latest_ver = versions[-1] if versions else None
+    test_result = latest_ver.test_result if latest_ver else {}
+
+    deploy_status = (DEPLOYMENT_STATE_DB.get(gen_id) or {}).get("status")
+    if meta.get("status"):
+        status = meta["status"]
+    elif deploy_status == "LIVE":
+        status = "LIVE"
+    elif latest_run:
+        status = str(latest_run.get("status", "")).upper() or "UNKNOWN"
+    else:
+        status = "GENERATED"
+
+    return {
+        "generation_id": gen_id,
+        "project_name": meta.get("name") or pdir.name.replace("_", " "),
+        "description": (latest_run or {}).get("prompt") or "",
+        "status": status,
+        "quality_score": latest_ver.quality_score if latest_ver else None,
+        "tests_passed": test_result.get("passed"),
+        "tests_total": test_result.get("total"),
+        "stack": _infer_stack(pdir),
+        "updated_at": _fmt_time(pdir.stat().st_mtime),
+        "created_at": (latest_run or {}).get("created_at") or _fmt_time(pdir.stat().st_ctime),
+        "is_archived": meta.get("archived", False),
+        "_runs": runs,
+        "_versions": versions,
+    }
+
+
+def _generated_dirs() -> list:
+    if not GENERATED_PROJECTS_DIR.exists():
+        return []
+    return [p for p in GENERATED_PROJECTS_DIR.iterdir() if p.is_dir() and not p.name.startswith(".")]
+
+
+def _public(summary: Dict[str, Any]) -> Dict[str, Any]:
+    return {k: v for k, v in summary.items() if not k.startswith("_")}
+
+
 @router.get("/api/projects")
 def list_projects_endpoint(
     page: int = 1,
@@ -73,104 +152,47 @@ def list_projects_endpoint(
     sort: str = "recently_updated"
 ):
     """
-    Scans generated_projects directory and returns paginated list of projects with quality scores, tests, and deployment statuses.
+    Lists the projects in generated_projects/ with the status, quality score and test counts
+    recorded for them. Values that were never measured are null, not estimated.
     """
+    from backend.generation.store import global_generation_store
+    generations = global_generation_store.list_all()
+
     projects_list = []
-
-    # Read all directories in generated_projects
-    if GENERATED_PROJECTS_DIR.exists():
-        dirs = [p for p in GENERATED_PROJECTS_DIR.glob("*") if p.is_dir() and not p.name.startswith(".")]
-        for pdir in dirs:
-            gen_id = f"aiforge-{pdir.name.lower().replace(' ', '-')}"
-            meta = PROJECT_METADATA_STORE.get(gen_id, {})
-
-            if meta.get("archived") and status.lower() != "archived":
+    for pdir in _generated_dirs():
+        proj = _public(_project_summary(pdir, generations))
+        if proj["is_archived"] and status.lower() != "archived":
+            continue
+        if search:
+            s_lower = search.lower()
+            haystack = [proj["project_name"], proj["description"], proj["status"], *proj["stack"]]
+            if not any(s_lower in str(h).lower() for h in haystack):
                 continue
-
-            display_name = meta.get("name") or pdir.name.replace("_", " ")
-            mtime = datetime.fromtimestamp(pdir.stat().st_mtime).strftime("%b %d, %H:%M")
-
-            proj_status = meta.get("status") or ("DEPLOYED" if "food" in pdir.name.lower() or "todo" in pdir.name.lower() else "COMPLETED")
-            quality_score = meta.get("quality_score") or (96.0 if "food" in pdir.name.lower() else 94.0)
-            tests_passed = meta.get("tests_passed") or 48
-            tests_total = meta.get("tests_total") or 48
-
-            # Infer stack
-            stack_items = ["React", "FastAPI", "PostgreSQL", "Tailwind CSS"]
-            if (pdir / "backend").exists():
-                stack_items = ["React", "FastAPI", "PostgreSQL", "Tailwind CSS"]
-
-            desc = f"Autonomous software application generated by AIForge."
-
-            # Search filter
-            if search:
-                s_lower = search.lower()
-                matches = (
-                    s_lower in display_name.lower()
-                    or s_lower in desc.lower()
-                    or s_lower in proj_status.lower()
-                    or any(s_lower in st.lower() for st in stack_items)
-                )
-                if not matches:
+        if status != "all":
+            if status.lower() == "archived":
+                if not proj["is_archived"]:
                     continue
+            elif proj["status"].lower() != status.lower():
+                continue
+        projects_list.append(proj)
 
-            # Status filter
-            if status != "all":
-                if status.lower() == "archived" and not meta.get("archived"):
-                    continue
-                elif status.lower() != "archived" and proj_status.lower() != status.lower():
-                    continue
-
-            projects_list.append({
-                "generation_id": gen_id,
-                "project_name": display_name,
-                "description": desc,
-                "status": proj_status,
-                "quality_score": quality_score,
-                "tests_passed": tests_passed,
-                "tests_total": tests_total,
-                "stack": stack_items,
-                "updated_at": mtime,
-                "created_at": "Aug 9, 2026",
-                "is_archived": meta.get("archived", False)
-            })
-
-    # Add demo default if empty
-    if not projects_list and not search:
-        projects_list.append({
-            "generation_id": "aiforge-fooddelivery-ai",
-            "project_name": "FoodDelivery AI",
-            "description": "Full-stack food delivery application with authentication, CRUD, and ordering workflow.",
-            "status": "LIVE",
-            "quality_score": 96.0,
-            "tests_passed": 48,
-            "tests_total": 48,
-            "stack": ["React", "FastAPI", "PostgreSQL", "Tailwind CSS"],
-            "updated_at": "Just now",
-            "created_at": "Aug 9, 2026",
-            "is_archived": False
-        })
-
-    # Sorting
-    if sort == "highest_quality":
-        projects_list.sort(key=lambda x: x["quality_score"], reverse=True)
-    elif sort == "lowest_quality":
-        projects_list.sort(key=lambda x: x["quality_score"])
+    if sort in ("highest_quality", "lowest_quality"):
+        scored = [p for p in projects_list if p["quality_score"] is not None]
+        unscored = [p for p in projects_list if p["quality_score"] is None]
+        scored.sort(key=lambda x: x["quality_score"], reverse=(sort == "highest_quality"))
+        projects_list = scored + unscored
     elif sort == "alphabetical":
         projects_list.sort(key=lambda x: x["project_name"].lower())
+    else:
+        projects_list.sort(key=lambda x: (GENERATED_PROJECTS_DIR / x["generation_id"]).stat().st_mtime, reverse=True)
 
-    # Pagination
     total = len(projects_list)
     start_idx = (page - 1) * page_size
     paginated = projects_list[start_idx : start_idx + page_size]
 
-    # Overall summary stats
-    completed_cnt = sum(1 for p in projects_list if p["status"] in ["COMPLETED", "LIVE"])
-    building_cnt = sum(1 for p in projects_list if p["status"] in ["BUILDING", "QUEUED"])
+    scores = [p["quality_score"] for p in projects_list if p["quality_score"] is not None]
+    tests = [p["tests_passed"] for p in projects_list if p["tests_passed"] is not None]
     deployed_cnt = sum(1 for p in projects_list if p["status"] == "LIVE")
-    avg_score = round(sum(p["quality_score"] for p in projects_list) / max(total, 1), 1)
-    total_tests = sum(p["tests_passed"] for p in projects_list)
-
     return {
         "projects": paginated,
         "page": page,
@@ -178,49 +200,49 @@ def list_projects_endpoint(
         "total": total,
         "stats": {
             "total_projects": total,
-            "completed": completed_cnt,
-            "building": building_cnt,
+            "completed": sum(1 for p in projects_list if p["status"] in ("COMPLETED", "LIVE")),
+            "building": sum(1 for p in projects_list if p["status"] in ("QUEUED", "PLANNING", "RUNNING", "WAITING_FOR_APPROVAL")),
             "deployed": deployed_cnt,
-            "avg_quality_score": avg_score,
-            "total_tests_passed": total_tests,
-            "successful_deployments": deployed_cnt
+            "avg_quality_score": round(sum(scores) / len(scores), 1) if scores else None,
+            "total_tests_passed": sum(tests) if tests else None,
+            "successful_deployments": deployed_cnt,
         }
     }
 
 
 @router.get("/api/projects/{generation_id}")
 def get_project_details_page(generation_id: str):
-    """Returns detailed project information, activity feed, and versions."""
-    now_str = datetime.now().strftime("%H:%M:%S")
-    meta = PROJECT_METADATA_STORE.get(generation_id, {})
+    """Project details, its generation activity and recorded versions."""
+    from backend.generation.store import global_generation_store
+    from backend.routes.project import resolve_generated_project_dir
 
-    display_name = meta.get("name") or generation_id.replace("aiforge-", "").replace("-", " ").title()
+    pdir = resolve_generated_project_dir(generation_id)
+    if not pdir:
+        raise HTTPException(status_code=404, detail=f"No generated project found for '{generation_id}'.")
+    summary = _project_summary(pdir, global_generation_store.list_all())
 
-    return {
-        "generation_id": generation_id,
-        "project_name": display_name,
-        "description": "Autonomous multi-agent software application built with AIForge.",
-        "status": meta.get("status") or "LIVE",
-        "quality_score": meta.get("quality_score") or 96.0,
-        "tests": {"passed": 48, "total": 48},
-        "stack": ["React", "FastAPI", "PostgreSQL", "Tailwind CSS"],
-        "created_at": "August 9, 2026",
-        "updated_at": "12 minutes ago",
-        "activity": [
-            {"timestamp": f"{now_str}", "message": "Deployment successful (Live on Edge CDN)"},
-            {"timestamp": f"{now_str}", "message": "48/48 empirical pytest suite assertions passed"},
-            {"timestamp": f"{now_str}", "message": "Reviewer Agent AST and SAST security audit completed"},
-            {"timestamp": f"{now_str}", "message": "Backend REST endpoints and FastAPI routers generated"},
-            {"timestamp": f"{now_str}", "message": "Frontend React components and state containers generated"},
-            {"timestamp": f"{now_str}", "message": "Architect Agent system specification defined"},
-            {"timestamp": f"{now_str}", "message": "Planner Agent task breakdown created"}
-        ],
-        "versions": [
-            {"version": "v3", "status": "LIVE", "timestamp": "Aug 9, 12:30", "quality_score": 96.0, "tests": "48/48"},
-            {"version": "v2", "status": "TESTED", "timestamp": "Aug 9, 11:15", "quality_score": 94.0, "tests": "48/48"},
-            {"version": "v1", "status": "GENERATED", "timestamp": "Aug 9, 09:00", "quality_score": 90.0, "tests": "46/48"}
-        ]
-    }
+    activity = [
+        {"timestamp": e.get("timestamp"), "message": e.get("message") or e.get("type")}
+        for run in reversed(summary["_runs"]) for e in reversed(run.get("events", []))
+    ][:50]
+    versions = [
+        {
+            "version": v.version_id,
+            "status": (v.test_result or {}).get("overall_status") or (v.test_result or {}).get("status"),
+            "timestamp": _fmt_time(v.created_at),
+            "quality_score": v.quality_score,
+            "tests": (f"{v.test_result.get('passed')}/{v.test_result.get('total')}"
+                      if v.test_result and v.test_result.get("total") else None),
+        }
+        for v in reversed(summary["_versions"])
+    ]
+    proj = _public(summary)
+    proj["generation_id"] = generation_id
+    proj["tests"] = ({"passed": proj["tests_passed"], "total": proj["tests_total"]}
+                     if proj["tests_total"] is not None else None)
+    proj["activity"] = activity
+    proj["versions"] = versions
+    return proj
 
 
 class UpdateProjectRequest(BaseModel):
@@ -251,8 +273,6 @@ def duplicate_project_endpoint(generation_id: str):
 
     PROJECT_METADATA_STORE[new_id] = {
         "name": new_name,
-        "status": "COMPLETED",
-        "quality_score": old_meta.get("quality_score", 96.0),
         "archived": False
     }
 

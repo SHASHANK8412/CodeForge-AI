@@ -46,10 +46,12 @@ class TestEngineeringMemorySystem:
         assert "****" in mem_a.content
 
         # Isolation check
+        # The repository also reads the persistent store, so earlier runs may have saved
+        # memories for proj_a; isolation means this one is found there and not under proj_b.
         repo = MemoryRepository()
         repo.save(mem_a)
-        assert len(repo.get_by_project("proj_a")) == 1
-        assert len(repo.get_by_project("proj_b")) == 0
+        assert mem_a.id in {m.id for m in repo.get_by_project("proj_a")}
+        assert mem_a.id not in {m.id for m in repo.get_by_project("proj_b")}
 
     def test_importance_scoring_engine(self):
         engine = ImportanceScoringEngine()
@@ -102,12 +104,13 @@ class TestEngineeringMemorySystem:
         assert any("ADR-007" in l for l in labels)
 
     def test_memory_rest_api_endpoints(self, client):
+        # POST /memory is served by the project memory router (project_memory_routes).
         create_res = client.post(
             "/api/projects/aiforge-demo/memory",
-            json={"title": "PostgreSQL Selection", "content": "Use PostgreSQL for ACID compliance", "type": "ARCHITECTURE_DECISION"}
+            json={"memory_type": "DATABASE", "key": "database_choice", "value": "Use PostgreSQL for ACID compliance"}
         )
         assert create_res.status_code == 200
-        assert create_res.json()["status"] == "success"
+        assert create_res.json()["status"] == "SUCCESS"
 
         list_res = client.get("/api/projects/aiforge-demo/memory")
         assert list_res.status_code == 200

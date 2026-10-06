@@ -117,12 +117,23 @@ class TestWriteReadbackAndZipValidation:
 class TestIntegrityAPIEndpoints:
     """Verifies GET /api/projects/{generation_id}/files and GET /api/projects/{project_id}/integrity endpoints."""
 
-    def test_files_endpoint_returns_file_representation(self):
+    def test_files_endpoint_returns_file_representation(self, tmp_path, monkeypatch):
+        import backend.routes.export as export_routes
+        monkeypatch.setattr(export_routes, "GENERATED_ROOT", tmp_path.resolve())
+        (tmp_path / "demo_project" / "backend").mkdir(parents=True)
+        (tmp_path / "demo_project" / "backend" / "main.py").write_text("app = None", encoding="utf-8")
+
         res = client.get("/api/projects/demo_project/files")
         assert res.status_code == 200
-        data = res.json()
-        assert "files" in data
-        assert isinstance(data["files"], list)
+        assert [f["path"] for f in res.json()["files"]] == ["backend/main.py"]
+
+    def test_files_endpoint_never_serves_another_project(self, tmp_path, monkeypatch):
+        import backend.routes.export as export_routes
+        monkeypatch.setattr(export_routes, "GENERATED_ROOT", tmp_path.resolve())
+        (tmp_path / "some_other_project").mkdir()
+        (tmp_path / "some_other_project" / "main.py").write_text("x = 1", encoding="utf-8")
+
+        assert client.get("/api/projects/demo_project/files").status_code == 404
 
     def test_integrity_debug_endpoint(self):
         res = client.get("/api/projects/demo_project/integrity")

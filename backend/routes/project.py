@@ -407,23 +407,32 @@ from backend.execution.project_runner import global_project_runner
 from backend.validation.file_integrity import global_file_integrity_validator, FileRepresentation
 
 
+def resolve_generated_project_dir(project_id: str) -> Optional[Path]:
+    """
+    Exactly this project's directory: the output a generation recorded, or a generated_projects/
+    folder with that name. Never a different project picked by substring or by listing order.
+    """
+    from backend.routes.export import _generation_record, _safe_project_dir
+    record = _generation_record(project_id)
+    if record and record.get("project_path"):
+        return _safe_project_dir(record["project_path"])
+    safe = "".join(c if c.isalnum() or c in "-_" else "_" for c in project_id).strip("_")
+    return _safe_project_dir(project_id) or (_safe_project_dir(safe) if safe else None)
+
+
+def _require_project_dir(project_id: str) -> Path:
+    target_dir = resolve_generated_project_dir(project_id)
+    if not target_dir:
+        raise HTTPException(status_code=404, detail=f"No generated project found for '{project_id}'.")
+    return target_dir
+
+
 @router.get("/api/projects/{generation_id}/files")
 def get_project_files_endpoint(generation_id: str):
     """
     Returns full file tree and FileRepresentation content map for generation_id.
     """
-    from backend.generators.project_generator import GENERATED_PROJECTS_DIR
-    target_dir = None
-
-    # Check generated_projects folder matching generation_id or safe project name
-    for p in GENERATED_PROJECTS_DIR.glob("*"):
-        if p.is_dir() and (generation_id.lower() in p.name.lower() or p.name.lower() in generation_id.lower()):
-            target_dir = p
-            break
-
-    if not target_dir:
-        candidates = [p for p in GENERATED_PROJECTS_DIR.glob("*") if p.is_dir()]
-        target_dir = candidates[0] if candidates else (GENERATED_PROJECTS_DIR / "AIForge_Project")
+    target_dir = _require_project_dir(generation_id)
 
     files_list = []
     if target_dir.exists():
@@ -456,19 +465,9 @@ def get_project_integrity_endpoint(project_id: str):
     """
     Development debug endpoint returning complete project file integrity report.
     """
-    from backend.generators.project_generator import GENERATED_PROJECTS_DIR
-    target_dir = None
-
-    for p in GENERATED_PROJECTS_DIR.glob("*"):
-        if p.is_dir() and (project_id.lower() in p.name.lower() or p.name.lower() in project_id.lower()):
-            target_dir = p
-            break
+    target_dir = resolve_generated_project_dir(project_id)
 
     if not target_dir:
-        candidates = [p for p in GENERATED_PROJECTS_DIR.glob("*") if p.is_dir()]
-        target_dir = candidates[0] if candidates else None
-
-    if not target_dir or not target_dir.exists():
         return {
             "project_id": project_id,
             "files": 0,
@@ -514,39 +513,28 @@ def get_project_integrity_endpoint(project_id: str):
 @router.post("/api/projects/{generation_id}/run")
 def run_project_endpoint(generation_id: str):
     """Executes backend/frontend run check for generation_id."""
-    from backend.generators.project_generator import GENERATED_PROJECTS_DIR
-    target_dir = GENERATED_PROJECTS_DIR / generation_id
-    if not target_dir.exists():
-        candidates = [p for p in GENERATED_PROJECTS_DIR.glob("*") if p.is_dir()]
-        target_dir = candidates[0] if candidates else GENERATED_PROJECTS_DIR / "FoodDelivery_AI"
-
+    target_dir = _require_project_dir(generation_id)
     exec_res = global_project_runner.run_project(str(target_dir))
     return {
         "status": exec_res.status,
         "exit_code": exec_res.exit_code,
-        "stdout": exec_res.stdout or "$ npm install\n$ npm run dev\nServer started on http://localhost:8000",
+        "stdout": exec_res.stdout or "",
         "stderr": exec_res.stderr or "",
-        "urls": {"frontend": "http://localhost:5173", "backend": "http://localhost:8000"}
     }
 
 
 @router.post("/api/projects/{generation_id}/test")
 def test_project_endpoint(generation_id: str):
     """Runs automated pytest suite for generation_id."""
-    from backend.generators.project_generator import GENERATED_PROJECTS_DIR
-    target_dir = GENERATED_PROJECTS_DIR / generation_id
-    if not target_dir.exists():
-        candidates = [p for p in GENERATED_PROJECTS_DIR.glob("*") if p.is_dir()]
-        target_dir = candidates[0] if candidates else GENERATED_PROJECTS_DIR / "FoodDelivery_AI"
-
-    exec_res = global_project_runner.run_project(str(target_dir))
+    from backend.services.project_tester import global_project_tester
+    res = global_project_tester.run_tests(str(_require_project_dir(generation_id)))
     return {
-        "status": exec_res.status,
-        "passed": 48 if exec_res.exit_code == 0 else 46,
-        "failed": 0 if exec_res.exit_code == 0 else 2,
-        "total": 48,
-        "output": exec_res.stdout or "48 passed in 0.42s",
-        "failures": [] if exec_res.exit_code == 0 else ["AssertionError in test_auth.py"]
+        "status": res.get("overall_status"),
+        "passed": res.get("passed", 0),
+        "failed": res.get("failed", 0),
+        "total": res.get("total", 0),
+        "output": res.get("output", ""),
+        "failures": res.get("failures", []),
     }
 
 

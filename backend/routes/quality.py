@@ -66,15 +66,10 @@ def get_project_quality_center_data(generation_id: str):
     from backend.evaluation.evaluator import global_project_evaluator
     from backend.generators.project_generator import GENERATED_PROJECTS_DIR
 
-    target_dir = None
-    for p in GENERATED_PROJECTS_DIR.glob("*"):
-        if p.is_dir() and (generation_id.lower() in p.name.lower() or p.name.lower() in generation_id.lower()):
-            target_dir = p
-            break
-
+    from backend.routes.project import resolve_generated_project_dir
+    target_dir = resolve_generated_project_dir(generation_id)
     if not target_dir:
-        candidates = [p for p in GENERATED_PROJECTS_DIR.glob("*") if p.is_dir()]
-        target_dir = candidates[0] if candidates else (GENERATED_PROJECTS_DIR / "FoodDelivery_AI")
+        raise HTTPException(status_code=404, detail=f"No generated project found for '{generation_id}'.")
 
     # Run or load evaluation results
     eval_res = global_project_evaluator.evaluate_and_repair_project(

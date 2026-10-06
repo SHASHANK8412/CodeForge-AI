@@ -80,6 +80,7 @@ from backend.generation.routes import router as generation_router
 from backend.routes.execution_routes import router as execution_router, execution_api_router
 from backend.routes.security_routes import router as security_router
 from backend.routes.project_memory_routes import router as project_memory_router
+from backend.routes.project_memory_routes import profile_router as project_memory_profile_router
 from backend.routes.workspace_ide_routes import router as workspace_ide_router
 from backend.routes.ai_memory_routes import router as ai_memory_router
 from backend.routes.agent_mode_routes import router as agent_mode_router
@@ -113,6 +114,7 @@ app.include_router(execution_router)
 app.include_router(execution_api_router)
 app.include_router(security_router)
 app.include_router(project_memory_router)
+app.include_router(project_memory_profile_router)
 app.include_router(workspace_ide_router)
 app.include_router(ai_memory_router)
 app.include_router(agent_mode_router)

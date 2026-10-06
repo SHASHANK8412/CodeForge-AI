@@ -60,7 +60,7 @@ export default function ApprovalPanel({
   const testsFailed = approvalRequest.tests_failed ?? 0;
   const qualityScore = typeof approvalRequest.quality_score === 'number'
     ? approvalRequest.quality_score
-    : (approvalRequest.quality_score?.overall_score || 96.0);
+    : (approvalRequest.quality_score?.overall_score ?? null);
 
   const handleApprove = async () => {
     setErrorMsg('');
@@ -208,7 +208,7 @@ export default function ApprovalPanel({
             <div className="p-3.5 rounded-xl bg-slate-900/80 border border-cyan-500/30">
               <span className="text-[10px] text-slate-400 uppercase font-mono block">Quality Score</span>
               <span className="text-lg font-bold text-cyan-400 mt-0.5 block">
-                {typeof qualityScore === 'number' ? qualityScore.toFixed(1) : qualityScore}%
+                {typeof qualityScore === 'number' ? `${qualityScore.toFixed(1)}%` : '—'}
               </span>
             </div>
             <div className="p-3.5 rounded-xl bg-slate-900/80 border border-indigo-500/30">

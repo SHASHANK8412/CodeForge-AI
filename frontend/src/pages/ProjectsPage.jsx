@@ -186,10 +186,10 @@ export default function ProjectsPage({ setView, setActiveProjectName, setActiveG
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold font-mono">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    {proj.status || "LIVE"}
+                    {proj.status || "UNKNOWN"}
                   </span>
                   <span className="text-[11px] font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">
-                    {proj.quality_score ? `${proj.quality_score}%` : "96%"}
+                    {proj.quality_score != null ? `${proj.quality_score}%` : "—"}
                   </span>
                 </div>
 
@@ -197,11 +197,11 @@ export default function ProjectsPage({ setView, setActiveProjectName, setActiveG
                   {proj.project_name}
                 </h3>
                 <p className="text-xs text-[#9AA1B2] mt-1.5 line-clamp-2 leading-relaxed">
-                  {proj.description || "Autonomous multi-agent software application generated with AIForge."}
+                  {proj.description || "No description recorded."}
                 </p>
 
                 <div className="flex items-center gap-1.5 flex-wrap mt-3">
-                  {(proj.stack || ["React", "FastAPI", "PostgreSQL"]).map((tech, idx) => (
+                  {(proj.stack || []).map((tech, idx) => (
                     <span
                       key={idx}
                       className="px-2 py-0.5 bg-[#08090D] border border-[#242833] text-[10px] font-mono text-[#9AA1B2] rounded-md"

@@ -23,6 +23,10 @@ from backend.quality.version_manager import global_version_manager
 from backend.generation.manager import GenerationManager
 
 router = APIRouter(prefix="/api/projects", tags=["Project Memory & Codebase Intelligence"])
+# Project list and profile live under their own prefix: /api/projects and /api/projects/{id}
+# belong to the projects dashboard (routes/project_manager.py), and sharing those paths made
+# one of the two pages receive the other's response shape.
+profile_router = APIRouter(prefix="/api/project-memory", tags=["Project Memory & Codebase Intelligence"])
 _logger = logging.getLogger("aiforge.routes.project_memory")
 _gen_manager = GenerationManager()
 
@@ -55,7 +59,7 @@ class ModifyProjectPayload(BaseModel):
 # Project Profile & Reopening Endpoints
 # ---------------------------------------------------------------------------
 
-@router.get("")
+@profile_router.get("")
 def list_projects() -> List[Dict[str, Any]]:
     """Lists all stored projects with metadata, version counts, test status, and memory summary."""
     projects_dict: Dict[str, Dict[str, Any]] = {}
@@ -69,8 +73,8 @@ def list_projects() -> List[Dict[str, Any]]:
             "version": latest.version_id if latest else "v1",
             "version_count": len(versions),
             "files_count": len(latest.files_snapshot) if latest else 0,
-            "test_status": latest.test_result.get("status", "PASS") if latest else "PASS",
-            "quality_score": latest.quality_score if latest else 100.0,
+            "test_status": (latest.test_result.get("overall_status") or latest.test_result.get("status")) if latest else None,
+            "quality_score": latest.quality_score if latest else None,
             "last_updated": latest.created_at if latest else 0.0,
         }
 
@@ -84,8 +88,8 @@ def list_projects() -> List[Dict[str, Any]]:
                 "version": "v1",
                 "version_count": 1,
                 "files_count": 0,
-                "test_status": "PASS",
-                "quality_score": 100.0,
+                "test_status": None,
+                "quality_score": None,
                 "last_updated": 0.0,
             }
         projects_dict[proj_id]["active_memories_count"] = len([m for m in mems.values() if m.get("status") == "ACTIVE"])
@@ -93,7 +97,7 @@ def list_projects() -> List[Dict[str, Any]]:
     return list(projects_dict.values())
 
 
-@router.get("/{project_id}")
+@profile_router.get("/{project_id}")
 def get_project_profile(project_id: str) -> Dict[str, Any]:
     """Retrieves detailed project profile, latest files snapshot, active memories, and version lineage."""
     latest_ver = global_version_manager.get_latest_version(project_id)
@@ -118,7 +122,7 @@ def get_project_profile(project_id: str) -> Dict[str, Any]:
             "dependency_edges": dep_graph.get("edge_count", len(dep_graph.get("edges", []))),
         },
         "test_results": latest_ver.test_result if latest_ver else {},
-        "quality_score": latest_ver.quality_score if latest_ver else 100.0,
+        "quality_score": latest_ver.quality_score if latest_ver else None,
     }
 
 

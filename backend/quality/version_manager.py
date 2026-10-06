@@ -14,6 +14,16 @@ from pydantic import BaseModel, Field
 _logger = logging.getLogger("aiforge.quality.version_manager")
 
 
+def overall_quality_score(value: Any) -> Optional[float]:
+    """A single 0-100 score from a number or a validation score map ({..., "overall_score": n})."""
+    if isinstance(value, dict):
+        value = value.get("overall_score")
+    try:
+        return float(value) if value is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
 class ProjectVersion(BaseModel):
     version_id: str
     project_id: str
@@ -24,7 +34,7 @@ class ProjectVersion(BaseModel):
     change_source: str = "USER"
     created_at: float = Field(default_factory=time.time)
     test_result: Dict[str, Any] = Field(default_factory=dict)
-    quality_score: float = 100.0
+    quality_score: Optional[float] = None
 
 
 class VersionManager:
@@ -42,7 +52,7 @@ class VersionManager:
         repair_reason: str = "Initial Generation",
         changed_files: Optional[List[str]] = None,
         test_result: Optional[Dict[str, Any]] = None,
-        quality_score: float = 100.0,
+        quality_score: Any = None,
         change_source: str = "USER"
     ) -> ProjectVersion:
         """
@@ -63,7 +73,7 @@ class VersionManager:
             change_source=change_source,
             created_at=time.time(),
             test_result=test_result or {},
-            quality_score=quality_score
+            quality_score=overall_quality_score(quality_score)
         )
         versions.append(ver)
         _logger.info(f"VersionManager: Created snapshot '{version_id}' for project '{project_id}' ({len(ver.files_snapshot)} file(s))")

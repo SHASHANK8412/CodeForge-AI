@@ -14,13 +14,13 @@ export default function ProjectVersions({ versions = [], onViewVersion }) {
             <div className="flex items-center gap-3">
               <span className="font-bold text-cyan-400 text-sm">{ver.version}</span>
               <span className="text-emerald-400 text-[10px] font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
-                <FaCheckCircle className="w-2.5 h-2.5" /> {ver.status}
+                <FaCheckCircle className="w-2.5 h-2.5" /> {ver.status ?? "—"}
               </span>
             </div>
 
             <div className="flex items-center gap-4 text-slate-400 text-[11px]">
-              <span>Score: <strong className="text-white">{ver.quality_score}</strong></span>
-              <span>Tests: <strong className="text-white">{ver.tests}</strong></span>
+              <span>Score: <strong className="text-white">{ver.quality_score ?? "—"}</strong></span>
+              <span>Tests: <strong className="text-white">{ver.tests ?? "—"}</strong></span>
               <button
                 onClick={() => onViewVersion && onViewVersion(ver)}
                 className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded font-sans text-[11px] font-semibold transition"
