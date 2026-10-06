@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
 import {
   Activity,
   Server,
@@ -15,8 +14,7 @@ import {
 } from 'lucide-react';
 import { BACKEND_URL } from '../config/backend';
 
-export default function MonitoringPage() {
-  const { projectId = 'aiforge-demo' } = useParams();
+export default function MonitoringPage({ projectId = 'aiforge-demo' }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [dashboard, setDashboard] = useState('AIForge Overview');
   const [loading, setLoading] = useState(false);

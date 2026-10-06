@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import {
   Building2,
   Cloud,
@@ -18,8 +17,7 @@ import {
 } from 'lucide-react';
 import { BACKEND_URL } from '../config/backend';
 
-export default function InfrastructureDashboardPage() {
-  const { projectId = 'aiforge-demo' } = useParams();
+export default function InfrastructureDashboardPage({ projectId = 'aiforge-demo' }) {
   const [provider, setProvider] = useState('AWS');
   const [environment, setEnvironment] = useState('production');
   const [loading, setLoading] = useState(false);

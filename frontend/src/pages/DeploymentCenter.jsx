@@ -11,7 +11,7 @@ import DeploymentStatus from '../components/deployment/DeploymentStatus';
 import HealthMonitor from '../components/deployment/HealthMonitor';
 import DeploymentHistory from '../components/deployment/DeploymentHistory';
 import DeploymentAssistant from '../components/deployment/DeploymentAssistant';
-import { fetchDeploymentStatus, startDeployment, validateDeployment, subscribeToDeploymentSSE } from '../services/deployment';
+import { fetchDeploymentStatus, startDeployment, validateDeployment } from '../services/deployment';
 import { FaSpinner } from 'react-icons/fa';
 
 export default function DeploymentCenter({ generationId = 'aiforge-demo', setView }) {
@@ -34,23 +34,13 @@ export default function DeploymentCenter({ generationId = 'aiforge-demo', setVie
 
     loadStatus();
 
+    // The backend has no deployment event stream; polling the status endpoint is the live view.
     intervalId = setInterval(() => {
       loadStatus();
     }, 2000);
 
-    const unsubscribeSSE = subscribeToDeploymentSSE(
-      generationId,
-      (eventData) => {
-        if (eventData) {
-          setData(eventData);
-        }
-      },
-      () => {}
-    );
-
     return () => {
       if (intervalId) clearInterval(intervalId);
-      if (unsubscribeSSE) unsubscribeSSE();
     };
   }, [generationId]);
 

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import {
   Server,
   Cpu,
@@ -18,8 +17,7 @@ import {
 } from 'lucide-react';
 import { BACKEND_URL } from '../config/backend';
 
-export default function KubernetesDashboardPage() {
-  const { projectId = 'aiforge-demo' } = useParams();
+export default function KubernetesDashboardPage({ projectId = 'aiforge-demo' }) {
   const [loading, setLoading] = useState(false);
   const [showScaleModal, setShowScaleModal] = useState(false);
   const [scalingComponent, setScalingComponent] = useState('backend');

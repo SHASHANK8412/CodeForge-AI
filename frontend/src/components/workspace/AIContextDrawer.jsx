@@ -41,11 +41,12 @@ export default function AIContextDrawer({
       setLoading(true);
       try {
         const [memRes, filesRes] = await Promise.allSettled([
-          axios.get(`${API_BASE_URL}/api/project-memory/projects/${projectId}/memories`),
+          axios.get(`${API_BASE_URL}/api/projects/${projectId}/memory`),
           axios.get(`${API_BASE_URL}/api/project/${projectId}/files`)
         ]);
 
-        const mems = memRes.status === 'fulfilled' ? (memRes.value.data?.memories || []) : [];
+        const memData = memRes.status === 'fulfilled' ? memRes.value.data : [];
+        const mems = Array.isArray(memData) ? memData : (memData?.memories || []);
         const allFiles = filesRes.status === 'fulfilled' ? (filesRes.value.data?.files || []) : [];
 
         // Determine related files based on active file

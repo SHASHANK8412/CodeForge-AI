@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import {
   GitPullRequest,
   GitBranch,
@@ -19,8 +18,7 @@ import {
 } from 'lucide-react';
 import { BACKEND_URL } from '../config/backend';
 
-export default function GitHubDashboardPage() {
-  const { projectId = 'aiforge-demo' } = useParams();
+export default function GitHubDashboardPage({ projectId = 'aiforge-demo' }) {
   const [loading, setLoading] = useState(false);
   const [copilotQuery, setCopilotQuery] = useState('');
   const [copilotResponse, setCopilotResponse] = useState(null);

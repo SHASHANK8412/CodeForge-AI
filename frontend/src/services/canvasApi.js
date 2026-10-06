@@ -154,10 +154,11 @@ function getLocalCanvases() {
   }
 }
 
-function saveLocalCanvases(canvases) {
+function saveLocalCanvases(canvases, { notify = true } = {}) {
   try {
     localStorage.setItem(LOCAL_CANVAS_KEY, JSON.stringify(canvases));
-    window.dispatchEvent(new CustomEvent("aiforge:canvas-updated", { detail: { count: canvases.length } }));
+    // Fetches refresh this cache quietly; only real changes notify (listeners refetch on it).
+    if (notify) window.dispatchEvent(new CustomEvent("aiforge:canvas-updated", { detail: { count: canvases.length } }));
   } catch (err) {
     console.error("Error saving canvases:", err);
   }
@@ -170,7 +171,7 @@ export async function fetchCanvases({ projectId, canvasType } = {}) {
       timeout: 5000
     });
     if (res.data?.canvases) {
-      saveLocalCanvases(res.data.canvases);
+      saveLocalCanvases(res.data.canvases, { notify: false });
       return res.data.canvases;
     }
   } catch (err) {

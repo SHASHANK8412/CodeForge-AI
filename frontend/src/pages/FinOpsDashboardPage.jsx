@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import {
   DollarSign,
   TrendingUp,
@@ -341,8 +340,7 @@ function KubernetesPanel({ data }) {
   );
 }
 
-export default function FinOpsDashboardPage() {
-  const { projectId = "aiforge-demo" } = useParams();
+export default function FinOpsDashboardPage({ projectId = 'aiforge-demo' }) {
   const [provider, setProvider] = useState("AWS");
   const [environment, setEnvironment] = useState("production");
   const [policy, setPolicy] = useState("BALANCED");

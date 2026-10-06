@@ -11,76 +11,10 @@ import axios from "axios";
 const API_BASE = import.meta.env.VITE_API_URL || `${BACKEND_URL}`;
 const LOCAL_STORAGE_KEY = "aiforge_ai_memory_items";
 
-const INITIAL_FALLBACK_MEMORIES = [
-  {
-    id: "mem-pers-1",
-    user_id: "default_user",
-    scope: "PERSONAL",
-    project_id: null,
-    category: "Tech Stack",
-    title: "Preferred Full-Stack Architecture",
-    content: "User prefers React with Tailwind CSS on frontend, and FastAPI with PostgreSQL & SQLAlchemy on backend.",
-    importance: "CRITICAL",
-    source: "User",
-    tags: ["FastAPI", "React", "Tailwind", "PostgreSQL"],
-    pinned: true,
-    created_at: "2026-08-20 10:00:00",
-    updated_at: "2026-08-20 10:00:00",
-    last_used_at: "Just now",
-    usage_count: 18
-  },
-  {
-    id: "mem-pers-2",
-    user_id: "default_user",
-    scope: "PERSONAL",
-    project_id: null,
-    category: "Preferences",
-    title: "Coding & Design Conventions",
-    content: "Always write clean, modular functional React code with strict PropTypes/TypeScript, async/await for async operations, and meaningful error handling.",
-    importance: "HIGH",
-    source: "User",
-    tags: ["Conventions", "Code Quality", "Clean Code"],
-    pinned: true,
-    created_at: "2026-08-21 11:30:00",
-    updated_at: "2026-08-21 11:30:00",
-    last_used_at: "1 hour ago",
-    usage_count: 12
-  },
-  {
-    id: "mem-proj-1",
-    user_id: "default_user",
-    scope: "PROJECT",
-    project_id: "aiforge-fooddelivery-ai",
-    category: "Architecture",
-    title: "FoodDelivery AI JWT & Role-Based Access",
-    content: "Authentication uses RS256 JWT tokens with Customer, Restaurant Owner, and Courier roles. Tokens expire in 60 minutes with auto-refresh.",
-    importance: "HIGH",
-    source: "Architecture Decision",
-    tags: ["Auth", "JWT", "RBAC", "FoodDelivery"],
-    pinned: false,
-    created_at: "2026-08-25 14:15:00",
-    updated_at: "2026-08-25 14:15:00",
-    last_used_at: "2 hours ago",
-    usage_count: 9
-  },
-  {
-    id: "mem-proj-2",
-    user_id: "default_user",
-    scope: "PROJECT",
-    project_id: "aiforge-fooddelivery-ai",
-    category: "Tasks",
-    title: "Stripe Webhook & Order Dispatch State Machine",
-    content: "Order status transitions: PENDING -> PAID -> KITCHEN_PREPARING -> READY_FOR_PICKUP -> OUT_FOR_DELIVERY -> DELIVERED. Webhooks handle payment intents.",
-    importance: "HIGH",
-    source: "Conversation",
-    tags: ["Stripe", "Orders", "State Machine"],
-    pinned: false,
-    created_at: "2026-08-28 16:45:00",
-    updated_at: "2026-08-28 16:45:00",
-    last_used_at: "Yesterday",
-    usage_count: 5
-  }
-];
+// The offline cache starts empty. Earlier versions seeded sample memories; those ids are
+// dropped on read so they don't pose as things the user told AIForge.
+const INITIAL_FALLBACK_MEMORIES = [];
+const SAMPLE_MEMORY_IDS = new Set(['mem-pers-1', 'mem-pers-2', 'mem-proj-1', 'mem-proj-2']);
 
 function getLocalMemories() {
   try {
@@ -89,17 +23,20 @@ function getLocalMemories() {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(INITIAL_FALLBACK_MEMORIES));
       return INITIAL_FALLBACK_MEMORIES;
     }
-    return JSON.parse(raw);
+    const items = JSON.parse(raw);
+    return Array.isArray(items) ? items.filter((m) => !SAMPLE_MEMORY_IDS.has(m?.id)) : [];
   } catch (err) {
     console.error("Local storage error:", err);
     return INITIAL_FALLBACK_MEMORIES;
   }
 }
 
-function saveLocalMemories(items) {
+function saveLocalMemories(items, { notify = true } = {}) {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
-    window.dispatchEvent(new CustomEvent("aiforge:memory-updated", { detail: { count: items.length } }));
+    // Only real changes notify listeners: the memory page reloads on this event, so announcing
+    // the cache refresh done by fetchMemories itself caused an endless fetch loop.
+    if (notify) window.dispatchEvent(new CustomEvent("aiforge:memory-updated", { detail: { count: items.length } }));
   } catch (err) {
     console.error("Failed to save memories to localStorage:", err);
   }
@@ -112,7 +49,7 @@ export async function fetchMemories({ scope, projectId, category, search, sortBy
       timeout: 6000
     });
     if (res.data?.memories) {
-      saveLocalMemories(res.data.memories);
+      saveLocalMemories(res.data.memories, { notify: false });
       return res.data.memories;
     }
     return getLocalMemories();

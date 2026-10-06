@@ -128,29 +128,3 @@ export async function updateEnvironmentVariables(generationId, envVars) {
   }
 }
 
-export function subscribeToDeploymentSSE(generationId, onEvent, onError) {
-  const url = `${API_BASE_URL}/api/projects/${generationId}/deployment/stream`;
-  let eventSource = null;
-
-  try {
-    eventSource = new EventSource(url);
-    eventSource.onmessage = (event) => {
-      try {
-        const parsed = JSON.parse(event.data);
-        onEvent(parsed);
-      } catch (e) {
-        console.error('SSE parse error:', e);
-      }
-    };
-    eventSource.onerror = (err) => {
-      if (eventSource) eventSource.close();
-      if (onError) onError(err);
-    };
-  } catch (err) {
-    if (onError) onError(err);
-  }
-
-  return () => {
-    if (eventSource) eventSource.close();
-  };
-}

@@ -210,10 +210,11 @@ function getLocalTasks() {
   }
 }
 
-function saveLocalTasks(tasks) {
+function saveLocalTasks(tasks, { notify = true } = {}) {
   try {
     localStorage.setItem(LOCAL_TASKS_KEY, JSON.stringify(tasks));
-    window.dispatchEvent(new CustomEvent("aiforge:agent-tasks-updated", { detail: { count: tasks.length } }));
+    // Fetches refresh this cache quietly; only real changes notify (listeners refetch on it).
+    if (notify) window.dispatchEvent(new CustomEvent("aiforge:agent-tasks-updated", { detail: { count: tasks.length } }));
   } catch (err) {
     console.error("Error saving local tasks:", err);
   }
@@ -295,7 +296,7 @@ export async function fetchTasks({ status, projectId } = {}) {
       timeout: 5000
     });
     if (res.data?.tasks) {
-      saveLocalTasks(res.data.tasks);
+      saveLocalTasks(res.data.tasks, { notify: false });
       return res.data.tasks;
     }
     return getLocalTasks();
@@ -313,7 +314,7 @@ export async function fetchTask(taskId) {
     const res = await axios.get(`${API_BASE}/api/agents/tasks/${taskId}`, { timeout: 5000 });
     if (res.data?.task) {
       const current = getLocalTasks();
-      saveLocalTasks(current.map(t => t.task_id === taskId ? res.data.task : t));
+      saveLocalTasks(current.map(t => t.task_id === taskId ? res.data.task : t), { notify: false });
       return res.data.task;
     }
   } catch (err) {

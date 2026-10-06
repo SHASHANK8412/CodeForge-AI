@@ -5,6 +5,7 @@ import CommandPalette from "./components/navigation/CommandPalette";
 import MainLayout from "./layouts/MainLayout";
 import { AuthProvider } from "./auth/AuthProvider";
 import ProtectedRoute from "./auth/ProtectedRoute";
+import { fetchProjects } from "./services/projects";
 
 // Route-level code splitting: each view is only fetched when it is first
 // navigated to, instead of all ~55 pages being bundled into one chunk.
@@ -77,10 +78,23 @@ function PageLoader() {
 function AppContent() {
     const [view, setView] = useState("dashboard");
     const [activeProjectName, setActiveProjectName] = useState("");
-    const [activeGenerationId, setActiveGenerationId] = useState("aiforge-fooddelivery-ai");
+    // Starts on the most recently updated real project (see effect below), not a demo id.
+    const [activeGenerationId, setActiveGenerationId] = useState("");
     const [selectedFile, setSelectedFile] = useState(null);
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        fetchProjects({ page: 1, pageSize: 1, sort: "recently_updated" }).then((res) => {
+            const latest = res?.projects?.[0];
+            if (!cancelled && latest) {
+                setActiveGenerationId((current) => current || latest.generation_id);
+                setActiveProjectName((current) => current || latest.project_name);
+            }
+        });
+        return () => { cancelled = true; };
+    }, []);
 
     // Global keyboard shortcut for Command Palette (Ctrl+K or Cmd+K)
     useEffect(() => {
@@ -300,7 +314,7 @@ function AppContent() {
                     )}
                     {view === "xray" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <ProjectXRayPage projectId={activeProjectName || activeGenerationId} setView={setView} />
+                            <ProjectXRayPage projectId={activeGenerationId || activeProjectName} setView={setView} />
                         </ProtectedRoute>
                     )}
                     {view === "metrics" && (

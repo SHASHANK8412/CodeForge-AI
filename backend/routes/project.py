@@ -427,6 +427,45 @@ def _require_project_dir(project_id: str) -> Path:
     return target_dir
 
 
+@router.get("/api/projects/{generation_id}/xray")
+def get_project_xray_endpoint(generation_id: str):
+    """
+    Static analysis of a generated project: backend routes, database tables and relationships,
+    and the React component tree, read from the files on disk.
+    """
+    from backend.project_intelligence.api_mapper import ApiMapper
+    from backend.project_intelligence.component_mapper import ComponentMapper
+    from backend.project_intelligence.schema_inferer import SchemaInferer
+
+    target_dir = _require_project_dir(generation_id)
+    apis = ApiMapper().map_apis(str(target_dir))
+    schema = SchemaInferer().infer_relationships(str(target_dir))
+    components = ComponentMapper().build_tree(str(target_dir))
+
+    def unique(items, key):
+        seen, out = set(), []
+        for item in items:
+            k = key(item)
+            if k not in seen:
+                seen.add(k)
+                out.append(item)
+        return out
+
+    files = [p for p in target_dir.rglob("*") if p.is_file()
+             and not {".venv", "node_modules", "__pycache__", ".git"} & set(p.relative_to(target_dir).parts)]
+    return {
+        "project_id": generation_id,
+        "project_name": target_dir.name,
+        "file_count": len(files),
+        "routes": unique(apis.get("backend_endpoints", []), lambda r: (r.get("route"), r.get("file"))),
+        "frontend_calls": apis.get("frontend_calls", []),
+        "tables": unique(schema.get("tables", []), lambda t: t.get("table")),
+        "relationships": unique(schema.get("relationships", []), lambda r: (r.get("source_table"), r.get("target_table"))),
+        "components": components.get("component_hierarchy", {}),
+        "root_components": components.get("root_components", []),
+    }
+
+
 @router.get("/api/projects/{generation_id}/files")
 def get_project_files_endpoint(generation_id: str):
     """

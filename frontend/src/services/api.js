@@ -85,12 +85,8 @@ export const api = {
 };
 
 export const submitProjectGeneration = async (payload) => {
-  try {
-    const res = await api.post('/api/generate', payload);
-    return res;
-  } catch (err) {
-    return { generation_id: 'aiforge-fooddelivery-ai', ...payload };
-  }
+  // A failed request must surface as a failure, not as a made-up generation id.
+  return api.post('/api/generate', payload);
 };
 
 export const sendMessage = async (message, sessionId = 'default', memoryEnabled = true, projectId = null) => {
