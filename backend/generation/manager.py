@@ -100,6 +100,17 @@ def _make_callback(gen_id: str):
 # Public API
 # ---------------------------------------------------------------------------
 
+
+def _approval_stage(next_nodes, values: dict) -> str:
+    """The checkpoint the graph is actually paused at. state["approval_stage"] is left over from
+    the previous approval, so the final checkpoint used to be reported as "architecture"."""
+    next_nodes = tuple(next_nodes or ())
+    if "final_approval" in next_nodes:
+        return "final"
+    if "human_approval" in next_nodes:
+        return "architecture"
+    return values.get("approval_stage") or "architecture"
+
 class GenerationManager:
     """
     Creates and runs project generations against the parallel_graph.
@@ -204,7 +215,7 @@ class GenerationManager:
                 # Paused at approval checkpoint
                 current_values = state_tuple.values or {}
                 approval_req = current_values.get("approval_request") or {}
-                stage = current_values.get("approval_stage") or ("final" if "final_approval" in next_nodes else "architecture")
+                stage = _approval_stage(next_nodes, current_values)
 
                 _logger.info("[GENERATION] %s paused at approval checkpoint: %s", gen_id, stage)
                 _store.update_status(gen_id, "waiting_for_approval")
@@ -323,7 +334,7 @@ class GenerationManager:
             raise ValueError(f"No checkpoint found for generation '{gen_id}'.")
 
         current_values = dict(state_tuple.values or {})
-        stage = current_values.get("approval_stage") or "architecture"
+        stage = _approval_stage(state_tuple.next, current_values)
 
         _logger.info("[HITL] Approving generation %s (stage: %s)", gen_id, stage)
 
@@ -387,7 +398,7 @@ class GenerationManager:
             raise ValueError(f"No checkpoint found for generation '{gen_id}'.")
 
         current_values = dict(state_tuple.values or {})
-        stage = current_values.get("approval_stage") or "architecture"
+        stage = _approval_stage(state_tuple.next, current_values)
 
         _logger.info("[HITL] Rejecting generation %s with feedback: %s", gen_id, feedback[:60])
 
@@ -460,7 +471,7 @@ class GenerationManager:
             "progress": values.get("workflow_progress", rec.get("progress", 0)),
             "approval_required": is_waiting or values.get("approval_required", False),
             "approval_status": values.get("approval_status", "pending" if is_waiting else "none"),
-            "approval_stage": values.get("approval_stage", "architecture" if "human_approval" in next_nodes else "final" if "final_approval" in next_nodes else None),
+            "approval_stage": _approval_stage(next_nodes, values) if is_waiting else values.get("approval_stage"),
             "approval_request": approval_req,
             "architecture": values.get("architecture", {}),
             "test_results": values.get("test_results", {}),
