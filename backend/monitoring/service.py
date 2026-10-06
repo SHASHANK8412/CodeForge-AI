@@ -24,25 +24,41 @@ class PrometheusGrafanaService:
     """
 
     def get_monitoring_overview(self, project_id: str = "aiforge-demo") -> Dict[str, Any]:
+        """
+        Platform health from what is actually measured: AIForge's own API requests (count, 5xx
+        rate, p95 from request traces), agent stage durations and LLM latency/cache use from
+        recorded generation runs. Grafana is not part of this deployment, so it is reported as such.
+        """
+        from backend.generation.store import global_generation_store
+        from backend.observability.service import PLATFORM_PROJECT, global_opentelemetry_service
+
+        req = global_opentelemetry_service.get_metrics(PLATFORM_PROJECT)
+        durations: Dict[str, List[float]] = {}
+        calls = cached = 0
+        llm_seconds = 0.0
+        for run in global_generation_store.list_all():
+            for agent in run.get("agents", []):
+                if agent.get("status") == "completed" and agent.get("duration"):
+                    durations.setdefault(agent["name"], []).append(agent["duration"] * 1000)
+            usage = run.get("usage") or {}
+            calls += usage.get("llm_calls", 0) or 0
+            cached += usage.get("cached_calls", 0) or 0
+            llm_seconds += usage.get("llm_seconds", 0.0) or 0.0
+        fresh_calls = calls - cached
+
         return {
             "project_id": project_id,
-            "system_health": "HEALTHY",
-            "requests_total": 12842,
-            "error_rate_pct": 0.14,
-            "p95_latency_ms": 182.0,
-            "active_requests": 2,
-            "agent_latency_ms": {
-                "planner": 140.0,
-                "architect": 320.0,
-                "frontend": 450.0,
-                "backend": 580.0,
-                "testing": 210.0
-            },
-            "llm_latency_ms": 280.0,
-            "cache_hit_rate_pct": 74.2,
-            "active_incidents": 0,
-            "grafana_status": "ACTIVE",
-            "prometheus_status": "SCRAPING_HEALTHY"
+            "system_health": "HEALTHY" if req.error_rate_pct < 5 else "DEGRADED",
+            "requests_total": req.total_requests,
+            "error_rate_pct": req.error_rate_pct,
+            "p95_latency_ms": req.p95_duration_ms,
+            "active_requests": None,
+            "agent_latency_ms": {name: round(sum(v) / len(v), 1) for name, v in durations.items()},
+            "llm_latency_ms": round(llm_seconds / fresh_calls * 1000, 1) if fresh_calls else None,
+            "cache_hit_rate_pct": round(cached / calls * 100, 1) if calls else None,
+            "active_incidents": None,
+            "grafana_status": "NOT_CONFIGURED",
+            "prometheus_status": "ENDPOINT_AT_/metrics",
         }
 
     def compare_performance_versions(

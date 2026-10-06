@@ -86,7 +86,7 @@ def get_performance_regression_alert(
     user: dict = Depends(get_current_user)
 ):
     alert = global_opentelemetry_service.detect_performance_regression(project_id)
-    return {"status": "success", "regression": alert.model_dump()}
+    return {"status": "success", "regression": alert.model_dump() if alert else None}
 
 
 @router.get("/api/projects/{project_id}/observability/readiness")

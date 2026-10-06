@@ -30,7 +30,8 @@ class ExecuteToolRequest(BaseModel):
 @router.get("/api/plugins")
 def list_plugins():
     """Lists all installed plugins and execution metrics."""
-    return {"plugins": global_plugin_manager.list_all_plugins()}
+    from backend.plugins.registry import global_plugin_registry
+    return {"plugins": global_plugin_registry.list_plugins()}
 
 
 @router.post("/plugins/install")
@@ -72,4 +73,5 @@ def execute_plugin(req: ExecuteToolRequest):
 @router.get("/api/plugins/logs")
 def get_plugin_logs(limit: int = Query(50, ge=1, le=200)):
     """Returns recent tool execution telemetry logs."""
-    return {"logs": global_plugin_manager.get_logs(limit)}
+    from backend.plugins.executor import global_tool_execution_engine
+    return {"logs": list(reversed(global_tool_execution_engine.logs[-limit:]))}

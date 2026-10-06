@@ -165,11 +165,12 @@ async def opentelemetry_fastapi_middleware(request: Request, call_next):
         try:
             headers = dict(request.headers)
             global_opentelemetry_service.record_trace(
-                project_id="aiforge-demo",
+                project_id="platform",
                 http_method=method,
                 route=path,
                 status_code=response.status_code,
-                headers=headers
+                headers=headers,
+                duration_ms=duration_ms,
             )
         except Exception:
             pass

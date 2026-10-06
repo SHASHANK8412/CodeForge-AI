@@ -84,10 +84,26 @@ class AlertEvaluator:
     def __init__(self, rules: Optional[List[AlertRule]] = None):
         self.rules = rules or DEFAULT_ALERT_RULES
 
+    def evaluate_system_alerts(self, system_metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Evaluate the alert rules against collected platform metrics (MetricsCollector). Read-only:
+        dashboards poll this, so it must not open an incident on every request. Rules whose
+        metric wasn't measured are skipped.
+        """
+        # No HTTP error-rate or p95-latency metric is collected, so those rules are skipped
+        # rather than fed a different number.
+        mapped = {
+            "memory_usage_pct": system_metrics.get("memory_usage_pct"),
+            "queue_depth": system_metrics.get("queue_length"),
+            "app_health": 1.0,  # this process is answering
+        }
+        return self.evaluate_metrics("platform", {k: v for k, v in mapped.items() if v is not None}, dispatch=False)
+
     def evaluate_metrics(
         self,
         project_id: str = "aiforge-demo",
-        current_metrics: Optional[Dict[str, float]] = None
+        current_metrics: Optional[Dict[str, float]] = None,
+        dispatch: bool = True,
     ) -> List[Dict[str, Any]]:
         metrics = current_metrics or {
             "error_rate_pct": 0.14,
@@ -128,7 +144,8 @@ class AlertEvaluator:
                 _logger.warning(f"[AlertEvaluator] Triggered alert '{rule.name}' for project '{project_id}': value {val} {rule.operator} {rule.threshold}")
 
                 # Dispatch to Incident Response
-                self._dispatch_incident(project_id, alert_evt)
+                if dispatch:
+                    self._dispatch_incident(project_id, alert_evt)
 
         return triggered_alerts
 

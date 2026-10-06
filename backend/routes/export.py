@@ -14,7 +14,7 @@ import logging
 from typing import Dict, Any, Optional
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse, Response
 from pydantic import BaseModel
 

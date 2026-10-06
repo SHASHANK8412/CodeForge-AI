@@ -19,24 +19,17 @@ export default function MonitoringPage({ projectId = 'aiforge-demo' }) {
   const [dashboard, setDashboard] = useState('AIForge Overview');
   const [loading, setLoading] = useState(false);
 
+  // Starts empty; every value comes from /api/monitoring/overview (unmeasured values are null).
   const [metrics, setMetrics] = useState({
-    system_health: 'HEALTHY',
-    requests_total: 12842,
-    error_rate_pct: 0.14,
-    p95_latency_ms: 182.0,
-    active_requests: 2,
-    agent_latency_ms: {
-      planner: 140,
-      architect: 320,
-      frontend: 450,
-      backend: 580,
-      testing: 210
-    },
-    llm_latency_ms: 280.0,
-    cache_hit_rate_pct: 74.2,
-    active_incidents: 0,
-    grafana_status: 'ACTIVE',
-    prometheus_status: 'SCRAPING_HEALTHY'
+    system_health: 'UNKNOWN',
+    requests_total: null,
+    error_rate_pct: null,
+    p95_latency_ms: null,
+    agent_latency_ms: {},
+    llm_latency_ms: null,
+    cache_hit_rate_pct: null,
+    active_incidents: null,
+    prometheus_status: null
   });
 
   const fetchMetrics = async () => {
@@ -68,7 +61,7 @@ export default function MonitoringPage({ projectId = 'aiforge-demo' }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
             <Activity style={{ color: '#6366F1' }} size={32} />
             <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#FFFFFF', margin: 0 }}>
-              Prometheus & Grafana Observability
+              Platform Monitoring
             </h1>
             <span style={{
               backgroundColor: metrics.system_health === 'HEALTHY' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
@@ -83,7 +76,7 @@ export default function MonitoringPage({ projectId = 'aiforge-demo' }) {
             </span>
           </div>
           <p style={{ color: '#9CA3AF', margin: 0, fontSize: '14px' }}>
-            Real-time Prometheus telemetry, Grafana dashboards, OpenTelemetry metrics, and evidence-backed monitoring for project: <strong style={{ color: '#E5E7EB' }}>{projectId}</strong>
+            Measured from AIForge's own API requests and recorded generation runs. Grafana is not connected; Prometheus metrics are exposed at <code>/metrics</code>.
           </p>
         </div>
 
@@ -116,8 +109,8 @@ export default function MonitoringPage({ projectId = 'aiforge-demo' }) {
             <span style={{ fontSize: '13px', fontWeight: '500' }}>Total Requests</span>
             <BarChart2 size={18} style={{ color: '#6366F1' }} />
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#FFFFFF' }}>{metrics.requests_total.toLocaleString()}</div>
-          <div style={{ fontSize: '12px', color: '#10B981', marginTop: '4px' }}>Prometheus scraped</div>
+          <div style={{ fontSize: '26px', fontWeight: '700', color: '#FFFFFF' }}>{metrics.requests_total?.toLocaleString() ?? '—'}</div>
+          <div style={{ fontSize: '12px', color: '#10B981', marginTop: '4px' }}>AIForge API requests</div>
         </div>
 
         <div style={{ backgroundColor: '#111827', border: '1px solid #1F2937', borderRadius: '12px', padding: '20px' }}>
@@ -125,7 +118,7 @@ export default function MonitoringPage({ projectId = 'aiforge-demo' }) {
             <span style={{ fontSize: '13px', fontWeight: '500' }}>P95 Latency</span>
             <Clock size={18} style={{ color: '#3B82F6' }} />
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#FFFFFF' }}>{metrics.p95_latency_ms} ms</div>
+          <div style={{ fontSize: '26px', fontWeight: '700', color: '#FFFFFF' }}>{metrics.p95_latency_ms ?? '—'} ms</div>
           <div style={{ fontSize: '12px', color: '#10B981', marginTop: '4px' }}>Target: &lt; 1000ms</div>
         </div>
 
@@ -134,7 +127,7 @@ export default function MonitoringPage({ projectId = 'aiforge-demo' }) {
             <span style={{ fontSize: '13px', fontWeight: '500' }}>HTTP Error Rate</span>
             <AlertTriangle size={18} style={{ color: metrics.error_rate_pct > 1 ? '#EF4444' : '#10B981' }} />
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#FFFFFF' }}>{metrics.error_rate_pct}%</div>
+          <div style={{ fontSize: '26px', fontWeight: '700', color: '#FFFFFF' }}>{metrics.error_rate_pct ?? '—'}%</div>
           <div style={{ fontSize: '12px', color: '#10B981', marginTop: '4px' }}>Threshold: &lt; 5.0%</div>
         </div>
 
@@ -143,8 +136,8 @@ export default function MonitoringPage({ projectId = 'aiforge-demo' }) {
             <span style={{ fontSize: '13px', fontWeight: '500' }}>Cache Hit Rate</span>
             <Zap size={18} style={{ color: '#F59E0B' }} />
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#FFFFFF' }}>{metrics.cache_hit_rate_pct}%</div>
-          <div style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '4px' }}>Redis LLM Cache</div>
+          <div style={{ fontSize: '26px', fontWeight: '700', color: '#FFFFFF' }}>{metrics.cache_hit_rate_pct ?? '—'}%</div>
+          <div style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '4px' }}>LLM response cache</div>
         </div>
 
         <div style={{ backgroundColor: '#111827', border: '1px solid #1F2937', borderRadius: '12px', padding: '20px' }}>
@@ -152,8 +145,8 @@ export default function MonitoringPage({ projectId = 'aiforge-demo' }) {
             <span style={{ fontSize: '13px', fontWeight: '500' }}>Active Incidents</span>
             <ShieldCheck size={18} style={{ color: metrics.active_incidents === 0 ? '#10B981' : '#EF4444' }} />
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: '#FFFFFF' }}>{metrics.active_incidents}</div>
-          <div style={{ fontSize: '12px', color: '#10B981', marginTop: '4px' }}>Incident Bridge Active</div>
+          <div style={{ fontSize: '26px', fontWeight: '700', color: '#FFFFFF' }}>{metrics.active_incidents ?? '—'}</div>
+          <div style={{ fontSize: '12px', color: '#10B981', marginTop: '4px' }}>Not tracked here</div>
         </div>
       </div>
 
@@ -167,7 +160,7 @@ export default function MonitoringPage({ projectId = 'aiforge-demo' }) {
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {Object.entries(metrics.agent_latency_ms).map(([agent, ms]) => (
+            {Object.entries(metrics.agent_latency_ms || {}).map(([agent, ms]) => (
               <div key={agent}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '6px' }}>
                   <span style={{ textTransform: 'capitalize', color: '#E5E7EB' }}>{agent} Agent</span>
@@ -239,25 +232,25 @@ export default function MonitoringPage({ projectId = 'aiforge-demo' }) {
           }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <span style={{ fontSize: '16px', fontWeight: '600', color: '#58A6FF' }}>Grafana Panel — {dashboard}</span>
-                <span style={{ fontSize: '12px', color: '#7D8590' }}>Prometheus Datasource</span>
+                <span style={{ fontSize: '16px', fontWeight: '600', color: '#58A6FF' }}>Live metrics</span>
+                <span style={{ fontSize: '12px', color: '#7D8590' }}>From /api/monitoring/overview</span>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
                 <div style={{ backgroundColor: '#161B22', padding: '16px', borderRadius: '6px', border: '1px solid #21262D' }}>
                   <div style={{ fontSize: '12px', color: '#8B949E' }}>LLM Mean Latency</div>
-                  <div style={{ fontSize: '20px', fontWeight: '600', color: '#7EE787' }}>{metrics.llm_latency_ms} ms</div>
+                  <div style={{ fontSize: '20px', fontWeight: '600', color: '#7EE787' }}>{metrics.llm_latency_ms ?? '—'} ms</div>
                 </div>
                 <div style={{ backgroundColor: '#161B22', padding: '16px', borderRadius: '6px', border: '1px solid #21262D' }}>
                   <div style={{ fontSize: '12px', color: '#8B949E' }}>Prometheus Status</div>
-                  <div style={{ fontSize: '20px', fontWeight: '600', color: '#79C0FF' }}>{metrics.prometheus_status}</div>
+                  <div style={{ fontSize: '20px', fontWeight: '600', color: '#79C0FF' }}>{metrics.prometheus_status ?? '—'}</div>
                 </div>
               </div>
             </div>
 
             <div style={{ fontSize: '12px', color: '#8B949E', borderTop: '1px solid #21262D', paddingTop: '12px', display: 'flex', justifyContent: 'space-between' }}>
               <span>Endpoint: <code>/metrics</code> (Prometheus text format)</span>
-              <a href="/metrics" target="_blank" rel="noopener noreferrer" style={{ color: '#58A6FF', textDecoration: 'none' }}>View Raw Prometheus Output &rarr;</a>
+              <a href={`${BACKEND_URL}/metrics`} target="_blank" rel="noopener noreferrer" style={{ color: '#58A6FF', textDecoration: 'none' }}>View Raw Prometheus Output &rarr;</a>
             </div>
           </div>
         </div>
