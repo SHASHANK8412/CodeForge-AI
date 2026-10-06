@@ -141,7 +141,7 @@ export default function AgentOrchestrationGraph({
       return (
         <span className="flex items-center gap-1 text-[9px] font-mono font-bold text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30">
           <FaCheckCircle className="w-2 h-2" />
-          PASSED
+          DONE
         </span>
       );
     }
@@ -186,11 +186,11 @@ export default function AgentOrchestrationGraph({
         <div className="flex items-center gap-3">
           {generationStatus?.agents && (
             <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-1 rounded-lg">
-              {passedCount}/{NODES.length} PASSED
+              {passedCount}/{NODES.length} DONE
             </span>
           )}
           <div className="flex items-center gap-2.5 text-[10px] font-mono">
-            <span className="flex items-center gap-1 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-400" /> Passed</span>
+            <span className="flex items-center gap-1 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-400" /> Done</span>
             <span className="flex items-center gap-1 text-cyan-400"><span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" /> Running</span>
             <span className="flex items-center gap-1 text-rose-400"><span className="w-2 h-2 rounded-full bg-rose-400" /> Failed</span>
             <span className="flex items-center gap-1 text-amber-400"><span className="w-2 h-2 rounded-full bg-amber-400" /> Retry Loop</span>
