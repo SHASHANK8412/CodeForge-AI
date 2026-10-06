@@ -67,18 +67,18 @@ class TestOpenTelemetryObservability:
 
     def test_distributed_trace_and_dna_mapping(self):
         service = OpenTelemetryService()
-        trace = service.record_trace("proj_test")
+        trace = service.record_trace("proj_test", "GET", "/api/projects", 200, duration_ms=42.5)
 
-        assert len(trace.spans) == 5
+        # One server span with the request's real method, route, status and duration.
+        assert len(trace.spans) == 1
         assert trace.spans[0].kind == SpanKind.SERVER
-        assert trace.spans[3].kind == SpanKind.CLIENT  # External API
+        assert trace.total_duration_ms == 42.5 and trace.root_route == "/api/projects"
 
         dna_mapper = EngineeringDNATraceMapper()
         mapped = dna_mapper.map_trace_to_dna(trace)
 
         assert mapped["trace_id"] == trace.trace_id
-        assert len(mapped["mapped_spans"]) == 5
-        assert mapped["mapped_spans"][1]["dna_file_path"] == "backend/services/orders.py"
+        assert len(mapped["mapped_spans"]) == 1
 
     def test_multi_system_telemetry_integration(self):
         bridge = TelemetryMultiSystemBridge()
@@ -99,9 +99,16 @@ class TestOpenTelemetryObservability:
 
     def test_performance_regression_alert(self):
         service = OpenTelemetryService()
+        assert service.detect_performance_regression("proj_test") is None, "no data, no regression"
+
+        for _ in range(20):
+            service.record_trace("proj_test", "GET", "/api/x", 200, duration_ms=100.0)
+        for _ in range(20):
+            service.record_trace("proj_test", "GET", "/api/x", 200, duration_ms=350.0)
         alert = service.detect_performance_regression("proj_test")
 
-        assert alert.regression_ratio > 2.0
+        assert alert.endpoint == "GET /api/x"
+        assert alert.regression_ratio >= 1.5
         assert alert.slowest_span_duration_ms == 350.0
 
     def test_readiness_gate_collector_integration(self):
@@ -122,11 +129,12 @@ class TestOpenTelemetryObservability:
         assert met_res.status_code == 200
         assert met_res.json()["status"] == "success"
 
-        tra_res = client.get("/api/projects/aiforge-demo/observability/traces")
+        # AIForge's own requests are traced under "platform"; this request itself is one of them.
+        tra_res = client.get("/api/projects/platform/observability/traces")
         assert tra_res.status_code == 200
 
         trace_id = tra_res.json()["traces"][0]["trace_id"]
-        det_res = client.get(f"/api/projects/aiforge-demo/observability/traces/{trace_id}")
+        det_res = client.get(f"/api/projects/platform/observability/traces/{trace_id}")
         assert det_res.status_code == 200
         assert det_res.json()["trace"]["trace_id"] == trace_id
 

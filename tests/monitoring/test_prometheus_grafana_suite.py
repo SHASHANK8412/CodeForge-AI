@@ -139,8 +139,8 @@ class TestPrometheusGrafanaSuite:
         res = client.get("/api/monitoring/overview?project_id=aiforge-demo")
         assert res.status_code == 200
         data = res.json()
-        assert data["system_health"] == "HEALTHY"
-        assert "requests_total" in data
-        assert "agent_latency_ms" in data
-        assert data["grafana_status"] == "ACTIVE"
-        assert data["prometheus_status"] == "SCRAPING_HEALTHY"
+        assert data["system_health"] in ("HEALTHY", "DEGRADED")
+        assert isinstance(data["requests_total"], int)
+        assert isinstance(data["agent_latency_ms"], dict)
+        # Grafana isn't part of the deployment; the page must not claim it is.
+        assert data["grafana_status"] == "NOT_CONFIGURED"

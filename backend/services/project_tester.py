@@ -23,8 +23,9 @@ class ProjectTester:
         start_time = time.perf_counter()
         logger.info(f"[TESTER] Starting test execution for project path: {project_path_str}")
 
-        proj_path = Path(project_path_str).resolve()
-        if not proj_path.exists() or not proj_path.is_dir():
+        # An empty path would resolve to the current directory (AIForge itself) and test that.
+        proj_path = Path(project_path_str).resolve() if project_path_str else None
+        if proj_path is None or not proj_path.exists() or not proj_path.is_dir():
             return {
                 "overall_status": "FAIL",
                 "message": "Project directory not found on disk.",
