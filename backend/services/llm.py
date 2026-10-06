@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import logging
 import asyncio
 import contextvars
@@ -25,7 +26,7 @@ from backend.config import (
     TASK_NUM_CTX,
 )
 from backend.utils.cache import llm_cache
-from backend.utils.retry import async_retry
+from backend.utils.retry import LLMDeadlineExceeded, async_retry
 from backend.utils.prompt_optimizer import optimize_prompt
 
 _ollama_client = Client(timeout=480.0)
@@ -159,6 +160,17 @@ async def _chat_completion_async(model: str, messages: list[dict[str, str]], str
     )
 
 
+# Ceiling, not an expected duration: CPU-only Ollama can need many minutes for a long response.
+LLM_TIMEOUT_SECONDS = float(os.getenv("AIFORGE_LLM_TIMEOUT_SECONDS", "900"))
+
+
+def _is_missing_model_error(exc: Exception) -> bool:
+    """Only a missing model justifies skipping it for the rest of the process; timeouts and
+    connection errors are transient load problems, not proof the model is unusable."""
+    status_code = getattr(exc, "status_code", None)
+    return status_code == 404 or "not found" in str(exc).lower()
+
+
 def _fallback_models(selected_model: str) -> list[str]:
     candidates = [selected_model, DEFAULT_OLLAMA_MODEL, "qwen2.5"]
     ordered_candidates: list[str] = []
@@ -187,10 +199,7 @@ def _chat_completion_with_fallback(
                 try:
                     return _chat_completion(candidate, messages, stream=stream, options=options)
                 except Exception as exc:  # noqa: BLE001 - Ollama raises ResponseError for missing models.
-                    error_text = str(exc).lower()
-                    status_code = getattr(exc, "status_code", None)
-
-                    if status_code == 404 or "not found" in error_text or "model" in error_text or "timeout" in error_text or "timed out" in error_text or "connect" in error_text:
+                    if _is_missing_model_error(exc):
                         _unavailable_models.add(candidate)
                         last_error = exc
                         continue
@@ -235,8 +244,7 @@ async def _chat_completion_with_fallback_async(
 ):
     last_error: Exception | None = None
 
-    num_predict = (options or {}).get("num_predict", 2048)
-    timeout = 480.0 if num_predict >= 2500 else 180.0
+    timeout = LLM_TIMEOUT_SECONDS
 
     for candidate in _fallback_models(model):
         try:
@@ -244,11 +252,13 @@ async def _chat_completion_with_fallback_async(
                 _chat_completion_async(candidate, messages, stream=stream, options=options),
                 timeout=timeout
             )
+        except asyncio.TimeoutError as exc:
+            raise LLMDeadlineExceeded(
+                f"Model '{candidate}' did not finish within {timeout:.0f}s "
+                "(raise AIFORGE_LLM_TIMEOUT_SECONDS or use a smaller model on CPU-only machines)"
+            ) from exc
         except Exception as exc:  # noqa: BLE001 - Ollama raises ResponseError for missing models.
-            error_text = str(exc).lower()
-            status_code = getattr(exc, "status_code", None)
-
-            if isinstance(exc, (TimeoutError, asyncio.TimeoutError)) or status_code == 404 or "not found" in error_text or "model" in error_text or "connect" in error_text or "timeout" in error_text:
+            if _is_missing_model_error(exc):
                 _unavailable_models.add(candidate)
                 last_error = exc
                 continue
