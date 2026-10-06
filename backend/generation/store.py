@@ -228,6 +228,10 @@ class GenerationStore:
         self._update_record(gen_id, updates)
         _logger.info("[GENERATION] %s status → %s", gen_id, status)
 
+    def set_output(self, gen_id: str, project_path: str, files_count: int) -> None:
+        """Record where the finished project was written so it can be exported later."""
+        self._update_record(gen_id, {"project_path": project_path, "files_count": files_count})
+
     def _get_progress(self, gen_id: str) -> int:
         rec = self._get_record(gen_id)
         if not rec:

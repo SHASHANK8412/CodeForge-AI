@@ -258,6 +258,7 @@ class GenerationManager:
                     quality_score=final_state.get("quality_score", 100.0)
                 )
 
+            _store.set_output(gen_id, project_path, len(final_files))
             _store.update_status(gen_id, "completed")
             _store.add_event(
                 gen_id, "generation_completed",

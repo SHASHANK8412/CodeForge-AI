@@ -18,9 +18,9 @@ from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import StreamingResponse, Response
 from pydantic import BaseModel
 
+from backend.config import GENERATED_PROJECTS_DIR_NAME
 from backend.exporter.zipper import global_project_zipper
 from backend.exporter.gate import global_export_gate
-from backend.memory.project_memory import global_project_memory_store
 
 _logger = logging.getLogger("aiforge.routes.export")
 
@@ -42,44 +42,72 @@ class ExportZipRequest(BaseModel):
     state: Optional[Dict[str, Any]] = None
 
 
+GENERATED_ROOT = (Path(__file__).resolve().parent.parent.parent / GENERATED_PROJECTS_DIR_NAME).resolve()
+_SKIP_DIRS = {"node_modules", "__pycache__", ".git", ".venv", "venv", "dist", "build", ".pytest_cache"}
+
+
+def _safe_project_dir(candidate: str) -> Optional[Path]:
+    """Resolve a project directory, refusing anything outside generated_projects/."""
+    if not candidate:
+        return None
+    try:
+        path = Path(candidate)
+        if not path.is_absolute():
+            path = GENERATED_ROOT / path
+        path = path.resolve()
+    except (OSError, ValueError):
+        return None
+    if GENERATED_ROOT not in path.parents:
+        return None
+    return path if path.is_dir() else None
+
+
+def _read_project_dir(project_dir: Path) -> Dict[str, str]:
+    files: Dict[str, str] = {}
+    for file_path in project_dir.rglob("*"):
+        rel = file_path.relative_to(project_dir)
+        if not file_path.is_file() or any(part in _SKIP_DIRS for part in rel.parts):
+            continue
+        try:
+            files[rel.as_posix()] = file_path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            _logger.warning("Skipping non-text file in export: %s", rel)
+    return files
+
+
+def _generation_record(project_id: str) -> Optional[Dict[str, Any]]:
+    from backend.generation.store import global_generation_store
+    return global_generation_store.get(project_id)
+
+
 def _resolve_project_files(project_id: str, client_files: Optional[Dict[str, str]]) -> Dict[str, str]:
-    """Resolves project files from client payload or persistent memory store."""
-    if client_files and len(client_files) > 0:
+    """Files for exactly this project: client payload, a generation's output, or its directory."""
+    if client_files:
         return client_files
 
-    mem_files = global_project_memory_store.get_all_generated_files()
-    if mem_files and len(mem_files) > 0:
-        return mem_files
+    record = _generation_record(project_id)
+    if record:
+        if record.get("status") != "completed":
+            raise HTTPException(
+                status_code=409,
+                detail=f"Generation '{project_id}' is '{record.get('status')}'; only completed generations can be exported.",
+            )
+        project_dir = _safe_project_dir(record.get("project_path", ""))
+    else:
+        project_dir = _safe_project_dir(project_id)
 
-    return {
-        "frontend/src/App.jsx": "export default function App() { return <div>AIForge Generated App</div>; }",
-        "frontend/src/components/Navbar.jsx": "import React from 'react'; export default function Navbar() { return <nav>Navbar</nav>; }",
-        "backend/main.py": "from fastapi import FastAPI\napp = FastAPI()\n@app.get('/health')\ndef health(): return {'status': 'healthy'}",
-        "backend/app/routers/auth_router.py": "from fastapi import APIRouter\nrouter = APIRouter()\n@router.post('/login')\ndef login(): return {'access_token': 'verified'}",
-        "database/schema.sql": "CREATE TABLE users (id UUID PRIMARY KEY, email VARCHAR(255) UNIQUE NOT NULL);",
-        "tests/test_api.py": "def test_health(): assert True",
-        "README.md": f"# {project_id}\n\nAutonomously generated with AIForge Autonomous AI Software Engineer Engine."
-    }
+    files = _read_project_dir(project_dir) if project_dir else {}
+    if not files:
+        raise HTTPException(status_code=404, detail=f"No generated files found for project '{project_id}'.")
+    return files
 
 
 def _validate_export_or_raise(projectId: str, files: Dict[str, str], state: Optional[Dict[str, Any]] = None):
-    # Ensure project directory exists on disk for validation if needed
-    proj_dir = Path("generated_projects") / projectId
-    proj_dir.mkdir(parents=True, exist_ok=True)
-    if not (proj_dir / "backend").exists():
-        (proj_dir / "backend").mkdir(parents=True, exist_ok=True)
-        (proj_dir / "backend" / "main.py").write_text("def foo(): pass", encoding="utf-8")
-
-    state_to_check = dict(state) if state else {
-        "project_name": projectId,
-        "project_path": str(proj_dir),
-        "files": files,
-        "status": "PASS",
-        "execution_results": {"exit_code": 0, "status": "PASS"},
-        "test_results": {"success": True, "failed": 0}
-    }
-
-    val_res = global_export_gate.validate_state(state_to_check)
+    # The gate judges real pipeline results; without client-supplied state there is nothing
+    # to judge, and inventing a passing state would make the gate meaningless.
+    if not state:
+        return
+    val_res = global_export_gate.validate_state(dict(state))
     if not val_res.allowed:
         _logger.warning(f"Export gate rejected export for '{projectId}': {val_res.reason}")
         raise HTTPException(status_code=403, detail=val_res.reason)

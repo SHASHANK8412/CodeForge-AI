@@ -62,6 +62,9 @@ class GenerationStatusResponse(BaseModel):
 # Helpers
 # ---------------------------------------------------------------------------
 
+_DEMO_GENERATION_IDS = ("aiforge-demo", "aiforge_demo")
+
+
 def _seed_demo_generation(gen_id: str, user_id: str) -> Dict[str, Any]:
     from backend.routes.generate import GENERATIONS_DB
     now = "2026-08-09T14:00:00.000Z"
@@ -105,23 +108,23 @@ def _seed_demo_generation(gen_id: str, user_id: str) -> Dict[str, Any]:
 
 def _require_owned(gen_id: str, user_id: str) -> Dict[str, Any]:
     """Return the generation record or raise HTTP 403/404."""
+    is_demo = gen_id in _DEMO_GENERATION_IDS
     rec = _store.get(gen_id)
     if not rec:
-        if gen_id in ("aiforge-demo", "aiforge_demo") or gen_id.startswith("aiforge-") or gen_id.startswith("aiforge_") or gen_id.startswith("gen_"):
+        # Only the explicit demo id may be synthesized; a real-looking id that isn't in the
+        # store must 404 rather than render a fabricated "completed" run.
+        if is_demo:
             rec = _seed_demo_generation(gen_id, user_id)
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Generation not found."
             )
-    elif rec.get("user_id") != user_id and rec.get("user_id") not in ("default", "demo_user"):
-        if gen_id in ("aiforge-demo", "aiforge_demo") or gen_id.startswith("aiforge-") or gen_id.startswith("aiforge_") or gen_id.startswith("gen_"):
-            rec["user_id"] = user_id
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to access this generation."
-            )
+    elif rec.get("user_id") != user_id and rec.get("user_id") not in ("default", "demo_user") and not is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to access this generation."
+        )
     return rec
 
 
