@@ -12,3 +12,9 @@ def _isolated_generation_store(tmp_path, monkeypatch):
     path = tmp_path / "generations.json"
     path.write_text("{}", encoding="utf-8")
     monkeypatch.setattr(global_generation_store, "_path", path)
+
+
+@pytest.fixture(autouse=True)
+def _local_test_sandbox(monkeypatch):
+    """Generated-project tests run locally unless a test opts into the Docker sandbox."""
+    monkeypatch.setenv("AIFORGE_TEST_SANDBOX", "local")

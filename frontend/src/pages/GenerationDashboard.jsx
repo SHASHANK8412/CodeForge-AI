@@ -11,6 +11,7 @@ import ProjectHeader from '../components/generation/ProjectHeader';
 import AgentOrchestrationGraph from '../components/generation/AgentOrchestrationGraph';
 import AgentPipeline from '../components/generation/AgentPipeline';
 import AgentCard from '../components/generation/AgentCard';
+import RunMetrics from '../components/generation/RunMetrics';
 import AgentLogs from '../components/generation/AgentLogs';
 import ProgressBar from '../components/generation/ProgressBar';
 import CompletionActions from '../components/generation/CompletionActions';
@@ -437,6 +438,7 @@ export default function GenerationDashboard({
 
           {/* Right: Active Agent + Live Logs */}
           <div className="lg:col-span-7 flex flex-col gap-6">
+            <RunMetrics generationId={genId} status={status} />
             <AgentCard currentAgent={currentAgent} progress={progress} />
             <AgentLogs logs={logs} />
           </div>

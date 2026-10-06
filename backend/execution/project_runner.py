@@ -164,6 +164,14 @@ class ProjectRunner:
         # Create dummy artifact pointing to existing dir
         artifact = CodeArtifact(filename="main.py", language=lang, content="")
 
+        # Python test runs go to a throwaway Docker container when Docker is available
+        # (AIFORGE_TEST_SANDBOX=auto|docker|local); otherwise they run locally below.
+        if lang == "python" and not command_override and "pytest" in cmd:
+            from backend.execution.docker_test_sandbox import run_pytest_in_docker, should_use_docker
+            if should_use_docker():
+                _logger.info("ProjectRunner: running tests for '%s' in the Docker sandbox", proj_path)
+                return run_pytest_in_docker(proj_path)
+
         # Python projects run against their own dependencies (<project>/.venv), which are put on
         # the import path after the project itself; AIForge's interpreter still runs pytest.
         extra_path = []

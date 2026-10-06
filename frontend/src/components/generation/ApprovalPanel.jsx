@@ -214,16 +214,45 @@ export default function ApprovalPanel({
             <div className="p-3.5 rounded-xl bg-slate-900/80 border border-indigo-500/30">
               <span className="text-[10px] text-slate-400 uppercase font-mono block">Files Generated</span>
               <span className="text-lg font-bold text-indigo-300 mt-0.5 block">
-                {filesGenerated.length || '12'} Files
+                {filesGenerated.length} Files
               </span>
             </div>
             <div className="p-3.5 rounded-xl bg-slate-900/80 border border-purple-500/30">
               <span className="text-[10px] text-slate-400 uppercase font-mono block">Readiness</span>
               <span className="text-sm font-bold text-purple-300 mt-1 block flex items-center gap-1">
-                <FaRocket className="w-3.5 h-3.5 text-purple-400" /> Ready for Export
+                <FaRocket className="w-3.5 h-3.5 text-purple-400" /> {approvalRequest.deployment_readiness || '—'}
               </span>
             </div>
           </div>
+
+          {approvalRequest.security && (
+            <div className={`p-3.5 rounded-xl border text-xs ${approvalRequest.security.gate === 'FAILED' ? 'bg-rose-950/30 border-rose-500/40' : 'bg-slate-900/60 border-slate-800'}`}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-bold text-slate-200">
+                  Security scan: {approvalRequest.security.gate || 'not run'}
+                  {approvalRequest.security.score != null && ` · score ${approvalRequest.security.score}`}
+                </span>
+                {approvalRequest.quality_gate && approvalRequest.quality_gate.error_count != null && (
+                  <span className={approvalRequest.quality_gate.error_count ? 'text-rose-300' : 'text-emerald-300'}>
+                    Code-quality gate: {approvalRequest.quality_gate.error_count ? `${approvalRequest.quality_gate.error_count} blocking issue(s)` : 'passing'}
+                  </span>
+                )}
+              </div>
+              {approvalRequest.security.gate === 'FAILED' && (
+                <p className="mt-1.5 text-rose-200">Automatic repair could not clear these findings. Approving exports the project with them.</p>
+              )}
+              {(approvalRequest.security.findings || []).length > 0 && (
+                <ul className="mt-2 space-y-1 font-mono text-[11px] text-slate-300 max-h-32 overflow-y-auto">
+                  {approvalRequest.security.findings.map((f, i) => (
+                    <li key={i} className="truncate">
+                      <span className={f.severity === 'CRITICAL' || f.severity === 'HIGH' ? 'text-rose-300' : 'text-amber-300'}>{f.severity}</span>{' '}
+                      {f.file}{f.line ? `:${f.line}` : ''} {f.description || f.title || f.category}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           {filesGenerated.length > 0 && (
             <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs font-mono max-h-32 overflow-y-auto">

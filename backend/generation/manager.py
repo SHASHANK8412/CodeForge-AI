@@ -30,6 +30,7 @@ from time import perf_counter
 from typing import Dict, Optional
 
 from backend.generation.store import global_generation_store as _store
+from backend.telemetry.usage import current_generation_var
 from backend.generation.event_bus import global_event_bus as _bus
 from backend.graph.parallel_workflow import (
     parallel_graph,
@@ -198,6 +199,7 @@ class GenerationManager:
         }
 
         token = generation_event_callback_var.set(cb)
+        current_generation_var.set(gen_id)
         started_at = perf_counter()
 
         try:

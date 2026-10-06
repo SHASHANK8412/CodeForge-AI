@@ -10,6 +10,8 @@ from time import perf_counter
 from threading import Lock
 from typing import Iterable, Optional
 
+from backend.telemetry.usage import record_llm_call, token_counts
+
 from ollama import Client, AsyncClient  # type: ignore[attr-defined]
 
 from backend.config import (
@@ -313,6 +315,7 @@ def generate_text(
             llm_time_ms=0.0,
             cache_status="HIT",
         )
+        record_llm_call(task, selected_model, 0, 0, 0.0, cached=True)
         return cached
 
     llm_started_at = perf_counter()
@@ -323,6 +326,7 @@ def generate_text(
             options=options,
         )
         content = response["message"]["content"]
+        record_llm_call(task, selected_model, *token_counts(response), perf_counter() - llm_started_at)
     except Exception as exc:
         _logger.warning("Synchronous LLM call timed out or failed for task '%s': %s. Returning structured fallback.", task, exc)
         content = _get_structured_task_fallback(task, compact_prompt)
@@ -380,6 +384,7 @@ async def generate_text_async(
             llm_time_ms=0.0,
             cache_status="HIT",
         )
+        record_llm_call(task, selected_model, 0, 0, 0.0, cached=True)
         queue = stream_queue_var.get()
         if queue is not None:
             await queue.put(("chunk", task, cached))
@@ -397,11 +402,15 @@ async def generate_text_async(
                 stream=True,
                 options=options,
             )
+            last_chunk = None
             async for chunk in stream_response:
+                last_chunk = chunk
                 content = chunk.get("message", {}).get("content")
                 if content:
                     chunks.append(content)
                     await queue.put(("chunk", task, content))
+            if last_chunk is not None:
+                record_llm_call(task, selected_model, *token_counts(last_chunk), perf_counter() - llm_started_at)
         except Exception as exc:
             _logger.error("Error in generate_text_async stream: %s", exc)
             raise
@@ -417,6 +426,7 @@ async def generate_text_async(
                 options=options,
             )
             content = response["message"]["content"]
+            record_llm_call(task, selected_model, *token_counts(response), perf_counter() - llm_started_at)
         except Exception as exc:
             _logger.warning("LLM call timed out or failed for task '%s': %s. Returning structured fallback.", task, exc)
             content = _get_structured_task_fallback(task, compact_prompt)

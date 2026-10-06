@@ -67,6 +67,18 @@ generation_event_callback_var: contextvars.ContextVar[Optional[Callable]] = (
 )
 
 
+def _record_metrics(state, increment=None, **values) -> None:
+    """Store pipeline metrics (tests, lint, security, auto-fixes) on the generation record."""
+    gen_id = state.get("generation_id")
+    if not gen_id:
+        return
+    try:
+        from backend.generation.store import global_generation_store
+        global_generation_store.update_metrics(gen_id, increment=increment, **values)
+    except Exception as e:  # noqa: BLE001 - metrics must never break the pipeline
+        _logger.warning("Could not record metrics for %s: %s", gen_id, e)
+
+
 def _fire_lifecycle(
     event_type: str,
     agent_name: str,
@@ -581,6 +593,30 @@ async def testing_node(state: ProjectState) -> dict:
         # inferring a pass from earlier stages.
         test_run_res = global_project_tester.run_tests("")
 
+    # Code-quality gate on the current files (patches change them between cycles)
+    from backend.validation.quality_gate import format_issues, run_quality_gate
+    gate = run_quality_gate(proj_path_str) if proj_path_str else None
+    if gate and not gate["passed"]:
+        lint_lines = format_issues(gate["errors"])
+        had_test_failure = test_run_res.get("overall_status") == "FAIL" and test_run_res.get("failure_category") not in (None, "NONE")
+        test_run_res = {
+            **test_run_res,
+            "overall_status": "FAIL",
+            "message": (test_run_res.get("message") or "") + f" Code-quality gate: {gate['error_count']} blocking issue(s).",
+            "failures": list(test_run_res.get("failures", [])) + lint_lines,
+            "stack_traces": list(test_run_res.get("stack_traces", [])) + lint_lines,
+            "failure_category": test_run_res.get("failure_category") if had_test_failure else "LINT_ERROR",
+        }
+    _record_metrics(
+        state,
+        tests_passed=test_run_res.get("passed", 0),
+        tests_failed=test_run_res.get("failed", 0),
+        tests_total=test_run_res.get("total", 0),
+        tests_status=test_run_res.get("overall_status"),
+        lint_errors=gate.get("error_count", 0) if gate else None,
+        lint_warnings=gate.get("warning_count", 0) if gate else None,
+    )
+
     # Format test report markdown
 
     report_lines = [
@@ -653,6 +689,7 @@ async def testing_node(state: ProjectState) -> dict:
         "tests": raw_tests,
         "files": files_map,
         "test_results": mapped_test_results,
+        "quality_gate": gate,
         "test_status": "passed" if is_success else "failed",
         "failed_tests": mapped_test_results["failed_tests"],
         "stack_traces": mapped_test_results["stack_traces"],
@@ -695,21 +732,23 @@ async def build_validation_node(state: ProjectState) -> dict:
     _logger.info("✔ [7/14] Build Validation Agent executing checks...")
     _fire_lifecycle("agent_started", "build_validation")
 
-    fe_files = {"App.jsx": str(state.get("frontend", ""))}
-    be_files = {"main.py": str(state.get("backend", ""))}
-    db_code = str(state.get("database", ""))
-    dk_files = {"Dockerfile": "FROM python:3.11-slim\nWORKDIR /app"}
+    from backend.validation.quality_gate import run_quality_gate
+    project_path = state.get("project_path", "")
 
     with Timer() as timer:
-        val_report = build_validation_agent.validate_all(fe_files, be_files, db_code, dk_files)
+        gate = run_quality_gate(project_path) if project_path else {
+            "passed": False, "errors": [], "warnings": [], "error_count": 0, "warning_count": 0,
+            "skipped": ["no project folder on disk"]}
 
     agent_timers["build_validation"] = timer.elapsed
+    _record_metrics(state, lint_errors=gate.get("error_count", 0), lint_warnings=gate.get("warning_count", 0))
 
     _fire_lifecycle("agent_completed", "build_validation", duration=timer.elapsed)
+    verdict = "PASSED" if gate["passed"] else f"{gate.get('error_count', 0)} blocking issue(s)"
     return {
-        "validation_report": val_report.dict(),
+        "quality_gate": gate,
         "current_step": "build_validation",
-        "stream_events": [f"✔ Build Validation: {'PASSED' if val_report.is_valid else 'FAILED'}"]
+        "stream_events": [f"✔ Code-quality gate: {verdict}"]
     }
 
 
@@ -766,8 +805,18 @@ async def security_scan_node(state: ProjectState) -> dict:
         sec_md = global_security_manager.generate_security_markdown(re_sec_report)
         report_dict = re_sec_report.model_dump()
 
+    findings = report_dict.get("findings", []) or []
+    _record_metrics(
+        state,
+        security_score=report_dict.get("security_score"),
+        security_gate=report_dict.get("gate_status"),
+        security_findings=len(findings),
+        security_critical=sum(1 for f in findings if str((f or {}).get("severity", "")).upper() == "CRITICAL"),
+        security_repair_attempts=sec_attempts,
+    )
     _fire_lifecycle("agent_completed", "security_scan", duration=timer.elapsed)
     return {
+        "security_repair_attempts": sec_attempts,
         "files": files_manifest,
         "security_report": sec_md,
         "security_data": report_dict,
@@ -784,7 +833,9 @@ async def performance_node(state: ProjectState) -> dict:
     total_time = sum(agent_timers.values())
 
     with Timer() as timer:
-        perf_report = performance_agent.collect_metrics(total_time, agent_timers, estimated_tokens=14200)
+        from backend.generation.store import global_generation_store
+        usage = (global_generation_store.get(state.get("generation_id") or "", {}) or {}).get("usage") or {}
+        perf_report = performance_agent.collect_metrics(total_time, agent_timers, estimated_tokens=usage.get("total_tokens", 0))
         perf_md = performance_agent.generate_performance_report_markdown(perf_report)
 
     agent_timers["performance"] = timer.elapsed
@@ -999,6 +1050,8 @@ async def patch_node(state: ProjectState) -> dict:
     }
     fix_history = list(state.get("fix_history", []) or []) + [applied_fix_record]
 
+    if modified_files:
+        _record_metrics(state, increment={"auto_fixes": 1})
     _logger.info(f"[Fixer] Applied patch in Cycle {cycle} to {len(modified_files)} file(s): {modified_files}")
     _fire_lifecycle("agent_completed", "patch")
     return {
@@ -1149,6 +1202,24 @@ async def final_approval_node(state: ProjectState) -> dict:
             "status": state.get("approval_status", "pending"),
         }
 
+    # Security and code-quality results travel with the approval, so approving means accepting
+    # any findings the automatic scan and repair could not clear.
+    sec = dict(state.get("security_data") or {})
+    findings = sec.get("findings") or []
+    final_req["security"] = {
+        "gate": sec.get("gate_status"),
+        "score": sec.get("security_score"),
+        "findings": [
+            {k: f.get(k) for k in ("severity", "category", "file", "line", "description", "title") if isinstance(f, dict) and f.get(k) is not None}
+            for f in findings[:15]
+        ],
+        "finding_count": len(findings),
+    }
+    gate = state.get("quality_gate") or {}
+    final_req["quality_gate"] = {"passed": gate.get("passed"), "error_count": gate.get("error_count"), "warning_count": gate.get("warning_count")}
+    if not is_escalation and sec.get("gate_status") == "FAILED":
+        final_req["deployment_readiness"] = "SECURITY REVIEW REQUIRED"
+
     return {
         "approval_required": True,
         "approval_stage": "debug_escalation" if is_escalation else "final",
@@ -1263,9 +1334,9 @@ def _read_project_files(project_dir: Path) -> dict[str, str]:
 
 async def github_sync_node(state: ProjectState) -> dict:
     """
-    Report the project's GitHub status. Publishing is an explicit user action (Export -> GitHub,
-    /api/github/publish), so this node never pushes on its own and never claims a push that did
-    not happen.
+    Publish the approved project to GitHub when enabled (AIFORGE_AUTO_PUBLISH_GITHUB=1 and a
+    GITHUB_TOKEN): a private repository, after the publisher's own secret scan. Otherwise report
+    the project's GitHub state. Never claims a push that did not happen.
     """
     _logger.info("✔ [15/18] Starting GitHub integration node...")
     _fire_lifecycle("agent_started", "github_sync")
@@ -1274,18 +1345,44 @@ async def github_sync_node(state: ProjectState) -> dict:
     project_id = str(state.get("project_id") or state.get("project_name") or "")
     meta = global_github_repo_store.get(project_id) if project_id else None
 
-    _fire_lifecycle("agent_completed", "github_sync")
+    def done(github: dict, event: str) -> dict:
+        _record_metrics(state, github_status=github.get("status"), github_repo=github.get("connected_repository"))
+        _fire_lifecycle("agent_completed", "github_sync")
+        return {"github": github, "current_step": "github_sync", "stream_events": [event]}
+
     if meta:
-        return {
-            "github": {"connected_repository": meta.repo_url, "status": "PUBLISHED"},
-            "current_step": "github_sync",
-            "stream_events": [f"✔ Project is published on GitHub: {meta.repo_url}"],
-        }
-    return {
-        "github": {"connected_repository": None, "status": "NOT_PUBLISHED"},
-        "current_step": "github_sync",
-        "stream_events": ["ℹ Not published to GitHub yet — use Export → GitHub to create a repository"],
-    }
+        return done({"connected_repository": meta.repo_url, "status": "PUBLISHED"},
+                    f"✔ Project is published on GitHub: {meta.repo_url}")
+
+    auto = os.environ.get("AIFORGE_AUTO_PUBLISH_GITHUB", "").strip().lower() in ("1", "true", "yes")
+    token = os.environ.get("GITHUB_TOKEN", "").strip()
+    project_path = state.get("project_path", "")
+    if not (auto and token and project_path and Path(project_path).is_dir()):
+        reason = "auto-publish is off (set AIFORGE_AUTO_PUBLISH_GITHUB=1)" if not auto else "GITHUB_TOKEN is not set" if not token else "no project folder"
+        return done({"connected_repository": None, "status": "NOT_PUBLISHED", "reason": reason},
+                    f"ℹ Not published to GitHub: {reason}")
+
+    from backend.github.publisher import SecurityViolationError, global_github_publisher
+    from backend.routes.export import _read_project_dir
+    try:
+        result = global_github_publisher.publish_project(
+            project_id=project_id,
+            files_manifest=_read_project_dir(Path(project_path)),
+            description=str(state.get("user_prompt") or "")[:300],
+            private=True,
+            token=token,
+        )
+    except SecurityViolationError as e:
+        return done({"connected_repository": None, "status": "BLOCKED", "reason": str(e)},
+                    "⛔ GitHub publish blocked by the pre-publish secret scan")
+    except Exception as e:  # noqa: BLE001 - network/API failures are reported, not raised
+        _logger.warning("GitHub publish failed for %s: %s", project_id, e)
+        return done({"connected_repository": None, "status": "FAILED", "reason": str(e)[:300]},
+                    f"⚠ GitHub publish failed: {str(e)[:120]}")
+
+    repo_url = (result.get("repository") or {}).get("url")
+    return done({"connected_repository": repo_url, "status": "PUBLISHED" if repo_url else "FAILED", "details": result},
+                f"✔ Published to GitHub: {repo_url}" if repo_url else "⚠ GitHub publish returned no repository URL")
 
 
 async def ci_check_node(state: ProjectState) -> dict:

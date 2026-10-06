@@ -165,6 +165,8 @@ def _safe_status_response(rec: Dict[str, Any]) -> Dict[str, Any]:
         "completed_at": rec.get("completed_at"),
         "error": rec.get("error"),
         "created_at": rec.get("created_at"),
+        "usage": rec.get("usage"),
+        "metrics": rec.get("metrics"),
     }
 
 

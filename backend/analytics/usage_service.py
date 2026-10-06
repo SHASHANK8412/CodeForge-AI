@@ -1,54 +1,80 @@
 """
-AIForge AI Usage & Analytics Telemetry Engine
-=============================================
-Aggregates platform telemetry:
-- AI Requests
-- Agent Runs
-- Tool Invocations
-- Token Consumption & Estimated Cost
-- Model Distribution & Activity Trends
+AIForge usage analytics, aggregated from what generation runs actually recorded: run outcomes
+and the real token counts reported by Ollama (backend/telemetry/usage.py). Runs from before
+token tracking existed have no usage and count as zero tokens.
 """
 
-import time
 import logging
-from typing import Dict, Any, List
+from collections import defaultdict
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict
 
 _logger = logging.getLogger("aiforge.analytics.service")
 
 
 class UsageAnalyticsService:
     def get_platform_metrics(self) -> Dict[str, Any]:
+        from backend.generation.store import global_generation_store
+        runs = global_generation_store.list_all()
+
+        totals = {"prompt_tokens": 0, "completion_tokens": 0, "llm_calls": 0, "cached_calls": 0, "cost_usd": 0.0}
+        by_model: Dict[str, int] = defaultdict(int)
+        by_agent: Dict[str, Dict[str, int]] = defaultdict(lambda: {"tokens": 0, "calls": 0})
+        tracked_runs = 0
+
+        today = datetime.now(timezone.utc).date()
+        days = [today - timedelta(days=offset) for offset in range(6, -1, -1)]
+        daily = {d: {"runs": 0, "tokens": 0} for d in days}
+
+        for run in runs:
+            usage = run.get("usage") or {}
+            run_tokens = usage.get("total_tokens", 0)
+            if usage:
+                tracked_runs += 1
+                for key in totals:
+                    totals[key] += usage.get(key, 0) or 0
+                for agent, stats in (usage.get("by_agent") or {}).items():
+                    tokens = stats.get("prompt_tokens", 0) + stats.get("completion_tokens", 0)
+                    by_agent[agent]["tokens"] += tokens
+                    by_agent[agent]["calls"] += stats.get("calls", 0)
+                    by_model[stats.get("model") or "unknown"] += tokens
+            try:
+                created = datetime.fromisoformat(str(run.get("created_at"))).date()
+            except (TypeError, ValueError):
+                continue
+            if created in daily:
+                daily[created]["runs"] += 1
+                daily[created]["tokens"] += run_tokens
+
+        total_tokens = totals["prompt_tokens"] + totals["completion_tokens"]
+        statuses = defaultdict(int)
+        for run in runs:
+            statuses[run.get("status") or "unknown"] += 1
+
         return {
             "summary": {
-                "total_ai_requests": 14280,
-                "autonomous_agent_tasks": 342,
-                "total_tokens_consumed": "42.8M",
-                "estimated_cost_usd": "$28.45",
-                "active_projects": 3,
-                "active_memories": 12,
-                "uptime_sla": "99.99%"
+                "total_runs": len(runs),
+                "completed_runs": statuses["completed"],
+                "failed_runs": statuses["failed"] + statuses["cancelled"],
+                "runs_with_token_data": tracked_runs,
+                "total_tokens": total_tokens,
+                "prompt_tokens": totals["prompt_tokens"],
+                "completion_tokens": totals["completion_tokens"],
+                "llm_calls": totals["llm_calls"],
+                "cached_calls": totals["cached_calls"],
+                "cost_usd": round(totals["cost_usd"], 4),
             },
             "model_distribution": [
-                {"model": "Claude 3.5 Sonnet", "usage_pct": 52, "color": "bg-indigo-500"},
-                {"model": "GPT-4o / GPT-4.5", "usage_pct": 34, "color": "bg-violet-500"},
-                {"model": "DeepSeek R1 / V3", "usage_pct": 14, "color": "bg-emerald-500"}
+                {"model": model, "tokens": tokens, "usage_pct": round(tokens / total_tokens * 100, 1) if total_tokens else 0}
+                for model, tokens in sorted(by_model.items(), key=lambda kv: -kv[1])
             ],
-            "top_tools": [
-                {"tool_name": "Monaco Code Workspace", "invocations": 4120, "category": "Coding"},
-                {"tool_name": "AI Memory Smart Recall", "invocations": 3280, "category": "Context"},
-                {"tool_name": "Autopilot Engine", "invocations": 2150, "category": "Autonomous"},
-                {"tool_name": "Bug Hunter SAST", "invocations": 1840, "category": "Security"},
-                {"tool_name": "Deep Research Engine", "invocations": 1490, "category": "Research"}
+            "top_agents": [
+                {"agent": agent, **stats}
+                for agent, stats in sorted(by_agent.items(), key=lambda kv: -kv[1]["tokens"])[:8]
             ],
             "daily_activity": [
-                {"day": "Mon", "requests": 1840},
-                {"day": "Tue", "requests": 2190},
-                {"day": "Wed", "requests": 2450},
-                {"day": "Thu", "requests": 2890},
-                {"day": "Fri", "requests": 3120},
-                {"day": "Sat", "requests": 1650},
-                {"day": "Sun", "requests": 1420}
-            ]
+                {"day": d.strftime("%a"), "date": d.isoformat(), **daily[d]} for d in days
+            ],
         }
 
 

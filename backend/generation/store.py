@@ -348,6 +348,46 @@ class GenerationStore:
         data = self._read()
         return [r for r in data.values() if r.get("user_id") == user_id]
 
+    def add_usage(self, gen_id: str, call: Dict[str, Any]) -> None:
+        """Accumulate one LLM call's token usage into the run's totals and per-agent breakdown."""
+        from backend.telemetry.usage import cost_usd
+        with self._lock:
+            data = self._load()
+            rec = data.get(gen_id)
+            if rec is None:
+                return
+            usage = rec.setdefault("usage", {
+                "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0,
+                "llm_calls": 0, "cached_calls": 0, "llm_seconds": 0.0, "cost_usd": 0.0, "by_agent": {},
+            })
+            agent = usage["by_agent"].setdefault(call.get("agent") or "unknown", {
+                "prompt_tokens": 0, "completion_tokens": 0, "calls": 0, "model": call.get("model"),
+            })
+            for target in (usage, agent):
+                target["prompt_tokens"] += call["prompt_tokens"]
+                target["completion_tokens"] += call["completion_tokens"]
+            usage["total_tokens"] = usage["prompt_tokens"] + usage["completion_tokens"]
+            usage["llm_calls"] += 1
+            agent["calls"] += 1
+            agent["model"] = call.get("model") or agent.get("model")
+            usage["cached_calls"] += 1 if call.get("cached") else 0
+            usage["llm_seconds"] = round(usage["llm_seconds"] + call.get("llm_seconds", 0.0), 3)
+            usage["cost_usd"] = cost_usd(usage["prompt_tokens"], usage["completion_tokens"])
+            self._save(data)
+
+    def update_metrics(self, gen_id: str, increment: Optional[Dict[str, int]] = None, **values: Any) -> None:
+        """Set pipeline metrics (tests, lint, security findings) and add to counters (auto-fixes)."""
+        with self._lock:
+            data = self._load()
+            rec = data.get(gen_id)
+            if rec is None:
+                return
+            metrics = rec.setdefault("metrics", {})
+            metrics.update(values)
+            for key, delta in (increment or {}).items():
+                metrics[key] = metrics.get(key, 0) + delta
+            self._save(data)
+
     def list_all(self) -> List[Dict[str, Any]]:
         return list(self._read().values())
 

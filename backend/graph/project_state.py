@@ -132,6 +132,9 @@ class ProjectState(TypedDict, total=False):
     security_gate: str
     security_repair_attempts: int
 
+    # Code-quality gate result (backend/validation/quality_gate.py)
+    quality_gate: Optional[Dict[str, Any]]
+
     # Human-in-the-Loop (HITL) & Checkpoint Workflow state fields
     approval_status: str  # "pending", "approved", "rejected", "none"
     approval_required: bool
