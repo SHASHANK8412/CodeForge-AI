@@ -342,10 +342,15 @@ docker-compose up --build -d
         _logger.info(f"DevOpsAgent: Executing approved deployment for '{project_id}'...")
         start_t = time.time()
 
-        # Deploy each component via provider abstraction
-        fe_res = await global_vercel_provider.deploy(project_id, {})
-        be_res = await global_render_provider.deploy(project_id, {})
+        # Order matters: the database URL configures the backend, the backend URL the frontend build.
         db_res = await global_neon_provider.deploy(project_id, {}) if plan.spec.database_tech else None
+        backend_env = {"DATABASE_URL": db_res["_database_url"]} if db_res and db_res.get("_database_url") else {}
+        be_res = await global_render_provider.deploy(project_id, {"env_vars": backend_env})
+        fe_res = await global_vercel_provider.deploy(project_id, {"backend_url": be_res.get("url")})
+
+        # Never return the raw database credential to API callers.
+        if db_res:
+            db_res = {k: v for k, v in db_res.items() if not k.startswith("_")}
 
         elapsed = round(time.time() - start_t, 2)
 

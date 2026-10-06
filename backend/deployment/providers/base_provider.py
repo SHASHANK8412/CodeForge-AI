@@ -52,26 +52,3 @@ class DeploymentProvider(ABC):
 
 
 BaseDeploymentProvider = DeploymentProvider
-
-
-def undeployed_result(provider: str, display_name: str, token_env: str, manual_hint: str) -> Dict[str, Any]:
-    """
-    Honest result for cloud providers whose API deployment isn't wired up: never report a
-    LIVE status or a URL for a deployment that didn't happen.
-    """
-    import os
-
-    if not os.environ.get(token_env):
-        return {
-            "provider": provider,
-            "status": "NOT_CONFIGURED",
-            "url": None,
-            "message": f"{display_name} deployment needs {token_env} set in the backend environment.",
-        }
-    return {
-        "provider": provider,
-        "status": "MANUAL_DEPLOY_REQUIRED",
-        "url": None,
-        "message": f"Automated {display_name} API deployment is not implemented yet. {manual_hint}",
-    }
-
