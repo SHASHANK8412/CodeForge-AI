@@ -1248,7 +1248,10 @@ async def deployment_node(state: ProjectState) -> dict:
     if isinstance(state.get("plan"), dict):
         project_name = state["plan"].get("project_name", "AIForge Project")
 
-    project_dir, report = project_generator.generate_project_structure(project_name, state)
+    assembled_dir = Path(state["project_path"]) if state.get("project_path") else None
+    project_dir, report = project_generator.generate_project_structure(
+        project_name, state, project_dir=assembled_dir if assembled_dir and assembled_dir.is_dir() else None
+    )
     report_dict = report.dict() if hasattr(report, "dict") else (report.to_dict() if hasattr(report, "to_dict") else str(report))
 
     _fire_lifecycle("agent_completed", "deployment")

@@ -60,6 +60,20 @@ class ProjectRunner:
         if not project_path.exists():
             return [], "unknown"
 
+        # Python tests come first: the tester parses pytest output, and full-stack projects
+        # carry a package.json as well.
+        py_files = [p for p in project_path.glob("**/*.py") if "node_modules" not in p.parts]
+        if py_files and any(p.name.startswith("test_") or p.name.endswith("_test.py") for p in py_files):
+            has_pytest = bool(shutil.which("pytest"))
+            if not has_pytest:
+                try:
+                    import pytest  # noqa: F401
+                    has_pytest = True
+                except ImportError:
+                    has_pytest = False
+            if has_pytest:
+                return self._isolated_pytest_command(project_path), "python"
+
         pkg_json_path = project_path / "package.json"
         if pkg_json_path.exists():
             npm_cmd = "npm.cmd" if sys.platform == "win32" and shutil.which("npm.cmd") else "npm"
@@ -74,20 +88,7 @@ class ProjectRunner:
                 pass
             return [npm_cmd, "run", "build"], "javascript"
 
-        # Check for Python project
-        py_files = list(project_path.glob("**/*.py"))
         if py_files:
-            has_tests = any("test" in p.name.lower() for p in py_files)
-            if has_tests:
-                has_pytest = bool(shutil.which("pytest"))
-                if not has_pytest:
-                    try:
-                        import pytest  # noqa: F401
-                        has_pytest = True
-                    except ImportError:
-                        has_pytest = False
-                if has_pytest:
-                    return self._isolated_pytest_command(project_path), "python"
             return [sys.executable, "-m", "compileall", "-e", "."], "python"
 
         return [], "unknown"
