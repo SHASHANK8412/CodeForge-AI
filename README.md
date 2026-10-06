@@ -45,7 +45,7 @@ Requirement
 | Validation, review, security scan, testing, debug/patch self-healing nodes | Implemented in the graph; see [verification](#verification) for how far a run got |
 | ZIP export of a completed generation | Working (tests: `tests/test_export_zip_route.py`) |
 | GitHub export | Implemented (`backend/github/`); requires `GITHUB_TOKEN` |
-| Docker / docker-compose for AIForge itself | Added; **not verified** — Docker was not available on the development machine |
+| Docker / docker-compose for AIForge itself | Working — both images build, both containers report healthy, and the backend reaches the host's Ollama (verified 2026-10-06, Docker 29.6.2) |
 | Local deployment with smoke tests and rollback | Working — a failed deploy restores the last file checkpoint (`tests/deployment/`) |
 | Cloud deployment (Vercel / Render / Neon) | Implemented against the real REST APIs (Neon database → Render backend → Vercel frontend). Tested with mocked HTTP only; **not yet run against live accounts**. Without `VERCEL_TOKEN` / `RENDER_API_KEY` / `NEON_API_KEY` a provider reports `NOT_CONFIGURED`; Render also needs the project exported to GitHub first |
 
@@ -89,8 +89,13 @@ docker compose --profile ollama up --build   # also runs Ollama in a container
 ```
 
 Frontend: http://localhost:8080 · API docs: http://localhost:8000/docs. Generated projects and
-app data persist in named volumes. Set `VITE_API_URL` (build arg) and `CORS_ORIGINS` when the
-frontend is served from a different origin.
+app data persist in named volumes (separate from a local run's `generated_projects/`). Set
+`VITE_API_URL` (build arg) and `CORS_ORIGINS` when the frontend is served from a different origin.
+
+The container uses SQLite by default, even if `.env` sets a `DATABASE_URL`: a `localhost`
+database there is not reachable from inside the container. To use Postgres, set
+`DOCKER_DATABASE_URL` to an address the container can reach (for example
+`postgresql://user:pass@host.docker.internal:5432/aiforge`).
 
 ## Configuration
 

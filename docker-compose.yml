@@ -19,6 +19,10 @@ services:
       # Default: the host's Ollama. With --profile ollama, set OLLAMA_HOST=http://ollama:11434
       OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+      # Overrides any DATABASE_URL from .env: a localhost Postgres there is unreachable from inside
+      # the container. Defaults to the SQLite file the app also uses locally (kept in a volume);
+      # set DOCKER_DATABASE_URL to use a reachable Postgres instead.
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-sqlite:///./backend/database/memory.db}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
