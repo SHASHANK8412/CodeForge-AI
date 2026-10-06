@@ -24,3 +24,6 @@ scratch/
 .pytest_cache/
 
 
+
+# Locally generated JWT signing key (backend/auth/security.py)
+backend/data/jwt_secret.key

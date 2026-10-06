@@ -6,7 +6,34 @@ import time
 import secrets
 from typing import Optional
 
-SECRET_KEY = "aiforge_jwt_super_secret_production_key_2026"
+import os
+from pathlib import Path
+
+_SECRET_FILE = Path(__file__).resolve().parent.parent / "data" / "jwt_secret.key"
+
+
+def _load_secret_key() -> str:
+    """
+    The JWT signing key: JWT_SECRET if set, otherwise a random key generated on first start and
+    kept in backend/data/jwt_secret.key (git-ignored). A key in the source code would be public,
+    letting anyone forge a token for any user.
+    """
+    env_key = os.environ.get("JWT_SECRET", "").strip()
+    if env_key and env_key != "change-me-to-a-long-random-string":
+        return env_key
+    try:
+        existing = _SECRET_FILE.read_text(encoding="utf-8").strip()
+        if existing:
+            return existing
+    except OSError:
+        pass
+    key = secrets.token_urlsafe(48)
+    _SECRET_FILE.parent.mkdir(parents=True, exist_ok=True)
+    _SECRET_FILE.write_text(key, encoding="utf-8")
+    return key
+
+
+SECRET_KEY = _load_secret_key()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_SECONDS = 86400 * 7  # 7 days
 

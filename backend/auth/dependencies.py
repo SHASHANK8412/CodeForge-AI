@@ -1,3 +1,5 @@
+import os
+
 from fastapi import Request, HTTPException, Depends, status
 from typing import Optional
 from backend.auth.security import decode_access_token
@@ -27,7 +29,10 @@ def get_current_user(request: Request) -> dict:
             if user:
                 return user
 
-    # Fallback to default user if token missing in local environment
+    # Local single-user mode: requests without a valid token act as the default user. Anything
+    # reachable from other machines should set AIFORGE_REQUIRE_AUTH=1 to reject them instead.
+    if os.environ.get("AIFORGE_REQUIRE_AUTH", "").strip().lower() in ("1", "true", "yes"):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
     return DEFAULT_USER
 
 

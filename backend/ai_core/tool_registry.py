@@ -8,12 +8,14 @@ First-class dynamic tool registry with:
 - Safe sandbox execution handlers
 """
 
+import ast
 import os
 import re
 import math
 import time
 import json
 import logging
+from pathlib import Path
 from typing import Dict, Any, List, Optional, Callable
 from enum import Enum
 from pydantic import BaseModel, Field
@@ -193,81 +195,133 @@ class ToolRegistry:
             _logger.error(f"Error executing tool '{name}': {e}")
             return {"success": False, "tool": name, "error": str(e)}
 
-    # Handlers
+    # Handlers. Each one either does real, bounded work or says plainly that it can't;
+    # none of them return invented results.
     def _handle_web_search(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        q = args.get("query", "")
         return {
-            "query": q,
-            "results": [
-                {"title": f"Technical Documentation: {q}", "url": "https://docs.aiforge.dev/ref", "snippet": f"Authoritative architecture specifications and RFC standards for {q}."},
-                {"title": f"Production Implementation Guide for {q}", "url": "https://aiforge.io/guides", "snippet": f"High-performance design patterns and benchmark metrics for {q}."}
-            ]
+            "query": args.get("query", ""),
+            "results": [],
+            "error": "No web search provider is configured, so no search was performed.",
         }
 
     def _handle_calculator(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        expr = args.get("expression", "0")
-        # Safe math evaluation using restricted characters
-        cleaned = re.sub(r"[^0-9+\-*/(). ]", "", expr)
+        expr = str(args.get("expression", "0"))
         try:
-            val = eval(cleaned, {"__builtins__": {}})
-            return {"expression": expr, "result": val}
-        except Exception as err:
+            return {"expression": expr, "result": _safe_arithmetic(expr)}
+        except (ValueError, ZeroDivisionError, SyntaxError, OverflowError) as err:
             return {"expression": expr, "error": str(err)}
 
     def _handle_code_execution(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        code = args.get("code", "")
+        from backend.tools.python_runner import CODE_TOOLS_ENV, code_tools_enabled, run_python_snippet
         lang = args.get("language", "python")
-        return {
-            "language": lang,
-            "stdout": f"[Sandbox vNode-22 Execution Result]\n✓ 14/14 unit tests passed in 0.042s.\nAll invariants verified cleanly.",
-            "exit_code": 0
-        }
+        if lang != "python":
+            return {"language": lang, "executed": False, "error": f"Only Python can be executed, not '{lang}'."}
+        if not code_tools_enabled():
+            return {"language": lang, "executed": False, "error": f"Code execution is disabled. Set {CODE_TOOLS_ENV}=1 to enable it."}
+        res = run_python_snippet(args.get("code", ""))
+        return {"language": lang, "executed": True, "stdout": res["output"], "stderr": res["error"], "exit_code": res["exit_code"]}
 
     def _handle_file_reader(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        path = args.get("path", "")
-        # SSRF / Directory traversal guard
-        if ".." in path or path.startswith("/"):
-            return {"path": path, "error": "Access denied: Path traversal outside project root is blocked."}
-        return {"path": path, "content": f"// Sourced content for {path}\nexport const verified = true;"}
+        path = str(args.get("path", ""))
+        target = _inside_repo(path)
+        if target is None or not target.is_file():
+            return {"path": path, "error": "File not found inside the project root (paths outside it are blocked)."}
+        if target.stat().st_size > _MAX_READ_BYTES:
+            return {"path": path, "error": f"File is larger than {_MAX_READ_BYTES // 1024} KB."}
+        return {"path": path, "content": target.read_text(encoding="utf-8", errors="replace")}
 
     def _handle_file_search(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        pat = args.get("pattern", "")
-        return {
-            "pattern": pat,
-            "matches": [
-                {"file": "backend/main.py", "line": 42, "preview": f"router.include('{pat}')"},
-                {"file": "frontend/src/App.jsx", "line": 88, "preview": f"const {pat} = useMemo()"}
-            ]
-        }
+        pattern = str(args.get("pattern", ""))
+        if not pattern:
+            return {"pattern": pattern, "matches": [], "error": "Empty pattern."}
+        matches = []
+        for f in _REPO_ROOT.rglob("*"):
+            if len(matches) >= 50:
+                break
+            if (not f.is_file() or f.suffix not in _SEARCHABLE_SUFFIXES
+                    or any(part in _SKIP_DIRS for part in f.relative_to(_REPO_ROOT).parts)
+                    or f.stat().st_size > _MAX_READ_BYTES):
+                continue
+            for lineno, line in enumerate(f.read_text(encoding="utf-8", errors="ignore").splitlines(), 1):
+                if pattern in line:
+                    matches.append({"file": f.relative_to(_REPO_ROOT).as_posix(), "line": lineno, "preview": line.strip()[:200]})
+                    if len(matches) >= 50:
+                        break
+        return {"pattern": pattern, "matches": matches, "truncated": len(matches) >= 50}
 
     def _handle_document_analyzer(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        content = args.get("content", "")
+        content = str(args.get("content", ""))
+        lines = content.splitlines()
         return {
             "word_count": len(content.split()),
-            "topics": ["Architecture Specification", "Security RBAC", "Async Orchestration"],
-            "summary": "Document specifies robust multi-tier architecture with modular agent adapters."
+            "line_count": len(lines),
+            "headings": [l.lstrip("#").strip() for l in lines if l.lstrip().startswith("#")][:30],
         }
 
     def _handle_data_analyzer(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        return {
-            "row_count": 1280,
-            "metrics": {
-                "mean_latency_ms": 42.6,
-                "p95_latency_ms": 78.1,
-                "p99_latency_ms": 112.4,
-                "error_rate_pct": 0.002
-            }
+        try:
+            data = json.loads(args.get("data_json", "[]") or "[]")
+        except json.JSONDecodeError as err:
+            return {"error": f"data_json is not valid JSON: {err}"}
+        rows = data if isinstance(data, list) else [data]
+        numeric: Dict[str, List[float]] = {}
+        for row in rows:
+            if isinstance(row, dict):
+                for key, value in row.items():
+                    if isinstance(value, (int, float)) and not isinstance(value, bool):
+                        numeric.setdefault(key, []).append(float(value))
+        metrics = {
+            key: {"count": len(vals), "mean": round(sum(vals) / len(vals), 4), "min": min(vals), "max": max(vals)}
+            for key, vals in numeric.items()
         }
+        return {"row_count": len(rows), "metrics": metrics}
 
     def _handle_http_api(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        url = args.get("url", "")
-        method = args.get("method", "GET")
         return {
-            "url": url,
-            "method": method,
-            "status_code": 200,
-            "response": {"status": "healthy", "service": "AIForge Microservice Engine"}
+            "url": args.get("url", ""),
+            "method": args.get("method", "GET"),
+            "error": "Outbound HTTP calls are not enabled for agent tools, so no request was sent.",
         }
+
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_MAX_READ_BYTES = 256 * 1024
+_SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__", "generated_projects", "dist", "build", ".claude"}
+_SEARCHABLE_SUFFIXES = {".py", ".js", ".jsx", ".ts", ".tsx", ".md", ".json", ".yml", ".yaml", ".toml", ".txt", ".css", ".html"}
+
+
+def _inside_repo(path: str) -> Optional[Path]:
+    """Resolve a relative path inside the repository, or None if it escapes it."""
+    try:
+        target = (_REPO_ROOT / path).resolve()
+    except (OSError, ValueError):
+        return None
+    return target if _REPO_ROOT in target.parents else None
+
+
+_BIN_OPS = {
+    ast.Add: lambda a, b: a + b, ast.Sub: lambda a, b: a - b, ast.Mult: lambda a, b: a * b,
+    ast.Div: lambda a, b: a / b, ast.FloorDiv: lambda a, b: a // b, ast.Mod: lambda a, b: a % b,
+}
+
+
+def _safe_arithmetic(expr: str) -> float:
+    """Evaluate + - * / // % and parentheses on numbers. No names, calls or powers (no '9**9**9')."""
+    def ev(node):
+        if isinstance(node, ast.Expression):
+            return ev(node.body)
+        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)) and not isinstance(node.value, bool):
+            return node.value
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
+            value = ev(node.operand)
+            return value if isinstance(node.op, ast.UAdd) else -value
+        if isinstance(node, ast.BinOp) and type(node.op) in _BIN_OPS:
+            return _BIN_OPS[type(node.op)](ev(node.left), ev(node.right))
+        raise ValueError("Only numbers, + - * / // % and parentheses are allowed.")
+
+    if len(expr) > 200:
+        raise ValueError("Expression is too long.")
+    return ev(ast.parse(expr, mode="eval"))
 
 
 global_tool_registry = ToolRegistry()

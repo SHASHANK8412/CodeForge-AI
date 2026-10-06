@@ -63,8 +63,9 @@ def disable_plugin(req: TogglePluginRequest):
 @router.post("/plugins/execute")
 @router.post("/api/plugins/execute")
 def execute_plugin(req: ExecuteToolRequest):
-    """Executes a plugin tool safely via ToolExecutionEngine."""
-    return global_plugin_manager.execute_plugin(req.plugin_id, req.params)
+    """Executes a plugin tool via ToolExecutionEngine (high-risk tools need AIFORGE_ENABLE_CODE_TOOLS=1)."""
+    from backend.plugins.executor import global_tool_execution_engine
+    return global_tool_execution_engine.execute_tool(req.plugin_id, req.params)
 
 
 @router.get("/plugins/logs")
