@@ -8,7 +8,7 @@ assigns frontend and backend ports, tracks running bindings, and releases ports 
 import socket
 import logging
 from typing import Dict, Any, Optional, Set
-from threading import Lock
+from threading import RLock
 from pydantic import BaseModel, Field
 
 _logger = logging.getLogger("aiforge.execution.port_manager")
@@ -29,7 +29,7 @@ class PortManager:
     def __init__(self, start_port: int = 5000, end_port: int = 9000):
         self.start_port = start_port
         self.end_port = end_port
-        self._lock = Lock()
+        self._lock = RLock()
         self._allocated_ports: Dict[str, ServicePortBinding] = {}
         self._reserved_ports: Set[int] = set()
 
