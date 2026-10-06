@@ -110,7 +110,8 @@ class LocalDockerProvider(DeploymentProvider):
                 _logger.warning(f"Docker compose failed: {e}. Falling back to process manager runner.")
 
         # Fallback process runner deployment
-        be_cmd = f"python -m uvicorn backend.main:app --host 0.0.0.0 --port {bindings['backend'].port}" if (project_path / "backend" / "main.py").exists() else f"python -m uvicorn main:app --host 0.0.0.0 --port {bindings['backend'].port}"
+        # The process runs inside backend/ when that folder exists, so the module is main:app there.
+        be_cmd = f'"{sys.executable}" -m uvicorn main:app --host 0.0.0.0 --port {bindings['backend'].port}'
         global_process_manager.start_process(
             project_id=project_id,
             service_name="backend",

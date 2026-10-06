@@ -122,6 +122,8 @@ class DeploymentOrchestrator:
         if not be_health.is_healthy or not fe_health.is_healthy:
             self._log(record, f"⚠ Health check failed (Backend: {be_health.status_code}, Frontend: {fe_health.status_code}). Triggering rollback...")
             record.status = "ROLLING_BACK"
+            # Stop the failed release first: its processes hold files the restore must replace.
+            global_local_docker_provider.destroy(project_id)
             global_rollback_manager.trigger_rollback(
                 reason=f"Health check failed (Backend: {be_health.error_message})",
                 project_path=project_path
@@ -139,6 +141,8 @@ class DeploymentOrchestrator:
         if not smoke_res.passed:
             self._log(record, f"⚠ Post-deployment smoke tests failed ({smoke_res.failed_count} failed). Triggering rollback...")
             record.status = "ROLLING_BACK"
+            # Stop the failed release first: its processes hold files the restore must replace.
+            global_local_docker_provider.destroy(project_id)
             global_rollback_manager.trigger_rollback(
                 reason="Post-deployment smoke tests failed",
                 project_path=project_path

@@ -43,7 +43,7 @@ class TestAutonomousDevOpsDeployment:
 
     def test_rollback_checkpoint_creation(self, tmp_path):
         tag = global_rollback_manager.create_deployment_checkpoint(tmp_path)
-        assert "deployment-" in tag
+        assert tag.startswith("deploy-checkpoint-")
 
         entry = global_rollback_manager.trigger_rollback(reason="Test rollback", project_path=tmp_path)
         assert entry["status"] == "RESTORED"
@@ -54,8 +54,7 @@ class TestAutonomousDevOpsDeployment:
         assert inc.project_id == "DevOpsTestApp"
         assert inc.status == "OPEN"
 
-    @pytest.mark.asyncio
-    async def test_orchestrator_deployment_pipeline(self, tmp_path):
+    def test_orchestrator_deployment_pipeline(self, tmp_path):
         proj_dir = tmp_path / "DevOpsE2EApp"
         proj_dir.mkdir(parents=True, exist_ok=True)
         (proj_dir / "backend").mkdir(parents=True, exist_ok=True)
@@ -73,7 +72,7 @@ class TestAutonomousDevOpsDeployment:
             "DATABASE_URL": "postgresql://user:pass@localhost:5432/appdb"
         })
 
-        record = await global_deployment_orchestrator.deploy_project_async("DevOpsE2EApp", proj_dir, manifest)
+        record = asyncio.run(global_deployment_orchestrator.deploy_project_async("DevOpsE2EApp", proj_dir, manifest))
         assert record.project_id == "DevOpsE2EApp"
         assert record.status in ["VERIFIED", "RUNNING"]
         assert record.git_checkpoint is not None

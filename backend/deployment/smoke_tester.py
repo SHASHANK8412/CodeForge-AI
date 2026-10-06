@@ -87,15 +87,18 @@ class SmokeTester:
             # 3. Auth Endpoint POST
             t0 = time.time()
             try:
-                res = await client.post(f"{backend_url}/api/auth/login", json={"email": "admin@aiforge.io", "password": "admin123"})
-                ok = (res.status_code == 200)
-                cases.append(SmokeTestCase(
-                    name="POST /api/auth/login (Auth Endpoint)",
-                    passed=ok,
-                    status_code=res.status_code,
-                    duration_ms=round((time.time() - t0) * 1000, 2),
-                    error_message=None if ok else f"HTTP {res.status_code}"
-                ))
+                # Liveness only: no credentials are guessed. A 4xx rejection means the endpoint is up;
+                # 404/405 means the project has no such route, which isn't a failure.
+                res = await client.post(f"{backend_url}/api/auth/login", json={})
+                if res.status_code not in (404, 405):
+                    ok = res.status_code < 500
+                    cases.append(SmokeTestCase(
+                        name="POST /api/auth/login (Auth Endpoint)",
+                        passed=ok,
+                        status_code=res.status_code,
+                        duration_ms=round((time.time() - t0) * 1000, 2),
+                        error_message=None if ok else f"HTTP {res.status_code}"
+                    ))
             except Exception as e:
                 cases.append(SmokeTestCase(
                     name="POST /api/auth/login (Auth Endpoint)",

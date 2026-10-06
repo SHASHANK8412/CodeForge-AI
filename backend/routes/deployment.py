@@ -373,25 +373,34 @@ def diagnose_deployment_endpoint(generation_id: str, req: DiagnoseRequest):
 
 
 class RollbackRequest(BaseModel):
-    target_version: Optional[str] = "v1"
+    target_version: Optional[str] = None
 
 
 @router.post("/api/projects/{generation_id}/deployment/rollback")
 def rollback_deployment_endpoint(generation_id: str, req: RollbackRequest):
-    """Safe snapshot rollback to previous deployment."""
+    """Restore the project directory from a pre-deployment checkpoint."""
     from backend.deployment.rollback_manager import global_rollback_manager
-    project_dir = GENERATED_PROJECTS_DIR / generation_id
+    from backend.routes.export import _safe_project_dir
+
+    # Rollback deletes and rewrites files, so the directory must be inside generated_projects/.
+    project_dir = _safe_project_dir(generation_id)
+    if project_dir is None:
+        raise HTTPException(status_code=404, detail=f"No generated project '{generation_id}'.")
     state = get_deployment_status_endpoint(generation_id)
 
-    tag = global_rollback_manager.rollback_to_checkpoint(project_dir, req.target_version)
-    state["status"] = "ROLLED_BACK"
+    restored = global_rollback_manager.rollback_to_checkpoint(project_dir, req.target_version)
     now_str = datetime.now().strftime("%H:%M:%S")
-    state["logs"].append(f"[{now_str}] [ROLLBACK] Reverted project deployment to checkpoint {req.target_version}.")
+    if not restored:
+        state["logs"].append(f"[{now_str}] [ROLLBACK] No checkpoint available; nothing was restored.")
+        return {"status": "NO_CHECKPOINT", "target_version": req.target_version,
+                "message": "No deployment checkpoint exists for this project; nothing was restored."}
 
+    state["status"] = "ROLLED_BACK"
+    state["logs"].append(f"[{now_str}] [ROLLBACK] Restored checkpoint {restored}.")
     return {
         "status": "ROLLED_BACK",
-        "target_version": req.target_version,
-        "message": f"Successfully rolled back deployment to {req.target_version}"
+        "target_version": restored,
+        "message": f"Restored checkpoint {restored}",
     }
 
 
