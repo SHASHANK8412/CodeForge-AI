@@ -1,3 +1,4 @@
+import asyncio
 import os
 import logging
 import json
@@ -964,7 +965,8 @@ async def debug_node(state: ProjectState) -> dict:
         files_map=files_map
     )
 
-    debug_res = global_debug_agent.diagnose_and_repair(dict(state))
+    # May call the coding model (LLM rewrite fallback): keep it off the event loop.
+    debug_res = await asyncio.to_thread(global_debug_agent.diagnose_and_repair, dict(state))
 
     try:
         global_project_memory_service.store_memory(MemoryRecord(

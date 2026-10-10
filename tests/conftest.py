@@ -19,3 +19,9 @@ def _isolated_generation_store(tmp_path_factory, monkeypatch):
 def _local_test_sandbox(monkeypatch):
     """Generated-project tests run locally unless a test opts into the Docker sandbox."""
     monkeypatch.setenv("AIFORGE_TEST_SANDBOX", "local")
+
+
+@pytest.fixture(autouse=True)
+def _no_llm_repair(monkeypatch):
+    """Repair tests exercise the deterministic strategies; the LLM rewrite needs a live model."""
+    monkeypatch.setenv("AIFORGE_LLM_REPAIR", "0")

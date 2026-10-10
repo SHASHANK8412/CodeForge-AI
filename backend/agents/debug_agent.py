@@ -267,37 +267,26 @@ class DebugAgent(BaseAgent):
                     continue
             safe_files_to_modify.append(clean_rel)
 
-        # 4. Formulate targeted code modification
-        if safe_files_to_modify:
-            target_rel = safe_files_to_modify[0]
-            existing_content = files.get(target_rel, "")
-
-            if error_type == "IMPORT_ERROR":
-                match = re.search(r"No module named '([^']+)'", combined_output)
-                mod_name = match.group(1) if match else None
-                if mod_name and target_rel == "requirements.txt":
-                    if mod_name not in existing_content:
-                        proposed_changes[target_rel] = f"{existing_content.strip()}\n{mod_name}\n".lstrip()
-                elif mod_name and (f"from {mod_name} import" in existing_content or f"import {mod_name}" in existing_content):
-                    # Replace with graceful fallback or standard alternative
-                    lines = existing_content.splitlines()
-                    new_lines = []
-                    for l in lines:
-                        if f"from {mod_name} import" in l or f"import {mod_name}" in l:
-                            new_lines.append(f"# Fixed import for {mod_name}")
-                            new_lines.append("pass")
-                        else:
-                            new_lines.append(l)
-                    proposed_changes[target_rel] = "\n".join(new_lines) + "\n"
-                elif "WRONG" in existing_content:
-                    proposed_changes[target_rel] = existing_content.replace("'WRONG'", "'OK'").replace('"WRONG"', '"OK"')
-                else:
-                    proposed_changes[target_rel] = existing_content
-
-            elif "WRONG" in existing_content:
-                proposed_changes[target_rel] = existing_content.replace("'WRONG'", "'OK'").replace('"WRONG"', '"OK"')
-            else:
-                proposed_changes[target_rel] = existing_content
+        # 4. Real repairs only (backend/agents/repair_strategies.py): missing imports, missing
+        # requirements, a single unambiguous literal mismatch, then an LLM rewrite of the one
+        # implicated file. Nothing is commented out, and an unchanged file is not a fix.
+        from backend.agents.repair_strategies import propose_repairs
+        gate_errors = (state.get("quality_gate") or {}).get("errors", [])
+        failure_text = "\n".join(
+            str(f.get("error") or f.get("message") or "") if isinstance(f, dict) else str(f)
+            for f in list(failures) + list(failed_tests)
+        )
+        strategy, raw_changes = propose_repairs(files, f"{combined_output}\n{failure_text}", gate_errors)
+        for rel, content in raw_changes.items():
+            clean_rel = rel.replace("\\", "/").lstrip("/")
+            if ".." in clean_rel:
+                continue
+            if target_path and not str((target_path / clean_rel).resolve()).startswith(str(target_path)):
+                continue
+            proposed_changes[clean_rel] = content
+        if proposed_changes:
+            safe_files_to_modify = list(proposed_changes)
+            root_cause = f"{root_cause} Repair strategy: {strategy}."
 
         # 5. Build 6-question structured explanation
         target_name = safe_files_to_modify[0] if safe_files_to_modify else "project source"
@@ -305,19 +294,19 @@ class DebugAgent(BaseAgent):
             f"1. What failed: {diagnosis}\n"
             f"2. Why did it fail: {root_cause}\n"
             f"3. Which file is responsible: {target_name}\n"
-            f"4. What exact change is required: Apply targeted patch to resolve {error_type} in {target_name}.\n"
+            f"4. What exact change is required: {('Patch ' + ', '.join(proposed_changes)) if proposed_changes else 'No automatic fix found; needs human guidance'}.\n"
             f"5. Could this fix break another component: Low risk. Fix is isolated to {target_name}.\n"
             f"6. How should it be tested: Re-run test suite via pytest."
         )
 
         return DebugResult(
-            success=len(safe_files_to_modify) > 0 or error_type != "UNKNOWN_ERROR",
+            success=bool(proposed_changes),
             diagnosis=diagnosis,
             root_cause=root_cause,
             error_type=error_type,
             files_to_modify=safe_files_to_modify,
             changes=proposed_changes,
-            confidence=0.95 if safe_files_to_modify else 0.60,
+            confidence=(0.95 if strategy != "llm_rewrite_file" else 0.6) if proposed_changes else 0.0,
             explanation=six_point_explanation
         )
 
@@ -325,4 +314,4 @@ class DebugAgent(BaseAgent):
 global_debug_agent = DebugAgent()
 
 
-
+
