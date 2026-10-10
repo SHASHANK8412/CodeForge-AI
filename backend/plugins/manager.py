@@ -26,6 +26,30 @@ class PluginManager:
     def __init__(self) -> None:
         self.registry = global_plugin_registry
         self.monitor = PluginMonitor()
+        # Loaded plugin implementations by id (lower-cased name), for execute_plugin.
+        self.loaded_instances: Dict[str, Any] = {}
+
+    def execute_plugin(self, plugin_id: str, context: Dict[str, Any]) -> Any:
+        """
+        Run a loaded, active plugin with its lifecycle hooks: before_execute -> execute ->
+        after_execute, rolling back if execution raises.
+        """
+        meta = self.registry.get_plugin(plugin_id)
+        if not meta:
+            raise ValueError(f"Plugin '{plugin_id}' is not installed.")
+        if str(meta.get("status", "")).lower() != "active":
+            raise ValueError(f"Plugin '{plugin_id}' is not currently active.")
+        instance = self.loaded_instances.get(plugin_id) or self.loaded_instances.get(str(plugin_id).lower())
+        if instance is None:
+            raise ValueError(f"Plugin '{plugin_id}' has no loaded implementation.")
+        ctx = instance.before_execute(context) if hasattr(instance, "before_execute") else context
+        try:
+            result = instance.execute(ctx)
+        except Exception:
+            if hasattr(instance, "rollback"):
+                instance.rollback(ctx)
+            raise
+        return instance.after_execute(result) if hasattr(instance, "after_execute") else result
 
     def discover_and_load_plugins(self) -> List[Dict[str, Any]]:
         _logger.info("PluginManager: Discovered and loaded installed plugins into active registry.")

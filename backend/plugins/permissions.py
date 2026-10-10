@@ -40,6 +40,29 @@ class PluginPermissionsSystem:
         return True
 
 
+class PermissionValidator:
+    """
+    Sandbox permission gate for plugin capabilities (the Day 23 plugin API): only permissions in
+    VALID_PERMISSIONS can be granted, and a request passes only if every item was granted.
+    """
+
+    VALID_PERMISSIONS = {"filesystem:read", "filesystem:write", "network:outbound", "env:read", "subprocess:run"}
+
+    def __init__(self, allowed_permissions: Optional[List[str]] = None) -> None:
+        allowed_permissions = ["filesystem:read"] if allowed_permissions is None else allowed_permissions
+        self.allowed = {p for p in allowed_permissions if p in self.VALID_PERMISSIONS}
+
+    def verify_permissions(self, requested: List[str]) -> bool:
+        for req in requested:
+            if req not in self.allowed:
+                _logger.warning("Permission blocked: sandbox rejected access to '%s'", req)
+                return False
+        return True
+
+    def has_permission(self, permission: str) -> bool:
+        return permission in self.allowed
+
+
 PermissionManager = PluginPermissionsSystem
 global_plugin_permissions_system = PluginPermissionsSystem()
 global_permission_manager = global_plugin_permissions_system
