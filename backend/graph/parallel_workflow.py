@@ -271,29 +271,20 @@ async def human_approval_node(state: ProjectState) -> dict:
     project_id = state.get("project_id") or state.get("project_name") or "default_project"
     arch_json = state.get("architecture") or memory_manager.get_agent_output(session_id, "architect") or {}
 
-    fe_tech = arch_json.get("frontend", "React + Vite")
-    be_tech = arch_json.get("backend", "FastAPI")
-    db_tech = arch_json.get("database", "PostgreSQL")
-    auth_tech = arch_json.get("authentication", "JWT Bearer")
-
-    components = arch_json.get("components") or [
-        "User Authentication & Authorization",
-        "Core REST API Endpoints & Models",
-        "Interactive React Frontend Application",
-        "PostgreSQL Relational Database Schema"
-    ]
-
-    expected_files = arch_json.get("files") or [
-        "frontend/src/App.jsx",
-        "backend/main.py",
-        "backend/models.py",
-        "backend/database.py"
-    ]
-
-    risks = arch_json.get("risks") or [
-        "Verify CORS and JWT secret configurations before production deployment",
-        "Ensure database connection pool parameters match target environment"
-    ]
+    # Everything shown comes from the plan and the architect's output; what they do not state is
+    # left empty for the reviewer to notice (this used to fill in a generic stack, components,
+    # files and risks, so every review looked complete).
+    plan_json = state.get("plan") if isinstance(state.get("plan"), dict) else {}
+    tech_stack = {key: arch_json.get(key) or plan_json.get(key) or (plan_json.get("tech_stack") or {}).get(key)
+                  for key in ("frontend", "backend", "database")}
+    tech_stack = {k: v for k, v in tech_stack.items() if v}
+    if arch_json.get("authentication"):
+        tech_stack["authentication"] = arch_json["authentication"]
+    document = arch_json.get("document") or ""
+    from backend.services.validator import _section, _sections
+    risk_text = _section(_sections(document), "risk") if document else ""
+    risks = arch_json.get("risks") or [line.strip().lstrip("-*+ ").strip() for line in risk_text.splitlines()
+                                       if line.strip().startswith(("-", "*", "+"))]
 
     approval_req = {
         "title": "Architecture Review Required",
@@ -302,24 +293,24 @@ async def human_approval_node(state: ProjectState) -> dict:
         "project_name": state.get("project_name", project_id),
         "reason": "Please review and approve the planned system architecture, tech stack, and components before parallel code generation commences.",
         "architecture": arch_json,
-        "tech_stack": {
-            "frontend": fe_tech,
-            "backend": be_tech,
-            "database": db_tech,
-            "authentication": auth_tech,
-        },
-        "components": components,
-        "database_design": arch_json.get("database_design", db_tech),
+        "architecture_document": document,
+        "tech_stack": tech_stack,
+        "components": arch_json.get("components") or [],
+        "routes": arch_json.get("routes") or [],
+        "models": arch_json.get("models") or [],
+        "database_design": arch_json.get("database_design") or arch_json.get("models") or [],
         "agents_ready": ["Frontend Agent", "Backend Agent", "Database Agent"],
         "risks": risks,
         "architecture_check": state.get("architecture_check") or {},
-        "expected_files": expected_files,
+        "expected_files": arch_json.get("files") or (arch_json.get("folder_structure") or {}).get("files") or [],
         "requested_by": "Architect Agent",
         "status": state.get("approval_status", "pending"),
     }
 
     return {
         "approval_required": True,
+        # A new decision is needed: a status left from an earlier checkpoint must not decide this one.
+        "approval_status": "pending",
         "approval_stage": "architecture",
         "approval_request": approval_req,
         "status": "WAITING_FOR_APPROVAL",
@@ -370,7 +361,7 @@ async def frontend_node(state: ProjectState) -> dict:
             "stream_events": ["✔ Frontend generated (Cached)"]
         }
 
-    fe_prompt = global_prompt_builder.build_frontend_prompt(arch_json if isinstance(arch_json, dict) else {})
+    fe_prompt = global_prompt_builder.build_frontend_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"))
     with Timer() as timer:
         frontend_code = await frontend_agent.run_async(fe_prompt)
 
@@ -402,7 +393,7 @@ async def backend_node(state: ProjectState) -> dict:
             "stream_events": ["✔ Backend generated (Cached)"]
         }
 
-    be_prompt = global_prompt_builder.build_backend_prompt(arch_json if isinstance(arch_json, dict) else {})
+    be_prompt = global_prompt_builder.build_backend_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"))
     with Timer() as timer:
         backend_code = await backend_agent.run_async(be_prompt)
 
@@ -434,7 +425,7 @@ async def database_node(state: ProjectState) -> dict:
             "stream_events": ["✔ Database generated (Cached)"]
         }
 
-    db_prompt = global_prompt_builder.build_database_prompt(arch_json if isinstance(arch_json, dict) else {})
+    db_prompt = global_prompt_builder.build_database_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"))
     with Timer() as timer:
         database_code = await database_agent.run_async(db_prompt)
 
@@ -565,6 +556,7 @@ async def testing_node(state: ProjectState) -> dict:
     testing_prompt = global_prompt_builder.build_testing_prompt(
         backend_code=str(state.get("backend", "")),
         frontend_code=str(state.get("frontend", "")),
+        files=state.get("files") or {},
     )
 
     with Timer() as timer:
@@ -695,6 +687,9 @@ async def testing_node(state: ProjectState) -> dict:
         "tests": raw_tests,
         "files": files_map,
         "test_results": mapped_test_results,
+        # Routing decides on this run's result; it was computed but not returned, so the router
+        # read the earlier execution check's result (e.g. a failed frontend build command).
+        "execution_results": exec_res,
         "quality_gate": gate,
         "test_status": "passed" if is_success else "failed",
         "failed_tests": mapped_test_results["failed_tests"],
@@ -1099,47 +1094,47 @@ def restore_file_backups(state: ProjectState) -> dict:
 from backend.exporter.gate import global_export_gate
 
 
-def route_after_testing(state: ProjectState) -> str:
+def _tests_verified(state: ProjectState) -> bool:
     exec_res = state.get("execution_results", {}) or {}
     test_res = state.get("test_results", {}) or {}
-    status = state.get("status", "")
     quality_report = state.get("quality_report")
-
-    exit_code = exec_res.get("exit_code", -1)
-    is_test_success = test_res.get("success", False)
-
     q_status = getattr(quality_report, "overall_status", None) if quality_report else None
     if isinstance(quality_report, dict):
         q_status = quality_report.get("overall_status")
+    return (exec_res.get("exit_code", -1) == 0 and bool(test_res.get("success", False))
+            and q_status in (None, "PASS", "WARN", GateStatus.PASS, GateStatus.WARN))
 
-    if exit_code == 0 and is_test_success and q_status in (None, "PASS", "WARN", GateStatus.PASS, GateStatus.WARN):
-        global_export_gate.mark_verified(state)
-        state["human_intervention_required"] = False
-        return "final_approval"
 
-    if status in ["UNSUPPORTED", "SECURITY_ERROR"]:
-        return "final_approval"
-
+def repair_escalation(state: ProjectState) -> Optional[str]:
+    """
+    Why the bounded repair loop has to stop and ask a human ("STOPPED_MAX_ATTEMPTS" /
+    "STOPPED_REPEATED_FAILURE"), or None. Shared by the router and final_approval_node: a
+    conditional-edge function cannot write state (LangGraph discards it), so the node that
+    persists the escalation recomputes it.
+    """
+    if _tests_verified(state) or state.get("status", "") in ("UNSUPPORTED", "SECURITY_ERROR"):
+        return None
+    if not state.get("test_results"):
+        return None
+    if global_version_manager.detect_repeated_failure(state.get("root_causes", [])):
+        return "STOPPED_REPEATED_FAILURE"
     attempt = state.get("retry_count", state.get("repair_attempt", state.get("iteration", 0)))
     max_attempts = state.get("max_retries", state.get("max_repair_attempts", state.get("max_iterations", MAX_REPAIR_ATTEMPTS)))
-
-    root_causes = state.get("root_causes", [])
-    if global_version_manager.detect_repeated_failure(root_causes):
-        state["status"] = "WAITING_FOR_APPROVAL"
-        state["approval_stage"] = "debug_escalation"
-        state["human_intervention_required"] = True
-        state["repair_status"] = "STOPPED_REPEATED_FAILURE"
-        _logger.warning("Repeated repair failure detected. Escalate to human intervention.")
-        return "final_approval"
-
     if attempt >= max_attempts:
-        state["status"] = "WAITING_FOR_APPROVAL"
-        state["approval_stage"] = "debug_escalation"
-        state["human_intervention_required"] = True
-        state["repair_status"] = "STOPPED_MAX_ATTEMPTS"
-        _logger.warning(f"Maximum repair attempts ({max_attempts}) reached. Escalate to human intervention.")
-        return "final_approval"
+        return "STOPPED_MAX_ATTEMPTS"
+    return None
 
+
+def route_after_testing(state: ProjectState) -> str:
+    if _tests_verified(state):
+        global_export_gate.mark_verified(state)
+        return "final_approval"
+    if state.get("status", "") in ("UNSUPPORTED", "SECURITY_ERROR"):
+        return "final_approval"
+    escalation = repair_escalation(state)
+    if escalation:
+        _logger.warning("Repair loop stopped (%s). Escalating to human intervention.", escalation)
+        return "final_approval"
     return "debug"
 
 
@@ -1160,7 +1155,8 @@ async def final_approval_node(state: ProjectState) -> dict:
     fix_history = list(state.get("fix_history", []) or [])
     failure_history = list(state.get("failure_history", []) or [])
     project_id = str(state.get("project_id") or state.get("project_name") or "default_project")
-    is_escalation = bool(state.get("human_intervention_required") or state.get("approval_stage") == "debug_escalation")
+    escalation = repair_escalation(state)
+    is_escalation = bool(escalation) or bool(state.get("human_intervention_required"))
 
     if is_escalation:
         final_req = {
@@ -1248,9 +1244,12 @@ async def final_approval_node(state: ProjectState) -> dict:
 
     return {
         "approval_required": True,
+        # The architecture approval must not carry over and approve the release.
+        "approval_status": "pending",
         "approval_stage": "debug_escalation" if is_escalation else "final",
         "approval_request": final_req,
         "human_intervention_required": is_escalation,
+        "repair_status": escalation or state.get("repair_status"),
         "status": "WAITING_FOR_APPROVAL",
         "execution_status": "WAITING_FOR_APPROVAL",
         "current_step": "final_approval",
@@ -1261,17 +1260,12 @@ async def final_approval_node(state: ProjectState) -> dict:
 
 
 def route_after_final_approval(state: ProjectState) -> str:
+    # Routing only: the retry-counter reset for human guidance is part of the approval update
+    # (GenerationManager.reject_generation), since a router cannot write state.
     status = (state.get("approval_status") or "").lower()
-    stage = (state.get("approval_stage") or "").lower()
     if status in ("approved", "proceed"):
-        state["human_intervention_required"] = False
         return "packaging"
     elif status in ("rejected", "retry", "debug"):
-        state["human_intervention_required"] = False
-        # Reset attempt counter when user provides new guidance to allow fresh debug cycles
-        state["retry_count"] = 0
-        state["repair_attempt"] = 0
-        state["current_debug_cycle"] = 0
         return "debug"
     return "final_approval"
 
@@ -1454,7 +1448,8 @@ async def live_deploy_node(state: ProjectState) -> dict:
     _fire_lifecycle("agent_completed", "live_deploy")
     return {
         "deployment_status": deployment_status,
-        "deployment_url": prov_res.frontend_url,
+        "deployment_url": prov_res.frontend_url or prov_res.backend_url,
+        "deployment_backend_url": prov_res.backend_url,
         "current_step": "live_deploy",
         "stream_events": [
             f"✔ Packaging container deployment for {spec.frontend_tech.upper()} stack...",
@@ -1472,20 +1467,27 @@ async def health_check_node(state: ProjectState) -> dict:
     project_id = state.get("project_id", state.get("project_name", "aiforge-demo"))
     project_path_str = state.get("project_path", "")
     project_dir = Path(project_path_str) if project_path_str else (GENERATED_PROJECTS_DIR / project_id)
-    
-    backend_url = state.get("deployment_url", "http://localhost:8000")
-    
+
+    # Nothing was deployed (no Docker, preview disabled, start-up failed): there is nothing to
+    # probe or repair. This used to probe http://localhost:8000 - AIForge's own API - and, when
+    # that failed, "repair" the project three times and roll its files back.
+    backend_url = state.get("deployment_backend_url") or state.get("deployment_url")
+    if state.get("deployment_status") != "LIVE" or not backend_url:
+        _fire_lifecycle("agent_completed", "health_check")
+        return {
+            "health_status": "NOT_DEPLOYED",
+            "current_step": "health_check",
+            "stream_events": ["ℹ Health check skipped: the app is not running (see the live deploy step)."],
+        }
+
     import httpx
-    is_healthy = False
-    try:
-        health_probe_url = f"{backend_url}/health"
-        async with httpx.AsyncClient(timeout=3.0) as client:
-            res = await client.get(health_probe_url)
-            if res.status_code == 200:
-                is_healthy = True
-    except Exception as e:
-        _logger.warning(f"Health probe to {backend_url}/health failed: {e}")
-        
+    # Same probe the preview used to verify the deploy (/health, /docs or /), so an app without
+    # a /health route is not "repaired" and rolled back while it is running fine.
+    from backend.execution.preview_manager import _probe
+    is_healthy = bool(await asyncio.to_thread(_probe, backend_url, 10))
+    if not is_healthy:
+        _logger.warning(f"Health probe to {backend_url} got no answer")
+
     attempts = 0
     max_attempts = 3
     
@@ -1662,11 +1664,19 @@ builder.add_edge("ci_check", "live_deploy")
 builder.add_edge("live_deploy", "health_check")
 builder.add_edge("health_check", END)
 
-# Compile LangGraph with persistent checkpointer and HITL interruption points
-parallel_graph = builder.compile(
-    checkpointer=global_persistent_checkpointer,
-    interrupt_before=["human_approval", "final_approval"],
-)
+# HITL checkpoints pause *after* the approval nodes: they build the approval request (the
+# architecture summary, test results, release report) that the reviewer sees. Pausing before
+# them meant they never ran - approval requests were empty and the UI showed placeholders.
+# While pending, each router sends the run back to the same node, so a resume records the
+# decision as that node (GenerationManager: as_node=next[0]) and routing continues from it.
+HITL_CHECKPOINTS = ["human_approval", "final_approval"]
+
+
+def compile_parallel_graph(checkpointer):
+    return builder.compile(checkpointer=checkpointer, interrupt_after=HITL_CHECKPOINTS)
+
+
+parallel_graph = compile_parallel_graph(global_persistent_checkpointer)
 
 
 

@@ -46,10 +46,6 @@ class AutopilotService:
 
     def get_autopilot_state(self, generation_id: str, user_id: str) -> Dict[str, Any]:
         rec = _store.get(generation_id)
-        if not rec and (generation_id in ("aiforge-demo", "aiforge_demo") or generation_id.startswith("aiforge-demo")):
-            # Auto-seed demo generation for demo requests
-            from backend.generation.routes import _seed_demo_generation
-            rec = _seed_demo_generation(generation_id, user_id)
 
         if not rec:
             return {

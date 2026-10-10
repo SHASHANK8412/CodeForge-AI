@@ -147,11 +147,17 @@ async def test_health_check_auto_repair_recovery_loop(monkeypatch):
             self.status_code = status_code
 
     import httpx
+    # First probe (the same one the preview uses to verify a deploy) gets no answer ...
+    def mock_first_probe(url, timeout):
+        nonlocal call_count
+        call_count += 1
+        return None
+    monkeypatch.setattr("backend.execution.preview_manager._probe", mock_first_probe)
+
+    # ... and after the repair and redeploy the app answers.
     async def mock_get_latched(url, *args, **kwargs):
         nonlocal call_count
         call_count += 1
-        if call_count < 2:
-            raise Exception("Connection timeout error")
         return MockResponse(status_code=200)
     monkeypatch.setattr(httpx.AsyncClient, "get", mock_get_latched)
 
@@ -174,7 +180,10 @@ async def test_health_check_auto_repair_recovery_loop(monkeypatch):
         "project_id": project_id,
         "project_name": project_id,
         "project_path": str(project_dir),
-        "deployment_url": "http://localhost:8000",
+        # As left by live_deploy_node after a deploy; without "LIVE" there is nothing to check.
+        "deployment_status": "LIVE",
+        "deployment_url": "http://localhost:3000",
+        "deployment_backend_url": "http://localhost:8000",
         "stream_events": []
     }
     
@@ -183,6 +192,7 @@ async def test_health_check_auto_repair_recovery_loop(monkeypatch):
     assert res["health_status"] == "HEALTHY"
     assert res["deployment_status"] == "LIVE"
     assert call_count >= 2  # Proves loop executed multiple times and resolved
+    assert (project_dir / "backend/main.py").read_text(encoding="utf-8") == "print('fixed app')"
 
     # Cleanup mock directory
     import subprocess

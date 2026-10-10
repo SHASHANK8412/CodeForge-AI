@@ -80,61 +80,61 @@ def _extract_files(text: str, agent_name: str = "", default_filename: str = "") 
     if not text or not text.strip():
         return files
 
+    # A block closes at a line that is only a fence. Requiring that keeps an empty block (an
+    # empty __init__.py) from running on into the next file, and a stray "```python" line inside
+    # a double-wrapped block from closing it early. Empty files are kept.
+    open_fence = r"```[a-zA-Z0-9_+\-]*[ \t]*\n"
+    close_fence = r"^[ \t]*```[ \t]*$"
+    flags = re.DOTALL | re.MULTILINE | re.IGNORECASE
+
+    def body(raw: str) -> str:
+        return raw[:-1] if raw.endswith("\n") else raw
+
     # Pattern 1: # filepath: path/to/file.ext \n ```language ... ```
     prefix_pattern = re.compile(
-        r"(?:#|//|--|/\*|<!--|\*)\s*(?:filepath|filename|file|path):\s*([^\n\r\*]+?)(?:\*/|-->)?\s*\n\s*```[a-zA-Z0-9_\-]*\s*\n(.*?)(?:```)",
-        re.DOTALL | re.IGNORECASE
+        r"(?:#|//|--|/\*|<!--|\*)[ \t]*(?:filepath|filename|file|path):[ \t]*([^\n\r\*]+?)(?:\*/|-->)?[ \t]*\n\s*"
+        + open_fence + r"(.*?)" + close_fence,
+        flags
     )
 
     for match in prefix_pattern.finditer(text):
-        filepath = match.group(1).strip()
-        content = match.group(2)
-        filepath = re.sub(r"^[#/\-\*\s]+", "", filepath).strip()
+        filepath = re.sub(r"^[#/\-\*\s]+", "", match.group(1).strip()).strip()
         normalized_path = filepath.replace("\\", "/").strip("/")
-        if normalized_path and content:
-            files[normalized_path] = content
+        if normalized_path:
+            files[normalized_path] = body(match.group(2))
 
     # Pattern 2: ```language \n # filepath: path/to/file.ext \n ... ```
     annotated_pattern = re.compile(
-        r"```[a-zA-Z0-9_\-]*\s*\n"
-        r"(?:#|//|--|/\*|<!--|\*)\s*(?:filepath|filename|file|path):\s*([^\n\r\*]+?)(?:\*/|-->)?\s*\n"
-        r"(.*?)"
-        r"\n```",
-        re.DOTALL | re.IGNORECASE
+        open_fence
+        + r"(?:#|//|--|/\*|<!--|\*)[ \t]*(?:filepath|filename|file|path):[ \t]*([^\n\r\*]+?)(?:\*/|-->)?[ \t]*\n"
+        + r"(.*?)" + close_fence,
+        flags
     )
 
     for match in annotated_pattern.finditer(text):
-        filepath = match.group(1).strip()
-        content = match.group(2)
-
-        filepath = re.sub(r"^[#/\-\*\s]+", "", filepath).strip()
+        filepath = re.sub(r"^[#/\-\*\s]+", "", match.group(1).strip()).strip()
         normalized_path = filepath.replace("\\", "/").strip("/")
-
-        if normalized_path and content:
-            files[normalized_path] = content
+        if normalized_path:
+            files[normalized_path] = body(match.group(2))
 
     # Pattern 3: ### backend/auth.py \n ```python \n ... ```
     header_pattern = re.compile(
-        r"(?:###|##|#)\s*([a-zA-Z0-9_\-/\.]+\.[a-zA-Z0-9]+)\s*\n\s*```[a-zA-Z0-9_\-]*\s*\n(.*?)\n```",
-        re.DOTALL | re.IGNORECASE
+        r"^[ \t]*(?:###|##|#)[ \t]*`?([a-zA-Z0-9_\-/\.]+\.[a-zA-Z0-9]+)`?[ \t]*:?[ \t]*\n\s*"
+        + open_fence + r"(.*?)" + close_fence,
+        flags
     )
 
     for match in header_pattern.finditer(text):
-        filepath = match.group(1).strip()
-        content = match.group(2)
-        normalized_path = filepath.replace("\\", "/").strip("/")
-        if normalized_path and content and normalized_path not in files:
-            files[normalized_path] = content
+        normalized_path = match.group(1).strip().replace("\\", "/").strip("/")
+        if normalized_path and normalized_path not in files:
+            files[normalized_path] = body(match.group(2))
 
     # If annotated blocks were found, return them
     if files:
         return files
 
     # Fallback 1: look for unannotated code blocks
-    unannotated_pattern = re.compile(
-        r"```[a-zA-Z0-9_\-]*\s*\n(.*?)\n```",
-        re.DOTALL
-    )
+    unannotated_pattern = re.compile(open_fence + r"(.*?)" + close_fence, flags)
 
     blocks = unannotated_pattern.findall(text)
     default_path = default_filename or AGENT_DEFAULT_PATHS.get(agent_name.lower(), "")

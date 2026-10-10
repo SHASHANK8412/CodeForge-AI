@@ -32,24 +32,15 @@ export default function ApprovalPanel({
   const reason = approvalRequest.reason || 'Please review and approve the planned system configuration before continuing.';
   const projectName = approvalRequest.project_name || 'AIForge Project';
 
-  const techStack = approvalRequest.tech_stack || {
-    frontend: 'React + Vite',
-    backend: 'FastAPI',
-    database: 'PostgreSQL',
-    authentication: 'JWT Bearer',
-  };
-
-  const components = approvalRequest.components || [
-    'User Authentication & JWT Verification',
-    'REST API Router & Business Logic',
-    'Interactive React Dashboard Components',
-    'Relational Schema & Database Migrations'
-  ];
-
-  const risks = approvalRequest.risks || [
-    'Ensure production environment variables are configured before deployment',
-    'Verify CORS permissions between frontend and backend endpoints'
-  ];
+  // Only what the plan and architect produced; empty means the architect did not say.
+  const techStack = approvalRequest.tech_stack || {};
+  const components = approvalRequest.components || [];
+  const routes = approvalRequest.routes || [];
+  const models = approvalRequest.models || [];
+  const risks = approvalRequest.risks || [];
+  const archCheck = approvalRequest.architecture_check || {};
+  const archDocument = approvalRequest.architecture_document || '';
+  const [showDocument, setShowDocument] = useState(false);
 
   const readyAgents = approvalRequest.agents_ready || (isFinal
     ? ['Project Packaging Agent', 'Deployment Agent', 'Live Deploy Agent']
@@ -128,41 +119,60 @@ export default function ApprovalPanel({
               <FaLayerGroup className="w-3.5 h-3.5" /> Selected Technology Stack
             </h4>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-cyan-500/30">
-                <span className="text-[10px] text-slate-400 uppercase font-mono block">Frontend</span>
-                <span className="text-sm font-bold text-white mt-0.5 block">{techStack.frontend || 'React + Vite'}</span>
-              </div>
-              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-indigo-500/30">
-                <span className="text-[10px] text-slate-400 uppercase font-mono block">Backend</span>
-                <span className="text-sm font-bold text-white mt-0.5 block">{techStack.backend || 'FastAPI'}</span>
-              </div>
-              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-emerald-500/30">
-                <span className="text-[10px] text-slate-400 uppercase font-mono block">Database</span>
-                <span className="text-sm font-bold text-white mt-0.5 block">{techStack.database || 'PostgreSQL'}</span>
-              </div>
-              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-purple-500/30">
-                <span className="text-[10px] text-slate-400 uppercase font-mono block">Authentication</span>
-                <span className="text-sm font-bold text-white mt-0.5 block">{techStack.authentication || 'JWT'}</span>
-              </div>
+              {[['Frontend', 'frontend', 'border-cyan-500/30'], ['Backend', 'backend', 'border-indigo-500/30'],
+                ['Database', 'database', 'border-emerald-500/30'], ['Authentication', 'authentication', 'border-purple-500/30']]
+                .map(([label, key, border]) => (
+                  <div key={key} className={`p-3.5 rounded-xl bg-slate-900/80 border ${border}`}>
+                    <span className="text-[10px] text-slate-400 uppercase font-mono block">{label}</span>
+                    {techStack[key]
+                      ? <span className="text-sm font-bold text-white mt-0.5 block">{techStack[key]}</span>
+                      : <span className="text-xs text-slate-500 mt-0.5 block">not specified</span>}
+                  </div>
+                ))}
             </div>
           </div>
 
-          {/* 2-Column Details: Components & Ready Agents */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Planned Components */}
-            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
-              <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-2">
-                <FaCode className="w-3.5 h-3.5 text-cyan-400" /> Planned System Components
-              </h4>
-              <ul className="space-y-2">
-                {components.map((comp, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-xs text-slate-300">
-                    <FaCheckCircle className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
-                    <span>{comp}</span>
-                  </li>
-                ))}
-              </ul>
+          {/* What the code agents will build from (parsed from the architect's document) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[['API endpoints', routes, 'font-mono'], ['Data models', models, 'font-mono'], ['Frontend components', components, '']]
+              .map(([label, items, mono]) => (
+                <div key={label} className="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
+                  <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-2">
+                    <FaCode className="w-3.5 h-3.5 text-cyan-400" /> {label}
+                    <span className="ml-auto text-[10px] text-slate-500">{items.length}</span>
+                  </h4>
+                  {items.length ? (
+                    <ul className="space-y-1.5 max-h-48 overflow-auto">
+                      {items.map((item, idx) => (
+                        <li key={idx} className={`text-xs text-slate-300 break-words ${mono}`}>{String(item)}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-xs text-amber-300/80">None stated in the architecture - consider rejecting with details.</p>
+                  )}
+                </div>
+              ))}
+          </div>
+
+          {(archCheck.missing_sections || []).length > 0 && (
+            <div className="flex items-start gap-2 text-xs text-amber-300/90 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">
+              <FaExclamationTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <span>Architecture is missing sections: {archCheck.missing_sections.join(', ')}</span>
             </div>
+          )}
+
+          {archDocument && (
+            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
+              <button onClick={() => setShowDocument((v) => !v)} className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white">
+                {showDocument ? '▾' : '▸'} Full architecture document
+              </button>
+              {showDocument && (
+                <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-words text-[11px] leading-relaxed text-slate-300">{archDocument}</pre>
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
             {/* Next Ready Agents */}
             <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between">
@@ -183,13 +193,13 @@ export default function ApprovalPanel({
 
               {/* Risks and Warnings */}
               {risks.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-slate-800/80">
-                  <div className="flex items-start gap-2 text-xs text-amber-300/90 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
-                    <FaExclamationTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                    <span className="text-[11px] leading-tight">
-                      {risks[0]}
-                    </span>
-                  </div>
+                <div className="mt-4 pt-3 border-t border-slate-800/80 space-y-1.5">
+                  {risks.map((risk, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-xs text-amber-300/90 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
+                      <FaExclamationTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span className="text-[11px] leading-tight">{risk}</span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

@@ -6,12 +6,86 @@ before marking workflow stages as completed.
 """
 
 import ast
+import re
 import json
 import logging
 from pathlib import Path
 from typing import Dict, Any, Tuple, Optional, List
 
 _logger = logging.getLogger("aiforge.validator")
+
+_ROUTE = re.compile(r"\b(GET|POST|PUT|PATCH|DELETE)\s+`?(/[A-Za-z0-9_\-/{}:.]*)")
+_HEADING = re.compile(r"^\s{0,3}##(?!#)\s+(?:\d+[.)]\s*)?(.+?)\s*#*\s*$", re.M)  # sections are `##`
+_MODEL_LINE = re.compile(r"^(?:[-*+]|\d+\.)\s+(?:\*\*|`)?([A-Za-z_][A-Za-z0-9_]*)(?:\*\*|`)?\s*(?:\(|:|—|–|-|$)")
+_FILE = re.compile(r"[A-Za-z0-9_\-./]*[A-Za-z0-9_\-]\.(?:py|jsx|tsx|js|ts|sql|json|md|txt|html|css|ya?ml|toml)\b")
+_COMPONENT = re.compile(r"\b([A-Z][A-Za-z0-9]+)\.(?:jsx|tsx)\b")
+
+
+def _json_object(text: str) -> Optional[Dict[str, Any]]:
+    """A JSON object from a model reply: the whole text, a fenced block, or the outermost braces."""
+    candidates = [text]
+    fenced = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", text)
+    if fenced:
+        candidates.append(fenced.group(1))
+    if "{" in text and "}" in text:
+        candidates.append(text[text.find("{"): text.rfind("}") + 1])
+    for candidate in candidates:
+        try:
+            value = json.loads(candidate)
+        except (ValueError, TypeError):
+            continue
+        if isinstance(value, dict):
+            return value
+    return None
+
+
+def _sections(markdown: str) -> Dict[str, str]:
+    """Heading (lower-case, numbering removed) -> body, for the architect's `##` sections."""
+    matches = list(_HEADING.finditer(markdown))
+    return {m.group(1).strip().lower(): markdown[m.end(): matches[i + 1].start() if i + 1 < len(matches) else len(markdown)]
+            for i, m in enumerate(matches)}
+
+
+def _section(sections: Dict[str, str], *names: str) -> str:
+    return "\n".join(body for title, body in sections.items() if any(n in title for n in names))
+
+
+def _unique(items: List[str], limit: int = 40) -> List[str]:
+    seen: List[str] = []
+    for item in items:
+        if item not in seen:
+            seen.append(item)
+    return seen[:limit]
+
+
+def parse_architecture_markdown(markdown: str) -> Dict[str, Any]:
+    """
+    The code agents' contract from the architect's Markdown: API routes ("METHOD /path"), data
+    models (top-level entries of the Database Schema section), files from the Folder Structure
+    section, and React components named there. Only what the text states is returned.
+    """
+    sections = _sections(markdown)
+    api = _section(sections, "api") or markdown
+    schema = _section(sections, "database", "schema", "data model")
+    folders = _section(sections, "folder", "structure")
+
+    routes = _unique([f"{m.group(1)} {m.group(2).rstrip('.').rstrip('`')}" for m in _ROUTE.finditer(api)])
+    models = []
+    for line in schema.splitlines():
+        if line.startswith((" ", "\t")):
+            continue                     # indented bullets are fields, not tables
+        m = _MODEL_LINE.match(line.strip())
+        if m and m.group(1).lower() not in {"id", "pk", "fk", "primary", "foreign", "relationships", "indexes", "note"}:
+            models.append(m.group(1))
+    models += re.findall(r"^\s{0,3}#{3,6}\s+`?([A-Za-z_][A-Za-z0-9_]*)`?\s*$", schema, re.M)
+    files = _unique([f.lstrip("./") for f in _FILE.findall(folders)], limit=80)
+    return {
+        "routes": routes,
+        "models": _unique(models, limit=20),
+        "components": _unique(_COMPONENT.findall(folders or markdown), limit=20),
+        "dependencies": [],
+        "folder_structure": {"files": files} if files else {},
+    }
 
 
 class StageValidatorService:
@@ -44,30 +118,28 @@ class StageValidatorService:
         return True, "Planner JSON Contract Validated", plan_dict
 
     def validate_architecture(self, arch_data: Any) -> Tuple[bool, str, Dict[str, Any]]:
-        if isinstance(arch_data, str):
-            try:
-                arch_dict = json.loads(arch_data)
-            except Exception:
-                arch_dict = {
-                    "components": ["Navbar", "Sidebar", "DashboardCard", "LoginForm"],
-                    "routes": ["GET /health", "POST /api/auth/login", "GET /api/data"],
-                    "models": ["User", "Session", "Item"],
-                    "dependencies": ["react", "fastapi", "sqlalchemy", "pydantic"],
-                    "folder_structure": {
-                        "frontend": ["src/App.jsx", "src/components/Navbar.jsx"],
-                        "backend": ["main.py", "models.py", "auth.py"],
-                        "database": ["schema.sql"]
-                    }
-                }
+        """
+        The architecture as a contract for the code agents: JSON (raw or fenced) or the
+        architect's Markdown sections, parsed deterministically. Nothing is invented: when
+        the output holds no routes or models, the contract says so and is_valid is False.
+        (Unparseable output used to be replaced by a fixed Navbar/User/Session/Item design,
+        which the code agents then built instead of the user's project.)
+        """
+        if isinstance(arch_data, dict):
+            arch_dict = dict(arch_data)
         else:
-            arch_dict = arch_data or {}
+            text = str(arch_data or "")
+            arch_dict = _json_object(text)
+            if arch_dict is None:
+                arch_dict = parse_architecture_markdown(text)
+            arch_dict.setdefault("document", text)
 
-        required = ["components", "routes", "models", "dependencies", "folder_structure"]
-        for key in required:
-            if key not in arch_dict:
-                arch_dict[key] = [] if key != "folder_structure" else {}
-
-        return True, "Architecture JSON Contract Validated", arch_dict
+        for key in ("components", "routes", "models", "dependencies"):
+            arch_dict.setdefault(key, [])
+        arch_dict.setdefault("folder_structure", {})
+        usable = bool(arch_dict["routes"] or arch_dict["models"])
+        msg = "Architecture contract parsed" if usable else "Architecture has no API routes or data models to build from"
+        return usable, msg, arch_dict
 
     def validate_code_output(self, code_data: Any, stage_name: str) -> Tuple[bool, str, str]:
         if not code_data or len(str(code_data).strip()) < 10:

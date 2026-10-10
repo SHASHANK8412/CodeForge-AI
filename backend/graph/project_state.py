@@ -50,6 +50,21 @@ class ProjectState(TypedDict, total=False):
     # Day 12 Context & Memory Extensions
     project_id: str
     generation_id: str
+    # LangGraph drops any key that is not declared here - from node results and from the initial
+    # input alike - so every key a node writes or reads must be listed (tests/test_state_schema.py).
+    session_id: str
+    user_request: str
+    errors: List[str]
+    testing_report: str
+    security_report: str
+    performance_report: str
+    architecture_report: str
+    api_documentation: str
+    zip_path: str
+    deployment_status: str
+    deployment_url: Optional[str]
+    deployment_backend_url: Optional[str]
+    health_status: str
     technology_stack: Dict[str, Any]
     agent_outputs: Dict[str, Any]
     memory: List[Dict[str, Any]]

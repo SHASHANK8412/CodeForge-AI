@@ -22,6 +22,12 @@ def test_normal_blocks_are_unchanged():
     assert extract(out) == {"backend/main.py": CODE, "backend/db.py": "DB = 1"}
 
 
+def test_empty_file_block_does_not_swallow_the_next_file():
+    # Seen in the pipeline integration test: an empty __init__.py block ran on into main.py.
+    out = "### backend/__init__.py\n```python\n```\n\n### backend/main.py\n```python\n" + CODE + "\n```"
+    assert extract(out) == {"backend/__init__.py": "", "backend/main.py": CODE}
+
+
 def test_markdown_files_keep_their_fences():
     readme = "```bash\nuvicorn main:app\n```"
     assert _strip_stray_fences("README.md", readme) == readme

@@ -62,65 +62,17 @@ class GenerationStatusResponse(BaseModel):
 # Helpers
 # ---------------------------------------------------------------------------
 
-_DEMO_GENERATION_IDS = ("aiforge-demo", "aiforge_demo")
-
-
-def _seed_demo_generation(gen_id: str, user_id: str) -> Dict[str, Any]:
-    from backend.routes.generate import GENERATIONS_DB
-    now = "2026-08-09T14:00:00.000Z"
-
-    db_info = GENERATIONS_DB.get(gen_id, {})
-    proj_name = db_info.get("project_name", "AIForge Generated Application")
-    prompt = f"Project {proj_name}"
-
-    agents = [
-        {"name": name, "status": "completed", "started_at": now,
-         "completed_at": now, "duration": 1.2, "retry_count": 0, "error": None}
-        for name in [
-            "planner", "architect", "frontend", "backend", "database",
-            "assembly", "reviewer", "documentation", "build_validation",
-            "dependency_manager", "security_scan", "performance",
-            "execution_validation", "testing", "debug", "patch",
-            "packaging", "deployment",
-        ]
-    ]
-    record: Dict[str, Any] = {
-        "generation_id": gen_id,
-        "project_id": gen_id,
-        "user_id": user_id,
-        "prompt": prompt,
-        "status": "completed",
-        "current_agent": "deployment",
-        "progress": 100,
-        "agents": agents,
-        "events": [],
-        "started_at": now,
-        "completed_at": now,
-        "error": None,
-        "created_at": now,
-    }
-    with _store._lock:
-        data = _store._load()
-        data[gen_id] = record
-        _store._save(data)
-    return record
-
-
 def _require_owned(gen_id: str, user_id: str) -> Dict[str, Any]:
     """Return the generation record or raise HTTP 403/404."""
-    is_demo = gen_id in _DEMO_GENERATION_IDS
     rec = _store.get(gen_id)
     if not rec:
-        # Only the explicit demo id may be synthesized; a real-looking id that isn't in the
-        # store must 404 rather than render a fabricated "completed" run.
-        if is_demo:
-            rec = _seed_demo_generation(gen_id, user_id)
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Generation not found."
-            )
-    elif rec.get("user_id") != user_id and rec.get("user_id") not in ("default", "demo_user") and not is_demo:
+        # Unknown ids are 404 - including "aiforge-demo", which used to be answered with a
+        # made-up completed run written into the store.
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Generation not found."
+        )
+    elif rec.get("user_id") != user_id and rec.get("user_id") not in ("default", "demo_user"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to access this generation."

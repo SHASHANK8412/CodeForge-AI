@@ -112,6 +112,24 @@ def _approval_stage(next_nodes, values: dict) -> str:
         return "architecture"
     return values.get("approval_stage") or "architecture"
 
+def approval_update(stage: str) -> dict:
+    """State update when a human approves a checkpoint (an escalation approved = proceed as is)."""
+    update = {"approval_status": "approved", "approval_required": False, "user_feedback": "",
+              "status": "RUNNING", "execution_status": "RUNNING", "human_intervention_required": False}
+    update["current_step"] = "dispatch_parallel" if stage == "architecture" else "packaging"
+    return update
+
+
+def guided_retry_update() -> dict:
+    """
+    State update when a human sends a stopped repair loop back with guidance: a fresh bounded
+    loop. It is part of the approval update because routers cannot write state (the reset
+    route_after_final_approval used to do was discarded).
+    """
+    return {"current_step": "debug", "retry_count": 0, "repair_attempt": 0, "current_debug_cycle": 0,
+            "iteration": 0, "root_causes": [], "human_intervention_required": False}
+
+
 class GenerationManager:
     """
     Creates and runs project generations against the parallel_graph.
@@ -344,18 +362,7 @@ class GenerationManager:
 
         _logger.info("[HITL] Approving generation %s (stage: %s)", gen_id, stage)
 
-        # Update state on checkpointer
-        update_payload = {
-            "approval_status": "approved",
-            "approval_required": False,
-            "user_feedback": "",
-            "status": "RUNNING",
-            "execution_status": "RUNNING",
-        }
-        if stage == "architecture":
-            update_payload["current_step"] = "dispatch_parallel"
-        elif stage == "final":
-            update_payload["current_step"] = "packaging"
+        update_payload = approval_update(stage)
 
         parallel_graph.update_state(config, update_payload, as_node=state_tuple.next[0] if state_tuple.next else "human_approval")
 
@@ -418,8 +425,8 @@ class GenerationManager:
         }
         if stage == "architecture":
             update_payload["current_step"] = "architect"
-        elif stage == "final":
-            update_payload["current_step"] = "debug"
+        else:
+            update_payload.update(guided_retry_update())
 
         parallel_graph.update_state(config, update_payload, as_node=state_tuple.next[0] if state_tuple.next else "human_approval")
 

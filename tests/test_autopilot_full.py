@@ -108,17 +108,33 @@ class TestEngineeringAutopilot:
         analytics = global_flight_recorder.get_analytics("proj_fre_001")
         assert "automatic_repairs" in analytics
 
+    # These used "aiforge-demo", for which the platform invented a completed run; they now
+    # start the run they inspect.
     def test_autopilot_ownership_and_api(self, app_client):
-        res = app_client.get("/api/autopilot/aiforge-demo")
+        from backend.generation.store import global_generation_store
+        started = app_client.post("/api/autopilot/start", json={"project_id": "proj_api_owner", "prompt": "Build a CRM dashboard"})
+        assert started.status_code == 200
+        gen_id = started.json()["generation_id"]
+
+        res = app_client.get(f"/api/autopilot/{gen_id}")
         assert res.status_code == 200
         body = res.json()
-        assert body["status"] in ("success", "completed")
+        assert body["generation_id"] == gen_id
+        assert body["status"] == global_generation_store.get(gen_id)["status"]
         assert "decisions" in body
 
+        unknown = app_client.get("/api/autopilot/aiforge-demo").json()
+        assert unknown["status"] == "not_found" and unknown["project_id"] is None
+
     def test_autopilot_recovery(self):
-        state = global_autopilot_service.get_autopilot_state("aiforge-demo", "user_test_01")
-        assert state["status"] in ("completed", "ACTIVE", "PAUSED")
-        assert len(state["decisions"]) >= 1
+        gen_res = asyncio.run(global_autopilot_service.start("proj_recover", "user_test_01", "Build inventory tracker"))
+        gen_id = gen_res["generation_id"]
+        global_autopilot_service.pause(gen_id)
+
+        state = global_autopilot_service.get_autopilot_state(gen_id, "user_test_01")
+        assert state["generation_id"] == gen_id and state["status"] not in (None, "not_found")
+        assert state["autonomy_level"] == "BALANCED"
+        assert global_autopilot_controller.get_status(gen_id) == AutopilotStatus.PAUSED
 
     def test_autopilot_completion(self):
         gen_res = asyncio.run(global_autopilot_service.start("proj_comp", "user_test_01", "Build SaaS app"))

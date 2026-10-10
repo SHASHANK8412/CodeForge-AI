@@ -29,6 +29,7 @@ from backend.graph.parallel_workflow import (
     debug_node,
     patch_node,
     route_after_testing,
+    repair_escalation,
     route_after_final_approval,
     final_approval_node,
 )
@@ -227,7 +228,9 @@ def test_route_after_testing_max_retries_and_pass():
         "max_retries": 3,
     }
     assert route_after_testing(pass_state) == "final_approval"
-    assert pass_state.get("human_intervention_required") is False
+    # Routers cannot write LangGraph state, so escalation is a computed decision (it used to be
+    # set on the router's copy of the state and lost).
+    assert repair_escalation(pass_state) is None
 
     # Case 2: Tests Fail and retry_count < 3 -> route to debug
     fail_state = {
@@ -249,9 +252,11 @@ def test_route_after_testing_max_retries_and_pass():
     }
     next_step = route_after_testing(exhausted_state)
     assert next_step == "final_approval"
-    assert exhausted_state["human_intervention_required"] is True
-    assert exhausted_state["approval_stage"] == "debug_escalation"
-    assert exhausted_state["repair_status"] == "STOPPED_MAX_ATTEMPTS"
+    assert repair_escalation(exhausted_state) == "STOPPED_MAX_ATTEMPTS"
+    out = asyncio.run(final_approval_node(exhausted_state))   # the node persists the escalation
+    assert out["human_intervention_required"] is True
+    assert out["approval_stage"] == "debug_escalation"
+    assert out["repair_status"] == "STOPPED_MAX_ATTEMPTS"
 
 
 # ===========================================================================
@@ -270,9 +275,11 @@ def test_repeated_failure_detection_and_escalation():
 
     next_step = route_after_testing(repeated_state)
     assert next_step == "final_approval"
-    assert repeated_state["human_intervention_required"] is True
-    assert repeated_state["approval_stage"] == "debug_escalation"
-    assert repeated_state["repair_status"] == "STOPPED_REPEATED_FAILURE"
+    assert repair_escalation(repeated_state) == "STOPPED_REPEATED_FAILURE"
+    out = asyncio.run(final_approval_node(repeated_state))
+    assert out["human_intervention_required"] is True
+    assert out["approval_stage"] == "debug_escalation"
+    assert out["repair_status"] == "STOPPED_REPEATED_FAILURE"
 
 
 def test_final_approval_escalation_payload():
@@ -312,8 +319,13 @@ def test_route_after_final_approval_escalation_actions():
         "retry_count": 3,
     }
     assert route_after_final_approval(retry_state) == "debug"
-    assert retry_state["retry_count"] == 0
+    # The reset is part of the approval update the GenerationManager applies (a router's
+    # writes are discarded by LangGraph).
+    from backend.generation.manager import guided_retry_update
+    retry_state.update(guided_retry_update())
+    assert retry_state["retry_count"] == 0 and retry_state["current_debug_cycle"] == 0
     assert retry_state["human_intervention_required"] is False
+    assert repair_escalation({**retry_state, "test_results": {"success": False}, "max_retries": 3}) is None
 
     # User forces proceed -> routes to packaging
     proceed_state = {
@@ -321,6 +333,8 @@ def test_route_after_final_approval_escalation_actions():
         "approval_stage": "debug_escalation",
     }
     assert route_after_final_approval(proceed_state) == "packaging"
+    from backend.generation.manager import approval_update
+    proceed_state.update(approval_update("final"))
     assert proceed_state["human_intervention_required"] is False
 
 
@@ -393,7 +407,7 @@ def test_end_to_end_debug_fix_retest_loop():
         # Step 5: Route after retesting -> proceeds to final approval
         step_5 = route_after_testing(state)
         assert step_5 == "final_approval"
-        assert state.get("human_intervention_required") is False
+        assert repair_escalation(state) is None
 
     asyncio.run(_runner())
 
