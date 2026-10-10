@@ -92,7 +92,6 @@ async def get_all_human_feedback() -> Dict[str, Any]:
     return {"status": "success", "total_feedback": len(feedback_items), "feedback": feedback_items}
 
 
-@router.post("/feedback")
 @router.post("/api/v1/feedback")
 async def submit_human_feedback(req: SubmitFeedbackInput) -> Dict[str, Any]:
     """Submits human feedback and automatically converts it into actionable engineering tasks."""

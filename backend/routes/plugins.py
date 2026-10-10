@@ -26,7 +26,6 @@ class ExecuteToolRequest(BaseModel):
     params: Dict[str, Any] = Field(default_factory=dict)
 
 
-@router.get("/plugins")
 @router.get("/api/plugins")
 def list_plugins():
     """Lists all installed plugins and execution metrics."""
@@ -34,14 +33,12 @@ def list_plugins():
     return {"plugins": global_plugin_registry.list_plugins()}
 
 
-@router.post("/plugins/install")
 @router.post("/api/plugins/install")
 def install_plugin(req: InstallPluginRequest):
     """Installs a new plugin SDK module."""
     return global_plugin_manager.install_plugin(req.name, req.version, req.permissions)
 
 
-@router.post("/plugins/enable")
 @router.post("/api/plugins/enable")
 def enable_plugin(req: TogglePluginRequest):
     """Enables an installed plugin."""
@@ -51,7 +48,6 @@ def enable_plugin(req: TogglePluginRequest):
     return {"status": "success", "message": f"Plugin '{req.plugin_id}' enabled."}
 
 
-@router.post("/plugins/disable")
 @router.post("/api/plugins/disable")
 def disable_plugin(req: TogglePluginRequest):
     """Disables an installed plugin."""

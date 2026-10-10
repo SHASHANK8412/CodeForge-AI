@@ -457,16 +457,21 @@ import os
 @app.get("/health")
 @app.get("/api/health")
 def health():
+    """Liveness of the API plus checks that actually ran (they used to be hardcoded "healthy")."""
+    import httpx
     ai_mode = os.environ.get("AI_MODE", "local")
+    ollama_host = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
+    if not ollama_host.startswith("http"):
+        ollama_host = f"http://{ollama_host}"
+    try:
+        ollama = "up" if httpx.get(f"{ollama_host}/api/tags", timeout=1.5).status_code == 200 else "error"
+    except httpx.HTTPError:
+        ollama = "down"
+    from backend.execution.docker_test_sandbox import docker_available
     return {
         "status": "healthy",
         "ai_mode": ai_mode,
-        "services": {
-            "database": "healthy",
-            "ollama": "healthy",
-            "langgraph": "healthy",
-            "cache": "healthy"
-        }
+        "services": {"api": "up", "ollama": ollama, "docker_sandbox": "up" if docker_available() else "down"},
     }
 
 
@@ -517,7 +522,6 @@ def monitoring_overview(project_id: str = "aiforge-demo"):
     return global_monitoring_service.get_monitoring_overview(project_id=project_id)
 
 
-@app.get("/api/github/overview")
 def github_overview(project_id: str = "aiforge-demo"):
     from backend.github.service import global_github_service
     return global_github_service.get_pr_dashboard_overview(project_id=project_id)
@@ -529,7 +533,6 @@ class GithubConnectRequest(BaseModel):
     token: Optional[str] = None
 
 
-@app.post("/api/github/connect")
 def github_connect(req: GithubConnectRequest):
     from backend.github.repositories import global_repository_analyzer
     return global_repository_analyzer.connect_repository(req.repo_url, project_id=req.project_id, token=req.token)
@@ -541,7 +544,6 @@ class CopilotGithubRequest(BaseModel):
     full_repo_name: str = "SHASHANK8412/CodeForge-AI"
 
 
-@app.post("/api/github/copilot")
 def github_copilot(req: CopilotGithubRequest):
     from backend.github.service import global_github_service
     return global_github_service.handle_copilot_github_query(req.project_id, req.query, full_repo_name=req.full_repo_name)
@@ -788,7 +790,6 @@ def rag_search(query: str, top_k: int = 5):
     return {"query": query, "results": results}
 
 
-@app.post("/generate-project")
 @app.post("/api/generate-project")
 async def generate_project(request: PromptRequest):
     from backend.graph.executor import global_workflow_executor
@@ -876,9 +877,6 @@ def get_project_file_tree(project_id: str):
     }
 
 
-@app.post("/generate")
-@app.post("/api/generate")
-@app.post("/api/project/generate")
 async def generate(request: PromptRequest):
     started_at = perf_counter()
     try:

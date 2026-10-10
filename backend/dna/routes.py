@@ -32,7 +32,6 @@ class ExplainPayload(BaseModel):
     node_id: str
 
 
-@dna_router.get("/api/dna/{project_id}/graph")
 async def get_project_dna_graph(
     project_id: str,
     user: dict = Depends(get_current_user)

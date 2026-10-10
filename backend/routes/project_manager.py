@@ -37,7 +37,6 @@ def get_project_tasks(prompt: str = "Build Application"):
     return {"tasks": plan["tasks"]}
 
 
-@router.get("/project/sprints")
 @router.get("/api/project/sprints")
 def get_project_sprints(prompt: str = "Build Application"):
     """Returns sprint allocation for a project."""

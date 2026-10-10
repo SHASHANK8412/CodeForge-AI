@@ -719,7 +719,6 @@ def get_project_status_route(project_id: str):
     }
 
 
-@router.get("/api/project/{project_id}/files")
 def get_project_files_alias(project_id: str):
     return get_project_files_endpoint(project_id)
 
@@ -764,7 +763,6 @@ class SaveFileRequest(BaseModel):
     path: str
     content: str
 
-@router.put("/api/project/{project_id}/file")
 def save_project_file(project_id: str, request: SaveFileRequest):
     # 1. Path Traversal & Security Validation
     from backend.generators.project_generator import GENERATED_PROJECTS_DIR
@@ -866,7 +864,6 @@ class ReviewSelectionRequest(BaseModel):
     selected_code: str
     action: str
 
-@router.post("/api/project/{project_id}/review-selection")
 async def review_selection_route(project_id: str, request: ReviewSelectionRequest):
     system_prompt = f"You are AIForge's Code assistant. Provide analysis/revision for the action: {request.action.upper()}."
     user_prompt = f"File Path: {request.path}\nSelected Code Snippet:\n{request.selected_code}\n\nHelp the user with this request."

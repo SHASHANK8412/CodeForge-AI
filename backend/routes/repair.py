@@ -31,7 +31,6 @@ class RepairTriggerResponse(BaseModel):
 _REPAIR_AUDIT_LOGS: Dict[str, Dict[str, Any]] = {}
 
 
-@router.post("/projects/{project_id}/repair", response_model=RepairTriggerResponse)
 async def trigger_project_repair(
     project_id: str,
     req: RepairTriggerRequest = RepairTriggerRequest(),

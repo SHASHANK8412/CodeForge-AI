@@ -246,7 +246,6 @@ async def monitor_workflow(req: GenerateRequest):
     return {"status": "monitoring_active", "metrics": {"cpu_pct": 12.4, "memory_mb": 420.0}}
 
 
-@router.post("/projects")
 async def create_project(req: GenerateRequest):
     spec = global_ceo_agent.evaluate_request(req.prompt)
     return {"status": "created", "project_id": spec.project_id, "name": spec.name}
