@@ -13,7 +13,8 @@ from backend import config as app_config
 from backend.execution.execution_backend import (
     ExecutionBackend,
     LocalExecutionBackend,
-    DockerExecutionBackend
+    DockerExecutionBackend,
+    UnavailableExecutionBackend
 )
 from backend.execution.models import (
     ProjectExecutionResult,
@@ -54,6 +55,22 @@ class ExecutionService:
         2. `config.execution_backend` or `config.docker_enabled`
         3. Default configured backend (`EXECUTION_BACKEND` / `DOCKER_ENABLED`)
         """
+        # Generated code runs on the host only when AIFORGE_TEST_SANDBOX=local says so explicitly;
+        # otherwise it is Docker, or not run at all.
+        from backend.execution.docker_test_sandbox import sandbox_mode
+        if sandbox_mode() != "local":
+            if self.docker_backend.is_available():
+                if config:
+                    self.docker_backend.memory_limit = config.memory_limit or self.docker_backend.memory_limit
+                    self.docker_backend.cpu_limit = config.cpu_limit or self.docker_backend.cpu_limit
+                    if config.docker_image:
+                        self.docker_backend.default_image = config.docker_image
+                return self.docker_backend
+            if strict_docker:
+                raise RuntimeError("DockerExecutionBackend was requested, but Docker is unavailable on host.")
+            _logger.warning("Docker is unavailable: generated code will not be run (no host fallback).")
+            return UnavailableExecutionBackend()
+
         target = backend_name
         if not target and config:
             if config.docker_enabled or config.execution_backend.lower() == "docker":

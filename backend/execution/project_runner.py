@@ -164,13 +164,20 @@ class ProjectRunner:
         # Create dummy artifact pointing to existing dir
         artifact = CodeArtifact(filename="main.py", language=lang, content="")
 
-        # Python test runs go to a throwaway Docker container when Docker is available
-        # (AIFORGE_TEST_SANDBOX=auto|docker|local); otherwise they run locally below.
-        if lang == "python" and not command_override and "pytest" in cmd:
-            from backend.execution.docker_test_sandbox import run_pytest_in_docker, should_use_docker
-            if should_use_docker():
-                _logger.info("ProjectRunner: running tests for '%s' in the Docker sandbox", proj_path)
+        # Generated code (pytest, npm scripts) runs only in throwaway Docker containers. Without
+        # Docker it is not run at all unless AIFORGE_TEST_SANDBOX=local explicitly allows the host.
+        # compileall only byte-compiles, so it never executes the project's code.
+        from backend.execution.docker_test_sandbox import (
+            not_run_result, run_npm_in_docker, run_pytest_in_docker, sandbox_mode, should_use_docker)
+        runs_project_code = bool(command_override) or "compileall" not in cmd
+        if runs_project_code and sandbox_mode() != "local":
+            if command_override or not should_use_docker():
+                _logger.warning("ProjectRunner: not running generated code for '%s' outside the Docker sandbox", proj_path)
+                return not_run_result(lang)
+            _logger.info("ProjectRunner: running '%s' for '%s' in the Docker sandbox", " ".join(cmd[-2:]), proj_path)
+            if lang == "python":
                 return run_pytest_in_docker(proj_path)
+            return run_npm_in_docker(proj_path, cmd[-1])
 
         # Python projects run against their own dependencies (<project>/.venv), which are put on
         # the import path after the project itself; AIForge's interpreter still runs pytest.

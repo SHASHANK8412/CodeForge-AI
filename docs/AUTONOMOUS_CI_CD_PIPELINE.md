@@ -124,7 +124,7 @@ When Docker is enabled (`docker_enabled=True` or `execution_backend="docker"`):
 * **Network Containment**: Supports `none` (isolated air-gapped test execution) or restricted bridge mode.
 * **Resource Quotas**: Enforces CPU limits (e.g., 1.0–2.0 cores) and RAM limits (e.g., `512m` to `2g`).
 * **Container Lifecycle & Cleanup**: Guarantees container termination and removal upon stage completion or timeout.
-* **Local Fallback**: Automatically and transparently falls back to `LocalExecutionBackend` if the Docker daemon is unreachable.
+* **No host fallback**: if the Docker daemon is unreachable, commands are reported as not run (`UnavailableExecutionBackend`). `LocalExecutionBackend` is used only with the explicit opt-in `AIFORGE_TEST_SANDBOX=local`.
 
 ---
 
@@ -198,7 +198,7 @@ The AIForge UI includes a dedicated glassmorphic **CI/CD Pipeline Dashboard**:
 
 | Issue | Likely Cause | Solution |
 | :--- | :--- | :--- |
-| `DockerDaemonConnectionError` | Docker daemon is not running | CI engine automatically falls back to `LocalExecutionBackend`. Ensure Docker Desktop is started if containerization is desired. |
+| `DockerDaemonConnectionError` | Docker daemon is not running | Steps are reported as not run. Start Docker Desktop (`scripts/start-docker.ps1` on Windows). |
 | Stage status `TIMEOUT` | Long-running test or build script | Increase `timeout_seconds` in `CIConfig` or optimize test suite execution. |
 | Security stage fails on `AKIA...` | Leaked secret or token in code | Move API keys and credentials to environment variables or `.env` files. |
 | Repair attempts exhausted | Complex logical bug requires human review | Check the CI Run History tab to review the Debug Agent's diagnosis and error tracebacks. |

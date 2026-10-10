@@ -46,7 +46,7 @@ Requirement
 | ZIP export of a completed generation | Working (tests: `tests/test_export_zip_route.py`) |
 | GitHub export | Implemented (`backend/github/`); requires `GITHUB_TOKEN`. With `AIFORGE_AUTO_PUBLISH_GITHUB=1` the pipeline publishes each approved project to a private repo after a pre-publish secret scan (tested with a mocked publisher) |
 | Code-quality gate | Working — ruff (syntax errors, undefined names) and oxlint (JS/JSX parse and correctness errors) on the generated files; blocking issues fail the run like failing tests and go through the debug → patch loop |
-| Docker sandbox for generated tests | Working — dependencies install in one container; tests run in another with no network, as a non-root user, with CPU/memory/process limits and a timeout, then both are removed (`AIFORGE_TEST_SANDBOX=auto` falls back to a per-project local venv without Docker) |
+| Docker sandbox for generated tests | Working — dependencies install in one container; tests run in another with no network, as a non-root user, with CPU/memory/process limits and a timeout, then both are removed (without Docker, generated code is reported as not run; `AIFORGE_TEST_SANDBOX=local` opts into running it locally) |
 | Security gate | Every run is scanned and auto-remediated; findings that remain are shown in the final approval, which is marked "Security review required" |
 | Release report | Working — code-quality gate, Bandit and pip-audit results with a `ready` / `review_required` / `blocked` recommendation, shown in the final approval |
 | Token and cost tracking | Working — real token counts from Ollama per run and per agent, shown live on the build view and on the Usage page. Local models have no API cost; set `AIFORGE_COST_PER_1K_*` to price runs |

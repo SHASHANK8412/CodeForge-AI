@@ -26,6 +26,8 @@ from backend.execution.models import (
 )
 from backend import config as app_config
 
+from backend.execution.docker_test_sandbox import docker_env, docker_exe
+
 _logger = logging.getLogger("aiforge.execution.backend")
 
 
@@ -62,6 +64,28 @@ class ExecutionBackend(ABC):
         Returns True if the execution backend runtime is available on the host system.
         """
         pass
+
+
+class UnavailableExecutionBackend(ExecutionBackend):
+    """
+    Used when generated code may only run in Docker and Docker is not available: every command
+    is reported as not run (never executed on the host).
+    """
+
+    def execute_command(self, command: List[str], cwd: str, timeout_seconds: float, max_output_bytes: int,
+                        custom_env: Optional[Dict[str, str]] = None, project_type: Optional[str] = None) -> ProjectExecutionResult:
+        return ProjectExecutionResult(
+            status=ExecutionStatus.INFRASTRUCTURE_ERROR, exit_code=-1, command_executed=" ".join(command or []),
+            stderr=("Not run: generated code only runs in the Docker sandbox, and Docker is not available. "
+                    "Start Docker, or set AIFORGE_TEST_SANDBOX=local to allow running it on this machine."),
+            backend_used="none",
+        )
+
+    def cleanup(self) -> None:
+        pass
+
+    def is_available(self) -> bool:
+        return False
 
 
 class LocalExecutionBackend(ExecutionBackend):
@@ -252,12 +276,12 @@ class DockerExecutionBackend(ExecutionBackend):
 
     def is_available(self) -> bool:
         """Checks if Docker binary is on PATH and daemon responds."""
-        docker_bin = shutil.which("docker")
+        docker_bin = docker_exe()
         if not docker_bin:
             return False
         try:
             res = self._cmd_runner(
-                ["docker", "info"],
+                [docker_bin, "info"],
                 capture_output=True,
                 text=True,
                 timeout=5
@@ -335,16 +359,28 @@ class DockerExecutionBackend(ExecutionBackend):
         elif adjusted_command and ("node.exe" in adjusted_command[0].lower() or "node" in adjusted_command[0].lower()):
             adjusted_command[0] = "node"
 
+        # Dependency installs need the network; they install into the workspace (pip --target,
+        # node_modules) so the later commands - which run with the configured network mode,
+        # "none" by default - can use them.
+        is_install = self._is_dependency_install(adjusted_command)
+        if is_install and adjusted_command[:4] == ["python", "-m", "pip", "install"]:
+            adjusted_command = adjusted_command[:4] + ["--target", "/workspace/.aiforge_deps",
+                                                       "--disable-pip-version-check"] + adjusted_command[4:]
+
         docker_cmd = [
-            "docker", "run",
+            docker_exe() or "docker", "run",
             "--name", container_id,
             "--rm",
             "-v", f"{mount_path}:/workspace:rw",
             "-w", "/workspace",
-            "--network", self.network_mode,
+            "--network", "bridge" if is_install else self.network_mode,
             "--memory", str(self.memory_limit),
             "--cpus", str(self.cpu_limit),
+            "--pids-limit", "512",
+            "--cap-drop", "ALL",
             "--security-opt", "no-new-privileges",
+            "-e", "PYTHONPATH=/workspace/.aiforge_deps:/workspace",
+            "-e", "HOME=/tmp",
         ]
         docker_cmd.extend(self._build_docker_env_flags(custom_env))
         docker_cmd.append(image)
@@ -356,7 +392,8 @@ class DockerExecutionBackend(ExecutionBackend):
                 capture_output=True,
                 text=True,
                 timeout=timeout_seconds,
-                stdin=subprocess.DEVNULL
+                stdin=subprocess.DEVNULL,
+                env=docker_env()
             )
             elapsed = time.perf_counter() - start_time
             stdout_text = proc.stdout or ""
@@ -426,11 +463,17 @@ class DockerExecutionBackend(ExecutionBackend):
             if container_id in self.active_containers:
                 self.active_containers.remove(container_id)
 
+    @staticmethod
+    def _is_dependency_install(command: List[str]) -> bool:
+        if command[:4] == ["python", "-m", "pip", "install"]:
+            return True
+        return bool(command) and command[0] in ("npm", "yarn", "pnpm") and len(command) > 1 and command[1] in ("install", "ci")
+
     def _force_remove_container(self, container_id: str) -> None:
         """Kills and removes container if still running."""
         try:
             self._cmd_runner(
-                ["docker", "rm", "-f", container_id],
+                [docker_exe() or "docker", "rm", "-f", container_id],
                 capture_output=True,
                 text=True,
                 timeout=5

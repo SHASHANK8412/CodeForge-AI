@@ -8,8 +8,11 @@ AIForge runs model-written code, so every generated project is treated as untrus
 |---|---|
 | Generated tests run in a throwaway Docker container: `--network none`, non-root user, `--cap-drop ALL`, `no-new-privileges`, 2 GB memory, 2 CPUs, 256 processes, a timeout; containers and volumes are removed afterwards | `backend/execution/docker_test_sandbox.py` |
 | Dependencies are installed in a separate container (the only step with network access) into a throwaway volume, never into AIForge's environment | same |
-| Without Docker, tests use a per-project virtualenv (`<project>/.venv`) and a subprocess with a timeout and a scrubbed environment (no tokens or keys) | `backend/execution/project_env.py`, `sandbox_executor.py` |
-| Patches are confined to the project folder (path traversal rejected) | `backend/graph/parallel_workflow.py` (`patch_node`) |
+| Code snippets from chat and the execution engine's commands run the same way: `--network none` (installs excepted), non-root where possible, `--cap-drop ALL`, read-only root, memory/CPU/process limits, timeout | `backend/execution/sandbox_executor.py`, `execution_backend.py` |
+| Without Docker, generated code is **not run** and the result says so; there is no host fallback. `AIFORGE_TEST_SANDBOX=local` is an explicit opt-in to run it on this machine (per-project venv, scrubbed environment) and is meant for AIForge's own test suite | `backend/execution/docker_test_sandbox.py`, `execution_service.py` |
+| Live previews run in hardened containers (non-root, no capabilities, read-only root, limits, port on 127.0.0.1 only, auto-stop) and are shown as running only after an HTTP probe answers | `backend/execution/preview_manager.py` |
+| Exported ZIPs never include `.env` files, keys, `.npmrc`/`.pypirc`, local databases, virtualenvs or caches | `backend/exporter/zipper.py` |
+| Patches are applied atomically and confined to the project folder (component-wise path checks; traversal rolls the whole patch back) | `backend/repository/patch_engine.py` |
 | Code-quality gate (ruff, oxlint), Bandit and pip-audit run before release; critical findings mark the release `blocked` | `backend/validation/quality_gate.py` |
 | Secret scan before GitHub publishing; publishing is off unless `AIFORGE_AUTO_PUBLISH_GITHUB=1` | `backend/github/publisher.py` |
 

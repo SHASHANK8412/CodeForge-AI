@@ -43,7 +43,9 @@ your host (`host.docker.internal:11434`). On Windows, if Docker Desktop fails to
 |---|---|---|
 | `AIFORGE_GENERAL_MODEL`, `AIFORGE_CODING_MODEL`, `AIFORGE_DEBUG_MODEL` | auto | Pin Ollama models per role |
 | `AIFORGE_LLM_TIMEOUT_SECONDS` | 900 | Ceiling for one model call (CPU inference is slow) |
-| `AIFORGE_TEST_SANDBOX` | `auto` | `docker`, `local` or `auto` (Docker when available) |
+| `AIFORGE_TEST_SANDBOX` | `auto` | `auto`/`docker`: generated code runs only in Docker (not run without it); `local`: explicit opt-in to run it on this machine |
+| `AIFORGE_PREVIEW` | `docker` | `off` disables live previews |
+| `AIFORGE_PREVIEW_TTL` | `1800` | Seconds before a preview stops itself |
 | `AIFORGE_LLM_REPAIR` | `1` | Let the debug loop ask the coding model to rewrite a failing file |
 | `MAX_REPAIR_ATTEMPTS` | 3 | Bound on debug → patch → retest cycles |
 | `AIFORGE_AUTO_PUBLISH_GITHUB` + `GITHUB_TOKEN` | off | Publish approved projects to a private repo |

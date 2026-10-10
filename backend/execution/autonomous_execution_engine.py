@@ -207,7 +207,7 @@ class AutonomousExecutionEngine:
 
         active_backend = self.execution_service.get_backend(config=cfg)
         is_docker = isinstance(active_backend, DockerExecutionBackend)
-        backend_name = "docker" if is_docker else "local"
+        backend_name = "docker" if is_docker else ("none" if not active_backend.is_available() else "local")
 
         def record_step(step: PipelineStep, status: str, cmd: str = "", stdout: str = "", stderr: str = "", code: int = 0, duration: float = 0.0, err_msg: str = "") -> PipelineStepResult:
             res = PipelineStepResult(

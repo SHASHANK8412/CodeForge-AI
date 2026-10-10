@@ -1,10 +1,12 @@
 """
 AIForge Autonomous Engineering Platform — SandboxedExecutionManager
 ======================================================================
-Provides isolated process execution for generated code:
-- Docker container sandbox execution when Docker is reachable
-- Process sandbox fallback with strict timeout (default 30s), working directory restriction,
-  environment sanitization, command allowlist, process termination, and memory bounds.
+Gates execution of generated-project commands:
+- command allowlist (the program itself, no shell chaining)
+- byte-compiling (py_compile / compileall) runs here; it never executes the project's code
+- everything else runs through the execution service's Docker backend (no network, no
+  capabilities, limits), or is reported as not run when Docker is unavailable. A host subprocess
+  with a scrubbed environment is used only with the explicit AIFORGE_TEST_SANDBOX=local opt-in.
 """
 
 import os
@@ -18,9 +20,10 @@ from pydantic import BaseModel, Field
 
 _logger = logging.getLogger("aiforge.execution.sandbox")
 
+# `docker` is not allowed: a generated command could mount the host into a container.
 ALLOWED_COMMAND_PREFIXES = {
     "python", "pytest", "npm", "npx", "pip", "node", "mvn", "gradle",
-    "echo", "git", "docker", "tsc", "vitest"
+    "echo", "git", "tsc", "vitest"
 }
 
 
@@ -58,9 +61,11 @@ class SandboxedExecutionManager:
         # Block shell chaining operators
         if any(op in c for op in [";", "&&", "||", "|", "`", "$("]):
             return False
-        first_token = c.split()[0].lower()
-        base_cmd = os.path.basename(first_token)
-        return base_cmd in ALLOWED_COMMAND_PREFIXES or any(p in c.lower() for p in ALLOWED_COMMAND_PREFIXES)
+        # The program itself must be allowlisted ("rm -rf x # python" used to pass because the
+        # text merely contained an allowed word).
+        first_token = c.split()[0].lower().replace("\\", "/")
+        base_cmd = os.path.splitext(os.path.basename(first_token))[0]
+        return base_cmd in ALLOWED_COMMAND_PREFIXES or base_cmd in ("python3",)
 
     def execute_command(
         self,
@@ -83,8 +88,9 @@ class SandboxedExecutionManager:
                 failed_command=command_str
             )
 
-        # Prepare isolated environment
-        clean_env = os.environ.copy()
+        # Host runs get no credentials (this used to pass the full environment, keys included).
+        from backend.execution.execution_backend import LocalExecutionBackend
+        clean_env = LocalExecutionBackend()._build_sanitized_environment()
         clean_env["PYTHONUNBUFFERED"] = "1"
         clean_env["CI"] = "true"
         if env_vars:
@@ -104,6 +110,12 @@ class SandboxedExecutionManager:
                 duration_ms=0.0,
                 failed_command=command_str
             )
+
+        from backend.execution.docker_test_sandbox import sandbox_mode
+        program = os.path.splitext(os.path.basename(cmd_args[0].replace("\\", "/")))[0].lower() if cmd_args else ""
+        compile_only = program in ("python", "python3") and cmd_args[1:3] in (["-m", "py_compile"], ["-m", "compileall"])
+        if not compile_only and program != "echo" and sandbox_mode() != "local":
+            return self._run_in_container(cmd_args, command_str, target_cwd, t_out, start_time)
 
         try:
             res = subprocess.run(
@@ -154,6 +166,28 @@ class SandboxedExecutionManager:
                 failed_command=command_str,
                 cwd=target_cwd
             )
+
+
+    def _run_in_container(self, cmd_args: List[str], command_str: str, cwd: str, timeout: int,
+                          start_time: float) -> ExecutionResult:
+        """Runs the command through the execution service's Docker backend (or reports not run)."""
+        from backend.execution.execution_service import global_execution_service
+        backend = global_execution_service.get_backend(backend_name="docker")
+        project_type = "javascript" if os.path.basename(cmd_args[0]).lower().split(".")[0] in ("npm", "npx", "node", "tsc", "vitest") else "python"
+        res = backend.execute_command(cmd_args, cwd, timeout_seconds=timeout, max_output_bytes=100_000, project_type=project_type)
+        ok = res.exit_code == 0
+        return ExecutionResult(
+            status="success" if ok else ("timeout" if res.timed_out else "failed"),
+            exit_code=res.exit_code,
+            error_type=None if ok else ("timeout" if res.timed_out else
+                                        "not_run" if res.backend_used == "none" else "runtime_error"),
+            error_message="" if ok else (res.stderr or res.stdout),
+            stdout=res.stdout,
+            stderr=res.stderr,
+            duration_ms=round((time.perf_counter() - start_time) * 1000, 2),
+            failed_command="" if ok else command_str,
+            cwd=cwd,
+        )
 
 
 global_sandbox_manager = SandboxedExecutionManager()

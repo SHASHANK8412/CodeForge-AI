@@ -17,6 +17,7 @@ Covers:
 import os
 import subprocess
 import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 import pytest
 
@@ -86,8 +87,10 @@ class TestDockerExecutionBackend:
 
             # Verify docker CLI invocation flags
             invoked_cmd = mock_runner.call_args[0][0]
-            assert invoked_cmd[0] == "docker"
+            # The CLI is resolved to its full path (Docker Desktop's bin folder may not be on PATH).
+            assert Path(invoked_cmd[0]).stem.lower() == "docker"
             assert invoked_cmd[1] == "run"
+            assert invoked_cmd[invoked_cmd.index("--cap-drop") + 1] == "ALL"
             assert "--memory" in invoked_cmd
             assert "512m" in invoked_cmd
             assert "--cpus" in invoked_cmd
@@ -181,7 +184,7 @@ class TestDockerExecutionBackend:
             # Check that docker rm -f was called to kill the container
             assert mock_runner.call_count == 2
             rm_call = mock_runner.call_args_list[1][0][0]
-            assert rm_call[:3] == ["docker", "rm", "-f"]
+            assert Path(rm_call[0]).stem.lower() == "docker" and rm_call[1:3] == ["rm", "-f"]
 
     def test_container_cleanup(self):
         """6. Verify container tracking and explicit cleanup."""
@@ -193,9 +196,11 @@ class TestDockerExecutionBackend:
 
         assert len(backend.active_containers) == 0
         assert mock_runner.call_count == 2
+        # The CLI is resolved to its full path; compare the arguments after it.
         calls = [call[0][0] for call in mock_runner.call_args_list]
-        assert ["docker", "rm", "-f", "aiforge_exec_12345"] in calls
-        assert ["docker", "rm", "-f", "aiforge_exec_67890"] in calls
+        assert all(Path(c[0]).stem.lower() == "docker" for c in calls)
+        assert ["rm", "-f", "aiforge_exec_12345"] in [c[1:] for c in calls]
+        assert ["rm", "-f", "aiforge_exec_67890"] in [c[1:] for c in calls]
 
     def test_invalid_project_handling(self):
         """7. Verify handling of invalid project workspace or empty command."""
