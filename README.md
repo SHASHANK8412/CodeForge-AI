@@ -42,16 +42,19 @@ Requirement
 | Planner / Architect / Frontend / Backend / Database agents (real LLM calls) | Working — see [verification](#verification) |
 | LangGraph pipeline with parallel branches and human-approval checkpoints | Working |
 | Live agent status (SSE) and agent org chart in the UI | Working |
-| Validation, review, security scan, testing, debug/patch self-healing nodes | Implemented in the graph; see [verification](#verification) for how far a run got |
+| Self-healing (test → debug → patch → retest) | Working — deterministic repairs (missing imports, missing requirements, unambiguous literal mismatches) with an LLM rewrite of the failing file as fallback; `tests/test_self_healing_demo.py` repairs a broken FastAPI project and its tests then pass. Bounded by `MAX_REPAIR_ATTEMPTS`; repeated failures escalate to a human |
 | ZIP export of a completed generation | Working (tests: `tests/test_export_zip_route.py`) |
 | GitHub export | Implemented (`backend/github/`); requires `GITHUB_TOKEN`. With `AIFORGE_AUTO_PUBLISH_GITHUB=1` the pipeline publishes each approved project to a private repo after a pre-publish secret scan (tested with a mocked publisher) |
 | Code-quality gate | Working — ruff (syntax errors, undefined names) and oxlint (JS/JSX parse and correctness errors) on the generated files; blocking issues fail the run like failing tests and go through the debug → patch loop |
-| Docker sandbox for generated tests | Working — tests run in a throwaway `python:3.13-slim` container that installs the project's own requirements (`AIFORGE_TEST_SANDBOX=auto`, the default, falls back to a per-project local venv without Docker) |
+| Docker sandbox for generated tests | Working — dependencies install in one container; tests run in another with no network, as a non-root user, with CPU/memory/process limits and a timeout, then both are removed (`AIFORGE_TEST_SANDBOX=auto` falls back to a per-project local venv without Docker) |
 | Security gate | Every run is scanned and auto-remediated; findings that remain are shown in the final approval, which is marked "Security review required" |
+| Release report | Working — code-quality gate, Bandit and pip-audit results with a `ready` / `review_required` / `blocked` recommendation, shown in the final approval |
 | Token and cost tracking | Working — real token counts from Ollama per run and per agent, shown live on the build view and on the Usage page. Local models have no API cost; set `AIFORGE_COST_PER_1K_*` to price runs |
 | Docker / docker-compose for AIForge itself | Working — both images build, both containers report healthy, and the backend reaches the host's Ollama (verified 2026-10-06, Docker 29.6.2) |
 | Local deployment with smoke tests and rollback | Working — a failed deploy restores the last file checkpoint (`tests/deployment/`) |
 | Cloud deployment (Vercel / Render / Neon) | Implemented against the real REST APIs (Neon database → Render backend → Vercel frontend). Tested with mocked HTTP only; **not yet run against live accounts**. Without `VERCEL_TOKEN` / `RENDER_API_KEY` / `NEON_API_KEY` a provider reports `NOT_CONFIGURED`; Render also needs the project exported to GitHub first |
+
+More detail: [setup](docs/setup.md) · [architecture](docs/ARCHITECTURE.md) · [API](docs/api.md) · [security](docs/security.md) · [troubleshooting](docs/troubleshooting.md)
 
 ## Quick start (local)
 
