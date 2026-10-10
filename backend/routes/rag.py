@@ -3,6 +3,7 @@ AIForge V2 — Day 13 FastAPI RAG API Routes
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from uuid import uuid4
 from typing import List, Dict, Any, Optional
@@ -40,8 +41,19 @@ class RAGUploadResponse(BaseModel):
     message: str
 
 
+_PROJECT_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$")
+_DATA_ROOT = Path(__file__).resolve().parents[2] / "data" / "projects"
+
+
+def _checked_project_id(project_id: str) -> str:
+    """Project ids become folder names: letters, digits, '_', '-', '.', and never '..'."""
+    if not _PROJECT_ID.match(project_id or "") or ".." in project_id:
+        raise HTTPException(status_code=400, detail="Invalid project id.")
+    return project_id
+
+
 def _documents_dir(project_id: str) -> Path:
-    p = Path(f"data/projects/{project_id}/documents")
+    p = _DATA_ROOT / _checked_project_id(project_id) / "documents"
     p.mkdir(parents=True, exist_ok=True)
     return p
 
@@ -140,11 +152,6 @@ def debug_rag_retrieval(
     }
 
 
-@router.post("/upload", response_model=RAGUploadResponse)
-async def upload_documents(files: List[UploadFile] = File(...)):
-    return await _upload_project_documents("default_project", files)
-
-
 @legacy_router.post("/upload", response_model=RAGUploadResponse)
 async def legacy_upload_documents(files: List[UploadFile] = File(...)):
     return await _upload_project_documents("default_project", files)
@@ -152,7 +159,7 @@ async def legacy_upload_documents(files: List[UploadFile] = File(...)):
 
 @router.post("/query")
 async def query_documents(request: RAGQueryRequest):
-    grounded_res = global_rag_pipeline.query_grounded_answer(request.question)
+    grounded_res = global_rag_pipeline.query_grounded_answer(request.question, project_id=_checked_project_id(request.project_id))
     return {
         "success": True,
         "question": request.question,

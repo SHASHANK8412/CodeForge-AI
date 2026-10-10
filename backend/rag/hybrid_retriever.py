@@ -98,8 +98,9 @@ class HybridRetriever:
         structural_candidates = self._structural_search(query, decision, domain_chunks)
 
         # 6. Reciprocal Rank Fusion (RRF) & Deduplication
+        # all_candidates are the project's vector-store hits; they used to be fetched and dropped.
         fused = self._reciprocal_rank_fusion(
-            [vector_candidates, keyword_candidates, symbol_candidates, structural_candidates],
+            [vector_candidates, keyword_candidates, symbol_candidates, structural_candidates, all_candidates],
             rrf_k=60
         )
 

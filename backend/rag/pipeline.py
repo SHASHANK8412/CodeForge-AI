@@ -120,15 +120,17 @@ class RAGPipeline(RetrievalAwareAgentMixin):
         query: str,
         active_repo_files: Optional[List[str]] = None,
         has_documents: bool = False,
-        conversation_context: str = ""
+        conversation_context: str = "",
+        project_id: str = "default_project"
     ) -> GroundedResponse:
-        """Executes full end-to-end grounded RAG answer generation & validation."""
+        """Executes full end-to-end grounded RAG answer generation & validation over project_id's sources."""
         decision, grounding_ctx, prompt_ctx = self.process_with_rag(
             agent_name="RAGPipeline",
             user_query=query,
             active_repo_files=active_repo_files,
             has_documents=has_documents,
-            conversation_context=conversation_context
+            conversation_context=conversation_context,
+            project_id=project_id
         )
 
         if not decision.required:
