@@ -130,3 +130,5 @@ xxhash==3.8.1
 yarl==1.24.2
 zstandard==0.25.0
 ruff==0.16.10
+bandit==1.9.4
+pip-audit==2.10.1

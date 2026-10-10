@@ -151,3 +151,22 @@ def test_dependency_stage_writes_requirements_before_testing(tmp_path):
     run(dependency_manager_node(state))
     reqs = (tmp_path / "requirements.txt").read_text(encoding="utf-8").lower()
     assert "fastapi" in reqs and "passlib" in reqs
+
+
+def test_quality_report_blocks_release_on_failed_gate(tmp_path, monkeypatch):
+    from backend.validation import quality_gate
+    monkeypatch.setattr(quality_gate, "_dependency_findings", lambda project: [])  # offline
+    (tmp_path / "main.py").write_text(
+        "import subprocess\n\ndef run(cmd):\n    return subprocess.call(cmd, shell=True)\n\napp = FastAPI()\n", encoding="utf-8")
+    report = quality_gate.run_quality_report(tmp_path)
+    assert report["checks"]["code_quality_gate"] == "failed"
+    assert report["release_recommendation"] == "blocked"
+    assert any(f["tool"] == "bandit" for f in report["findings"])
+
+
+def test_quality_report_ready_for_clean_code(tmp_path, monkeypatch):
+    from backend.validation import quality_gate
+    monkeypatch.setattr(quality_gate, "_dependency_findings", lambda project: [])
+    (tmp_path / "main.py").write_text("def add(a, b):\n    return a + b\n", encoding="utf-8")
+    report = quality_gate.run_quality_report(tmp_path)
+    assert report["release_recommendation"] == "ready" and report["checks_failed"] == 0

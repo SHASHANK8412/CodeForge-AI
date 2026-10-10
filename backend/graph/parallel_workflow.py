@@ -1229,6 +1229,22 @@ async def final_approval_node(state: ProjectState) -> dict:
     if not is_escalation and sec.get("gate_status") == "FAILED":
         final_req["deployment_readiness"] = "SECURITY REVIEW REQUIRED"
 
+    # Release report from executed tools (quality gate, Bandit, pip-audit); critical findings block.
+    project_path = state.get("project_path", "")
+    if project_path and Path(project_path).is_dir():
+        from backend.validation.quality_gate import run_quality_report
+        try:
+            report = await asyncio.to_thread(run_quality_report, project_path, gate or None)
+        except Exception as e:  # noqa: BLE001 - a failed report must not block the approval itself
+            _logger.warning("Quality report failed: %s", e)
+            report = None
+        if report:
+            final_req["quality_report"] = report
+            _record_metrics(state, release_recommendation=report["release_recommendation"],
+                            critical_findings=report["critical_findings"])
+            if not is_escalation and report["release_recommendation"] == "blocked":
+                final_req["deployment_readiness"] = "RELEASE BLOCKED"
+
     return {
         "approval_required": True,
         "approval_stage": "debug_escalation" if is_escalation else "final",

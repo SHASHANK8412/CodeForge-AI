@@ -106,3 +106,84 @@ def run_quality_gate(project_dir: Any) -> Dict[str, Any]:
 
 def format_issues(issues: List[Dict[str, Any]], limit: int = 20) -> List[str]:
     return [f"{i['file']}:{i.get('line') or '?'}: [{i['code']}] {i['message']}" for i in issues[:limit]]
+
+
+# --- Release report: deterministic checks only, never model-reported results -----------------
+
+def _bandit_findings(project: Path) -> Optional[List[Dict[str, Any]]]:
+    try:
+        proc = subprocess.run(
+            [sys.executable, "-m", "bandit", "-r", str(project), "-f", "json", "-q",
+             "-x", ",".join(f"*/{d}/*" for d in (*_EXCLUDE, "tests"))],
+            capture_output=True, text=True, timeout=180,
+        )
+        results = json.loads(proc.stdout or "{}").get("results", [])
+    except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as e:
+        _logger.warning("Quality report: bandit unavailable (%s)", e)
+        return None
+    return [{
+        "tool": "bandit", "code": r.get("test_id"), "severity": r.get("issue_severity", "LOW").upper(),
+        "confidence": r.get("issue_confidence", "LOW").upper(),
+        "file": Path(r["filename"]).resolve().relative_to(project).as_posix(),
+        "line": r.get("line_number"), "message": r.get("issue_text", ""),
+    } for r in results]
+
+
+def _dependency_findings(project: Path) -> Optional[List[Dict[str, Any]]]:
+    """Known-vulnerable pinned requirements via pip-audit (needs network; skipped if unavailable)."""
+    from backend.execution.project_env import requirements_file
+    req = requirements_file(project)
+    if req is None:
+        return []
+    try:
+        proc = subprocess.run(
+            [sys.executable, "-m", "pip_audit", "-r", str(req), "--format", "json", "--progress-spinner", "off"],
+            capture_output=True, text=True, timeout=300,
+        )
+        data = json.loads(proc.stdout or "{}")
+    except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as e:
+        _logger.info("Quality report: dependency audit skipped (%s)", e)
+        return None
+    deps = data.get("dependencies", []) if isinstance(data, dict) else data
+    return [{
+        "tool": "pip-audit", "code": v.get("id"), "severity": "HIGH", "file": req.relative_to(project).as_posix(),
+        "line": None, "message": f"{d.get('name')} {d.get('version')}: {v.get('id')} (fixed in {', '.join(v.get('fix_versions') or []) or 'no release yet'})",
+    } for d in deps for v in (d.get("vulns") or [])]
+
+
+def run_quality_report(project_dir: Any, gate: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """
+    Machine-readable quality report built from executed tools: the code-quality gate, Bandit
+    (Python security) and pip-audit (vulnerable dependencies). Recommendation:
+    "blocked" when the gate fails or there is a HIGH-severity, HIGH-confidence security finding
+    or a vulnerable dependency; "review_required" for remaining MEDIUM/HIGH findings; else "ready".
+    """
+    project = Path(project_dir).resolve()
+    gate = gate or run_quality_gate(project)
+    bandit = _bandit_findings(project)
+    deps = _dependency_findings(project)
+
+    security = (bandit or []) + (deps or [])
+    critical = [f for f in security if f["tool"] == "pip-audit" or (f["severity"] == "HIGH" and f.get("confidence") == "HIGH")]
+    review = [f for f in security if f not in critical and f["severity"] in ("HIGH", "MEDIUM")]
+    checks = {
+        "code_quality_gate": "passed" if gate.get("passed") else "failed",
+        "python_security": "skipped" if bandit is None else ("failed" if any(f["tool"] == "bandit" for f in critical) else "passed"),
+        "dependency_audit": "skipped" if deps is None else ("failed" if deps else "passed"),
+    }
+    if not gate.get("passed") or critical:
+        recommendation = "blocked"
+    elif review:
+        recommendation = "review_required"
+    else:
+        recommendation = "ready"
+    return {
+        "checks": checks,
+        "checks_passed": sum(1 for v in checks.values() if v == "passed"),
+        "checks_failed": sum(1 for v in checks.values() if v == "failed"),
+        "checks_skipped": [k for k, v in checks.items() if v == "skipped"],
+        "critical_findings": len(critical),
+        "review_findings": len(review),
+        "findings": (critical + review)[:50],
+        "release_recommendation": recommendation,
+    }

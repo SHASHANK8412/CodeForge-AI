@@ -225,6 +225,40 @@ export default function ApprovalPanel({
             </div>
           </div>
 
+          {approvalRequest.quality_report && (
+            <div className={`p-3.5 rounded-xl border text-xs ${
+              approvalRequest.quality_report.release_recommendation === 'blocked' ? 'bg-rose-950/30 border-rose-500/40'
+                : approvalRequest.quality_report.release_recommendation === 'review_required' ? 'bg-amber-950/20 border-amber-500/40'
+                : 'bg-emerald-950/20 border-emerald-500/30'}`}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-bold text-slate-200">
+                  Release report: {approvalRequest.quality_report.release_recommendation.replace('_', ' ')}
+                </span>
+                <span className="text-slate-400">
+                  {approvalRequest.quality_report.checks_passed} passed · {approvalRequest.quality_report.checks_failed} failed
+                  {approvalRequest.quality_report.checks_skipped?.length ? ` · ${approvalRequest.quality_report.checks_skipped.length} skipped` : ''}
+                </span>
+              </div>
+              <div className="mt-1.5 flex flex-wrap gap-2 text-[11px] text-slate-300">
+                {Object.entries(approvalRequest.quality_report.checks || {}).map(([name, result]) => (
+                  <span key={name} className="rounded border border-slate-700 px-1.5 py-0.5 font-mono">
+                    {name.replace(/_/g, ' ')}: <span className={result === 'passed' ? 'text-emerald-300' : result === 'failed' ? 'text-rose-300' : 'text-slate-400'}>{result}</span>
+                  </span>
+                ))}
+              </div>
+              {(approvalRequest.quality_report.findings || []).length > 0 && (
+                <ul className="mt-2 space-y-1 font-mono text-[11px] text-slate-300 max-h-28 overflow-y-auto">
+                  {approvalRequest.quality_report.findings.slice(0, 10).map((f, i) => (
+                    <li key={i} className="truncate">
+                      <span className={f.severity === 'HIGH' ? 'text-rose-300' : 'text-amber-300'}>{f.severity}</span>{' '}
+                      [{f.tool}] {f.file}{f.line ? `:${f.line}` : ''} {f.message}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
           {approvalRequest.security && (
             <div className={`p-3.5 rounded-xl border text-xs ${approvalRequest.security.gate === 'FAILED' ? 'bg-rose-950/30 border-rose-500/40' : 'bg-slate-900/60 border-slate-800'}`}>
               <div className="flex flex-wrap items-center justify-between gap-2">
