@@ -132,6 +132,8 @@ class ProjectState(TypedDict, total=False):
     security_gate: str
     security_repair_attempts: int
 
+    # Architecture completeness (backend/graph/architecture_check.py)
+    architecture_check: Dict[str, Any]
     # Code-quality gate result (backend/validation/quality_gate.py)
     quality_gate: Optional[Dict[str, Any]]
 

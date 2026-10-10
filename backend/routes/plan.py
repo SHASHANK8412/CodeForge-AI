@@ -1,10 +1,7 @@
-from fastapi import APIRouter
-import asyncio
 from time import perf_counter
+
+from fastapi import APIRouter
 from pydantic import BaseModel
-
-from backend.graph.workflow import graph
-
 
 router = APIRouter()
 
@@ -16,22 +13,26 @@ class PlanRequest(BaseModel):
 
 @router.post("/plan")
 async def generate_plan(request: PlanRequest):
+    """
+    Plan and architecture for a request: runs only the planner and architect stages of the
+    generation pipeline (it used to run the whole 14-stage project build to return these two).
+    """
+    from backend.graph.parallel_workflow import architect_node, planner_node
 
     started_at = perf_counter()
-
-    result = await asyncio.to_thread(
-        graph.invoke,
-        {
-            "prompt": request.message,
-            "session_id": request.session_id,
-        },
-    )
-
-    elapsed_ms = (perf_counter() - started_at) * 1000
-    print(f"/plan completed in {elapsed_ms:.1f}ms")
+    state = {
+        "prompt": request.message,
+        "user_prompt": request.message,
+        "project_id": request.session_id,
+        "session_id": request.session_id,
+        "generation_id": request.session_id,
+    }
+    state.update(await planner_node(state))
+    state.update(await architect_node(state))
 
     return {
-        "plan": result["plan"],
-        "architecture": result["architecture"],
+        "plan": state.get("plan"),
+        "architecture": state.get("architecture"),
         "session_id": request.session_id,
+        "elapsed_ms": round((perf_counter() - started_at) * 1000, 1),
     }

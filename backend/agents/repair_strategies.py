@@ -185,7 +185,29 @@ def llm_rewrite_file(files: Dict[str, str], output: str, errors: List[Dict[str, 
         except SyntaxError:
             _logger.warning("LLM repair for %s did not parse; discarded", rel)
             return {}
+        before, after = _blocking_issue_count(original), _blocking_issue_count(fixed)
+        if after is not None and before is not None and after > before:
+            _logger.warning("LLM repair for %s added blocking issues (%s -> %s); discarded", rel, before, after)
+            return {}
     return {rel: fixed}
+
+
+def _blocking_issue_count(source: str) -> Optional[int]:
+    """Undefined names / syntax errors in one Python source (ruff), or None if ruff is unavailable."""
+    import json
+    import subprocess
+    import sys
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "candidate.py")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(source)
+        try:
+            proc = subprocess.run([sys.executable, "-m", "ruff", "check", path, "--select", "E9,F63,F7,F82",
+                                   "--output-format", "json", "--no-cache"], capture_output=True, text=True, timeout=60)
+            return len(json.loads(proc.stdout or "[]"))
+        except (OSError, subprocess.SubprocessError, ValueError):
+            return None
 
 
 def propose_repairs(files: Dict[str, str], output: str, errors: List[Dict[str, Any]]) -> Tuple[str, Dict[str, str]]:

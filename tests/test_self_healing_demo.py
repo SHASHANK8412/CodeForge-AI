@@ -93,3 +93,19 @@ def test_no_fix_found_is_not_reported_as_a_fix():
         "execution_results": {"exit_code": 1, "stderr": "something odd happened"},
     })
     assert res.success is False and res.changes == {}
+
+
+def test_llm_rewrite_that_adds_errors_is_discarded(monkeypatch):
+    from backend.agents import repair_strategies
+    monkeypatch.setenv("AIFORGE_LLM_REPAIR", "1")
+    original = "from fastapi import FastAPI\n\napp = FastAPI()\nvalue = undefined_one\n"
+    worse = "app = FastAPI()\nvalue = undefined_one\nother = undefined_two\n"   # drops the import: 1 -> 3
+    better = "from fastapi import FastAPI\n\napp = FastAPI()\nvalue = 1\n"         # 1 -> 0
+    files = {"backend/main.py": original}
+    errors = [{"file": "backend/main.py", "message": "Undefined name `undefined_one`"}]
+
+    monkeypatch.setattr("backend.services.llm.generate_text", lambda *a, **k: f"```python\n{worse}```")
+    assert repair_strategies.llm_rewrite_file(files, "", errors) == {}
+
+    monkeypatch.setattr("backend.services.llm.generate_text", lambda *a, **k: f"```python\n{better}```")
+    assert repair_strategies.llm_rewrite_file(files, "", errors) == {"backend/main.py": better}

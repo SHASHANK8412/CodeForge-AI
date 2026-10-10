@@ -224,6 +224,8 @@ async def architect_node(state: ProjectState) -> dict:
         raw_arch = await architect.run_async(arch_prompt)
 
     is_valid, msg, arch_json = global_stage_validator.validate_architecture(raw_arch)
+    from backend.graph.architecture_check import validate_architecture_sections
+    arch_complete, arch_missing = validate_architecture_sections(raw_arch if isinstance(raw_arch, str) else "")
     if not user_feedback:
         global_cache_service.set("architect", plan_json, arch_json)
     memory_manager.save_agent_output(session_id, "architect", arch_json)
@@ -246,6 +248,7 @@ async def architect_node(state: ProjectState) -> dict:
 
     return {
         "architecture": arch_json,
+        "architecture_check": {"complete": arch_complete, "missing_sections": arch_missing},
         "current_step": "architect",
         "current_agent": "architect",
         "approval_required": True,
@@ -308,6 +311,7 @@ async def human_approval_node(state: ProjectState) -> dict:
         "database_design": arch_json.get("database_design", db_tech),
         "agents_ready": ["Frontend Agent", "Backend Agent", "Database Agent"],
         "risks": risks,
+        "architecture_check": state.get("architecture_check") or {},
         "expected_files": expected_files,
         "requested_by": "Architect Agent",
         "status": state.get("approval_status", "pending"),
