@@ -139,7 +139,7 @@ function Message({ sender, text, metadata, timestamp, onRegenerate }) {
                 </div>
 
                 {/* Project Summary Dashboard OR Markdown text rendering */}
-                {!isUser && (metadata?.intent === "PROJECT_GENERATION" || text.includes("# 🚀 Production Software Generated")) ? (
+                {!isUser && (metadata?.intent === "PROJECT_GENERATION" || text.startsWith("# Project generated:")) ? (
                     <ProjectSummaryDashboard metadata={metadata} filesMap={metadata?.files} />
                 ) : (
                     <div className="prose prose-invert max-w-none text-sm leading-relaxed text-gray-300">

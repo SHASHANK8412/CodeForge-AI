@@ -1,81 +1,15 @@
+"""
+Day 13: agent collaboration - which requests get a reviewer pass.
+
+Originally written against the removed router graph in backend/graph/workflow.py. The same rules
+now live in the generation pipeline and the review policy:
+  * project generation is reviewed inside the project workflow (its reviewer node), not in chat;
+  * explanations and resume edits are never reviewed;
+  * a debugging answer is reviewed when its validation score is borderline (< 0.85).
+"""
 from backend.graph import workflow
 
-
-class DummyPlanner:
-    def run(self, prompt, memory_context="", previous_output=""):
-        return f"PLAN::{prompt[:30]}"
-
-
-class DummyArchitect:
-    def run(self, plan, memory_context="", previous_output=""):
-        return """# Project Architecture
-
-# Folder Structure
-- backend/
-- frontend/
-
-# Frontend Files
-- src/App.jsx
-
-# Backend Files
-- main.py
-
-# Database Schema
-- users
-
-# API Routes
-- /chat
-
-# Dependencies
-- FastAPI
-"""
-
-
-class DummyRouter:
-    def route(self, prompt, memory_context=""):
-        text = prompt.lower()
-        if "fix" in text or "bug" in text:
-            return "debug"
-        if "resume" in text:
-            return "resume"
-        if "explain" in text:
-            return "explanation"
-        return "coding"
-
-
-class CaptureAgent:
-    def __init__(self, name):
-        self.name = name
-        self.calls = []
-
-    def run(self, user_prompt, memory_context="", previous_output=""):
-        self.calls.append(
-            {
-                "prompt": user_prompt,
-                "memory_context": memory_context,
-                "previous_output": previous_output,
-            }
-        )
-        return f"{self.name.upper()}::{len(user_prompt)}"
-
-    def process(self, user_prompt, memory_context="", previous_output=""):
-        return self.run(user_prompt, memory_context, previous_output)
-
-
-class DummyMemoryManager:
-    def build_context_block(self, session_id, prompt):
-        return {
-            "history_text": "previous prompt: Create login page",
-            "project_text": "Current Project: AIForge",
-            "relevant_text": "login flow remembered",
-        }
-
-    def build_planner_prompt(self, prompt, session_id):
-        return f"Planner Prompt::{prompt}::{session_id}"
-
-    def save_interaction(self, **kwargs):
-        self.last_saved = kwargs
-        return kwargs
+from tests._pipeline_doubles import EXPLANATION, PipelineDoubles
 
 
 def test_validate_architecture_sections_complete():
@@ -95,82 +29,61 @@ def test_validate_architecture_sections_complete():
     assert missing == []
 
 
-def test_graph_coding_path_runs_reviewer_then_explanation():
-    workflow.planner = DummyPlanner()
-    workflow.architect = DummyArchitect()
-    workflow.router = DummyRouter()
-    workflow.coding = CaptureAgent("coding")
-    workflow.debug = CaptureAgent("debug")
-    workflow.resume = CaptureAgent("resume")
-    workflow.explanation = CaptureAgent("explanation")
-    workflow.reviewer = CaptureAgent("reviewer")
-    workflow.testing_agent = CaptureAgent("testing")
-    workflow.memory_manager = DummyMemoryManager()
-
-    result = workflow.graph.invoke({"prompt": "Create Login API", "session_id": "s1"})
-
-    assert result["route"] == "coding"
-    assert workflow.coding.calls
-    assert workflow.reviewer.calls
-    assert workflow.explanation.calls
-    assert result["response"].startswith("EXPLANATION::")
+def _successors(graph, node):
+    return {e.target for e in graph.get_graph().edges if e.source == node}
 
 
-def test_graph_explanation_path_skips_reviewer():
-    workflow.planner = DummyPlanner()
-    workflow.architect = DummyArchitect()
-    workflow.router = DummyRouter()
-    workflow.coding = CaptureAgent("coding")
-    workflow.debug = CaptureAgent("debug")
-    workflow.resume = CaptureAgent("resume")
-    workflow.explanation = CaptureAgent("explanation")
-    workflow.reviewer = CaptureAgent("reviewer")
-    workflow.testing_agent = CaptureAgent("testing")
-    workflow.memory_manager = DummyMemoryManager()
+def test_graph_coding_path_runs_reviewer_then_explanation(monkeypatch):
+    doubles = PipelineDoubles(monkeypatch)
+    result = doubles.run("Create Login API", session_id="s1")
 
-    result = workflow.graph.invoke({"prompt": "Explain previous code", "session_id": "s2"})
+    assert result.intent == "PROJECT_GENERATION"
+    assert doubles.calls == ["project"], "the chat pipeline hands project review to the workflow"
+    assert result.execution_strategy == "WORKFLOW"
 
-    assert result["route"] == "explanation"
-    assert not workflow.reviewer.calls
-    assert workflow.explanation.calls
-    assert result["response"].startswith("EXPLANATION::")
+    # In the project workflow the reviewer runs on the assembled code, before documentation.
+    from backend.graph.parallel_workflow import parallel_graph
+    assert _successors(parallel_graph, "assembly") == {"reviewer"}
+    assert _successors(parallel_graph, "reviewer") == {"documentation"}
 
 
-def test_graph_debug_path_runs_reviewer_then_explanation():
-    workflow.planner = DummyPlanner()
-    workflow.architect = DummyArchitect()
-    workflow.router = DummyRouter()
-    workflow.coding = CaptureAgent("coding")
-    workflow.debug = CaptureAgent("debug")
-    workflow.resume = CaptureAgent("resume")
-    workflow.explanation = CaptureAgent("explanation")
-    workflow.reviewer = CaptureAgent("reviewer")
-    workflow.testing_agent = CaptureAgent("testing")
-    workflow.memory_manager = DummyMemoryManager()
+def test_graph_explanation_path_skips_reviewer(monkeypatch):
+    doubles = PipelineDoubles(monkeypatch)
+    result = doubles.run("Explain previous code", session_id="s2")
 
-    result = workflow.graph.invoke({"prompt": "Fix previous bug", "session_id": "s3"})
-
-    assert result["route"] == "debug"
-    assert workflow.debug.calls
-    assert workflow.reviewer.calls
-    assert workflow.explanation.calls
+    assert result.intent == "EXPLANATION"
+    assert "reviewer" not in doubles.calls
+    assert result.response.strip() == EXPLANATION
 
 
-def test_graph_resume_path_routes_to_explanation_only():
-    workflow.planner = DummyPlanner()
-    workflow.architect = DummyArchitect()
-    workflow.router = DummyRouter()
-    workflow.coding = CaptureAgent("coding")
-    workflow.debug = CaptureAgent("debug")
-    workflow.resume = CaptureAgent("resume")
-    workflow.explanation = CaptureAgent("explanation")
-    workflow.reviewer = CaptureAgent("reviewer")
-    workflow.testing_agent = CaptureAgent("testing")
-    workflow.memory_manager = DummyMemoryManager()
+def test_graph_debug_path_runs_reviewer_then_explanation(monkeypatch):
+    from backend.services import generation_service as gs
+    doubles = PipelineDoubles(monkeypatch)
+    real_validate = gs.global_output_validator.validate
 
-    result = workflow.graph.invoke({"prompt": "Generate Resume", "session_id": "s4"})
+    def borderline(**kwargs):
+        res = real_validate(**kwargs)
+        return res.model_copy(update={"score": min(res.score, 0.8)})
 
-    assert result["route"] == "resume"
-    assert workflow.resume.calls
-    assert workflow.explanation.calls
-    assert not workflow.reviewer.calls
+    monkeypatch.setattr(gs.global_output_validator, "validate", borderline)
+    result = doubles.run("Fix previous bug", session_id="s3")
+
+    assert result.intent == "DEBUGGING"
+    assert doubles.calls == ["debug", "reviewer"]
+
+
+def test_graph_debug_path_with_strong_answer_is_not_reviewed(monkeypatch):
+    doubles = PipelineDoubles(monkeypatch)
+    result = doubles.run("Fix previous bug", session_id="s3b")
+
+    assert result.intent == "DEBUGGING" and result.quality_score >= 85
+    assert doubles.calls == ["debug"]
+
+
+def test_graph_resume_path_routes_to_explanation_only(monkeypatch):
+    doubles = PipelineDoubles(monkeypatch)
+    result = doubles.run("Generate Resume", session_id="s4")
+
+    assert result.intent == "RESUME"
+    assert doubles.calls == ["resume"]
+    assert "reviewer" not in doubles.calls
