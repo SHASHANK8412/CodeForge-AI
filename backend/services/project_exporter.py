@@ -1,27 +1,18 @@
-import io
-import zipfile
 import logging
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict
+
+from backend.exporter.zipper import EXCLUDED_DIRS as EXCLUDE_PATTERNS  # noqa: F401 - kept for importers
+from backend.exporter.zipper import global_project_zipper
 
 logger = logging.getLogger("aiforge.services.project_exporter")
-
-EXCLUDE_PATTERNS = [
-    "__pycache__",
-    ".pytest_cache",
-    ".git",
-    "node_modules",
-    ".DS_Store",
-    "Thumbs.db",
-    ".venv",
-    "venv"
-]
 
 
 class ProjectExporter:
     """
     ProjectExporter packages the validated software project directory or files map into a ZIP archive.
-    - Excludes cache folders, environment paths, node_modules, and git folders.
+    - Uses the shared export policy (backend/exporter/zipper.py): no caches, virtualenvs,
+      node_modules, .git, .env files, keys or local databases.
     - Resolves path names safely and guards against path traversal vulnerabilities.
     """
 
@@ -44,20 +35,7 @@ class ProjectExporter:
         # Ensure base directory exists
         base_path.mkdir(parents=True, exist_ok=True)
 
-        buffer = io.BytesIO()
-        with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
-            for rel_path, content in files_map.items():
-                clean_rel = rel_path.replace("\\", "/").lstrip("/")
-
-                # Filter out excluded directory segments
-                parts = clean_rel.split("/")
-                if any(p in EXCLUDE_PATTERNS for p in parts) or ".." in parts:
-                    continue
-
-                archive_path = f"{safe_name}/{clean_rel}"
-                zf.writestr(archive_path, content or "")
-
-        zip_bytes = buffer.getvalue()
+        zip_bytes = global_project_zipper.create_zip_bytes(files_map, root_folder=safe_name)
         target_zip_path.write_bytes(zip_bytes)
 
         logger.info(f"[EXPORTER] Project ZIP archive created safely at {target_zip_path} ({len(zip_bytes)} bytes).")

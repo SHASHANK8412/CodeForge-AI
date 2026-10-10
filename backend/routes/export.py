@@ -19,7 +19,7 @@ from fastapi.responses import StreamingResponse, Response
 from pydantic import BaseModel
 
 from backend.config import GENERATED_PROJECTS_DIR_NAME
-from backend.exporter.zipper import global_project_zipper
+from backend.exporter.zipper import export_exclusion_reason, global_project_zipper
 from backend.exporter.gate import global_export_gate
 
 _logger = logging.getLogger("aiforge.routes.export")
@@ -66,7 +66,7 @@ def _read_project_dir(project_dir: Path) -> Dict[str, str]:
     files: Dict[str, str] = {}
     for file_path in project_dir.rglob("*"):
         rel = file_path.relative_to(project_dir)
-        if not file_path.is_file() or any(part in _SKIP_DIRS for part in rel.parts):
+        if not file_path.is_file() or any(part in _SKIP_DIRS for part in rel.parts)                 or export_exclusion_reason(rel.as_posix()):
             continue
         try:
             files[rel.as_posix()] = file_path.read_text(encoding="utf-8")

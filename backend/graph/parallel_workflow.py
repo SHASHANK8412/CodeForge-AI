@@ -1467,7 +1467,9 @@ async def live_deploy_node(state: ProjectState) -> dict:
         "current_step": "live_deploy",
         "stream_events": [
             f"✔ Packaging container deployment for {spec.frontend_tech.upper()} stack...",
-            f"✔ Services running on local ports: Backend {prov_res.backend_url}, Frontend {prov_res.frontend_url}"
+            f"✔ Containers started: Backend {prov_res.backend_url}, Frontend {prov_res.frontend_url} (health check next)"
+            if prov_res.success else
+            f"⚠ Container deployment failed: {str(getattr(prov_res, 'error', '') or getattr(prov_res, 'message', '') or 'see deployment logs')[:200]}"
         ]
     }
 
