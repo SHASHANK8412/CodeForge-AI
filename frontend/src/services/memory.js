@@ -50,7 +50,7 @@ export async function createMemory(
   type = 'ARCHITECTURE_DECISION',
   source = 'DEBATE'
 ) {
-  return _apiFetch(`/api/projects/${projectId}/memory`, {
+  return _apiFetch(`/api/projects/${projectId}/engineering-memory`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, content, type, source }),
@@ -58,27 +58,27 @@ export async function createMemory(
 }
 
 export async function fetchMemories(projectId = 'aiforge-demo', activeOnly = true) {
-  return _apiFetch(`/api/projects/${projectId}/memory?active_only=${activeOnly}`);
+  return _apiFetch(`/api/projects/${projectId}/engineering-memory?active_only=${activeOnly}`);
 }
 
 export async function searchMemories(projectId = 'aiforge-demo', query = '') {
-  return _apiFetch(`/api/projects/${projectId}/memory/search?q=${encodeURIComponent(query)}`);
+  return _apiFetch(`/api/projects/${projectId}/engineering-memory/search?q=${encodeURIComponent(query)}`);
 }
 
 export async function fetchKnowledgeGraph(projectId = 'aiforge-demo') {
-  return _apiFetch(`/api/projects/${projectId}/memory/graph`);
+  return _apiFetch(`/api/projects/${projectId}/engineering-memory/graph`);
 }
 
 export async function fetchMemoryDashboard(projectId = 'aiforge-demo') {
-  return _apiFetch(`/api/projects/${projectId}/memory/dashboard`);
+  return _apiFetch(`/api/projects/${projectId}/engineering-memory/dashboard`);
 }
 
 export async function consolidateMemories(projectId = 'aiforge-demo') {
-  return _apiFetch(`/api/projects/${projectId}/memory/consolidate`, { method: 'POST' });
+  return _apiFetch(`/api/projects/${projectId}/engineering-memory/consolidate`, { method: 'POST' });
 }
 
 export async function updateMemoryVersion(projectId = 'aiforge-demo', memoryId, newContent, reason = 'Migration') {
-  return _apiFetch(`/api/projects/${projectId}/memory/${memoryId}`, {
+  return _apiFetch(`/api/projects/${projectId}/engineering-memory/${memoryId}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ new_content: newContent, reason }),

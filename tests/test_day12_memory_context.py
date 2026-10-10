@@ -158,13 +158,13 @@ class TestDay12Memory:
         global_memory_manager.save("proj_api", MemoryType.REQUIREMENT, "api_req", "JWT Auth Required", "planner")
         global_memory_manager.save_decision("proj_api", "Use FastAPI", "High async performance", "architect")
 
-        res = app_client.get("/api/projects/proj_api/memory")
+        res = app_client.get("/api/projects/proj_api/long-term-memory")
         assert res.status_code == 200
         body = res.json()
         assert body["memories_count"] >= 1
         assert body["decisions_count"] >= 1
 
-        search_res = app_client.post("/api/projects/proj_api/memory/search", json={"query": "FastAPI", "top_k": 5})
+        search_res = app_client.post("/api/projects/proj_api/long-term-memory/search", json={"query": "FastAPI", "top_k": 5})
         assert search_res.status_code == 200
         assert search_res.json()["status"] == "success"
 

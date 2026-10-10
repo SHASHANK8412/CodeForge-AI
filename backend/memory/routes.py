@@ -38,7 +38,7 @@ class UpdateMemoryPayload(BaseModel):
     reason: str = "Migration"
 
 
-@day22_memory_router.post("/{project_id}/memory")
+@day22_memory_router.post("/{project_id}/engineering-memory")
 async def create_memory(
     project_id: str,
     payload: RememberPayload,
@@ -56,28 +56,19 @@ async def create_memory(
     return {"status": "success", "memory": mem.model_dump()}
 
 
-@day22_memory_router.get("/{project_id}/memory")
+@day22_memory_router.get("/{project_id}/engineering-memory")
 async def list_memories(
     project_id: str,
     active_only: bool = Query(True),
     user: dict = Depends(get_current_user)
 ):
     from backend.memory.repository import global_memory_repository
+    # An empty project returns an empty list (it used to have a made-up decision written into it).
     mems = global_memory_repository.get_by_project(project_id, active_only=active_only)
-    if not mems:
-        # Seed demo memory
-        m1 = global_engineering_memory_service.remember(
-            project_id=project_id,
-            title="PostgreSQL chosen for transactional consistency",
-            content="AIForge selected PostgreSQL due to order and payment ACID compliance requirements.",
-            mem_type=MemoryType.ARCHITECTURE_DECISION,
-            source=MemorySource.DEBATE
-        )
-        mems = [m1]
     return {"status": "success", "memories": [m.model_dump() for m in mems]}
 
 
-@day22_memory_router.get("/{project_id}/memory/search")
+@day22_memory_router.get("/{project_id}/engineering-memory/search")
 async def search_memories(
     project_id: str,
     q: str = Query(...),
@@ -87,7 +78,7 @@ async def search_memories(
     return {"status": "success", "memories": [m.model_dump() for m in res]}
 
 
-@day22_memory_router.get("/{project_id}/memory/graph")
+@day22_memory_router.get("/{project_id}/engineering-memory/graph")
 async def get_knowledge_graph(
     project_id: str,
     user: dict = Depends(get_current_user)
@@ -96,7 +87,7 @@ async def get_knowledge_graph(
     return {"status": "success", "graph": graph.model_dump()}
 
 
-@day22_memory_router.get("/{project_id}/memory/dashboard")
+@day22_memory_router.get("/{project_id}/engineering-memory/dashboard")
 async def get_memory_dashboard(
     project_id: str,
     user: dict = Depends(get_current_user)
@@ -105,7 +96,7 @@ async def get_memory_dashboard(
     return {"status": "success", "dashboard": score.model_dump()}
 
 
-@day22_memory_router.get("/{project_id}/memory/{memory_id}")
+@day22_memory_router.get("/{project_id}/engineering-memory/{memory_id}")
 async def get_memory_detail(
     project_id: str,
     memory_id: str,
@@ -123,7 +114,7 @@ async def get_memory_detail(
     return {"status": "success", "memory": mem.model_dump()}
 
 
-@day22_memory_router.patch("/{project_id}/memory/{memory_id}")
+@day22_memory_router.patch("/{project_id}/engineering-memory/{memory_id}")
 async def update_memory_version(
     project_id: str,
     memory_id: str,
@@ -134,7 +125,7 @@ async def update_memory_version(
     return {"status": "success", "memory": updated.model_dump()}
 
 
-@day22_memory_router.post("/{project_id}/memory/consolidate")
+@day22_memory_router.post("/{project_id}/engineering-memory/consolidate")
 async def consolidate_memories(
     project_id: str,
     user: dict = Depends(get_current_user)

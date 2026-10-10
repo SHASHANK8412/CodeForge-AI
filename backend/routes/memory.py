@@ -21,7 +21,7 @@ class SearchMemoryRequest(BaseModel):
 # Endpoints
 # ---------------------------------------------------------------------------
 
-@router.get("/{project_id}/memory")
+@router.get("/{project_id}/long-term-memory")
 def get_project_memory(
     project_id: str,
     memory_type: Optional[str] = None,
@@ -44,7 +44,7 @@ def get_project_memory(
     }
 
 
-@router.post("/{project_id}/memory/search")
+@router.post("/{project_id}/long-term-memory/search")
 def search_project_memory(
     project_id: str,
     req: SearchMemoryRequest,
@@ -63,7 +63,7 @@ def search_project_memory(
     }
 
 
-@router.delete("/{project_id}/memory/{memory_id}")
+@router.delete("/{project_id}/long-term-memory/{memory_id}")
 def delete_project_memory(
     project_id: str,
     memory_id: str,

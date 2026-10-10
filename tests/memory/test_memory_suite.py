@@ -104,7 +104,7 @@ class TestEngineeringMemorySystem:
         assert any("ADR-007" in l for l in labels)
 
     def test_memory_rest_api_endpoints(self, client):
-        # POST /memory is served by the project memory router (project_memory_routes).
+        # /memory is the project memory store (key/value records, project_memory_routes).
         create_res = client.post(
             "/api/projects/aiforge-demo/memory",
             json={"memory_type": "DATABASE", "key": "database_choice", "value": "Use PostgreSQL for ACID compliance"}
@@ -114,12 +114,29 @@ class TestEngineeringMemorySystem:
 
         list_res = client.get("/api/projects/aiforge-demo/memory")
         assert list_res.status_code == 200
+        assert any(m["key"] == "database_choice" for m in list_res.json())
 
-        search_res = client.get("/api/projects/aiforge-demo/memory/search?q=PostgreSQL")
+        # /engineering-memory is the Day 22 engineering memory (titled records, knowledge graph).
+        # It shared the /memory paths before, so its list and create endpoints were unreachable.
+        eng = client.post("/api/projects/aiforge-demo/engineering-memory",
+                          json={"title": "PostgreSQL for orders", "content": "ACID compliance for payments"})
+        assert eng.status_code == 200 and eng.json()["memory"]["title"] == "PostgreSQL for orders"
+
+        eng_list = client.get("/api/projects/aiforge-demo/engineering-memory")
+        assert eng_list.status_code == 200
+        assert any(m["title"] == "PostgreSQL for orders" for m in eng_list.json()["memories"])
+
+        search_res = client.get("/api/projects/aiforge-demo/engineering-memory/search?q=PostgreSQL")
         assert search_res.status_code == 200
+        assert "memories" in search_res.json()
 
-        graph_res = client.get("/api/projects/aiforge-demo/memory/graph")
+        graph_res = client.get("/api/projects/aiforge-demo/engineering-memory/graph")
         assert graph_res.status_code == 200
 
-        dash_res = client.get("/api/projects/aiforge-demo/memory/dashboard")
+        dash_res = client.get("/api/projects/aiforge-demo/engineering-memory/dashboard")
         assert dash_res.status_code == 200
+
+    def test_empty_engineering_memory_is_not_seeded(self, client):
+        res = client.get("/api/projects/proj_never_used_9f3c/engineering-memory")
+        assert res.status_code == 200
+        assert res.json()["memories"] == []
