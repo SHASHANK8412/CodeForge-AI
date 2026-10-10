@@ -126,8 +126,10 @@ class TestDay14SelfHealingEngine:
             "root_causes": root_causes
         }
         next_route = route_after_testing(state)
-        assert next_route == "__end__"
-        assert state["status"] in ("FAILED_REPEATED_ROOT_CAUSE", "FAILED_MAX_ITERATIONS")
+        # Stopped repairs escalate to the human review rather than ending the run silently.
+        assert next_route == "final_approval"
+        from backend.graph.parallel_workflow import repair_escalation
+        assert repair_escalation(state) in ("STOPPED_REPEATED_FAILURE", "STOPPED_MAX_ATTEMPTS")
 
     def test_quality_and_deployment_gate_blocking(self):
         findings = [
@@ -168,4 +170,6 @@ class TestDay14SelfHealingEngine:
             "max_repair_attempts": 3
         }
         route = route_after_testing(state)
-        assert route == "__end__"
+        assert route == "final_approval" and route != "packaging"
+        from backend.graph.parallel_workflow import repair_escalation
+        assert repair_escalation(state) == "STOPPED_MAX_ATTEMPTS"

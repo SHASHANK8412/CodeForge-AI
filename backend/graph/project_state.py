@@ -55,6 +55,7 @@ class ProjectState(TypedDict, total=False):
     session_id: str
     user_request: str
     template: str
+    file_backups: Dict[str, Optional[str]]
     template_check: Dict[str, Any]
     errors: List[str]
     testing_report: str

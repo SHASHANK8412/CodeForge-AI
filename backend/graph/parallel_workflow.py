@@ -701,6 +701,10 @@ async def testing_node(state: ProjectState) -> dict:
         # Routing decides on this run's result; it was computed but not returned, so the router
         # read the earlier execution check's result (e.g. a failed frontend build command).
         "execution_results": exec_res,
+        # The run's status follows the tests (it stayed "PASS" from the compile check while tests
+        # failed); a blocking UNSUPPORTED / SECURITY_ERROR status is kept.
+        "status": state.get("status") if state.get("status") in ("UNSUPPORTED", "SECURITY_ERROR")
+                  else ("PASS" if is_success else "FAIL"),
         "quality_gate": gate,
         "test_status": "passed" if is_success else "failed",
         "failed_tests": mapped_test_results["failed_tests"],
@@ -1049,7 +1053,10 @@ async def patch_node(state: ProjectState) -> dict:
         _, applied = global_patch_engine.apply_changes(str(target_dir), safe, reason=latest_fix.get("root_cause", ""))
         if not applied:
             _logger.warning(f"[Fixer] Patch for cycle {cycle} was rejected and rolled back")
+    original_files = dict(files_map)
+    file_backups = {}
     for rel, content in safe.items() if applied else []:
+        file_backups[rel] = original_files.get(rel)      # None: the patch created this file
         if content is None:
             files_map.pop(rel, None)
         else:
@@ -1072,6 +1079,7 @@ async def patch_node(state: ProjectState) -> dict:
     _fire_lifecycle("agent_completed", "patch")
     return {
         "files": files_map,
+        "file_backups": file_backups,
         "files_modified": modified_files,
         "applied_fix": applied_fix_record,
         "fix_history": fix_history,
@@ -1092,6 +1100,20 @@ def restore_file_backups(state: ProjectState) -> dict:
     files_map = dict(state.get("files", {}) or {})
     proj_path_str = state.get("project_path", "")
     target_dir = Path(proj_path_str).resolve() if proj_path_str else None
+
+    # The last patch's originals (None = the patch created the file) are restored first; the
+    # version history is the fallback. (This ignored file_backups despite its docstring.)
+    backups = state.get("file_backups") or {}
+    if backups:
+        if target_dir:
+            global_patch_engine.apply_changes(str(target_dir), backups, reason="rollback")
+        for rel, content in backups.items():
+            if content is None:
+                files_map.pop(rel, None)
+            else:
+                files_map[rel] = content
+        return {"files": files_map, "file_backups": {}, "current_step": "rollback",
+                "stream_events": [f"✔ Restored {len(backups)} file(s) from before the last patch"]}
 
     restored_ver = global_version_manager.rollback(project_id, files_map, project_dir=target_dir)
 
