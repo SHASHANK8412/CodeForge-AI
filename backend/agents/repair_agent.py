@@ -132,7 +132,7 @@ class RepairAgent(BaseAgent):
 
         if project_dir:
             target_path = (project_dir / rel_path).resolve()
-            if not str(target_path).startswith(str(project_dir)):
+            if not Path(target_path).is_relative_to(project_dir):
                 _logger.warning(f"Patch validation failed: path traversal outside project_dir for '{patch.file}'")
                 return False
 

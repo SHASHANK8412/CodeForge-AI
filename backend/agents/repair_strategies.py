@@ -2,7 +2,8 @@
 Repair strategies for the debug -> patch -> retest loop.
 
 Deterministic fixes come first: they are exact, fast and safe. The LLM rewrite of a single file
-is the fallback, and its output is only accepted if it parses and actually changes the file.
+is the fallback, and its output is only accepted if it parses, changes the file and does not add
+blocking lint errors.
 No strategy comments code out or returns a file unchanged as a "fix".
 """
 
@@ -112,6 +113,25 @@ def fix_missing_modules(files: Dict[str, str], output: str) -> Dict[str, str]:
     return {reqs_key: (current.rstrip("\n") + "\n" if current.strip() else "") + "\n".join(additions) + "\n"}
 
 
+def fix_shadowed_module(files: Dict[str, str], errors: List[Dict[str, Any]]) -> Dict[str, Optional[str]]:
+    """
+    `x.py` next to a package `x/` is unreachable: `import x` loads the package. When the package's
+    __init__.py is empty, move the module's code into it and delete the module. If both have code,
+    merging needs judgement and is left to the LLM strategy.
+    """
+    changes: Dict[str, Optional[str]] = {}
+    for e in errors or []:
+        rel = e.get("file", "")
+        if e.get("code") != "AIF-shadowed-module" or rel not in files or not rel.endswith(".py"):
+            continue
+        init = rel[:-3] + "/__init__.py"
+        if files.get(init, "").strip():
+            continue
+        changes[init] = files[rel]
+        changes[rel] = None
+    return changes
+
+
 def fix_literal_assertion(files: Dict[str, str], output: str) -> Dict[str, str]:
     """
     A test fails with `assert '<got>' == '<expected>'` and exactly one non-test source file contains
@@ -210,10 +230,11 @@ def _blocking_issue_count(source: str) -> Optional[int]:
             return None
 
 
-def propose_repairs(files: Dict[str, str], output: str, errors: List[Dict[str, Any]]) -> Tuple[str, Dict[str, str]]:
-    """(strategy name, {file: new content}); empty changes when nothing applicable was found."""
+def propose_repairs(files: Dict[str, str], output: str, errors: List[Dict[str, Any]]) -> Tuple[str, Dict[str, Optional[str]]]:
+    """(strategy name, {file: new content, or None to delete}); empty when nothing applicable was found."""
     for name, strategy in (
         ("add_missing_imports", lambda: fix_undefined_names(files, errors, output)),
+        ("merge_shadowed_module", lambda: fix_shadowed_module(files, errors)),
         ("add_missing_requirements", lambda: fix_missing_modules(files, output)),
         ("fix_literal_assertion", lambda: fix_literal_assertion(files, output)),
         ("llm_rewrite_file", lambda: llm_rewrite_file(files, output, errors)),

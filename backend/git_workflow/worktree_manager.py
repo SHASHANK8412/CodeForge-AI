@@ -51,7 +51,7 @@ class WorktreeManager:
         target_path = (self.worktree_root / f"wt-{workflow_id}").resolve()
 
         # Security check: validate path is strictly inside workspace root
-        if not str(target_path).startswith(str(self.main_repo_path)):
+        if not Path(target_path).is_relative_to(self.main_repo_path):
             return (False, target_path, "Security Error: Worktree path outside workspace root.")
 
         if target_path.exists():

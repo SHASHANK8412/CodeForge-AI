@@ -171,7 +171,7 @@ class AutonomousExecutionEngine:
                 _logger.warning(f"Path traversal detected and rejected in sandbox creation: {rel_path}")
                 continue
             dest = (sandbox_path / clean_rel).resolve()
-            if not str(dest).startswith(str(sandbox_path)):
+            if not Path(dest).is_relative_to(sandbox_path):
                 _logger.warning(f"Path traversal escaping sandbox rejected: {rel_path}")
                 continue
             dest.parent.mkdir(parents=True, exist_ok=True)
@@ -388,20 +388,14 @@ class AutonomousExecutionEngine:
                 record_step(PipelineStep.APPLYING_FIX, "IN_PROGRESS")
                 patch_start = time.perf_counter()
 
-                changes = debug_result.changes or {}
-                files_patched = []
-
-                for rel_path, updated_content in changes.items():
-                    clean_rel = rel_path.replace("\\", "/").lstrip("/")
-                    if ".." in clean_rel or clean_rel.startswith("/"):
-                        continue
-                    dest = (sandbox_path / clean_rel).resolve()
-                    if not str(dest).startswith(str(sandbox_path)):
-                        continue
-                    dest.parent.mkdir(parents=True, exist_ok=True)
-                    dest.write_text(updated_content, encoding="utf-8")
-                    current_manifest[clean_rel] = updated_content
-                    files_patched.append(clean_rel)
+                from backend.repository.patch_engine import global_patch_engine
+                changes = {k.replace("\\", "/").lstrip("/"): v for k, v in (debug_result.changes or {}).items()}
+                files_patched, _ = global_patch_engine.apply_changes(str(sandbox_path), changes, reason=debug_result.root_cause)
+                for clean_rel in files_patched:
+                    if changes[clean_rel] is None:
+                        current_manifest.pop(clean_rel, None)
+                    else:
+                        current_manifest[clean_rel] = changes[clean_rel]
                     modified_files_set.add(clean_rel)
 
                 applied_fixes.append({

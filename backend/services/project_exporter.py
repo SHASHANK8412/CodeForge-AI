@@ -38,7 +38,7 @@ class ProjectExporter:
         target_zip_path = (base_path / f"AIForge_Project_{safe_name}.zip").resolve()
 
         # Path safety check
-        if not str(target_zip_path).startswith(str(base_path)):
+        if not Path(target_zip_path).is_relative_to(base_path):
             raise ValueError(f"Unsafe export ZIP path: {target_zip_path}")
 
         # Ensure base directory exists

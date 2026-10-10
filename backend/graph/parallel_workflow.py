@@ -18,6 +18,7 @@ from backend.agents.architect_agent import ArchitectAgent
 from backend.agents.frontend_agent import FrontendAgent
 from backend.agents.backend_agent import BackendAgent
 from backend.agents.database_agent import DatabaseAgent
+from backend.repository.patch_engine import global_patch_engine
 from backend.agents.documentation import DocumentationAgent
 from backend.agents.testing_agent import TestingAgent
 from backend.agents.reviewer_agent import ReviewerAgent
@@ -1036,22 +1037,27 @@ async def patch_node(state: ProjectState) -> dict:
     changes = latest_fix.get("changes", {})
     modified_files = []
 
+    # A change of None deletes the file (e.g. a module merged into its package's __init__.py).
+    safe = {}
     for rel_path, new_content in changes.items():
         clean_rel = rel_path.replace("\\", "/").lstrip("/")
-        if ".." in clean_rel or clean_rel.startswith("/") or clean_rel.startswith("\\"):
+        if ".." in clean_rel.split("/") or ":" in clean_rel:
             _logger.warning(f"Path traversal rejected in patch_node: {rel_path}")
             continue
+        safe[clean_rel] = new_content
 
-        if target_dir:
-            dest_path = (target_dir / clean_rel).resolve()
-            if not str(dest_path).startswith(str(target_dir)):
-                _logger.warning(f"Path traversal rejected in patch_node: {rel_path}")
-                continue
-            dest_path.parent.mkdir(parents=True, exist_ok=True)
-            dest_path.write_text(new_content, encoding="utf-8")
-
-        files_map[clean_rel] = new_content
-        modified_files.append(clean_rel)
+    # All-or-nothing on disk: an unsafe path or failed write rolls the whole repair back.
+    applied = True
+    if target_dir and safe:
+        _, applied = global_patch_engine.apply_changes(str(target_dir), safe, reason=latest_fix.get("root_cause", ""))
+        if not applied:
+            _logger.warning(f"[Fixer] Patch for cycle {cycle} was rejected and rolled back")
+    for rel, content in safe.items() if applied else []:
+        if content is None:
+            files_map.pop(rel, None)
+        else:
+            files_map[rel] = content
+        modified_files.append(rel)
 
     applied_fix_record = {
         "cycle": cycle,

@@ -37,7 +37,7 @@ class SecurityPermissionManager:
             clean_rel = target_file_path.lstrip("/\\")
             target_path = (base_path / clean_rel).resolve()
 
-            if not str(target_path).startswith(str(base_path)):
+            if not Path(target_path).is_relative_to(base_path):
                 _logger.error(f"[Security] Path traversal attempt blocked: '{target_file_path}' relative to '{base_workspace_dir}'")
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,

@@ -152,7 +152,7 @@ class DebugResult(BaseModel):
     root_cause: str = Field(default="", description="Exact technical root cause explanation")
     error_type: str = Field(default="UNKNOWN", description="Category: SYNTAX_ERROR, IMPORT_ERROR, ASSERTION_FAILURE, API_MISMATCH, etc.")
     files_to_modify: List[str] = Field(default_factory=list, description="List of relative file paths needing modification")
-    changes: Dict[str, str] = Field(default_factory=dict, description="Mapping of relative file path -> proposed updated content")
+    changes: Dict[str, Optional[str]] = Field(default_factory=dict, description="Relative file path -> proposed content (None deletes the file)")
     confidence: float = Field(default=1.0, description="Confidence score between 0.0 and 1.0")
     explanation: str = Field(default="", description="Detailed fix explanation")
 

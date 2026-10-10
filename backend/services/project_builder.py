@@ -115,7 +115,7 @@ class StructuredProjectBuilder:
         target_dir = (base_path / safe_name).resolve()
 
         # Security check: ensure target_dir is strictly inside base_path
-        if not str(target_dir).startswith(str(base_path)):
+        if not Path(target_dir).is_relative_to(base_path):
             raise ValueError(f"Unsafe project directory path: {target_dir}")
 
         target_dir.mkdir(parents=True, exist_ok=True)
@@ -128,7 +128,7 @@ class StructuredProjectBuilder:
             dest_path = (target_dir / clean_rel).resolve()
 
             # Path traversal security check
-            if not str(dest_path).startswith(str(target_dir)):
+            if not Path(dest_path).is_relative_to(target_dir):
                 raise ValueError(f"Security Warning: Path traversal detected for path '{rel_path_str}'")
 
             dest_path.parent.mkdir(parents=True, exist_ok=True)

@@ -262,7 +262,7 @@ class DebugAgent(BaseAgent):
                 continue
             if target_path:
                 dest = (target_path / clean_rel).resolve()
-                if not str(dest).startswith(str(target_path)):
+                if not Path(dest).is_relative_to(target_path):
                     _logger.warning(f"Path traversal attempt rejected in DebugAgent: {rel_f}")
                     continue
             safe_files_to_modify.append(clean_rel)
@@ -281,7 +281,7 @@ class DebugAgent(BaseAgent):
             clean_rel = rel.replace("\\", "/").lstrip("/")
             if ".." in clean_rel:
                 continue
-            if target_path and not str((target_path / clean_rel).resolve()).startswith(str(target_path)):
+            if target_path and not (target_path / clean_rel).resolve().is_relative_to(target_path.resolve()):
                 continue
             proposed_changes[clean_rel] = content
         if proposed_changes:

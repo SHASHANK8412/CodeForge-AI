@@ -316,7 +316,7 @@ def list_project_files(project_name: str):
     # Secure against directory traversal
     resolved_proj_dir = project_dir.resolve()
     resolved_base_dir = GENERATED_PROJECTS_DIR.resolve()
-    if not str(resolved_proj_dir).startswith(str(resolved_base_dir)):
+    if not Path(resolved_proj_dir).is_relative_to(resolved_base_dir):
         raise HTTPException(status_code=400, detail="Invalid project directory path.")
         
     if not project_dir.exists() or not project_dir.is_dir():
@@ -351,12 +351,15 @@ def get_project_file_content(project_name: str, path: str):
     project_dir = GENERATED_PROJECTS_DIR / project_name
     file_path = project_dir / path
     
-    # Secure against directory traversal
+    # Secure against directory traversal: the file must be inside this project, not just inside
+    # the generated-projects folder (which would expose other projects' files).
     resolved_file_path = file_path.resolve()
     resolved_base_dir = GENERATED_PROJECTS_DIR.resolve()
-    if not str(resolved_file_path).startswith(str(resolved_base_dir)):
+    resolved_proj_dir = project_dir.resolve()
+    if not resolved_proj_dir.is_relative_to(resolved_base_dir) or resolved_proj_dir == resolved_base_dir \
+            or not resolved_file_path.is_relative_to(resolved_proj_dir):
         raise HTTPException(status_code=400, detail="Invalid file path.")
-        
+
     if not file_path.exists() or not file_path.is_file():
         raise HTTPException(status_code=404, detail="File not found.")
         
@@ -777,7 +780,7 @@ def save_project_file(project_id: str, request: SaveFileRequest):
         
     resolved_proj_dir = target_dir.resolve()
     resolved_base_dir = GENERATED_PROJECTS_DIR.resolve()
-    if not str(resolved_proj_dir).startswith(str(resolved_base_dir)):
+    if not Path(resolved_proj_dir).is_relative_to(resolved_base_dir):
         raise HTTPException(status_code=400, detail="Invalid project ID path.")
 
     clean_path = request.path.replace("\\", "/").lstrip("/")
@@ -785,7 +788,7 @@ def save_project_file(project_id: str, request: SaveFileRequest):
         raise HTTPException(status_code=400, detail="Path traversal rejected.")
         
     file_path = (resolved_proj_dir / clean_path).resolve()
-    if not str(file_path).startswith(str(resolved_proj_dir)):
+    if not Path(file_path).is_relative_to(resolved_proj_dir):
         raise HTTPException(status_code=400, detail="Path traversal rejected.")
         
     if len(request.content) > 5 * 1024 * 1024:
@@ -898,7 +901,7 @@ async def propose_fix_route(project_id: str, request: ProposeFixRequest):
         
     clean_path = request.file.replace("\\", "/").lstrip("/")
     file_path = (target_dir / clean_path).resolve()
-    if not str(file_path).startswith(str(target_dir.resolve())):
+    if not Path(file_path).is_relative_to(target_dir.resolve()):
         raise HTTPException(status_code=400, detail="Path traversal blocked.")
         
     if not file_path.exists():
@@ -965,7 +968,7 @@ def apply_fix_route(project_id: str, request: ApplyFixRequest):
         raise HTTPException(status_code=400, detail="Path traversal blocked.")
         
     file_path = (target_dir / clean_path).resolve()
-    if not str(file_path).startswith(str(target_dir.resolve())):
+    if not Path(file_path).is_relative_to(target_dir.resolve()):
         raise HTTPException(status_code=400, detail="Path traversal blocked.")
 
     try:

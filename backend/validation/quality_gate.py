@@ -2,8 +2,9 @@
 Code-quality gate for generated projects.
 
 Blocking errors are real defects, not style: Python syntax errors, undefined names and invalid
-comparisons (ruff E9, F63, F7, F82), and JS/JSX parse and correctness errors (oxlint). Unused
-imports and variables are reported as warnings. The pipeline treats blocking errors like failing
+comparisons (ruff E9, F63, F7, F82), cross-file import errors (import_check: project modules or
+names that do not exist, a module shadowed by a package), and JS/JSX parse and correctness errors
+(oxlint). Unused imports and variables are reported as warnings. The pipeline treats blocking errors like failing
 tests, so they go through the debug -> patch -> retest loop.
 """
 
@@ -91,7 +92,8 @@ def run_quality_gate(project_dir: Any) -> Dict[str, Any]:
 
     py = _python_issues(project)
     js = _js_issues(project)
-    issues = (py or []) + (js or [])
+    from backend.validation.import_check import local_import_issues
+    issues = (py or []) + local_import_issues(project) + (js or [])
     skipped = [name for name, res in (("python (ruff unavailable)", py), ("javascript (oxlint unavailable)", js)) if res is None]
     errors = [i for i in issues if i["severity"] == "error"]
     return {
