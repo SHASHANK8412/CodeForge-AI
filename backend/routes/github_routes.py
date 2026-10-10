@@ -381,10 +381,11 @@ def git_push_endpoint(req: GitPushRequest):
 
     token = os.getenv("GITHUB_TOKEN")
     if not token:
+        # Nothing was pushed; this used to answer success with a simulated "Everything up-to-date".
         return {
-            "success": True,
-            "stdout": "Everything up-to-date (Simulated)",
-            "message": "Git push simulation complete."
+            "success": False,
+            "stdout": "",
+            "message": "Not pushed: GITHUB_TOKEN is not configured."
         }
 
     push_res = global_git_service.push(project_dir, remote="origin", branch="main")

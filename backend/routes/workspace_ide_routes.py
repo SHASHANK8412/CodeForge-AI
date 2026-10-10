@@ -240,7 +240,7 @@ def save_workspace_file(project_id: str, req: SaveFileRequest) -> Dict[str, Any]
 
     return {
         "success": True,
-        "status": "VALIDATION REQUIRED",
+        "status": "VALIDATION REQUIRED" if validation_errors else "SUCCESS",
         "project_id": project_id,
         "path": clean_p,
         "file_hash": new_hash,

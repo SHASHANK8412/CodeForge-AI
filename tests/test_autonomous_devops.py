@@ -144,11 +144,23 @@ def test_explicit_user_approval_enforcement(sample_devops_files):
     with pytest.raises(PermissionError):
         asyncio.run(agent.execute_approved_deployment("approval_test", plan, approved_by_user=False))
 
-    # 2. Approved deployment executes successfully
+    # 2. Approved, but no provider credentials in this environment: nothing is deployed, and the
+    #    result says so (it must not report LIVE for a deployment that did not happen).
     result = asyncio.run(agent.execute_approved_deployment("approval_test", plan, approved_by_user=True))
+    assert result["status"] != "LIVE"
+
+    # 3. Approved with providers that succeed: the orchestration reports their real URLs.
+    from backend.agents import devops_agent as devops_module
+
+    def live(name, url):
+        async def deploy(project_id, config):
+            return {"provider": name, "status": "LIVE", "url": url}
+        return deploy
+    import unittest.mock as um
+    with um.patch.object(devops_module.global_render_provider, "deploy", live("render", "https://api.example.onrender.com")),          um.patch.object(devops_module.global_vercel_provider, "deploy", live("vercel", "https://app.example.vercel.app")),          um.patch.object(devops_module.global_neon_provider, "deploy", live("neon", "postgres://neon")):
+        result = asyncio.run(agent.execute_approved_deployment("approval_test", plan, approved_by_user=True))
     assert result["status"] == "LIVE"
-    assert "vercel" in result["frontend_url"] or "http" in result["frontend_url"]
-    assert "render" in result["backend_url"] or "http" in result["backend_url"]
+    assert "vercel" in result["frontend_url"] and "render" in result["backend_url"]
 
 
 def test_devops_copilot_failure_diagnosis():
@@ -215,9 +227,21 @@ def test_devops_fastapi_rest_endpoints():
     diag_data = resp_diag.json()
     assert diag_data["category"] == "ENVIRONMENT_CONFIGURATION"
 
-    # 4. Rollback endpoint
-    resp_rb = client.post("/api/projects/aiforge-demo/deployment/rollback", json={
-        "target_version": "v1"
-    })
-    assert resp_rb.status_code == 200
-    assert resp_rb.json()["status"] == "ROLLED_BACK"
+    # 4. Rollback endpoint: with a checkpoint the project is restored; without one nothing is
+    #    claimed (it used to answer ROLLED_BACK regardless).
+    from backend.routes import export as export_routes
+    project = export_routes.GENERATED_ROOT / "rollback_endpoint_test"
+    project.mkdir(parents=True, exist_ok=True)
+    try:
+        (project / "main.py").write_text("v1", encoding="utf-8")
+        checkpoint = global_rollback_manager.create_deployment_checkpoint(project)
+        (project / "main.py").write_text("v2 broken", encoding="utf-8")
+        resp_rb = client.post("/api/projects/rollback_endpoint_test/deployment/rollback", json={"target_version": checkpoint})
+        assert resp_rb.status_code == 200
+        assert resp_rb.json()["status"] == "ROLLED_BACK"
+        assert (project / "main.py").read_text(encoding="utf-8") == "v1"
+    finally:
+        import shutil
+        shutil.rmtree(project, ignore_errors=True)
+    none = client.post("/api/projects/aiforge-demo/deployment/rollback", json={"target_version": "v1"})
+    assert none.status_code in (200, 404) and none.json().get("status") != "ROLLED_BACK"

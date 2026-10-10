@@ -129,18 +129,11 @@ def test_deployment_state_machine_flow(setup_test_project, monkeypatch):
 
 
 def test_git_github_router_endpoints(setup_test_project, monkeypatch):
+    """Local git operations run for real; push and pull requests are external actions that need a
+    token and a published repository, and report honestly when they cannot happen."""
     project_id = setup_test_project
     project_dir = GENERATED_PROJECTS_DIR / project_id
-
-    from backend.routes import github_routes
-    original_run_git = github_routes._run_git_cmd
-
-    # Intercept git push commands to avoid live remote repository push authentication blocks
-    def mock_run_git(project_dir, cmd):
-        if "git push" in cmd:
-            return "Everything up-to-date"
-        return original_run_git(project_dir, cmd)
-    monkeypatch.setattr(github_routes, "_run_git_cmd", mock_run_git)
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
 
     # 1. Git Init
     res_init = client.post("/api/github/git-init", json={"project_id": project_id})
@@ -153,9 +146,12 @@ def test_git_github_router_endpoints(setup_test_project, monkeypatch):
     res_status = client.get(f"/api/github/git-status?project_id={project_id}")
     assert res_status.status_code == 200
     assert res_status.json()["success"] is True
-    assert "on branch" in res_status.json()["stdout"].lower()
+    assert "branch" in res_status.json()["stdout"].lower()
 
-    # 3. Git Commit
+    # 3. Git Commit (needs a committer identity in the throwaway repo)
+    import subprocess
+    subprocess.run(["git", "-C", str(project_dir), "config", "user.email", "test@example.com"], check=True)
+    subprocess.run(["git", "-C", str(project_dir), "config", "user.name", "AIForge Test"], check=True)
     res_commit = client.post("/api/github/commit", json={"project_id": project_id, "message": "feat: init commit"})
     assert res_commit.status_code == 200
     assert res_commit.json()["success"] is True
@@ -165,25 +161,14 @@ def test_git_github_router_endpoints(setup_test_project, monkeypatch):
     assert res_branch.status_code == 200
     assert res_branch.json()["success"] is True
 
-    # 5. Connect Remote
-    res_conn = client.post("/api/github/connect", json={"project_id": project_id, "repo_url": "https://github.com/SHASHANK8412/test-repo"})
-    assert res_conn.status_code == 200
-    assert res_conn.json()["status"] == "CONNECTED"
-
-    # 6. Push
-    res_push = client.post("/api/github/push", json={"project_id": project_id, "remote_url": "https://github.com/SHASHANK8412/test-repo"})
+    # 5. Push without a token: nothing is pushed and the response says so (it used to report a
+    #    simulated success).
+    res_push = client.post("/api/github/push", json={"project_id": project_id})
     assert res_push.status_code == 200
-    assert res_push.json()["success"] is True
+    assert res_push.json()["success"] is False and "GITHUB_TOKEN" in res_push.json()["message"]
 
-    # 7. Pull Request creation
+    # 6. A pull request needs the project to be published first.
     res_pr = client.post("/api/github/pull-request", json={
-        "project_id": project_id,
-        "title": "Autonomous bugfix integration",
-        "body": "Fixes connection latency",
-        "head_branch": "aiforge/test-feature",
-        "base_branch": "main"
-    })
-    assert res_pr.status_code == 200
-    pr_data = res_pr.json()
-    assert pr_data["success"] is True
-    assert pr_data["pr_number"] == 42
+        "project_id": project_id, "title": "Autonomous bugfix integration", "body": "Fixes connection latency",
+        "head_branch": "aiforge/test-feature", "base_branch": "main"})
+    assert res_pr.status_code == 400
