@@ -18,6 +18,7 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
     const [loadingImpact, setLoadingImpact] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [modifyingProject, setModifyingProject] = useState(false);
+    const [editResult, setEditResult] = useState(null);
 
     useEffect(() => {
         loadProjects();
@@ -96,23 +97,22 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
         }
     };
 
+    // Focused edit: only the needed files change; tests run before and after, and an edit that
+    // makes things worse is rolled back by the backend (POST /api/projects/{id}/edit).
     const handleModifyProject = async () => {
         if (!impactPrompt.trim()) return;
         setModifyingProject(true);
+        setEditResult(null);
         try {
-            const res = await fetch(`${BACKEND_URL}/api/projects/${selectedProject}/modify`, {
+            const res = await fetch(`${BACKEND_URL}/api/projects/${encodeURIComponent(selectedProject)}/edit`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt: impactPrompt })
+                body: JSON.stringify({ request: impactPrompt })
             });
-            if (res.ok) {
-                const data = await res.json();
-                if (setActiveGenerationId) setActiveGenerationId(data.generation_id);
-                if (setActiveProjectName) setActiveProjectName(selectedProject);
-                if (setView) setView("build");
-            }
+            const data = await res.json();
+            setEditResult(res.ok ? data : { status: "error", reason: data.detail || `HTTP ${res.status}` });
         } catch (e) {
-            console.error("Modify project failed:", e);
+            setEditResult({ status: "error", reason: e.message });
         } finally {
             setModifyingProject(false);
         }
@@ -405,10 +405,32 @@ export default function ProjectOverviewPage({ projectId = "AIForgeApp", setView,
                                     className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-lg shadow-indigo-600/20 transition disabled:opacity-50"
                                 >
                                     <ArrowRight className="w-4 h-4" />
-                                    {modifyingProject ? "Launching..." : "Modify Existing Project"}
+                                    {modifyingProject ? "Editing and testing..." : "Apply Change"}
                                 </button>
                             </div>
                         </div>
+
+                        {editResult && (
+                            <div className={`rounded-xl p-5 border text-xs space-y-2 ${editResult.status === "applied" ? "border-emerald-500/40 bg-emerald-500/5" : "border-amber-500/40 bg-amber-500/5"}`}>
+                                <p className="font-bold text-white">
+                                    {{ applied: "Change applied", rolled_back: "Change rolled back", no_changes: "No changes made", rejected: "Change rejected", error: "Edit failed" }[editResult.status] || editResult.status}
+                                </p>
+                                {editResult.reason && <p className="text-gray-300">{editResult.reason}</p>}
+                                {editResult.changed_files?.length > 0 && (
+                                    <p className="text-gray-300">Files: <span className="font-mono">{editResult.changed_files.join(", ")}</span></p>
+                                )}
+                                {editResult.after?.tests_status && (
+                                    <p className="text-gray-300">
+                                        Tests: {editResult.before?.tests_passed ?? 0}/{editResult.before?.tests_total ?? 0} before,{" "}
+                                        {editResult.after.tests_passed}/{editResult.after.tests_total} after ({editResult.after.tests_status});
+                                        quality-gate errors {editResult.before?.gate_errors ?? 0} → {editResult.after.gate_errors}
+                                    </p>
+                                )}
+                                {Object.keys(editResult.rejected_paths || {}).length > 0 && (
+                                    <p className="text-amber-300">Refused: {Object.entries(editResult.rejected_paths).map(([p, r]) => `${p} (${r})`).join("; ")}</p>
+                                )}
+                            </div>
+                        )}
 
                         {/* Impact Report Card */}
                         {impactReport && (

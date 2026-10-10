@@ -226,6 +226,28 @@ def reindex_codebase(project_id: str, force: bool = Query(False)) -> Dict[str, A
 # Project Modification Execution Endpoint
 # ---------------------------------------------------------------------------
 
+class EditProjectPayload(BaseModel):
+    request: str = Field(min_length=5, description="What to change, in plain words")
+
+
+@router.post("/{project_id}/edit")
+async def edit_existing_project(project_id: str, payload: EditProjectPayload) -> Dict[str, Any]:
+    """
+    Focused edit of an existing project: only the files the request needs change, the quality
+    gate and tests run before and after, and an edit that makes things worse is rolled back.
+    project_id is a generation id or a folder under generated_projects/.
+    """
+    import asyncio
+    from backend.generation.project_editor import edit_project
+    from backend.routes.export import _generation_record, _safe_project_dir
+    record = _generation_record(project_id)
+    project_dir = _safe_project_dir(record.get("project_path", "") if record else project_id)
+    if not project_dir:
+        raise HTTPException(status_code=404, detail=f"No generated project folder for '{project_id}'.")
+    result = await asyncio.to_thread(edit_project, project_dir, payload.request, project_id)
+    return result.to_dict()
+
+
 @router.post("/{project_id}/modify")
 async def modify_existing_project(project_id: str, payload: ModifyProjectPayload) -> Dict[str, Any]:
     """Launches an autonomous generation pipeline modifying the existing project."""
