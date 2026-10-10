@@ -1,0 +1,323 @@
+[
+  {
+    "id": "mission_dashboard_redesign",
+    "title": "Improve AIForge Workspace & Navigation",
+    "goal": "Take the existing project, analyze the UI components, implement responsive modern dashboard, run test suite, and perform visual QA.",
+    "status": "COMPLETED",
+    "progress_percent": 100,
+    "active_agent": "Visual QA Agent",
+    "environment": "Isolated Sandbox Container (vNode-22)",
+    "project_id": "aiforge-fooddelivery-ai",
+    "files_changed_count": 7,
+    "tests_count": 14,
+    "tests_passed_count": 14,
+    "approvals_required_count": 1,
+    "pending_approval": null,
+    "stages": [
+      {
+        "id": "s1",
+        "name": "\ud83e\udde0 Planning & Architecture",
+        "icon": "\ud83e\udde0",
+        "status": "COMPLETED",
+        "output_summary": "Synthesized 5-stage UI modernization plan.",
+        "duration_seconds": 1.2
+      },
+      {
+        "id": "s2",
+        "name": "\ud83d\udd0d Inspecting Project Workspace",
+        "icon": "\ud83d\udd0d",
+        "status": "COMPLETED",
+        "output_summary": "Scanned 128 AST symbols via MCP Filesystem tool.",
+        "duration_seconds": 1.8
+      },
+      {
+        "id": "s3",
+        "name": "\ud83c\udfa8 UI & Contrast Analysis",
+        "icon": "\ud83c\udfa8",
+        "status": "COMPLETED",
+        "output_summary": "Analyzed WCAG contrast and layout hierarchy.",
+        "duration_seconds": 2.1
+      },
+      {
+        "id": "s4",
+        "name": "\ud83d\udcbb Implementing Code Modifications",
+        "icon": "\ud83d\udcbb",
+        "status": "COMPLETED",
+        "output_summary": "Refactored Dashboard & Navigation components in sandbox.",
+        "duration_seconds": 3.4
+      },
+      {
+        "id": "s5",
+        "name": "\ud83e\uddea Running Automated Test Suite",
+        "icon": "\ud83e\uddea",
+        "status": "COMPLETED",
+        "output_summary": "Executed 14 Jest/React tests. 100% Pass.",
+        "duration_seconds": 2.0
+      },
+      {
+        "id": "s6",
+        "name": "\ud83d\udc41 Visual QA & Screenshot Regression",
+        "icon": "\ud83d\udc41",
+        "status": "COMPLETED",
+        "output_summary": "Verified 0 DOM layout shifts across 375px & 1440px.",
+        "duration_seconds": 1.9
+      },
+      {
+        "id": "s7",
+        "name": "\ud83d\udce6 Final Report & Artifact Synthesis",
+        "icon": "\ud83d\udce6",
+        "status": "COMPLETED",
+        "output_summary": "Mission successfully completed with verified changes.",
+        "duration_seconds": 0.8
+      }
+    ],
+    "task_graph": [],
+    "checkpoints": [],
+    "terminal_logs": [
+      "[Mission Control] Autonomous Computer runtime initialized in sandbox.",
+      "[MCP Filesystem] Reading src/components/Dashboard.jsx...",
+      "[Planner] Formulated 5 atomic file transformation patches.",
+      "[MCP Shell] Executing test runner: npm test -- --coverage",
+      "[MCP Shell] 14/14 tests passed (0 errors, 0 warnings)",
+      "[Visual QA] Headless browser captured screenshot. Contrast verified at 8.4:1 ratio.",
+      "[Mission Control] Mission completed successfully. Ready for deployment."
+    ],
+    "final_report": "# \ud83d\ude80 AIForge Mission Control Report: Dashboard Modernization\n\n## \ud83d\udccb Mission Deliverables\n- **Files Modified**: 7 UI Components (`Dashboard.jsx`, `Sidebar.jsx`, `TopNav.jsx`, `CommandPalette.jsx`)\n- **Automated Tests**: 14 / 14 Unit & Integration Tests Passed (100%)\n- **Visual QA**: Verified 0 layout shifts across Desktop, Tablet, and Mobile breakpoints.\n- **Safety Gate**: Approved 1 destructive file mutation checkpoint.",
+    "created_at": "2026-08-30 15:57:50",
+    "updated_at": "2026-08-30 15:57:50"
+  },
+  {
+    "id": "mission_efe2731c",
+    "title": "Test Mission",
+    "goal": "Automated testing",
+    "status": "COMPLETED",
+    "progress_percent": 100,
+    "active_agent": "Visual QA Agent",
+    "environment": "Isolated Sandbox Container (vNode-22)",
+    "project_id": "aiforge-fooddelivery-ai",
+    "files_changed_count": 3,
+    "tests_count": 8,
+    "tests_passed_count": 8,
+    "approvals_required_count": 1,
+    "pending_approval": null,
+    "stages": [
+      {
+        "id": "s1",
+        "name": "\ud83e\udde0 Planning & Architecture",
+        "icon": "\ud83e\udde0",
+        "status": "COMPLETED",
+        "output_summary": "Deconstructed goal into 4 specialist sub-agent missions.",
+        "duration_seconds": 1.1
+      },
+      {
+        "id": "s2",
+        "name": "\ud83d\udd0d Inspecting Project Workspace",
+        "icon": "\ud83d\udd0d",
+        "status": "COMPLETED",
+        "output_summary": "Discovered 42 project files via MCP Filesystem.",
+        "duration_seconds": 1.4
+      },
+      {
+        "id": "s3",
+        "name": "\ud83c\udfa8 UI & Architecture Analysis",
+        "icon": "\ud83c\udfa8",
+        "status": "COMPLETED",
+        "output_summary": "Specialist agent evaluating component hierarchy...",
+        "duration_seconds": 0.8
+      },
+      {
+        "id": "s4",
+        "name": "\ud83d\udcbb Implementing Changes",
+        "icon": "\ud83d\udcbb",
+        "status": "COMPLETED",
+        "output_summary": null,
+        "duration_seconds": 0.0
+      },
+      {
+        "id": "s5",
+        "name": "\ud83e\uddea Running Sandbox Tests",
+        "icon": "\ud83e\uddea",
+        "status": "COMPLETED",
+        "output_summary": null,
+        "duration_seconds": 0.0
+      },
+      {
+        "id": "s6",
+        "name": "\ud83d\udc41 Visual QA",
+        "icon": "\ud83d\udc41",
+        "status": "COMPLETED",
+        "output_summary": null,
+        "duration_seconds": 0.0
+      },
+      {
+        "id": "s7",
+        "name": "\ud83d\udce6 Final Report",
+        "icon": "\ud83d\udce6",
+        "status": "COMPLETED",
+        "output_summary": null,
+        "duration_seconds": 0.0
+      }
+    ],
+    "task_graph": [],
+    "checkpoints": [],
+    "terminal_logs": [
+      "[Mission Control] Launched Autonomous Mission: 'Test Mission'",
+      "[MCP Gateway] Connected to 5 Sandbox MCP Servers (Filesystem, Shell, Visual QA, Memory, Git)",
+      "[Planner Agent] Analyzed AST topology & dependencies.",
+      "[Sandbox] Workspace mounted into isolated virtual container.",
+      "[Human Consent Gateway] Action APPROVED by user. Applied changes to workspace.",
+      "[Mission Control] 8/8 tests passed. Visual QA score: 100%."
+    ],
+    "final_report": "# \ud83d\ude80 Mission Completed: Test Mission\n\nAll stages verified and executed cleanly in isolated sandbox runtime.",
+    "created_at": "2026-08-30 15:57:50",
+    "updated_at": "2026-08-30 15:57:50"
+  },
+  {
+    "id": "mission_4253389c",
+    "title": "Test Mission Plan",
+    "goal": "Verify task graph",
+    "status": "COMPLETED",
+    "progress_percent": 100,
+    "active_agent": "Visual QA Agent",
+    "environment": "Isolated Sandbox Container (vNode-22)",
+    "project_id": "aiforge-fooddelivery-ai",
+    "files_changed_count": 3,
+    "tests_count": 8,
+    "tests_passed_count": 8,
+    "approvals_required_count": 1,
+    "pending_approval": null,
+    "stages": [
+      {
+        "id": "s1",
+        "name": "\ud83e\udde0 Planning & Architecture",
+        "icon": "\ud83e\udde0",
+        "status": "COMPLETED",
+        "output_summary": "Deconstructed goal into 4 specialist sub-agent missions.",
+        "duration_seconds": 1.1
+      },
+      {
+        "id": "s2",
+        "name": "\ud83d\udd0d Inspecting Project Workspace",
+        "icon": "\ud83d\udd0d",
+        "status": "COMPLETED",
+        "output_summary": "Discovered 42 project files via MCP Filesystem.",
+        "duration_seconds": 1.4
+      },
+      {
+        "id": "s3",
+        "name": "\ud83c\udfa8 UI & Architecture Analysis",
+        "icon": "\ud83c\udfa8",
+        "status": "COMPLETED",
+        "output_summary": "Specialist agent evaluating component hierarchy...",
+        "duration_seconds": 0.8
+      },
+      {
+        "id": "s4",
+        "name": "\ud83d\udcbb Implementing Changes",
+        "icon": "\ud83d\udcbb",
+        "status": "COMPLETED",
+        "output_summary": null,
+        "duration_seconds": 0.0
+      },
+      {
+        "id": "s5",
+        "name": "\ud83e\uddea Running Sandbox Tests",
+        "icon": "\ud83e\uddea",
+        "status": "COMPLETED",
+        "output_summary": null,
+        "duration_seconds": 0.0
+      },
+      {
+        "id": "s6",
+        "name": "\ud83d\udc41 Visual QA",
+        "icon": "\ud83d\udc41",
+        "status": "COMPLETED",
+        "output_summary": null,
+        "duration_seconds": 0.0
+      },
+      {
+        "id": "s7",
+        "name": "\ud83d\udce6 Final Report",
+        "icon": "\ud83d\udce6",
+        "status": "COMPLETED",
+        "output_summary": null,
+        "duration_seconds": 0.0
+      }
+    ],
+    "task_graph": [
+      {
+        "id": "t1",
+        "name": "Inspect Workspace",
+        "description": "Scan AST topology and file tree.",
+        "status": "COMPLETED",
+        "assigned_agent": "Planner Agent",
+        "mcp_tools": [
+          "filesystem.read_file"
+        ],
+        "dependencies": [],
+        "risk_level": "LOW"
+      },
+      {
+        "id": "t2",
+        "name": "UI Component Audit",
+        "description": "Evaluate contrast and responsiveness.",
+        "status": "COMPLETED",
+        "assigned_agent": "UI Agent",
+        "mcp_tools": [
+          "visual_qa.audit_ui_layout"
+        ],
+        "dependencies": [
+          "t1"
+        ],
+        "risk_level": "LOW"
+      },
+      {
+        "id": "t3",
+        "name": "Apply Component Patches",
+        "description": "Refactor target files.",
+        "status": "COMPLETED",
+        "assigned_agent": "Coding Agent",
+        "mcp_tools": [
+          "filesystem.write_file_patch"
+        ],
+        "dependencies": [
+          "t2"
+        ],
+        "risk_level": "HIGH"
+      },
+      {
+        "id": "t4",
+        "name": "Automated Test Suite",
+        "description": "Run unit and integration tests.",
+        "status": "COMPLETED",
+        "assigned_agent": "Testing Agent",
+        "mcp_tools": [
+          "shell.run_test_suite"
+        ],
+        "dependencies": [
+          "t3"
+        ],
+        "risk_level": "COMPUTE"
+      }
+    ],
+    "checkpoints": [
+      {
+        "checkpoint_id": "chk_4971d6af",
+        "stage_id": "s1",
+        "snapshot_title": "Architecture Plan Approved",
+        "created_at": "2026-08-30 15:58:59"
+      }
+    ],
+    "terminal_logs": [
+      "[Mission Control] Launched Autonomous Mission: 'Test Mission Plan'",
+      "[MCP Gateway] Connected to 5 Sandbox MCP Servers (Filesystem, Shell, Visual QA, Memory, Git)",
+      "[Planner Agent] Analyzed AST topology & dependencies.",
+      "[Sandbox] Workspace mounted into isolated virtual container.",
+      "[Human Consent Gateway] Action APPROVED by user. Applied changes to workspace.",
+      "[Mission Control] 8/8 tests passed. Visual QA score: 100%."
+    ],
+    "final_report": "# \ud83d\ude80 Mission Completed: Test Mission Plan\n\nAll stages verified and executed cleanly in isolated sandbox runtime.",
+    "created_at": "2026-08-30 15:58:59",
+    "updated_at": "2026-08-30 16:46:54"
+  }
+]

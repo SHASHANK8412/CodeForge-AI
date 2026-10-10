@@ -1,7 +1,8 @@
+import { BACKEND_URL } from '../config/backend';
 import axios from "axios";
 
 const API = axios.create({
-    baseURL: "http://127.0.0.1:8000",
+    baseURL: `${BACKEND_URL}`,
 });
 
 export async function uploadRagDocuments(files, onProgress) {

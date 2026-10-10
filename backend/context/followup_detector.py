@@ -16,6 +16,8 @@ class FollowUpDetector:
     """
 
     FOLLOW_UP_PATTERNS = [
+        r"^(continue|go on|keep going|carry on|proceed)\b",
+        r"\b(continue|resume) (it|that|this|from|where)\b",
         r"\bmake it\b",
         r"\bchange it\b",
         r"\bconvert it\b",
@@ -99,7 +101,8 @@ class FollowUpDetector:
                 }
 
         # 4. Check Pronoun and Demonstrative References
-        if any(ref in prompt_lower for ref in [" it ", " that ", " this ", " the code ", " the function ", " the error ", " the file "]):
+        padded = f" {re.sub(r'[^a-z0-9 ]', ' ', prompt_lower)} "
+        if any(ref in padded for ref in [" it ", " that ", " this ", " the code ", " the function ", " the error ", " the file "]):
             return {
                 "is_follow_up": True,
                 "confidence": 0.85,

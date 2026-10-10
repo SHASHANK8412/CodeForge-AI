@@ -19,7 +19,6 @@ from backend.performance.health import global_health_service
 from backend.performance.metrics import global_metrics_service
 from backend.performance.checkpoint import global_workflow_checkpoint_manager
 from backend.performance.audit import global_audit_logger
-from backend.performance.profiler import global_performance_profiler
 
 logger = logging.getLogger("aiforge.evaluation.performance_evaluator")
 

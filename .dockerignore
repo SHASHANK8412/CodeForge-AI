@@ -1,0 +1,25 @@
+# Secrets must never be baked into an image - pass them at runtime instead.
+.env
+.env.*
+!.env.example
+
+# Local environments and tooling
+.git
+.venv
+venv
+.vscode
+.claude
+.worktrees
+.pytest_cache
+**/__pycache__
+**/*.pyc
+
+# The frontend has its own image (frontend/Dockerfile)
+frontend
+
+# Runtime output and scratch space
+generated_projects
+workspace_test_env
+scratch
+logs/*.log
+backend/logs/*.log

@@ -31,7 +31,12 @@ def optimize_prompt(prompt: str) -> str:
                 cleaned_lines.append(line)
             elif cleaned_lines and cleaned_lines[-1] != "":
                 cleaned_lines.append("")
-        return "\n".join(cleaned_lines).strip()
+        res = "\n".join(cleaned_lines).strip()
+        max_chars = 8000
+        if len(res) > max_chars:
+            suffix = "\n...[truncated long prompt]"
+            res = res[: max_chars - len(suffix)].strip() + suffix
+        return res
 
     optimized_sections: list[tuple[str, str]] = []
     seen_section_contents: set[str] = set()
@@ -82,4 +87,9 @@ def optimize_prompt(prompt: str) -> str:
         else:
             result_parts.append(body)
 
-    return "\n\n".join(result_parts).strip()
+    res = "\n\n".join(result_parts).strip()
+    max_chars = 8000
+    if len(res) > max_chars:
+        suffix = "\n...[truncated long prompt]"
+        res = res[: max_chars - len(suffix)].strip() + suffix
+    return res

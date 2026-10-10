@@ -1,0 +1,98 @@
+[
+  {
+    "session_id": "csess_live_browser_01",
+    "goal": "Navigate to FastAPI documentation, research WebSockets endpoint specs, and extract connection protocol.",
+    "current_url": "https://fastapi.tiangolo.com/advanced/websockets/",
+    "page_title": "WebSockets - FastAPI Documentation",
+    "status": "COMPLETED",
+    "allowed_domains": [
+      "fastapi.tiangolo.com",
+      "github.com"
+    ],
+    "dom_snapshot_summary": "DOM Tree: main article with <pre><code> WebSocket endpoint implementation and JWT header parameters.",
+    "actions_history": [
+      {
+        "id": "act_1",
+        "action_type": "NAVIGATE",
+        "target_selector": "https://fastapi.tiangolo.com/advanced/websockets/",
+        "value": null,
+        "description": "Opened FastAPI WebSockets documentation page.",
+        "risk_level": "LOW",
+        "requires_approval": false,
+        "is_approved": true,
+        "status": "COMPLETED",
+        "duration_seconds": 0.4,
+        "result_summary": "Page loaded (HTTP 200 OK)."
+      },
+      {
+        "id": "act_2",
+        "action_type": "EXTRACT",
+        "target_selector": "article.md-content pre code",
+        "value": null,
+        "description": "Extracted WebSocket endpoint handler async signature.",
+        "risk_level": "LOW",
+        "requires_approval": false,
+        "is_approved": true,
+        "status": "COMPLETED",
+        "duration_seconds": 0.2,
+        "result_summary": "Extracted async def websocket_endpoint(websocket: WebSocket, token: str): await websocket.accept()"
+      }
+    ],
+    "extracted_data": {
+      "protocol": "wss://",
+      "endpoint_pattern": "/ws/{client_id}?token={jwt_token}",
+      "authentication": "Query Param or Subprotocol Header"
+    },
+    "screenshot_url": "/screenshots/live_preview.png",
+    "created_at": "2026-08-30 16:16:19"
+  },
+  {
+    "session_id": "csess_4415f6e8",
+    "goal": "Research WebSocket protocols in FastAPI docs",
+    "current_url": "https://fastapi.tiangolo.com",
+    "page_title": "Browser Agent: Research WebSocket protocols i",
+    "status": "COMPLETED",
+    "allowed_domains": [
+      "aiforge.dev",
+      "github.com",
+      "openai.com",
+      "fastapi.tiangolo.com"
+    ],
+    "dom_snapshot_summary": "DOM Tree: 12 buttons, 4 form fields, 1 table, 18 links",
+    "actions_history": [
+      {
+        "id": "act_8f4d93",
+        "action_type": "NAVIGATE",
+        "target_selector": "https://fastapi.tiangolo.com",
+        "value": null,
+        "description": "Navigated to https://fastapi.tiangolo.com",
+        "risk_level": "LOW",
+        "requires_approval": false,
+        "is_approved": true,
+        "status": "COMPLETED",
+        "duration_seconds": 0.3,
+        "result_summary": "Page loaded successfully."
+      },
+      {
+        "id": "act_ad2e7d",
+        "action_type": "EXTRACT",
+        "target_selector": "main",
+        "value": null,
+        "description": "Extracted page structure and technical specifications.",
+        "risk_level": "LOW",
+        "requires_approval": false,
+        "is_approved": true,
+        "status": "COMPLETED",
+        "duration_seconds": 0.3,
+        "result_summary": "DOM tree parsed into structured knowledge."
+      }
+    ],
+    "extracted_data": {
+      "page_url": "https://fastapi.tiangolo.com",
+      "extracted_title": "FastAPI & Distributed Streaming Guide",
+      "status": "EXTRACTED_AND_GROUNDED"
+    },
+    "screenshot_url": "/screenshots/live_preview.png",
+    "created_at": "2026-08-30 16:16:19"
+  }
+]

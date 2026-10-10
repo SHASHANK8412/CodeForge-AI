@@ -408,5 +408,45 @@
     "tokens_used": 12500,
     "errors_count": 0,
     "retries": 0
+  },
+  {
+    "project_name": "Enterprise Microservice Platform",
+    "timestamp": 1786328157.4964385,
+    "overall_score": 92.8,
+    "latency_ms": 1200,
+    "llm_model": "qwen2.5-coder:latest",
+    "tokens_used": 12500,
+    "errors_count": 0,
+    "retries": 0
+  },
+  {
+    "project_name": "Flawed Microservice",
+    "timestamp": 1786328157.5307457,
+    "overall_score": 92.0,
+    "latency_ms": 1200,
+    "llm_model": "qwen2.5-coder:latest",
+    "tokens_used": 12500,
+    "errors_count": 0,
+    "retries": 0
+  },
+  {
+    "project_name": "Sample Project V1",
+    "timestamp": 1786328157.5703652,
+    "overall_score": 93.5,
+    "latency_ms": 1200,
+    "llm_model": "qwen2.5-coder:latest",
+    "tokens_used": 12500,
+    "errors_count": 0,
+    "retries": 0
+  },
+  {
+    "project_name": "Enterprise Microservice Platform (Self-Improved)",
+    "timestamp": 1786328157.609767,
+    "overall_score": 100.0,
+    "latency_ms": 1200,
+    "llm_model": "qwen2.5-coder:latest",
+    "tokens_used": 12500,
+    "errors_count": 0,
+    "retries": 0
   }
 ]

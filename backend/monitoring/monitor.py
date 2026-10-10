@@ -89,12 +89,24 @@ class OpsMonitor:
                 recovery_status="Triggered"
             )
 
-            # 5. Root Cause Analysis
-            diagnostics = self.root_cause_analyzer.analyze(
-                incidents=[i.model_dump() for i in detected_incidents],
-                metrics=metrics,
-                health=health
-            )
+            # 5. Root Cause Analysis (blocking LLM call - must stay off the event loop)
+            if sre_settings.llm_root_cause_enabled:
+                diagnostics = await asyncio.to_thread(
+                    self.root_cause_analyzer.analyze,
+                    incidents=[i.model_dump() for i in detected_incidents],
+                    metrics=metrics,
+                    health=health,
+                )
+            else:
+                diagnostics = {
+                    "incident": primary_incident.description,
+                    "severity": primary_incident.severity,
+                    "service": primary_incident.service,
+                    "root_cause": f"Threshold rule '{primary_incident.signature}' triggered (LLM RCA disabled)",
+                    "affected_components": [primary_incident.service],
+                    "confidence": 0.5,
+                    "recommended_action": "None",
+                }
 
             # 6. Self-Healing Loop
             success = False
@@ -105,10 +117,11 @@ class OpsMonitor:
 
             while not success and attempts < max_attempts:
                 attempts += 1
-                strategy_tried, duration = self.recovery_engine.execute_recovery(
+                strategy_tried, duration = await asyncio.to_thread(
+                    self.recovery_engine.execute_recovery,
                     signature=primary_incident.signature,
                     recommendation=diagnostics,
-                    attempt_number=attempts
+                    attempt_number=attempts,
                 )
                 exec_time += duration
 

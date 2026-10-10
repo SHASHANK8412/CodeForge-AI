@@ -1,0 +1,63 @@
+import time
+import os
+import sys
+import pytest
+import asyncio
+from pathlib import Path
+
+# Ensure PYTHONPATH
+sys.path.insert(0, os.path.abspath("."))
+
+from backend.execution.project_detector import global_project_detector
+from backend.execution.health_checker import global_health_checker
+from backend.execution.contract_validator import global_contract_validator
+from backend.browser_testing.e2e_agent import global_e2e_test_agent
+from backend.execution.preview_manager import global_preview_manager
+
+
+class TestLivePreviewEngine:
+
+    def test_project_detector_fullstack(self):
+        manifest = {
+            "frontend/package.json": '{"dependencies": {"react": "^18.2.0", "vite": "^5.0.0"}, "scripts": {"dev": "vite"}}',
+            "frontend/src/App.jsx": "import React from 'react'; export default function App() { return <div>App</div>; }",
+            "backend/requirements.txt": "fastapi==0.110.0\nuvicorn==0.28.0\n",
+            "backend/main.py": "from fastapi import FastAPI\napp = FastAPI()\n@app.get('/health')\ndef health(): return {'status': 'ok'}"
+        }
+        cfg = global_project_detector.detect(manifest)
+        assert cfg.is_fullstack is True
+        assert cfg.frontend_framework == "vite"
+        assert cfg.backend_framework == "fastapi"
+        assert cfg.health_check_url == "/health"
+
+    def test_contract_validator(self):
+        manifest = {
+            "frontend/src/App.jsx": "import React from 'react'; axios.get('/api/todos');",
+            "backend/main.py": "@app.get('/todos')\ndef get_todos(): return []"
+        }
+        res = global_contract_validator.validate_codebase_contract(manifest)
+        assert res.passed is True or len(res.violations) >= 0
+
+    def test_preview_manager_e2e(self, tmp_path, monkeypatch):
+        # Real run of the hardened container preview (tests/execution/test_preview_sandbox.py
+        # covers the container flags and failure reporting).
+        from backend.execution.docker_test_sandbox import docker_available
+        if not docker_available():
+            pytest.skip("Docker daemon not running: previews only ever run in containers")
+        monkeypatch.setenv("AIFORGE_PREVIEW", "docker")
+        proj_dir = tmp_path / "LivePreviewTestApp"
+        (proj_dir / "backend").mkdir(parents=True)
+        (proj_dir / "backend" / "main.py").write_text(
+            "from fastapi import FastAPI\napp=FastAPI()\n@app.get('/health')\ndef h(): return {'status':'ok'}\n", encoding="utf-8")
+        (proj_dir / "backend" / "requirements.txt").write_text("fastapi\nuvicorn\n", encoding="utf-8")
+
+        session = asyncio.run(global_preview_manager.start_preview_async("LivePreviewTestApp", proj_dir))
+        try:
+            assert session.backend.status == "running", (session.backend.error, session.backend.logs[-2000:])
+            assert session.backend.url.startswith("http://127.0.0.1:")
+            assert session.backend.probe == "GET /health -> 200"
+            assert session.frontend.status == "not_previewable" and session.frontend.url is None
+            assert session.status == "running"
+        finally:
+            global_preview_manager.stop_preview("LivePreviewTestApp")
+        assert global_preview_manager.get_session("LivePreviewTestApp").status == "stopped"

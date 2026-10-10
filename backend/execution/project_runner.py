@@ -8,6 +8,7 @@ Classifies error types and returns structured ExecutionResult objects.
 import sys
 import os
 import shutil
+import tempfile
 import json
 import logging
 from pathlib import Path
@@ -59,6 +60,20 @@ class ProjectRunner:
         if not project_path.exists():
             return [], "unknown"
 
+        # Python tests come first: the tester parses pytest output, and full-stack projects
+        # carry a package.json as well.
+        py_files = [p for p in project_path.glob("**/*.py") if not {"node_modules", ".venv"} & set(p.parts)]
+        if py_files and any(p.name.startswith("test_") or p.name.endswith("_test.py") for p in py_files):
+            has_pytest = bool(shutil.which("pytest"))
+            if not has_pytest:
+                try:
+                    import pytest  # noqa: F401
+                    has_pytest = True
+                except ImportError:
+                    has_pytest = False
+            if has_pytest:
+                return self._isolated_pytest_command(project_path), "python"
+
         pkg_json_path = project_path / "package.json"
         if pkg_json_path.exists():
             npm_cmd = "npm.cmd" if sys.platform == "win32" and shutil.which("npm.cmd") else "npm"
@@ -73,16 +88,36 @@ class ProjectRunner:
                 pass
             return [npm_cmd, "run", "build"], "javascript"
 
-        # Check for Python project
-        py_files = list(project_path.glob("**/*.py"))
         if py_files:
-            has_tests = any("test" in p.name.lower() for p in py_files)
-            if has_tests and shutil.which("pytest"):
-                return [sys.executable, "-m", "pytest"], "python"
             return [sys.executable, "-m", "compileall", "-e", "."], "python"
 
         return [], "unknown"
 
+    @staticmethod
+    def _isolated_pytest_command(project_path: Path) -> List[str]:
+        """
+        Run a generated project's tests against that project, not this platform.
+
+        Generated projects live inside the AIForge repository, and AIForge's root may be on
+        sys.path. A generated backend/ without __init__.py is a namespace package, which loses
+        to AIForge's own regular `backend` package, so `from backend.routes import app` imported
+        the platform instead. Making the project's top-level code folders regular packages lets
+        them win (cwd comes first on sys.path), and an empty config plus --rootdir keeps
+        AIForge's pytest.ini out of the run.
+        """
+        skip = {"node_modules", "frontend", ".git", ".venv", "venv", "__pycache__", "dist", "build"}
+        for folder in project_path.iterdir():
+            if (folder.is_dir() and folder.name not in skip and not folder.name.startswith(".")
+                    and any(folder.glob("*.py")) and not (folder / "__init__.py").exists()):
+                (folder / "__init__.py").write_text("", encoding="utf-8")
+
+        cmd = [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", "--rootdir", str(project_path)]
+        if not any((project_path / name).exists() for name in ("pytest.ini", "pyproject.toml", "setup.cfg", "tox.ini")):
+            empty_ini = Path(tempfile.gettempdir()) / "aiforge_isolated_pytest.ini"
+            if not empty_ini.exists():
+                empty_ini.write_text("[pytest]\n", encoding="utf-8")
+            cmd += ["-c", str(empty_ini)]
+        return cmd
 
     def run_project(
         self,
@@ -129,6 +164,32 @@ class ProjectRunner:
         # Create dummy artifact pointing to existing dir
         artifact = CodeArtifact(filename="main.py", language=lang, content="")
 
+        # Generated code (pytest, npm scripts) runs only in throwaway Docker containers. Without
+        # Docker it is not run at all unless AIFORGE_TEST_SANDBOX=local explicitly allows the host.
+        # compileall only byte-compiles, so it never executes the project's code.
+        from backend.execution.docker_test_sandbox import (
+            not_run_result, run_npm_in_docker, run_pytest_in_docker, sandbox_mode, should_use_docker)
+        runs_project_code = bool(command_override) or "compileall" not in cmd
+        if runs_project_code and sandbox_mode() != "local":
+            if command_override or not should_use_docker():
+                _logger.warning("ProjectRunner: not running generated code for '%s' outside the Docker sandbox", proj_path)
+                return not_run_result(lang)
+            _logger.info("ProjectRunner: running '%s' for '%s' in the Docker sandbox", " ".join(cmd[-2:]), proj_path)
+            if lang == "python":
+                return run_pytest_in_docker(proj_path)
+            return run_npm_in_docker(proj_path, cmd[-1])
+
+        # Python projects run against their own dependencies (<project>/.venv), which are put on
+        # the import path after the project itself; AIForge's interpreter still runs pytest.
+        extra_path = []
+        if lang == "python":
+            from backend.execution.project_env import ensure_project_env, site_packages
+            env_res = ensure_project_env(proj_path)
+            if not env_res["ok"]:
+                _logger.warning("ProjectRunner: dependency install failed for %s", proj_path)
+            if site_packages(proj_path):
+                extra_path.append(str(site_packages(proj_path)))
+
         # Execute using SandboxExecutor inside proj_path
         exec_res = global_sandbox_executor.execute(
             artifacts=[artifact],
@@ -136,7 +197,8 @@ class ProjectRunner:
             command_override=cmd,
             execution_type=ExecutionType.PROJECT_TEST,
             cwd=str(proj_path),
-            limits=self.limits
+            limits=self.limits,
+            extra_pythonpath=extra_path
         )
 
         return exec_res

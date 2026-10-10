@@ -1,18 +1,24 @@
+import asyncio
+import os
 import logging
 import json
 import re
+import time
+import contextvars
 from time import perf_counter
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Callable, Dict, List, Optional
+
 
 from langgraph.graph import StateGraph, END
 
 from backend.graph.project_state import ProjectState
-from backend.agents.planner_agent import PlannerAgent
+from backend.agents.planner_agent import DEFAULT_PROJECT_NAME, PlannerAgent, project_name_from_prompt
 from backend.agents.architect_agent import ArchitectAgent
 from backend.agents.frontend_agent import FrontendAgent
 from backend.agents.backend_agent import BackendAgent
 from backend.agents.database_agent import DatabaseAgent
+from backend.repository.patch_engine import global_patch_engine
 from backend.agents.documentation import DocumentationAgent
 from backend.agents.testing_agent import TestingAgent
 from backend.agents.reviewer_agent import ReviewerAgent
@@ -27,7 +33,7 @@ from backend.agents.security_agent import SecurityAgent
 from backend.agents.performance_agent import PerformanceAgent
 from backend.agents.project_packaging_agent import ProjectPackagingAgent
 
-from backend.generators.project_generator import ProjectGenerator
+from backend.generators.project_generator import GENERATED_PROJECTS_DIR, ProjectGenerator
 from backend.review.self_heal import SelfHealOrchestrator
 from backend.utils.timer import Timer
 from backend.graph.profiler import workflow_profiler
@@ -41,9 +47,59 @@ from backend.memory.memory_manager import memory_manager
 from backend.execution.project_runner import global_project_runner
 from backend.agents.debug_agent import global_debug_agent
 
+from backend.services.project_assembler import global_project_assembler
+from backend.services.project_validator import global_project_validator
+from backend.services.project_tester import global_project_tester
+from backend.services.project_exporter import global_project_exporter
+from backend.graph.persistent_checkpointer import global_persistent_checkpointer
+
 
 
 _logger = logging.getLogger("aiforge.performance")
+
+# ---------------------------------------------------------------------------
+# ContextVar: generation lifecycle callback
+# ---------------------------------------------------------------------------
+# GenerationManager sets this ContextVar on its asyncio.Task before calling
+# parallel_graph.ainvoke(). Every node calls _fire_lifecycle() which reads the
+# ContextVar and, if set, notifies the manager about agent start/complete/fail.
+# Zero impact on nodes that run without a callback (CLI, tests, etc.).
+generation_event_callback_var: contextvars.ContextVar[Optional[Callable]] = (
+    contextvars.ContextVar("generation_event_callback_var", default=None)
+)
+
+
+def _record_metrics(state, increment=None, **values) -> None:
+    """Store pipeline metrics (tests, lint, security, auto-fixes) on the generation record."""
+    gen_id = state.get("generation_id")
+    if not gen_id:
+        return
+    try:
+        from backend.generation.store import global_generation_store
+        global_generation_store.update_metrics(gen_id, increment=increment, **values)
+    except Exception as e:  # noqa: BLE001 - metrics must never break the pipeline
+        _logger.warning("Could not record metrics for %s: %s", gen_id, e)
+
+
+def _fire_lifecycle(
+    event_type: str,
+    agent_name: str,
+    *,
+    duration: float = 0.0,
+    error: str = "",
+) -> None:
+    """
+    Invoke the registered generation lifecycle callback (if any).
+    Safe to call from any node — silently no-ops if no callback is set.
+    """
+    cb = generation_event_callback_var.get()
+    if cb is None:
+        return
+    try:
+        cb(event_type, agent_name, duration=duration, error=error)
+    except Exception as exc:  # noqa: BLE001
+        _logger.warning("_fire_lifecycle error [%s/%s]: %s", event_type, agent_name, exc)
+
 
 # Instantiate all Platform Agents
 planner = PlannerAgent()
@@ -76,10 +132,16 @@ async def planner_node(state: ProjectState) -> dict:
     agent_timers.clear()
 
     prompt = state.get("user_prompt") or state.get("prompt", "")
+    project_id = state.get("project_id") or state.get("project_name") or "default_project"
+    gen_id = state.get("generation_id") or state.get("session_id", "default")
     _logger.info(f"✔ [1/14] Planner started: {prompt[:40]}...")
+    _fire_lifecycle("agent_started", "planner")
 
     cached_plan = global_cache_service.get("planner", prompt)
     if cached_plan:
+        if cached_plan.get("project_name") in (None, "", DEFAULT_PROJECT_NAME):
+            cached_plan = {**cached_plan, "project_name": project_name_from_prompt(prompt)}
+        _fire_lifecycle("agent_completed", "planner", duration=0.0)
         return {
             "prompt": prompt,
             "user_prompt": prompt,
@@ -91,17 +153,35 @@ async def planner_node(state: ProjectState) -> dict:
     with Timer() as timer:
         raw_plan = await planner.run_async(prompt)
 
-    session_id = state.get("session_id", "default")
+    session_id = gen_id
     plan_json = planner.parse_plan_json(raw_plan, allow_fallback=True)
+    if plan_json.get("project_name") in (None, "", DEFAULT_PROJECT_NAME):
+        plan_json["project_name"] = project_name_from_prompt(prompt)
     global_cache_service.set("planner", prompt, plan_json)
     memory_manager.save_agent_output(session_id, "planner", plan_json)
     agent_timers["planner"] = timer.elapsed
     workflow_profiler.record_agent_time("planner", timer.elapsed)
+    _fire_lifecycle("agent_completed", "planner", duration=timer.elapsed)
+
+    # Persist Planner requirements & tech choices to long-term memory safely
+    try:
+        reqs = plan_json.get("functional_requirements") or plan_json.get("requirements", [])
+        if reqs:
+            memory_manager.save(project_id, "REQUIREMENT", "functional_requirements", reqs, "planner", "HIGH", generation_id=gen_id)
+        stack = plan_json.get("tech_stack") or {}
+        if stack:
+            memory_manager.save(project_id, "TECHNOLOGY", "tech_stack", stack, "planner", "HIGH", generation_id=gen_id)
+        if "auth" in str(reqs).lower() or "jwt" in str(reqs).lower():
+            memory_manager.save_decision(project_id, "JWT Bearer Authentication", "Secure user sessions across API routes", "planner", "HIGH", generation_id=gen_id)
+    except Exception as e:
+        _logger.warning(f"Planner memory persistence warning: {e}")
 
     return {
         "prompt": prompt,
         "user_prompt": prompt,
         "user_request": prompt,
+        "project_id": project_id,
+        "generation_id": gen_id,
         "project_name": plan_json.get("project_name", "AIForgeApp"),
         "requirements": plan_json.get("functional_requirements") or plan_json.get("requirements", []),
         "project_spec": plan_json,
@@ -114,50 +194,174 @@ async def planner_node(state: ProjectState) -> dict:
 
 async def architect_node(state: ProjectState) -> dict:
     _logger.info("✔ [2/14] Architect started")
+    _fire_lifecycle("agent_started", "architect")
     session_id = state.get("session_id", "default")
+    project_id = state.get("project_id") or state.get("project_name") or "default_project"
+    gen_id = state.get("generation_id") or session_id
     plan_json = state.get("plan") or memory_manager.get_agent_output(session_id, "planner")
+    user_feedback = state.get("user_feedback", "")
 
-    cached_arch = global_cache_service.get("architect", plan_json)
-    if cached_arch:
-        memory_manager.save_agent_output(session_id, "architect", cached_arch)
-        return {
-            "architecture": cached_arch,
-            "current_step": "architect",
-            "stream_events": ["✔ Architecture generated (Cached)"]
-        }
+    # Only use cache if there is no rejection feedback
+    if not user_feedback:
+        cached_arch = global_cache_service.get("architect", plan_json)
+        if cached_arch:
+            memory_manager.save_agent_output(session_id, "architect", cached_arch)
+            _fire_lifecycle("agent_completed", "architect", duration=0.0)
+            return {
+                "architecture": cached_arch,
+                "current_step": "architect",
+                "current_agent": "architect",
+                "approval_required": True,
+                "approval_status": "pending",
+                "stream_events": ["✔ Architecture generated (Cached)"]
+            }
 
-    arch_prompt = global_prompt_builder.build_architect_prompt(plan_json if isinstance(plan_json, dict) else {})
+    arch_prompt = global_prompt_builder.build_architect_prompt(plan_json if isinstance(plan_json, dict) else {}, state.get("template"))
+    if user_feedback:
+        _logger.info(f"✔ Architect incorporating human rejection feedback: {user_feedback[:80]}")
+        arch_prompt += f"\n\n[CRITICAL HUMAN REVISION FEEDBACK]:\nThe user reviewed the previous architecture and requested the following changes:\n\"{user_feedback}\"\nYou MUST strictly update the architecture, tech stack, database, and components according to this feedback."
+
     with Timer() as timer:
         raw_arch = await architect.run_async(arch_prompt)
 
     is_valid, msg, arch_json = global_stage_validator.validate_architecture(raw_arch)
-    global_cache_service.set("architect", plan_json, arch_json)
+    from backend.graph.architecture_check import validate_architecture_sections
+    arch_complete, arch_missing = validate_architecture_sections(raw_arch if isinstance(raw_arch, str) else "")
+    if not user_feedback:
+        global_cache_service.set("architect", plan_json, arch_json)
     memory_manager.save_agent_output(session_id, "architect", arch_json)
     agent_timers["architect"] = timer.elapsed
     workflow_profiler.record_agent_time("architect", timer.elapsed)
+    _fire_lifecycle("agent_completed", "architect", duration=timer.elapsed)
+
+    # Persist Architect architecture & key decisions to long-term memory safely
+    try:
+        memory_manager.save(project_id, "ARCHITECTURE", "architecture_spec", arch_json, "architect", "CRITICAL", generation_id=gen_id)
+        be_framework = arch_json.get("backend", "FastAPI")
+        db_engine = arch_json.get("database", "PostgreSQL")
+        fe_framework = arch_json.get("frontend", "React")
+
+        memory_manager.save_decision(project_id, f"Use {db_engine} database engine", "Relational consistency, indexing, and schema integrity", "architect", "CRITICAL", generation_id=gen_id)
+        memory_manager.save_decision(project_id, f"Use {be_framework} backend framework", "High performance async REST API endpoint routing", "architect", "CRITICAL", generation_id=gen_id)
+        memory_manager.save_decision(project_id, f"Use {fe_framework} frontend framework", "Component-driven reactive single-page app architecture", "architect", "HIGH", generation_id=gen_id)
+    except Exception as e:
+        _logger.warning(f"Architect memory persistence warning: {e}")
 
     return {
         "architecture": arch_json,
+        "architecture_check": {"complete": arch_complete, "missing_sections": arch_missing},
         "current_step": "architect",
-        "stream_events": ["✔ Architecture generated"]
+        "current_agent": "architect",
+        "approval_required": True,
+        "approval_status": "pending",
+        "approval_stage": "architecture",
+        "stream_events": ["✔ Architecture generated. Awaiting human approval."]
     }
+
+
+async def human_approval_node(state: ProjectState) -> dict:
+    """
+    Checkpoint 1: Pauses the autonomous pipeline after Architect stage.
+    Presents the architecture, stack, components, database design, ready agents, and risks to the user.
+    """
+    _logger.info("⏸ [HITL Checkpoint 1] Workflow paused: Human Approval required for Architecture")
+    _fire_lifecycle("workflow_paused", "human_approval")
+
+    session_id = state.get("session_id", "default")
+    project_id = state.get("project_id") or state.get("project_name") or "default_project"
+    arch_json = state.get("architecture") or memory_manager.get_agent_output(session_id, "architect") or {}
+
+    # Everything shown comes from the plan and the architect's output; what they do not state is
+    # left empty for the reviewer to notice (this used to fill in a generic stack, components,
+    # files and risks, so every review looked complete).
+    plan_json = state.get("plan") if isinstance(state.get("plan"), dict) else {}
+    tech_stack = {key: arch_json.get(key) or plan_json.get(key) or (plan_json.get("tech_stack") or {}).get(key)
+                  for key in ("frontend", "backend", "database")}
+    tech_stack = {k: v for k, v in tech_stack.items() if v}
+    if arch_json.get("authentication"):
+        tech_stack["authentication"] = arch_json["authentication"]
+    document = arch_json.get("document") or ""
+    from backend.services.validator import _section, _sections
+    risk_text = _section(_sections(document), "risk") if document else ""
+    risks = arch_json.get("risks") or [line.strip().lstrip("-*+ ").strip() for line in risk_text.splitlines()
+                                       if line.strip().startswith(("-", "*", "+"))]
+
+    approval_req = {
+        "title": "Architecture Review Required",
+        "stage": "architecture",
+        "project_id": project_id,
+        "project_name": state.get("project_name", project_id),
+        "reason": "Please review and approve the planned system architecture, tech stack, and components before parallel code generation commences.",
+        "architecture": arch_json,
+        "architecture_document": document,
+        "tech_stack": tech_stack,
+        "components": arch_json.get("components") or [],
+        "routes": arch_json.get("routes") or [],
+        "models": arch_json.get("models") or [],
+        "database_design": arch_json.get("database_design") or arch_json.get("models") or [],
+        "agents_ready": ["Frontend Agent", "Backend Agent", "Database Agent"],
+        "risks": risks,
+        "architecture_check": state.get("architecture_check") or {},
+        "expected_files": arch_json.get("files") or (arch_json.get("folder_structure") or {}).get("files") or [],
+        "requested_by": "Architect Agent",
+        "status": state.get("approval_status", "pending"),
+    }
+
+    return {
+        "approval_required": True,
+        # A new decision is needed: a status left from an earlier checkpoint must not decide this one.
+        "approval_status": "pending",
+        "approval_stage": "architecture",
+        "approval_request": approval_req,
+        "status": "WAITING_FOR_APPROVAL",
+        "execution_status": "WAITING_FOR_APPROVAL",
+        "current_step": "human_approval",
+        "current_agent": "architect",
+        "workflow_progress": 25,
+        "stream_events": ["⏸ Workflow paused: Human Approval required for Architecture"]
+    }
+
+
+def route_after_architecture_approval(state: ProjectState) -> str:
+    status = (state.get("approval_status") or "").lower()
+    if status == "approved":
+        return "dispatch_parallel"
+    elif status == "rejected":
+        return "architect"
+    return "human_approval"
+
+
+async def dispatch_parallel_node(state: ProjectState) -> dict:
+    """Dispatches execution to parallel Frontend, Backend, Database branches."""
+    _logger.info("✔ Architecture approved! Dispatching parallel Frontend, Backend, Database agents...")
+    _fire_lifecycle("workflow_resumed", "dispatch_parallel")
+    return {
+        "approval_required": False,
+        "status": "RUNNING",
+        "execution_status": "RUNNING",
+        "current_step": "dispatch_parallel",
+        "stream_events": ["✔ Architecture approved. Commencing parallel code generation..."]
+    }
+
 
 
 async def frontend_node(state: ProjectState) -> dict:
     _logger.info("✔ [3a/14] Frontend generating...")
+    _fire_lifecycle("agent_started", "frontend")
     session_id = state.get("session_id", "default")
     arch_json = state.get("architecture") or memory_manager.get_agent_output(session_id, "architect")
 
     cached_fe = global_cache_service.get("frontend", arch_json)
     if cached_fe:
         memory_manager.save_agent_output(session_id, "frontend", cached_fe)
+        _fire_lifecycle("agent_completed", "frontend", duration=0.0)
         return {
             "frontend": cached_fe,
             "current_step": "frontend",
             "stream_events": ["✔ Frontend generated (Cached)"]
         }
 
-    fe_prompt = global_prompt_builder.build_frontend_prompt(arch_json if isinstance(arch_json, dict) else {})
+    fe_prompt = global_prompt_builder.build_frontend_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"), state.get("template"))
     with Timer() as timer:
         frontend_code = await frontend_agent.run_async(fe_prompt)
 
@@ -165,6 +369,7 @@ async def frontend_node(state: ProjectState) -> dict:
     memory_manager.save_agent_output(session_id, "frontend", frontend_code)
     agent_timers["frontend"] = timer.elapsed
     workflow_profiler.record_agent_time("frontend", timer.elapsed)
+    _fire_lifecycle("agent_completed", "frontend", duration=timer.elapsed)
 
     return {
         "frontend": frontend_code,
@@ -175,6 +380,7 @@ async def frontend_node(state: ProjectState) -> dict:
 
 async def backend_node(state: ProjectState) -> dict:
     _logger.info("✔ [3b/14] Backend generating...")
+    _fire_lifecycle("agent_started", "backend")
     session_id = state.get("session_id", "default")
     arch_json = state.get("architecture") or memory_manager.get_agent_output(session_id, "architect")
 
@@ -187,7 +393,7 @@ async def backend_node(state: ProjectState) -> dict:
             "stream_events": ["✔ Backend generated (Cached)"]
         }
 
-    be_prompt = global_prompt_builder.build_backend_prompt(arch_json if isinstance(arch_json, dict) else {})
+    be_prompt = global_prompt_builder.build_backend_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"), state.get("template"))
     with Timer() as timer:
         backend_code = await backend_agent.run_async(be_prompt)
 
@@ -195,6 +401,7 @@ async def backend_node(state: ProjectState) -> dict:
     memory_manager.save_agent_output(session_id, "backend", backend_code)
     agent_timers["backend"] = timer.elapsed
     workflow_profiler.record_agent_time("backend", timer.elapsed)
+    _fire_lifecycle("agent_completed", "backend", duration=timer.elapsed)
 
     return {
         "backend": backend_code,
@@ -205,6 +412,7 @@ async def backend_node(state: ProjectState) -> dict:
 
 async def database_node(state: ProjectState) -> dict:
     _logger.info("✔ [3c/14] Database generating...")
+    _fire_lifecycle("agent_started", "database")
     session_id = state.get("session_id", "default")
     arch_json = state.get("architecture") or memory_manager.get_agent_output(session_id, "architect")
 
@@ -217,7 +425,7 @@ async def database_node(state: ProjectState) -> dict:
             "stream_events": ["✔ Database generated (Cached)"]
         }
 
-    db_prompt = global_prompt_builder.build_database_prompt(arch_json if isinstance(arch_json, dict) else {})
+    db_prompt = global_prompt_builder.build_database_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"), state.get("template"))
     with Timer() as timer:
         database_code = await database_agent.run_async(db_prompt)
 
@@ -225,6 +433,7 @@ async def database_node(state: ProjectState) -> dict:
     memory_manager.save_agent_output(session_id, "database", database_code)
     agent_timers["database"] = timer.elapsed
     workflow_profiler.record_agent_time("database", timer.elapsed)
+    _fire_lifecycle("agent_completed", "database", duration=timer.elapsed)
 
     return {
         "database": database_code,
@@ -233,37 +442,64 @@ async def database_node(state: ProjectState) -> dict:
     }
 
 
+from backend.validation.file_integrity import global_file_integrity_validator
+
+MAX_FILE_REGENERATION_ATTEMPTS = int(os.getenv("MAX_FILE_REGENERATION_ATTEMPTS", 3))
+
+
 async def assembly_node(state: ProjectState) -> dict:
-    _logger.info("✔ Project Assembly fan-in completed")
+    _logger.info("✔ Project Assembly & File Integrity Verification started")
+    _fire_lifecycle("agent_started", "assembly")
     plan_json = state.get("plan", {})
-    arch_json = state.get("architecture", {})
     proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
 
-    assembled = global_structured_project_builder.assemble_real_project(
-        project_name=proj_name,
-        plan_json=plan_json if isinstance(plan_json, dict) else {},
-        arch_json=arch_json if isinstance(arch_json, dict) else {},
-        frontend_code=str(state.get("frontend", "")),
-        backend_code=str(state.get("backend", "")),
-        database_code=str(state.get("database", "")),
-        testing_code=str(state.get("tests", "")),
-        docs_code=str(state.get("documentation", ""))
-    )
+    agent_outputs = {
+        "frontend": state.get("frontend", ""),
+        "backend": state.get("backend", ""),
+        "database": state.get("database", ""),
+        "testing": state.get("tests", ""),
+        "documentation": state.get("documentation", "")
+    }
 
-    duplicate_report = global_duplicate_detector.detect_duplicates(assembled.get("manifest", {}))
-    files_manifest = assembled.get("manifest", {})
-    written_path = global_structured_project_builder.write_project_to_disk(proj_name, files_manifest)
+    assembled = global_project_assembler.assemble_project(agent_outputs, project_name=proj_name)
+    files_map = assembled["files"]
+    manifest = assembled["manifest"]
 
+    # Template configuration files the agents did not write (never overwriting theirs), and the
+    # template's required files that are still missing - reported, not invented.
+    from backend.generation.templates import apply_scaffold, missing_required_files
+    template_id = state.get("template")
+    scaffold = apply_scaffold(template_id, files_map)
+    files_map.update(scaffold)
+    template_check = {"template": template_id or "fastapi-react", "scaffolded": sorted(scaffold),
+                      "missing_required": missing_required_files(template_id, files_map)}
+
+    # Write project safely to disk
+    written_path = global_project_assembler.write_project_to_disk(proj_name, files_map)
+
+    # Run the validator immediately after assembly
+    val_report = global_project_validator.validate_project(files_map, manifest)
+
+    # For auto-repair triggers in route_after_testing or debugger
+    exec_res = {"exit_code": 0, "status": "PASS"}
+    if val_report.get("status") == "FAIL":
+        exec_res = {"exit_code": 1, "status": "FAIL", "stderr": "\n".join(val_report.get("errors", []))}
+
+    _fire_lifecycle("agent_completed", "assembly")
     return {
         "project_path": str(written_path),
-        "files": files_manifest,
-        "assembly_manifest": assembled,
-        "duplicate_report": duplicate_report,
+        "files": files_map,
+        "template_check": template_check,
+        "assembly_manifest": manifest,
+        "validation_report": val_report,
+        "validation_status": val_report,
+        "execution_results": exec_res,
         "current_step": "assembly",
         "stream_events": [
-            "✔ Assembly completed",
+            "✔ Project Assembled successfully",
             f"✔ Files written to disk at {written_path}",
-            f"✔ Duplicate scan: {duplicate_report['duplicate_count']} duplicate block(s) found",
+            f"✔ Total valid source files: {len(files_map)}",
+            f"✔ Validation Status: {val_report['status']} (Score: {val_report['score']}/100)"
         ]
     }
 
@@ -271,6 +507,7 @@ async def assembly_node(state: ProjectState) -> dict:
 
 async def reviewer_node(state: ProjectState) -> dict:
     _logger.info("✔ [4/14] Reviewer running...")
+    _fire_lifecycle("agent_started", "reviewer")
     duplicate_report = state.get("duplicate_report", {}) or {}
     rev_prompt = global_prompt_builder.build_reviewer_prompt(
         frontend_code=str(state.get("frontend", "")),
@@ -295,6 +532,7 @@ async def reviewer_node(state: ProjectState) -> dict:
     score -= review_output.count("[Minor]") * 2
     score = max(0.0, min(100.0, score))
 
+    _fire_lifecycle("agent_completed", "reviewer", duration=timer.elapsed)
     return {
         "review": {"review_text": review_output, "score": round(score, 1)},
         "current_step": "reviewer",
@@ -323,10 +561,13 @@ def _count_tests_by_section(raw_text: str) -> Dict[str, int]:
 
 
 async def testing_node(state: ProjectState) -> dict:
-    _logger.info("✔ [5/14] Testing Agent generating test suites...")
+    _logger.info("✔ [5/14] Testing Agent generating and executing test suites...")
+    _fire_lifecycle("agent_started", "testing")
     testing_prompt = global_prompt_builder.build_testing_prompt(
         backend_code=str(state.get("backend", "")),
         frontend_code=str(state.get("frontend", "")),
+        files=state.get("files") or {},
+        template=state.get("template"),
     )
 
     with Timer() as timer:
@@ -335,41 +576,145 @@ async def testing_node(state: ProjectState) -> dict:
     agent_timers["testing"] = timer.elapsed
     workflow_profiler.record_agent_time("testing", timer.elapsed)
 
-    section_counts = _count_tests_by_section(raw_tests)
-    total_tests = sum(section_counts.values())
+    # Extract test files and write to files map and disk
+    from backend.validation.code_extractor import extract_files_from_agent_output
+    extracted_tests = extract_files_from_agent_output(raw_tests, agent_name="testing")
+    
+    # If no test files were extracted, default to tests/test_main.py
+    if not extracted_tests:
+        extracted_tests["tests/test_main.py"] = raw_tests
+
+    files_map = dict(state.get("files", {}) or {})
+    proj_path_str = state.get("project_path", "")
+
+    for p, c in extracted_tests.items():
+        clean_p = p.replace("\\", "/").strip("/")
+        files_map[clean_p] = c
+
+    # Write the updated files (including tests) to disk
+    if proj_path_str:
+        plan_json = state.get("plan", {})
+        proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
+        global_project_assembler.write_project_to_disk(proj_name, files_map)
+        test_run_res = global_project_tester.run_tests(proj_path_str)
+    else:
+        # Nothing was written to disk, so there is nothing to test; report that rather than
+        # inferring a pass from earlier stages.
+        test_run_res = global_project_tester.run_tests("")
+
+    # Code-quality gate on the current files (patches change them between cycles)
+    from backend.validation.quality_gate import format_issues, run_quality_gate
+    gate = run_quality_gate(proj_path_str) if proj_path_str else None
+    if gate and not gate["passed"]:
+        lint_lines = format_issues(gate["errors"])
+        had_test_failure = test_run_res.get("overall_status") == "FAIL" and test_run_res.get("failure_category") not in (None, "NONE")
+        test_run_res = {
+            **test_run_res,
+            "overall_status": "FAIL",
+            "message": (test_run_res.get("message") or "") + f" Code-quality gate: {gate['error_count']} blocking issue(s).",
+            "failures": list(test_run_res.get("failures", [])) + lint_lines,
+            "stack_traces": list(test_run_res.get("stack_traces", [])) + lint_lines,
+            "failure_category": test_run_res.get("failure_category") if had_test_failure else "LINT_ERROR",
+        }
+    _record_metrics(
+        state,
+        tests_passed=test_run_res.get("passed", 0),
+        tests_failed=test_run_res.get("failed", 0),
+        tests_total=test_run_res.get("total", 0),
+        tests_status=test_run_res.get("overall_status"),
+        lint_errors=gate.get("error_count", 0) if gate else None,
+        lint_warnings=gate.get("warning_count", 0) if gate else None,
+    )
+
+    # Format test report markdown
 
     report_lines = [
         "# Automated Test Suite Report",
         "",
-        "**Status**: Static generation only — not executed. No pass/fail or coverage data "
-        "exists until these tests are actually run.",
-        f"**Total test functions generated**: `{total_tests}`",
+        f"**Status**: {test_run_res['overall_status']}",
+        f"**Message**: {test_run_res['message']}",
+        f"**Passed**: `{test_run_res['passed']}` / `{test_run_res['total']}`",
         "",
-        "## Test Suite Breakdown",
-        "",
-        "| Test Suite Type | Test Functions Generated |",
-        "|---|---|",
+        "## Failures",
+        ""
     ]
-    for section in TEST_SECTION_HEADERS:
-        report_lines.append(f"| {section} | {section_counts.get(section, 0)} |")
+    if test_run_res["failures"]:
+        for f in test_run_res["failures"]:
+            report_lines.append(f"- {f}")
+    else:
+        report_lines.append("No test failures detected.")
     report_md = "\n".join(report_lines) + "\n"
 
-    exec_results = state.get("execution_results", {})
-    project_spec = state.get("project_spec", {})
-    architecture = state.get("architecture", {})
+    # Map test results back for routing and self-correction debug loop
+    is_success = (test_run_res["overall_status"] == "PASS")
+    mapped_test_results = {
+        "success": is_success,
+        "overall_status": test_run_res.get("overall_status", "PASS" if is_success else "FAIL"),
+        "message": test_run_res.get("message", ""),
+        "passed": test_run_res.get("passed", 0),
+        "failed": test_run_res.get("failed", 0),
+        "total": test_run_res.get("total", 0),
+        "command_executed": test_run_res.get("command_executed", "pytest -q tests/"),
+        "exit_code": test_run_res.get("exit_code", 0 if is_success else 1),
+        "stdout": test_run_res.get("stdout", ""),
+        "stderr": test_run_res.get("stderr", ""),
+        "output": test_run_res.get("output", ""),
+        "failed_tests": test_run_res.get("failed_tests", []),
+        "stack_traces": test_run_res.get("stack_traces", []),
+        "failure_category": test_run_res.get("failure_category", "NONE" if is_success else "TEST_ASSERTION_ERROR"),
+        "duration": test_run_res.get("duration", timer.elapsed),
+        "failures": test_run_res.get("failures", []),
+    }
 
-    test_res = testing_agent.evaluate_execution_results(
-        exec_results=exec_results if isinstance(exec_results, dict) else {},
-        project_spec=project_spec if isinstance(project_spec, dict) else {},
-        architecture=architecture if isinstance(architecture, dict) else {}
-    )
+    # For auto-repair triggers
+    exec_res = dict(state.get("execution_results", {}) or {})
+    if not is_success:
+        exec_res = {
+            "exit_code": mapped_test_results["exit_code"] or 1,
+            "status": "FAIL",
+            "stderr": mapped_test_results["stderr"] or "\n".join(test_run_res.get("failures", [])) or "Test suite failed.",
+            "stdout": mapped_test_results["stdout"],
+        }
+    else:
+        exec_res = {
+            "exit_code": 0,
+            "status": "PASS",
+            "stdout": mapped_test_results["stdout"],
+            "stderr": "",
+        }
 
+    failure_history = list(state.get("failure_history", []) or [])
+    if not is_success:
+        failure_history.append({
+            "attempt": state.get("retry_count", state.get("repair_attempt", state.get("iteration", 0))),
+            "category": mapped_test_results["failure_category"],
+            "failed_tests": mapped_test_results["failed_tests"],
+            "failures": mapped_test_results["failures"],
+            "exit_code": mapped_test_results["exit_code"],
+        })
+
+    _fire_lifecycle("agent_completed", "testing", duration=timer.elapsed)
     return {
         "tests": raw_tests,
-        "test_results": test_res.model_dump(),
+        "files": files_map,
+        "test_results": mapped_test_results,
+        # Routing decides on this run's result; it was computed but not returned, so the router
+        # read the earlier execution check's result (e.g. a failed frontend build command).
+        "execution_results": exec_res,
+        # The run's status follows the tests (it stayed "PASS" from the compile check while tests
+        # failed); a blocking UNSUPPORTED / SECURITY_ERROR status is kept.
+        "status": state.get("status") if state.get("status") in ("UNSUPPORTED", "SECURITY_ERROR")
+                  else ("PASS" if is_success else "FAIL"),
+        "quality_gate": gate,
+        "test_status": "passed" if is_success else "failed",
+        "failed_tests": mapped_test_results["failed_tests"],
+        "stack_traces": mapped_test_results["stack_traces"],
+        "error_messages": mapped_test_results["failures"],
+        "failure_history": failure_history,
         "testing_report": report_md,
         "current_step": "testing",
-        "stream_events": [f"✔ Generated {total_tests} real test function(s) across 4 suites (Verification: {'PASS' if test_res.success else 'FAIL'})"]
+        "current_agent": "testing",
+        "stream_events": [f"✔ Executed test suite: {mapped_test_results['passed']}/{mapped_test_results['total']} passed (Verification: {mapped_test_results['overall_status']})"]
     }
 
 
@@ -378,8 +723,10 @@ testing_node.__test__ = False
 
 
 
+
 async def documentation_node(state: ProjectState) -> dict:
     _logger.info("✔ [6/14] Documentation Agent generating README...")
+    _fire_lifecycle("agent_started", "documentation")
     plan_json = state.get("plan", {})
     proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
 
@@ -389,6 +736,7 @@ async def documentation_node(state: ProjectState) -> dict:
     agent_timers["documentation"] = timer.elapsed
     workflow_profiler.record_agent_time("documentation", timer.elapsed)
 
+    _fire_lifecycle("agent_completed", "documentation", duration=timer.elapsed)
     return {
         "documentation": docs_code,
         "current_step": "documentation",
@@ -398,26 +746,31 @@ async def documentation_node(state: ProjectState) -> dict:
 
 async def build_validation_node(state: ProjectState) -> dict:
     _logger.info("✔ [7/14] Build Validation Agent executing checks...")
+    _fire_lifecycle("agent_started", "build_validation")
 
-    fe_files = {"App.jsx": str(state.get("frontend", ""))}
-    be_files = {"main.py": str(state.get("backend", ""))}
-    db_code = str(state.get("database", ""))
-    dk_files = {"Dockerfile": "FROM python:3.11-slim\nWORKDIR /app"}
+    from backend.validation.quality_gate import run_quality_gate
+    project_path = state.get("project_path", "")
 
     with Timer() as timer:
-        val_report = build_validation_agent.validate_all(fe_files, be_files, db_code, dk_files)
+        gate = run_quality_gate(project_path) if project_path else {
+            "passed": False, "errors": [], "warnings": [], "error_count": 0, "warning_count": 0,
+            "skipped": ["no project folder on disk"]}
 
     agent_timers["build_validation"] = timer.elapsed
+    _record_metrics(state, lint_errors=gate.get("error_count", 0), lint_warnings=gate.get("warning_count", 0))
 
+    _fire_lifecycle("agent_completed", "build_validation", duration=timer.elapsed)
+    verdict = "PASSED" if gate["passed"] else f"{gate.get('error_count', 0)} blocking issue(s)"
     return {
-        "validation_report": val_report.dict(),
+        "quality_gate": gate,
         "current_step": "build_validation",
-        "stream_events": [f"✔ Build Validation: {'PASSED' if val_report.is_valid else 'FAILED'}"]
+        "stream_events": [f"✔ Code-quality gate: {verdict}"]
     }
 
 
 async def dependency_manager_node(state: ProjectState) -> dict:
     _logger.info("✔ [8/14] Dependency Manager Agent building package manifests...")
+    _fire_lifecycle("agent_started", "dependency_manager")
     plan_json = state.get("plan", {})
     proj_name = plan_json.get("project_name", "aiforge-app") if isinstance(plan_json, dict) else "aiforge-app"
 
@@ -429,6 +782,14 @@ async def dependency_manager_node(state: ProjectState) -> dict:
 
     agent_timers["dependency_manager"] = timer.elapsed
 
+    # Write the Python requirements now, not only at deployment: the testing stage installs them
+    # into the project's sandbox, so without the file generated tests can't import fastapi & co.
+    from backend.execution.project_env import requirements_file
+    project_path = state.get("project_path", "")
+    if project_path and Path(project_path).is_dir() and deps_files.get("requirements.txt")             and requirements_file(Path(project_path)) is None:
+        (Path(project_path) / "requirements.txt").write_text(deps_files["requirements.txt"], encoding="utf-8")
+
+    _fire_lifecycle("agent_completed", "dependency_manager", duration=timer.elapsed)
     return {
         "deployment_files": deps_files,
         "current_step": "dependency_manager",
@@ -436,37 +797,73 @@ async def dependency_manager_node(state: ProjectState) -> dict:
     }
 
 
+from backend.security.security_manager import global_security_manager
+from backend.agents.security_repair_agent import global_security_repair_agent
+
+MAX_SECURITY_REPAIR_ATTEMPTS = int(os.getenv("MAX_SECURITY_REPAIR_ATTEMPTS", 3))
+
+
 async def security_scan_node(state: ProjectState) -> dict:
-    _logger.info("✔ [9/14] Security Agent scanning codebase...")
-    all_files = {
-        "frontend/App.jsx": str(state.get("frontend", "")),
-        "backend/main.py": str(state.get("backend", "")),
-        "database/schema.sql": str(state.get("database", ""))
-    }
+    _logger.info("✔ [9/14] Security Manager auditing project for vulnerabilities & secret leaks...")
+    _fire_lifecycle("agent_started", "security_scan")
+    files_manifest = dict(state.get("files", {}) or {})
+    proj_name = str(state.get("project_name", state.get("project_id", "AIForge Application")))
 
     with Timer() as timer:
-        sec_report = security_agent.scan_files(all_files)
-        sec_md = security_agent.generate_security_report_markdown(sec_report)
+        sec_report = global_security_manager.audit_project(proj_name, files_manifest)
+        sec_md = global_security_manager.generate_security_markdown(sec_report)
 
     agent_timers["security_scan"] = timer.elapsed
+    report_dict = sec_report.model_dump()
 
+    # Automatically trigger Security Repair if GATE is FAILED or WARNING
+    sec_attempts = state.get("security_repair_attempts", 0)
+    if sec_report.gate_status in ["FAILED", "WARNING"] and sec_attempts < MAX_SECURITY_REPAIR_ATTEMPTS:
+        sec_attempts += 1
+        _logger.info(f"Security Gate '{sec_report.gate_status}'. Auto-remediating issues (Attempt {sec_attempts}/{MAX_SECURITY_REPAIR_ATTEMPTS})...")
+        fix_res = global_security_repair_agent.fix_security_issues(sec_report.findings, files_manifest)
+
+        # Re-scan after repair
+        re_sec_report = global_security_manager.audit_project(proj_name, files_manifest)
+        sec_md = global_security_manager.generate_security_markdown(re_sec_report)
+        report_dict = re_sec_report.model_dump()
+
+    findings = report_dict.get("findings", []) or []
+    _record_metrics(
+        state,
+        security_score=report_dict.get("security_score"),
+        security_gate=report_dict.get("gate_status"),
+        security_findings=len(findings),
+        security_critical=sum(1 for f in findings if str((f or {}).get("severity", "")).upper() == "CRITICAL"),
+        security_repair_attempts=sec_attempts,
+    )
+    _fire_lifecycle("agent_completed", "security_scan", duration=timer.elapsed)
     return {
+        "security_repair_attempts": sec_attempts,
+        "files": files_manifest,
         "security_report": sec_md,
+        "security_data": report_dict,
+        "security_score": report_dict.get("security_score", 100.0),
+        "security_gate": report_dict.get("gate_status", "PASSED"),
         "current_step": "security_scan",
-        "stream_events": [f"✔ Security Audit Completed (Score: {sec_report.score}/100)"]
+        "stream_events": [f"✔ Security Audit: {report_dict.get('gate_status', 'PASSED')} (Score: {report_dict.get('security_score', 100.0)}/100)"]
     }
 
 
 async def performance_node(state: ProjectState) -> dict:
     _logger.info("✔ [10/14] Performance Agent profiling generation metrics...")
+    _fire_lifecycle("agent_started", "performance")
     total_time = sum(agent_timers.values())
 
     with Timer() as timer:
-        perf_report = performance_agent.collect_metrics(total_time, agent_timers, estimated_tokens=14200)
+        from backend.generation.store import global_generation_store
+        usage = (global_generation_store.get(state.get("generation_id") or "", {}) or {}).get("usage") or {}
+        perf_report = performance_agent.collect_metrics(total_time, agent_timers, estimated_tokens=usage.get("total_tokens", 0))
         perf_md = performance_agent.generate_performance_report_markdown(perf_report)
 
     agent_timers["performance"] = timer.elapsed
 
+    _fire_lifecycle("agent_completed", "performance", duration=timer.elapsed)
     return {
         "performance_report": perf_md,
         "current_step": "performance",
@@ -474,112 +871,224 @@ async def performance_node(state: ProjectState) -> dict:
     }
 
 
+from backend.agents.execution_agent import global_execution_agent
+from backend.agents.diagnostic_agent import global_diagnostic_agent
+from backend.validation.validation_pipeline import global_validation_pipeline
+
+
 async def execution_validation_node(state: ProjectState) -> dict:
-    _logger.info("✔ [11/14] Project Execution Agent verifying runtime startup...")
+    _logger.info("✔ [11/14] Execution Agent verifying sandboxed runtime & compilation...")
+    _fire_lifecycle("agent_started", "execution_validation")
     project_path = state.get("project_path", "")
     existing_commands = state.get("commands", []) or []
+    files_manifest = dict(state.get("files", {}) or {})
+    history = list(state.get("execution_history", []) or [])
 
     with Timer() as timer:
-        exec_res = global_project_runner.run_project(project_path)
+        exec_report = global_execution_agent.execute_project(
+            files_manifest=files_manifest,
+            project_dir=project_path if project_path else None
+        )
 
     agent_timers["execution_validation"] = timer.elapsed
-    exec_dict = exec_res.model_dump()
-    cmd_str = exec_dict.get("command", "compileall")
-    new_status = "PASS" if exec_res.exit_code == 0 else "FAIL"
+    exec_dict = exec_report.model_dump()
+    cmd_str = exec_report.failed_command or "compileall"
+    new_status = "PASS" if exec_report.exit_code == 0 else "FAIL"
 
+    # Run 8-Level Validation Pipeline
+    val_report = global_validation_pipeline.run_pipeline(
+        files_manifest=files_manifest,
+        execution_data=exec_dict,
+        test_data=state.get("test_results", {})
+    )
+
+    attempt_record = {
+        "attempt": len(history) + 1,
+        "status": exec_report.status,
+        "exit_code": exec_report.exit_code,
+        "error_type": exec_report.error_type,
+        "failed_command": exec_report.failed_command,
+        "duration_ms": exec_report.duration_ms,
+        "validation_status": val_report.overall_status
+    }
+    history.append(attempt_record)
+    # (This node used to also run the autonomous execution engine: a second install -> test ->
+    # LLM-repair loop on a temporary copy whose report nothing read. Tests and repairs are the
+    # testing -> debug -> patch loop that follows.)
+
+    _fire_lifecycle("agent_completed", "execution_validation", duration=timer.elapsed)
     return {
         "execution_results": exec_dict,
+        "execution_history": history,
+        "validation_report": val_report.model_dump(),
+        "quality_score": val_report.quality_scores,
         "commands": existing_commands + [cmd_str],
         "status": new_status,
-        "error": exec_res.stderr if exec_res.exit_code != 0 else "",
+        "error": exec_report.stderr if exec_report.exit_code != 0 else "",
         "current_step": "execution_validation",
-        "stream_events": [f"✔ Execution Verification: {'PASS' if exec_res.exit_code == 0 else 'FAIL'} (Exit code: {exec_res.exit_code})"]
+        "stream_events": [f"✔ Execution Verification: {val_report.overall_status} (Exit code: {exec_report.exit_code})"]
     }
-
 
 
 from backend.memory.project_memory_service import global_project_memory_service
 from backend.execution.models import MemoryRecord
 
 
+from backend.execution.failure_classifier import classify_test_failure, FailureCategory
+from backend.agents.repair_agent import global_repair_agent
+from backend.quality.version_manager import global_version_manager, overall_quality_score
+from backend.quality.gates import evaluate_quality_gates, GateStatus
+
+MAX_REPAIR_ATTEMPTS = int(os.getenv("MAX_REPAIR_ATTEMPTS", 3))
+
+
 async def debug_node(state: ProjectState) -> dict:
-    _logger.info("✔ [12/14] DebugAgent analyzing failure evidence...")
-    iteration = state.get("iteration", 0) + 1
-    max_iterations = state.get("max_iterations", 3)
+    _logger.info("✔ [12/14] Diagnostic Agent analyzing failure evidence & root causes...")
+    _fire_lifecycle("agent_started", "debug")
+    cycle = state.get("current_debug_cycle", state.get("retry_count", state.get("iteration", 0))) + 1
+    max_retries = state.get("max_retries", MAX_REPAIR_ATTEMPTS)
 
-    debug_res = global_debug_agent.diagnose_and_repair(dict(state))
+    files_map = dict(state.get("files", {}) or {})
+    exec_res = dict(state.get("execution_results", {}) or {})
+    fixes = list(state.get("fixes", []) or [])
+    existing_errors = list(state.get("errors", []) or [])
+    existing_causes = list(state.get("root_causes", []) or [])
 
-    existing_fixes = state.get("fixes", []) or []
-    existing_errors = state.get("errors", []) or []
+    # Structured Diagnosis via DiagnosticAgent & DebugAgent
+    diag_res = global_diagnostic_agent.diagnose_failure(
+        execution_report=exec_res,
+        files_manifest=files_map,
+        architecture_spec=state.get("architecture"),
+        previous_fixes=fixes
+    )
+    diag_dict = diag_res.model_dump()
+
+    # Generate targeted RepairPlan via RepairAgent
+    repair_plan = global_repair_agent.generate_repair_plan(
+        root_cause=diag_res.root_cause,
+        affected_files=diag_res.affected_files,
+        classified_failures=[{"message": exec_res.get("stderr", "")}],
+        files_map=files_map
+    )
+
+    # May call the coding model (LLM rewrite fallback): keep it off the event loop.
+    debug_res = await asyncio.to_thread(global_debug_agent.diagnose_and_repair, dict(state))
 
     try:
         global_project_memory_service.store_memory(MemoryRecord(
             project_id=str(state.get("project_name", state.get("project_id", "default_project"))),
             memory_type="FAILURE",
-            content=debug_res.diagnosis,
-            error_type=debug_res.error_type,
+            content=diag_res.root_cause,
+            error_type=diag_res.error_category,
             technology=str(state.get("technology_stack", "python")),
-            files=debug_res.files_to_modify,
-            root_cause=debug_res.root_cause,
-            fix=json.dumps(debug_res.changes),
+            files=diag_res.affected_files,
+            root_cause=diag_res.root_cause,
+            fix=json.dumps([p.model_dump() for p in repair_plan.patches]),
             result="FAIL",
-            confidence=debug_res.confidence
+            confidence=diag_res.confidence
         ))
     except Exception as e:
         _logger.warning(f"Memory store failed safely in debug_node: {e}")
 
+    _logger.info(f"[Debug] Cycle {cycle}/{max_retries} - Category: {debug_res.error_type} - Root Cause: {debug_res.root_cause}")
+    _fire_lifecycle("agent_completed", "debug")
     return {
-        "iteration": iteration,
-        "max_iterations": max_iterations,
-        "fixes": existing_fixes + [debug_res.model_dump()],
-        "errors": existing_errors + [debug_res.diagnosis],
+        "iteration": cycle,
+        "retry_count": cycle,
+        "current_debug_cycle": cycle,
+        "max_retries": max_retries,
+        "max_iterations": max_retries,
+        "error_category": debug_res.error_type,
+        "diagnostic_result": diag_dict,
+        "debug_analysis": debug_res.explanation,
+        "proposed_fix": debug_res.model_dump(),
+        "fixes": fixes + [debug_res.model_dump()],
+        "errors": existing_errors + [debug_res.root_cause],
+        "root_causes": existing_causes + [debug_res.root_cause],
+        "repair_status": f"DIAGNOSED_CYCLE_{cycle}",
         "current_step": "debug",
-        "stream_events": [f"⚠️ Debugger diagnosed failure (Attempt {iteration}/{max_iterations}): {debug_res.diagnosis}"]
+        "current_agent": "debug",
+        "stream_events": [f"⚠️ Debug Agent (Cycle {cycle}/{max_retries}): [{debug_res.error_type}] -> {debug_res.root_cause}"]
     }
 
 
-
 async def patch_node(state: ProjectState) -> dict:
-    _logger.info("✔ Applying targeted patch to generated project on disk...")
+    _logger.info("✔ Applying targeted patch and taking version snapshot...")
+    _fire_lifecycle("agent_started", "patch")
     fixes = state.get("fixes", []) or []
     files_map = dict(state.get("files", {}) or {})
     proj_path_str = state.get("project_path", "")
+    project_id = str(state.get("project_name", state.get("project_id", "default_project")))
+    target_dir = Path(proj_path_str).resolve() if proj_path_str else None
+    cycle = state.get("current_debug_cycle", 1)
 
-    if not fixes or not proj_path_str:
-        return {"current_step": "patch"}
+    # Take Snapshot before applying repair
+    global_version_manager.create_snapshot(
+        project_id=project_id,
+        files_map=files_map,
+        repair_reason=f"Pre-patch snapshot (Cycle {cycle})",
+        test_result=state.get("test_results", {})
+    )
+
+    if not fixes:
+        _fire_lifecycle("agent_completed", "patch")
+        return {"current_step": "patch", "current_agent": "patch"}
 
     latest_fix = fixes[-1]
     changes = latest_fix.get("changes", {})
-    target_dir = Path(proj_path_str).resolve()
-
     modified_files = []
-    file_backups = dict(state.get("file_backups", {}) or {})
 
+    # A change of None deletes the file (e.g. a module merged into its package's __init__.py).
+    safe = {}
     for rel_path, new_content in changes.items():
         clean_rel = rel_path.replace("\\", "/").lstrip("/")
-        if clean_rel.startswith("/") or clean_rel.startswith("\\"):
+        if ".." in clean_rel.split("/") or ":" in clean_rel:
             _logger.warning(f"Path traversal rejected in patch_node: {rel_path}")
             continue
+        safe[clean_rel] = new_content
 
-        dest_path = (target_dir / clean_rel).resolve()
-        if not str(dest_path).startswith(str(target_dir)):
-            _logger.warning(f"Path traversal rejected in patch_node: {rel_path}")
-            continue
+    # All-or-nothing on disk: an unsafe path or failed write rolls the whole repair back.
+    applied = True
+    if target_dir and safe:
+        _, applied = global_patch_engine.apply_changes(str(target_dir), safe, reason=latest_fix.get("root_cause", ""))
+        if not applied:
+            _logger.warning(f"[Fixer] Patch for cycle {cycle} was rejected and rolled back")
+    original_files = dict(files_map)
+    file_backups = {}
+    for rel, content in safe.items() if applied else []:
+        file_backups[rel] = original_files.get(rel)      # None: the patch created this file
+        if content is None:
+            files_map.pop(rel, None)
+        else:
+            files_map[rel] = content
+        modified_files.append(rel)
 
-        # Backup previous file content before patching
-        if dest_path.exists():
-            file_backups[clean_rel] = dest_path.read_text(encoding="utf-8")
+    applied_fix_record = {
+        "cycle": cycle,
+        "files_modified": modified_files,
+        "root_cause": latest_fix.get("root_cause", ""),
+        "category": latest_fix.get("error_type", ""),
+        "timestamp": time.time(),
+        "explanation": latest_fix.get("explanation", ""),
+    }
+    fix_history = list(state.get("fix_history", []) or []) + [applied_fix_record]
 
-        dest_path.parent.mkdir(parents=True, exist_ok=True)
-        dest_path.write_text(new_content, encoding="utf-8")
-        files_map[clean_rel] = new_content
-        modified_files.append(clean_rel)
-
+    if modified_files:
+        _record_metrics(state, increment={"auto_fixes": 1})
+    _logger.info(f"[Fixer] Applied patch in Cycle {cycle} to {len(modified_files)} file(s): {modified_files}")
+    _fire_lifecycle("agent_completed", "patch")
     return {
         "files": files_map,
         "file_backups": file_backups,
+        "files_modified": modified_files,
+        "applied_fix": applied_fix_record,
+        "fix_history": fix_history,
+        "repair_attempt": cycle,
+        "iteration": cycle,
+        "repair_status": f"PATCHED_CYCLE_{cycle}",
         "current_step": "patch",
-        "stream_events": [f"✔ Applied targeted patch to {len(modified_files)} file(s): {modified_files}"]
+        "current_agent": "patch",
+        "stream_events": [f"✔ Applied targeted patch (Cycle {cycle}) to {len(modified_files)} file(s): {modified_files}"]
     }
 
 
@@ -587,66 +1096,221 @@ def restore_file_backups(state: ProjectState) -> dict:
     """
     Restores modified files on disk and in ProjectState["files"] from ProjectState["file_backups"].
     """
-    file_backups = state.get("file_backups", {}) or {}
-    proj_path_str = state.get("project_path", "")
-    if not file_backups or not proj_path_str:
-        return {}
-
-    target_dir = Path(proj_path_str).resolve()
-    restored_files = []
+    project_id = str(state.get("project_name", state.get("project_id", "default_project")))
     files_map = dict(state.get("files", {}) or {})
+    proj_path_str = state.get("project_path", "")
+    target_dir = Path(proj_path_str).resolve() if proj_path_str else None
 
-    for rel_path, old_content in file_backups.items():
-        clean_rel = rel_path.replace("\\", "/").lstrip("/")
-        if clean_rel.startswith("/") or clean_rel.startswith("\\"):
-            continue
-        dest_path = (target_dir / clean_rel).resolve()
-        if not str(dest_path).startswith(str(target_dir)):
-            continue
+    # The last patch's originals (None = the patch created the file) are restored first; the
+    # version history is the fallback. (This ignored file_backups despite its docstring.)
+    backups = state.get("file_backups") or {}
+    if backups:
+        if target_dir:
+            global_patch_engine.apply_changes(str(target_dir), backups, reason="rollback")
+        for rel, content in backups.items():
+            if content is None:
+                files_map.pop(rel, None)
+            else:
+                files_map[rel] = content
+        return {"files": files_map, "file_backups": {}, "current_step": "rollback",
+                "stream_events": [f"✔ Restored {len(backups)} file(s) from before the last patch"]}
 
-        dest_path.parent.mkdir(parents=True, exist_ok=True)
-        dest_path.write_text(old_content, encoding="utf-8")
-        files_map[clean_rel] = old_content
-        restored_files.append(clean_rel)
+    restored_ver = global_version_manager.rollback(project_id, files_map, project_dir=target_dir)
 
     return {
         "files": files_map,
         "current_step": "rollback",
-        "stream_events": [f"✔ Restored {len(restored_files)} file(s) from backup: {restored_files}"]
+        "stream_events": [f"✔ Restored project to version '{restored_ver.version_id if restored_ver else 'snapshot'}'"]
     }
 
 
 from backend.exporter.gate import global_export_gate
 
 
-def route_after_testing(state: ProjectState) -> str:
+def _tests_verified(state: ProjectState) -> bool:
     exec_res = state.get("execution_results", {}) or {}
     test_res = state.get("test_results", {}) or {}
-    status = state.get("status", "")
+    quality_report = state.get("quality_report")
+    q_status = getattr(quality_report, "overall_status", None) if quality_report else None
+    if isinstance(quality_report, dict):
+        q_status = quality_report.get("overall_status")
+    return (exec_res.get("exit_code", -1) == 0 and bool(test_res.get("success", False))
+            and q_status in (None, "PASS", "WARN", GateStatus.PASS, GateStatus.WARN))
 
-    exit_code = exec_res.get("exit_code", -1)
-    is_test_success = test_res.get("success", False)
 
-    if exit_code == 0 and is_test_success:
+def repair_escalation(state: ProjectState) -> Optional[str]:
+    """
+    Why the bounded repair loop has to stop and ask a human ("STOPPED_MAX_ATTEMPTS" /
+    "STOPPED_REPEATED_FAILURE"), or None. Shared by the router and final_approval_node: a
+    conditional-edge function cannot write state (LangGraph discards it), so the node that
+    persists the escalation recomputes it.
+    """
+    if _tests_verified(state) or state.get("status", "") in ("UNSUPPORTED", "SECURITY_ERROR"):
+        return None
+    if not state.get("test_results"):
+        return None
+    if global_version_manager.detect_repeated_failure(state.get("root_causes", [])):
+        return "STOPPED_REPEATED_FAILURE"
+    attempt = state.get("retry_count", state.get("repair_attempt", state.get("iteration", 0)))
+    max_attempts = state.get("max_retries", state.get("max_repair_attempts", state.get("max_iterations", MAX_REPAIR_ATTEMPTS)))
+    if attempt >= max_attempts:
+        return "STOPPED_MAX_ATTEMPTS"
+    return None
+
+
+def route_after_testing(state: ProjectState) -> str:
+    if _tests_verified(state):
         global_export_gate.mark_verified(state)
-        return "packaging"
-
-
-    if status in ["UNSUPPORTED", "SECURITY_ERROR"]:
-        return END
-
-    iteration = state.get("iteration", 0)
-    max_iterations = state.get("max_iterations", 3)
-
-    if iteration >= max_iterations:
-        state["status"] = "FAILED_MAX_ITERATIONS"
-        return END
-
+        return "final_approval"
+    if state.get("status", "") in ("UNSUPPORTED", "SECURITY_ERROR"):
+        return "final_approval"
+    escalation = repair_escalation(state)
+    if escalation:
+        _logger.warning("Repair loop stopped (%s). Escalating to human intervention.", escalation)
+        return "final_approval"
     return "debug"
+
+
+async def final_approval_node(state: ProjectState) -> dict:
+    """
+    Checkpoint 2: Pauses before packaging/export or on autonomous debug failure escalation.
+    Presents generated files, test results (passed/failed), reviewer findings,
+    quality score, repair/fix history, and deployment readiness to the user.
+    """
+    _logger.info("⏸ [HITL Checkpoint 2] Workflow paused: Human Review / Escalation Gate")
+    _fire_lifecycle("workflow_paused", "final_approval")
+
+    files_map = dict(state.get("files", {}) or {})
+    test_res = dict(state.get("test_results", {}) or {})
+    review_res = dict(state.get("review", {}) or {}) if isinstance(state.get("review"), dict) else {"summary": str(state.get("review") or "")}
+    quality_score = overall_quality_score(state.get("quality_score"))
+    fixes = list(state.get("fixes", []) or [])
+    fix_history = list(state.get("fix_history", []) or [])
+    failure_history = list(state.get("failure_history", []) or [])
+    project_id = str(state.get("project_id") or state.get("project_name") or "default_project")
+    escalation = repair_escalation(state)
+    is_escalation = bool(escalation) or bool(state.get("human_intervention_required"))
+
+    if is_escalation:
+        final_req = {
+            "title": "AUTOMATIC FIX FAILED — Human Guidance Required",
+            "stage": "debug_escalation",
+            "is_escalation": True,
+            "project_id": project_id,
+            "project_name": state.get("project_name", project_id),
+            "reason": f"AIForge attempted {len(fix_history) or state.get('retry_count', 3)} fixes across autonomous debug cycles, but tests are still failing. Please review the errors and provide guidance.",
+            "files_generated": list(files_map.keys()),
+            "files_count": len(files_map),
+            "tests_passed": test_res.get("passed", 0),
+            "tests_failed": test_res.get("failed", 0),
+            "test_success": False,
+            "failed_tests": state.get("failed_tests", []),
+            "stack_traces": state.get("stack_traces", []),
+            "failure_category": test_res.get("failure_category", "TEST_ASSERTION_ERROR"),
+            "fix_history": fix_history,
+            "failure_history": failure_history,
+            "root_causes": state.get("root_causes", []),
+            "reviewer_summary": review_res,
+            "quality_score": quality_score,
+            "fixes_applied": len(fixes),
+            "deployment_readiness": "NEEDS_MANUAL_GUIDANCE",
+            "agents_ready": ["Debug Agent", "Patch Agent"],
+            "requested_by": "Autonomous Debugger & Testing Agent",
+            "status": state.get("approval_status", "pending"),
+        }
+    else:
+        final_req = {
+            "title": "Final Quality & Project Export Review",
+            "stage": "final",
+            "is_escalation": False,
+            "project_id": project_id,
+            "project_name": state.get("project_name", project_id),
+            "reason": "Please review the generated code, test suite execution results, reviewer metrics, and deployment readiness before final packaging and export.",
+            "files_generated": list(files_map.keys()),
+            "files_count": len(files_map),
+            "tests_passed": test_res.get("passed", 0),
+            "tests_failed": test_res.get("failed", 0),
+            "test_success": test_res.get("success"),
+            "test_failures": test_res.get("failures", []),
+            "reviewer_summary": review_res,
+            "quality_score": quality_score,
+            "fixes_applied": len(fixes),
+            "deployment_readiness": "READY FOR EXPORT" if test_res.get("success") else "TESTS NOT PASSING",
+            "agents_ready": ["Project Packaging Agent", "Deployment Agent", "Live Deploy Agent"],
+            "requested_by": "Testing & Reviewer Agents",
+            "status": state.get("approval_status", "pending"),
+        }
+
+    # Security and code-quality results travel with the approval, so approving means accepting
+    # any findings the automatic scan and repair could not clear.
+    sec = dict(state.get("security_data") or {})
+    findings = sec.get("findings") or []
+    final_req["security"] = {
+        "gate": sec.get("gate_status"),
+        "score": sec.get("security_score"),
+        "findings": [
+            {k: f.get(k) for k in ("severity", "category", "file", "line", "description", "title") if isinstance(f, dict) and f.get(k) is not None}
+            for f in findings[:15]
+        ],
+        "finding_count": len(findings),
+    }
+    gate = state.get("quality_gate") or {}
+    final_req["quality_gate"] = {"passed": gate.get("passed"), "error_count": gate.get("error_count"), "warning_count": gate.get("warning_count")}
+    if not is_escalation and sec.get("gate_status") == "FAILED":
+        final_req["deployment_readiness"] = "SECURITY REVIEW REQUIRED"
+    final_req["template_check"] = state.get("template_check") or {}
+    if final_req["template_check"].get("missing_required"):
+        final_req["deployment_readiness"] = "INCOMPLETE: missing " + ", ".join(final_req["template_check"]["missing_required"])
+
+    # Release report from executed tools (quality gate, Bandit, pip-audit); critical findings block.
+    project_path = state.get("project_path", "")
+    if project_path and Path(project_path).is_dir():
+        from backend.validation.quality_gate import run_quality_report
+        try:
+            report = await asyncio.to_thread(run_quality_report, project_path, gate or None)
+        except Exception as e:  # noqa: BLE001 - a failed report must not block the approval itself
+            _logger.warning("Quality report failed: %s", e)
+            report = None
+        if report:
+            final_req["quality_report"] = report
+            _record_metrics(state, release_recommendation=report["release_recommendation"],
+                            critical_findings=report["critical_findings"])
+            if not is_escalation and report["release_recommendation"] == "blocked":
+                final_req["deployment_readiness"] = "RELEASE BLOCKED"
+
+    return {
+        "approval_required": True,
+        # The architecture approval must not carry over and approve the release.
+        "approval_status": "pending",
+        "approval_stage": "debug_escalation" if is_escalation else "final",
+        "approval_request": final_req,
+        "human_intervention_required": is_escalation,
+        "repair_status": escalation or state.get("repair_status"),
+        "status": "WAITING_FOR_APPROVAL",
+        "execution_status": "WAITING_FOR_APPROVAL",
+        "current_step": "final_approval",
+        "current_agent": "final_approval",
+        "workflow_progress": 85,
+        "stream_events": [f"⏸ Workflow paused: {'Human Guidance Required (Debug Escalation)' if is_escalation else 'Final Quality & Export Approval required'}"]
+    }
+
+
+def route_after_final_approval(state: ProjectState) -> str:
+    # Routing only: the retry-counter reset for human guidance is part of the approval update
+    # (GenerationManager.reject_generation), since a router cannot write state.
+    status = (state.get("approval_status") or "").lower()
+    if status in ("approved", "proceed"):
+        return "packaging"
+    elif status in ("rejected", "retry", "debug"):
+        return "debug"
+    return "final_approval"
+
+
 
 
 async def packaging_node(state: ProjectState) -> dict:
     _logger.info("✔ [13/14] Project Packaging Agent assembling export bundle...")
+    _fire_lifecycle("agent_started", "packaging")
     plan_json = state.get("plan", {})
     arch_json = state.get("architecture", {})
     proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
@@ -655,18 +1319,36 @@ async def packaging_node(state: ProjectState) -> dict:
         arch_md = packaging_agent.generate_architecture_md(proj_name, plan_json if isinstance(plan_json, dict) else {}, arch_json if isinstance(arch_json, dict) else {})
         api_md = packaging_agent.generate_api_docs_md(proj_name)
 
+    files_map = dict(state.get("files", {}) or {})
+    zip_path = global_project_exporter.export_project(proj_name, files_map)
+
+    # Copy to standard zip path for backward compatibility
+    safe_name = "".join([c if c.isalnum() or c in " -_" else "_" for c in proj_name]).strip()
+    standard_zip_path = Path("generated_projects") / f"{safe_name}.zip"
+    try:
+        import shutil
+        shutil.copy2(zip_path, standard_zip_path)
+    except Exception as e:
+        _logger.error(f"Failed to copy zip: {e}")
+
     agent_timers["packaging"] = timer.elapsed
+    _fire_lifecycle("agent_completed", "packaging", duration=timer.elapsed)
 
     return {
         "architecture_report": arch_md,
         "api_documentation": api_md,
         "current_step": "packaging",
-        "stream_events": ["✔ Project Bundled with Architecture & API Docs"]
+        "zip_path": str(zip_path),
+        "stream_events": [
+            "✔ Project Bundled with Architecture & API Docs",
+            f"✔ Exporter generated ZIP archive: {zip_path.name}"
+        ]
     }
 
 
 async def deployment_node(state: ProjectState) -> dict:
     _logger.info("✔ [14/14] Deployment Agent generating cloud manifests...")
+    _fire_lifecycle("agent_started", "deployment")
     updated_state = await deployment_agent.run_async(dict(state))
 
     # Also run final project path assembly
@@ -674,16 +1356,250 @@ async def deployment_node(state: ProjectState) -> dict:
     if isinstance(state.get("plan"), dict):
         project_name = state["plan"].get("project_name", "AIForge Project")
 
-    project_dir, report = project_generator.generate_project_structure(project_name, state)
+    assembled_dir = Path(state["project_path"]) if state.get("project_path") else None
+    project_dir, report = project_generator.generate_project_structure(
+        project_name, state, project_dir=assembled_dir if assembled_dir and assembled_dir.is_dir() else None
+    )
     report_dict = report.dict() if hasattr(report, "dict") else (report.to_dict() if hasattr(report, "to_dict") else str(report))
 
+    _fire_lifecycle("agent_completed", "deployment")
     return {
         "project_path": str(project_dir),
         "validation_report": report_dict,
         "deployment_files": updated_state.get("deployment_files", {}),
         "deployment_guide": updated_state.get("deployment_guide", ""),
         "current_step": "deployment",
-        "stream_events": ["🚀 AIForge Autonomous Pipeline Complete & Download Ready!"]
+        "stream_events": ["🚀 Deployment configurations completed. Triggering GitHub Sync..."]
+    }
+
+
+def _read_project_files(project_dir: Path) -> dict[str, str]:
+    files = {}
+    for root, _, filenames in os.walk(str(project_dir)):
+        for f in filenames:
+            if any(p in root for p in [".git", "node_modules", "__pycache__", "venv", ".venv"]):
+                continue
+            path = Path(root) / f
+            try:
+                rel = path.relative_to(project_dir)
+                files[str(rel).replace("\\", "/")] = path.read_text(encoding="utf-8")
+            except Exception:
+                pass
+    return files
+
+
+async def github_sync_node(state: ProjectState) -> dict:
+    """
+    Publish the approved project to GitHub when enabled (AIFORGE_AUTO_PUBLISH_GITHUB=1 and a
+    GITHUB_TOKEN): a private repository, after the publisher's own secret scan. Otherwise report
+    the project's GitHub state. Never claims a push that did not happen.
+    """
+    _logger.info("✔ [15/18] Starting GitHub integration node...")
+    _fire_lifecycle("agent_started", "github_sync")
+
+    from backend.github.repo_store import global_github_repo_store
+    project_id = str(state.get("project_id") or state.get("project_name") or "")
+    meta = global_github_repo_store.get(project_id) if project_id else None
+
+    def done(github: dict, event: str) -> dict:
+        _record_metrics(state, github_status=github.get("status"), github_repo=github.get("connected_repository"))
+        _fire_lifecycle("agent_completed", "github_sync")
+        return {"github": github, "current_step": "github_sync", "stream_events": [event]}
+
+    if meta:
+        return done({"connected_repository": meta.repo_url, "status": "PUBLISHED"},
+                    f"✔ Project is published on GitHub: {meta.repo_url}")
+
+    auto = os.environ.get("AIFORGE_AUTO_PUBLISH_GITHUB", "").strip().lower() in ("1", "true", "yes")
+    token = os.environ.get("GITHUB_TOKEN", "").strip()
+    project_path = state.get("project_path", "")
+    if not (auto and token and project_path and Path(project_path).is_dir()):
+        reason = "auto-publish is off (set AIFORGE_AUTO_PUBLISH_GITHUB=1)" if not auto else "GITHUB_TOKEN is not set" if not token else "no project folder"
+        return done({"connected_repository": None, "status": "NOT_PUBLISHED", "reason": reason},
+                    f"ℹ Not published to GitHub: {reason}")
+
+    from backend.github.publisher import SecurityViolationError, global_github_publisher
+    from backend.routes.export import _read_project_dir
+    try:
+        result = global_github_publisher.publish_project(
+            project_id=project_id,
+            files_manifest=_read_project_dir(Path(project_path)),
+            description=str(state.get("user_prompt") or "")[:300],
+            private=True,
+            token=token,
+        )
+    except SecurityViolationError as e:
+        return done({"connected_repository": None, "status": "BLOCKED", "reason": str(e)},
+                    "⛔ GitHub publish blocked by the pre-publish secret scan")
+    except Exception as e:  # noqa: BLE001 - network/API failures are reported, not raised
+        _logger.warning("GitHub publish failed for %s: %s", project_id, e)
+        return done({"connected_repository": None, "status": "FAILED", "reason": str(e)[:300]},
+                    f"⚠ GitHub publish failed: {str(e)[:120]}")
+
+    repo_url = (result.get("repository") or {}).get("url")
+    return done({"connected_repository": repo_url, "status": "PUBLISHED" if repo_url else "FAILED", "details": result},
+                f"✔ Published to GitHub: {repo_url}" if repo_url else "⚠ GitHub publish returned no repository URL")
+
+
+async def ci_check_node(state: ProjectState) -> dict:
+    _logger.info("✔ [16/18] Starting CI workflow verification node...")
+    _fire_lifecycle("agent_started", "ci_check")
+
+    # Mirrors the generated project's own test run; no remote CI is triggered from here.
+    test_res = state.get("test_results") or {}
+    if not test_res:
+        ci_status = "NOT_RUN"
+    else:
+        ci_status = "SUCCESS" if test_res.get("success") else "FAILED"
+
+    _fire_lifecycle("agent_completed", "ci_check")
+    return {
+        "current_step": "ci_check",
+        "stream_events": [f"✔ Local test gate: {ci_status}"],
+    }
+
+
+async def live_deploy_node(state: ProjectState) -> dict:
+    _logger.info("✔ [17/18] Starting Container Deployment execution node...")
+    _fire_lifecycle("agent_started", "live_deploy")
+    
+    project_id = state.get("project_id", state.get("project_name", "aiforge-demo"))
+    project_path_str = state.get("project_path", "")
+    project_dir = Path(project_path_str) if project_path_str else (GENERATED_PROJECTS_DIR / project_id)
+    
+    from backend.deployment.providers.local_docker_provider import global_local_docker_provider
+    from backend.deployment.environment_manager import global_environment_manager
+    from backend.deployment.deployment_analyzer import global_deployment_analyzer
+    
+    files = _read_project_files(project_dir)
+    spec = global_deployment_analyzer.analyze(project_dir, files)
+    
+    env_res = global_environment_manager.validate_environment(project_id, spec.required_env_vars)
+    clean_envs = {k: v.value for k, v in env_res.variables.items() if v.is_configured}
+    
+    prov_res = global_local_docker_provider.deploy(project_id, project_dir, files, clean_envs)
+    
+    deployment_status = "LIVE" if prov_res.success else "FAILED"
+    
+    _fire_lifecycle("agent_completed", "live_deploy")
+    return {
+        "deployment_status": deployment_status,
+        "deployment_url": prov_res.frontend_url or prov_res.backend_url,
+        "deployment_backend_url": prov_res.backend_url,
+        "current_step": "live_deploy",
+        "stream_events": [
+            f"✔ Packaging container deployment for {spec.frontend_tech.upper()} stack...",
+            f"✔ Containers started: Backend {prov_res.backend_url}, Frontend {prov_res.frontend_url} (health check next)"
+            if prov_res.success else
+            f"⚠ Container deployment failed: {str(getattr(prov_res, 'error', '') or getattr(prov_res, 'message', '') or 'see deployment logs')[:200]}"
+        ]
+    }
+
+
+async def health_check_node(state: ProjectState) -> dict:
+    _logger.info("✔ [18/18] Starting Health check monitoring and auto-repair node...")
+    _fire_lifecycle("agent_started", "health_check")
+    
+    project_id = state.get("project_id", state.get("project_name", "aiforge-demo"))
+    project_path_str = state.get("project_path", "")
+    project_dir = Path(project_path_str) if project_path_str else (GENERATED_PROJECTS_DIR / project_id)
+
+    # Nothing was deployed (no Docker, preview disabled, start-up failed): there is nothing to
+    # probe or repair. This used to probe http://localhost:8000 - AIForge's own API - and, when
+    # that failed, "repair" the project three times and roll its files back.
+    backend_url = state.get("deployment_backend_url") or state.get("deployment_url")
+    if state.get("deployment_status") != "LIVE" or not backend_url:
+        _fire_lifecycle("agent_completed", "health_check")
+        return {
+            "health_status": "NOT_DEPLOYED",
+            "current_step": "health_check",
+            "stream_events": ["ℹ Health check skipped: the app is not running (see the live deploy step)."],
+        }
+
+    import httpx
+    # Same probe the preview used to verify the deploy (/health, /docs or /), so an app without
+    # a /health route is not "repaired" and rolled back while it is running fine.
+    from backend.execution.preview_manager import _probe
+    is_healthy = bool(await asyncio.to_thread(_probe, backend_url, 10))
+    if not is_healthy:
+        _logger.warning(f"Health probe to {backend_url} got no answer")
+
+    attempts = 0
+    max_attempts = 3
+    
+    while not is_healthy and attempts < max_attempts:
+        attempts += 1
+        _logger.warning(f"Deployment health check failed. Attempting autonomous fix (Iteration {attempts}/{max_attempts})...")
+        
+        # 1. Capture snapshot before applying changes
+        files_map = _read_project_files(project_dir)
+        global_version_manager.create_snapshot(
+            project_id, files_map
+        )
+        
+        # 2. Run diagnostic/repair
+        from backend.routes.project import review_project_route_internal, propose_fix_route, apply_fix_route, ProposeFixRequest, ApplyFixRequest
+        review = await review_project_route_internal(project_id)
+        critical_issues = [r for r in review.get("issues", []) if r.get("severity") in ("CRITICAL", "HIGH")]
+        
+        if critical_issues:
+            issue = critical_issues[0]
+            req_prop = ProposeFixRequest(
+                file=issue["file"],
+                line=issue.get("line", 1),
+                category=issue.get("category", "SYNTAX"),
+                title="Health check failure correction",
+                description=issue.get("description") or issue.get("message", ""),
+                suggested_fix="Correct the source configuration"
+            )
+            try:
+                prop = await propose_fix_route(project_id, req_prop)
+                req_apply = ApplyFixRequest(
+                    file=issue["file"],
+                    content=prop["after"]
+                )
+                apply_fix_route(project_id, req_apply)
+            except Exception as fe:
+                _logger.warning(f"Error executing auto repair loop logic: {fe}")
+                
+        # 3. Re-deploy
+        from backend.deployment.providers.local_docker_provider import global_local_docker_provider
+        from backend.deployment.environment_manager import global_environment_manager
+        from backend.deployment.deployment_analyzer import global_deployment_analyzer
+        
+        updated_files = _read_project_files(project_dir)
+        spec = global_deployment_analyzer.analyze(project_dir, updated_files)
+        env_res = global_environment_manager.validate_environment(project_id, spec.required_env_vars)
+        clean_envs = {k: v.value for k, v in env_res.variables.items() if v.is_configured}
+        
+        prov_res = global_local_docker_provider.deploy(project_id, project_dir, updated_files, clean_envs)
+        
+        try:
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                res = await client.get(f"{prov_res.backend_url}/health")
+                if res.status_code == 200:
+                    is_healthy = True
+                    break
+        except Exception:
+            pass
+            
+    if not is_healthy:
+        _logger.error("All autonomous repair attempts failed. Rolling back to stable checkpoint...")
+        try:
+            # Revert files via version manager
+            global_version_manager.rollback(project_id, files_map, project_dir=project_dir)
+        except Exception as e:
+            _logger.error(f"Rollback error: {e}")
+            
+    _fire_lifecycle("agent_completed", "health_check")
+    return {
+        "health_status": "HEALTHY" if is_healthy else "UNHEALTHY",
+        "deployment_status": "LIVE" if is_healthy else "FAILED",
+        "current_step": "health_check",
+        "stream_events": [
+            "✔ Health Check probe checking: /health endpoint ...",
+            f"✔ Live Application Health Status: {'HEALTHY' if is_healthy else 'FAILED_ROLLBACK'}. Pipeline completed!"
+        ]
     }
 
 
@@ -693,31 +1609,49 @@ builder = StateGraph(ProjectState)
 
 builder.add_node("planner", planner_node)
 builder.add_node("architect", architect_node)
+builder.add_node("human_approval", human_approval_node)
+builder.add_node("dispatch_parallel", dispatch_parallel_node)
 builder.add_node("frontend", frontend_node)
 builder.add_node("backend", backend_node)
 builder.add_node("database", database_node)
 builder.add_node("assembly", assembly_node)
 builder.add_node("reviewer", reviewer_node)
-builder.add_node("testing", testing_node)
 builder.add_node("documentation", documentation_node)
 builder.add_node("build_validation", build_validation_node)
 builder.add_node("dependency_manager", dependency_manager_node)
 builder.add_node("security_scan", security_scan_node)
 builder.add_node("performance", performance_node)
 builder.add_node("execution_validation", execution_validation_node)
+builder.add_node("testing", testing_node)
 builder.add_node("debug", debug_node)
 builder.add_node("patch", patch_node)
+builder.add_node("final_approval", final_approval_node)
 builder.add_node("packaging", packaging_node)
 builder.add_node("deployment", deployment_node)
+builder.add_node("github_sync", github_sync_node)
+builder.add_node("ci_check", ci_check_node)
+builder.add_node("live_deploy", live_deploy_node)
+builder.add_node("health_check", health_check_node)
 
-# Entry Point
+# Entry Point & Architecture Review Checkpoint
 builder.set_entry_point("planner")
 builder.add_edge("planner", "architect")
+builder.add_edge("architect", "human_approval")
 
-# Parallel Branches
-builder.add_edge("architect", "frontend")
-builder.add_edge("architect", "backend")
-builder.add_edge("architect", "database")
+builder.add_conditional_edges(
+    "human_approval",
+    route_after_architecture_approval,
+    {
+        "dispatch_parallel": "dispatch_parallel",
+        "architect": "architect",
+        "human_approval": "human_approval",
+    }
+)
+
+# Parallel Branches (Fan-out after approval)
+builder.add_edge("dispatch_parallel", "frontend")
+builder.add_edge("dispatch_parallel", "backend")
+builder.add_edge("dispatch_parallel", "database")
 
 # Fan-in Assembly
 builder.add_edge("frontend", "assembly")
@@ -734,14 +1668,51 @@ builder.add_edge("security_scan", "performance")
 builder.add_edge("performance", "execution_validation")
 builder.add_edge("execution_validation", "testing")
 
-# Self-Correction Loop Routing
-builder.add_conditional_edges("testing", route_after_testing, {"packaging": "packaging", "debug": "debug", END: END})
+# Self-Correction Loop Routing (Testing -> Debug -> Patch -> Retest)
+builder.add_conditional_edges(
+    "testing",
+    route_after_testing,
+    {
+        "final_approval": "final_approval",
+        "debug": "debug",
+        END: END,
+    }
+)
 builder.add_edge("debug", "patch")
 builder.add_edge("patch", "execution_validation")
 
-builder.add_edge("packaging", "deployment")
-builder.add_edge("deployment", END)
+# Final Approval Checkpoint Routing
+builder.add_conditional_edges(
+    "final_approval",
+    route_after_final_approval,
+    {
+        "packaging": "packaging",
+        "debug": "debug",
+        "final_approval": "final_approval",
+    }
+)
 
-parallel_graph = builder.compile()
+# Packaging & Deployment Progression
+builder.add_edge("packaging", "deployment")
+builder.add_edge("deployment", "github_sync")
+builder.add_edge("github_sync", "ci_check")
+builder.add_edge("ci_check", "live_deploy")
+builder.add_edge("live_deploy", "health_check")
+builder.add_edge("health_check", END)
+
+# HITL checkpoints pause *after* the approval nodes: they build the approval request (the
+# architecture summary, test results, release report) that the reviewer sees. Pausing before
+# them meant they never ran - approval requests were empty and the UI showed placeholders.
+# While pending, each router sends the run back to the same node, so a resume records the
+# decision as that node (GenerationManager: as_node=next[0]) and routing continues from it.
+HITL_CHECKPOINTS = ["human_approval", "final_approval"]
+
+
+def compile_parallel_graph(checkpointer):
+    return builder.compile(checkpointer=checkpointer, interrupt_after=HITL_CHECKPOINTS)
+
+
+parallel_graph = compile_parallel_graph(global_persistent_checkpointer)
+
 
 

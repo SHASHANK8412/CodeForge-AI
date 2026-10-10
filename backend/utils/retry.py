@@ -9,6 +9,10 @@ _logger = logging.getLogger("aiforge.performance")
 retries_used_count = 0
 
 
+class LLMDeadlineExceeded(RuntimeError):
+    """An LLM call hit its (deliberately generous) ceiling; retrying would just wait again."""
+
+
 def reset_retry_stats() -> None:
     global retries_used_count
     retries_used_count = 0
@@ -41,6 +45,8 @@ def async_retry(
                         # Apply timeout to the async execution
                         return await asyncio.wait_for(func(*args, **kwargs), timeout=timeout)
                     return await func(*args, **kwargs)
+                except LLMDeadlineExceeded:
+                    raise
                 except (asyncio.TimeoutError, ConnectionError) as exc:
                     last_exc = exc
                     _logger.warning("INFO Retry Attempt %d - Timeout/Connection error: %s", attempt, exc)

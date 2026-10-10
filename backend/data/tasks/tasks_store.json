@@ -1,0 +1,84 @@
+[
+  {
+    "id": "task_food_01",
+    "title": "Implement Redis Streams Courier Geolocation Queue",
+    "description": "Build high-throughput async ingest worker for real-time driver coordinate broadcasts.",
+    "priority": "CRITICAL",
+    "status": "IN_PROGRESS",
+    "deadline": "Tomorrow, 5:00 PM",
+    "project_id": "aiforge-fooddelivery-ai",
+    "assigned_agent": "agent-coding",
+    "dependencies": [],
+    "tags": [
+      "Backend",
+      "Redis",
+      "FastAPI"
+    ],
+    "is_blocked": false,
+    "blocker_reason": null,
+    "created_at": "2026-08-30 15:55:37",
+    "updated_at": "2026-08-30 15:55:37"
+  },
+  {
+    "id": "task_food_02",
+    "title": "Design Dynamic Surge Pricing Estimation Model",
+    "description": "Analyze dinner peak order volume and compute dynamic delivery fee multiplier.",
+    "priority": "HIGH",
+    "status": "TODO",
+    "deadline": "In 3 Days",
+    "project_id": "aiforge-fooddelivery-ai",
+    "assigned_agent": "agent-data-analyst",
+    "dependencies": [
+      "task_food_01"
+    ],
+    "tags": [
+      "Analytics",
+      "Pricing",
+      "Algorithms"
+    ],
+    "is_blocked": false,
+    "blocker_reason": null,
+    "created_at": "2026-08-30 15:55:37",
+    "updated_at": "2026-08-30 15:55:37"
+  },
+  {
+    "id": "task_food_03",
+    "title": "Comprehensive DBMS Indexing & Normalization Study Plan",
+    "description": "Complete 5-day syllabus revision for B-Trees, transactions, and ACID isolation levels.",
+    "priority": "HIGH",
+    "status": "DONE",
+    "deadline": "Completed",
+    "project_id": "aiforge-fooddelivery-ai",
+    "assigned_agent": "agent-study",
+    "dependencies": [],
+    "tags": [
+      "Study",
+      "DBMS",
+      "Exam"
+    ],
+    "is_blocked": false,
+    "blocker_reason": null,
+    "created_at": "2026-08-30 15:55:37",
+    "updated_at": "2026-08-30 15:55:37"
+  },
+  {
+    "id": "task_food_04",
+    "title": "Stripe Webhook & RS256 Idempotency Review",
+    "description": "Verify idempotency keys and replay protection for customer checkout transactions.",
+    "priority": "MEDIUM",
+    "status": "REVIEW",
+    "deadline": "Friday, 12:00 PM",
+    "project_id": "aiforge-fooddelivery-ai",
+    "assigned_agent": "agent-coding",
+    "dependencies": [],
+    "tags": [
+      "Security",
+      "Payments",
+      "Audit"
+    ],
+    "is_blocked": false,
+    "blocker_reason": null,
+    "created_at": "2026-08-30 15:55:37",
+    "updated_at": "2026-08-30 15:55:37"
+  }
+]

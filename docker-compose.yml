@@ -1,0 +1,59 @@
+# AIForge - local Docker stack
+#
+#   docker compose up --build                     # uses the Ollama already running on your host
+#   docker compose --profile ollama up --build    # also runs Ollama in a container
+#
+# Frontend: http://localhost:8080   Backend API: http://localhost:8000/docs
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Default: the host's Ollama. With --profile ollama, set OLLAMA_HOST=http://ollama:11434
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+      # Overrides any DATABASE_URL from .env: a localhost Postgres there is unreachable from inside
+      # the container. Defaults to the SQLite file the app also uses locally (kept in a volume);
+      # set DOCKER_DATABASE_URL to use a reachable Postgres instead.
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-sqlite:///./backend/database/memory.db}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - generated-projects:/app/generated_projects
+      - backend-data:/app/backend/data
+      - backend-database:/app/backend/database
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  generated-projects:
+  backend-data:
+  backend-database:
+  ollama-models:

@@ -33,11 +33,13 @@ class GitTool(BaseTool):
             return self._format_result(False, "", "Git command failed security validation.", 0.0, 1)
 
         start = time.perf_counter()
-        full_command = f"git {git_cmd}"
+        import shlex
         try:
+            # Tokenize command to prevent shell injection without using shell=True
+            args = ["git"] + shlex.split(git_cmd)
             res = subprocess.run(
-                full_command,
-                shell=True,
+                args,
+                shell=False,
                 cwd=cwd,
                 capture_output=True,
                 text=True,

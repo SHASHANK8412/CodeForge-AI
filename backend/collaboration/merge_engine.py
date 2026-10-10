@@ -14,7 +14,7 @@ from dataclasses import dataclass
 _logger = logging.getLogger("aiforge.collaboration")
 
 
-from dataclasses import dataclass, field
+from dataclasses import field
 from backend.collaboration.negotiation_agent import ResolutionDecision
 
 

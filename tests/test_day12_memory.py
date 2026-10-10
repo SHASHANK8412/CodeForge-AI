@@ -1,159 +1,88 @@
-from pathlib import Path
-
-from backend.graph import workflow
-from backend.memory.memory_manager import memory_manager
-
-
-class DummyPlanner:
-    def run(self, prompt, memory_context=""):
-        return f"PLAN::{prompt[:40]}"
-
-
-class DummyArchitect:
-    def run(self, plan, memory_context=""):
-        return """# Project Architecture
-
-# Folder Structure
-- backend/
-- frontend/
-
-# Frontend Files
-- src/App.jsx
-
-# Backend Files
-- main.py
-
-# Database Schema
-- users
-
-# API Routes
-- /chat
-
-# Dependencies
-- FastAPI
-- React
 """
+Day 12: conversation memory.
+
+Originally written against an old MemoryManager API (save_interaction / get_history / get_project /
+clear_session) and the removed router graph. Conversation memory now lives in ConversationManager
+(SQLite), and the generation pipeline reads it through the context manager. These tests use a
+temporary database, so they never touch the real conversation store.
+"""
+import pytest
+
+from backend.memory.conversation_manager import ConversationManager
+from backend.memory.crud import ConversationRepository
+from backend.memory.database import ConversationDatabase
+
+from tests._pipeline_doubles import PipelineDoubles
 
 
-class DummyRouter:
-    def route(self, prompt, memory_context=""):
-        value = prompt.lower()
-        if "bug" in value or "fix" in value:
-            return "debug"
-        if "resume" in value or "cv" in value:
-            return "resume"
-        if "explain" in value:
-            return "explanation"
-        return "coding"
+@pytest.fixture
+def conversations(tmp_path, monkeypatch):
+    manager = ConversationManager(ConversationRepository(ConversationDatabase(tmp_path / "conversations.db")))
+    from backend.services import generation_service as gs
+    monkeypatch.setattr(gs.global_context_manager, "conv_mgr", manager)
+    return manager
 
 
-class CaptureAgent:
-    def __init__(self, name):
-        self.name = name
-        self.last_prompt = ""
-        self.last_memory_context = ""
-
-    def run(self, user_prompt, memory_context=""):
-        self.last_prompt = user_prompt
-        self.last_memory_context = memory_context
-        return f"{self.name.upper()}::{user_prompt[:30]}"
-
-    def process(self, user_prompt, memory_context=""):
-        return self.run(user_prompt, memory_context)
-
-
-
-def configure_temp_memory(tmp_path: Path):
-    conversation_root = tmp_path / "conversations"
-    project_root = tmp_path / "projects"
-    vector_root = tmp_path / "vectors"
-
-    memory_manager.conversation_memory.storage_root = conversation_root
-    memory_manager.project_memory.storage_root = project_root
-    memory_manager.vector_memory.storage_root = vector_root
-
-    conversation_root.mkdir(parents=True, exist_ok=True)
-    project_root.mkdir(parents=True, exist_ok=True)
-    vector_root.mkdir(parents=True, exist_ok=True)
-
-    try:
-        memory_manager.clear_session("test-session")
-    except Exception:
-        pass
-
-
-def mock_graph_agents():
-    workflow.planner = DummyPlanner()
-    workflow.architect = DummyArchitect()
-    workflow.router = DummyRouter()
-    workflow.coding = CaptureAgent("coding")
-    workflow.debug = CaptureAgent("debug")
-    workflow.resume = CaptureAgent("resume")
-    workflow.explanation = CaptureAgent("explanation")
-    workflow.reviewer = CaptureAgent("reviewer")
-    workflow.testing_agent = CaptureAgent("testing")
-    workflow.memory_manager = memory_manager
-    return workflow.coding
-
-
-def test_memory_manager_conversation_and_project_storage(tmp_path):
-    configure_temp_memory(tmp_path)
-
-    memory_manager.save_interaction(
-        session_id="session-a",
+def test_memory_manager_conversation_and_project_storage(conversations):
+    conversations.record_turn(
+        conversation_id="session-a",
         user_prompt="Create login page",
-        ai_response="Use React form components",
-        agent_name="coding",
-        route="coding",
-        plan="Plan A",
-        architecture="Arch A",
+        assistant_response="Use React form components",
+        metadata={"intent": "CODING", "agent": "CodingAgent", "plan": "Plan A", "architecture": "Arch A"},
     )
 
-    history = memory_manager.get_history("session-a")
-    project = memory_manager.get_project("session-a")
+    messages = conversations.get_messages("session-a")
+    assert [(m.role, m.content) for m in messages] == [
+        ("user", "Create login page"),
+        ("assistant", "Use React form components"),
+    ]
+    assistant = messages[1].metadata
+    assert assistant["plan"] == "Plan A"
+    assert assistant["architecture"] == "Arch A"
+    assert assistant["agent"] == "CodingAgent"
+    assert conversations.get_conversation("session-a").message_count == 2
 
-    assert len(history) == 1
-    assert history[0]["user_prompt"] == "Create login page"
-    assert project["latest_plan"] == "Plan A"
-    assert project["latest_architecture"] == "Arch A"
-    assert project["last_agent"] == "coding"
+
+def test_clear_session_removes_all_memory(conversations):
+    conversations.record_turn("session-b", "Create FastAPI backend", "Backend ready", {"intent": "CODING"})
+    conversations.delete_conversation("session-b")
+
+    assert conversations.get_messages("session-b") == []
+    assert conversations.get_conversation("session-b") is None
 
 
-def test_clear_session_removes_all_memory(tmp_path):
-    configure_temp_memory(tmp_path)
-
-    memory_manager.save_interaction(
-        session_id="session-b",
-        user_prompt="Create FastAPI backend",
-        ai_response="Backend ready",
-        agent_name="coding",
-        route="coding",
+def test_graph_carries_memory_forward_between_prompts(conversations, monkeypatch):
+    doubles = PipelineDoubles(monkeypatch)
+    conversations.record_turn(
+        "session-c",
+        "Write a Python function to validate a login form",
+        "```python\ndef validate(user, password):\n    return bool(user and password)\n```",
+        {"intent": "CODING", "agent": "CodingAgent"},
     )
 
-    memory_manager.clear_session("session-b")
+    second = doubles.run("Continue", conversation_id="session-c")
 
-    assert memory_manager.get_history("session-b") == []
-    project = memory_manager.get_project("session-b")
-    assert project["current_project"] == ""
-    assert project["latest_plan"] == ""
-
-
-def test_graph_carries_memory_forward_between_prompts(tmp_path):
-    configure_temp_memory(tmp_path)
-    coding_agent = mock_graph_agents()
-
-    first = workflow.graph.invoke({"prompt": "Create login page", "session_id": "session-c"})
-    second = workflow.graph.invoke({"prompt": "Continue", "session_id": "session-c"})
-
-    assert first["route"] == "coding"
-    assert second["route"] == "coding"
-    assert "Create login page" in coding_agent.last_prompt
-    assert "Conversation History" in coding_agent.last_prompt
-    assert second["generated_code"].startswith("CODING::")
-    assert second["response"].startswith("EXPLANATION::")
+    assert second.intent == "CODING", "a bare 'Continue' carries on the previous coding turn"
+    assert "coding" in doubles.calls
+    prompt = doubles.prompts["coding"][0]
+    assert "Write a Python function to validate a login form" in prompt
+    assert "def validate(user, password)" in prompt
+    assert prompt.rstrip().endswith("Continue")
 
 
-def test_router_uses_memory_context_for_continuation_hint():
-    router = DummyRouter()
-    assert router.route("Continue", "last_agent: coding") == "coding"
-    assert router.route("Fix previous bug", "something") == "debug"
+def test_router_uses_memory_context_for_continuation_hint(conversations):
+    from backend.agents.router_agent import global_router_agent
+    from backend.services import generation_service as gs
+
+    conversations.record_turn("session-d", "Write a function that parses dates", "```python\ndef parse(s): ...\n```",
+                              {"intent": "CODING"})
+    ctx = gs.global_context_manager.get_context("session-d", "Continue")
+    assert ctx.is_follow_up
+    assert global_router_agent.classify_intent("Continue", context_result=ctx)["intent"] == "CODING"
+
+    ctx = gs.global_context_manager.get_context("session-d", "Fix previous bug")
+    assert global_router_agent.classify_intent("Fix previous bug", context_result=ctx)["intent"] == "DEBUGGING"
+
+    # Without history there is nothing to continue: the request needs clarification.
+    no_history = gs.global_context_manager.get_context("session-empty", "Continue")
+    assert no_history.is_follow_up is False

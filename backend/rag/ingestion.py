@@ -59,7 +59,10 @@ class DocumentIngestionPipeline:
         """Ingests a document with structure-aware chunking, secret redaction, and incremental versioning."""
         meta = metadata or {}
         content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
-        source_id = f"src_{hashlib.md5(filepath_or_name.encode('utf-8')).hexdigest()[:12]}"
+        project_id = meta.get("project_id", "default_project")
+        # The same file name in two projects is two sources (default_project keeps its old ids).
+        source_key = filepath_or_name if project_id == "default_project" else f"{project_id}/{filepath_or_name}"
+        source_id = f"src_{hashlib.md5(source_key.encode('utf-8')).hexdigest()[:12]}"
 
         # Check existing version
         if source_id in self.sources:
@@ -96,10 +99,12 @@ class DocumentIngestionPipeline:
             cid = f"{source_id}_chunk_{idx}"
             chunk_meta["source"] = filepath_or_name
             chunk_meta["path"] = filepath_or_name
+            chunk_meta["project_id"] = project_id
 
             c_record = ChunkRecord(
                 chunk_id=cid,
                 source_id=source_id,
+                project_id=project_id,
                 domain=domain,
                 text=safe_text,
                 metadata=chunk_meta,

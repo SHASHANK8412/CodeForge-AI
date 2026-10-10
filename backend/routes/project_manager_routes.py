@@ -98,7 +98,6 @@ async def get_project_daily_report(project_name: Optional[str] = "Food Delivery 
     return {"status": "success", "daily_report": report}
 
 
-@router.get("/project/tasks")
 @router.get("/api/v1/project/tasks")
 async def get_project_tasks(project_name: Optional[str] = "Food Delivery App") -> Dict[str, Any]:
     """Retrieves all milestone tasks, agent assignments, and status breakdown."""

@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState, useEffect } from 'react';
 import { FaPlug, FaCheckCircle, FaTimesCircle, FaSync, FaShieldAlt, FaServer, FaTerminal, FaDatabase, FaDocker, FaGithub, FaAws, FaSlack, FaJira } from 'react-icons/fa';
 
@@ -23,7 +24,7 @@ export default function McpDashboard() {
   const fetchMcpData = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/mcp/dashboard');
+      const res = await fetch(`${BACKEND_URL}/api/v1/mcp/dashboard`);
       if (res.ok) {
         const data = await res.json();
         if (data.mcp_dashboard) setDashboard(data.mcp_dashboard);

@@ -1,32 +1,50 @@
-# ☁️ AIForge Production Deployment Guide
+# Deploying AIForge
 
-## Docker Compose Deployment
+## Docker Compose (single machine)
 
-### 1. Build & Start Services
 ```bash
-docker-compose up -d --build
+cp .env.example .env               # optional; compose works without it
+docker compose up --build -d
 ```
 
-### 2. Verify Health Endpoints
-- Backend API Health: `http://localhost:8000/health`
-- Frontend Interface: `http://localhost:5173`
+| Service | URL |
+|---|---|
+| Frontend (nginx) | http://localhost:8080 |
+| Backend API | http://localhost:8000 (health: `/health`, docs: `/docs`) |
 
----
+The backend calls the Ollama running on the **host** by default (`OLLAMA_HOST=http://host.docker.internal:11434`).
+To run Ollama in a container instead:
 
-## Cloud Deployment (AWS / GCP / DigitalOcean)
+```bash
+OLLAMA_HOST=http://ollama:11434 docker compose --profile ollama up --build -d
+docker compose exec ollama ollama pull llama3.2:3b
+```
 
-### Backend Deployment (FastAPI + Docker)
-1. Push Docker image to container registry:
-   ```bash
-   docker tag aiforge/backend:v1.0.0 registry.example.com/aiforge/backend:v1.0.0
-   docker push registry.example.com/aiforge/backend:v1.0.0
-   ```
-2. Deploy to ECS / Cloud Run / Kubernetes using provided Helm charts in `docker/`.
+Generated projects (`generated-projects`), JSON stores (`backend-data`) and the SQLite database
+(`backend-database`) live in named volumes and survive `docker compose down` (not `down -v`).
 
-### Frontend Deployment (React / Vite)
-1. Build static production bundle:
+## Frontend and backend on separate hosts
+
+The frontend is a static Vite build; the backend is a FastAPI service.
+
+1. **Backend** — build `backend/Dockerfile` (context: repository root) and run it anywhere that
+   can reach an Ollama endpoint. Set:
+   - `OLLAMA_HOST` — URL of your Ollama server. Most free hosting tiers cannot run Ollama
+     themselves, so this usually points at a separate GPU machine.
+   - `CORS_ORIGINS` — the frontend's public URL, e.g. `https://aiforge.example.com`.
+   - `JWT_SECRET` and, if not using SQLite, `DATABASE_URL`.
+2. **Frontend** — build with the backend's public URL baked in:
    ```bash
    cd frontend
-   npm run build
+   VITE_API_URL=https://api.aiforge.example.com npm run build
    ```
-2. Deploy `dist/` directory to Vercel / Netlify / AWS S3 + CloudFront.
+   and serve `frontend/dist/` from any static host (Vercel, Netlify, S3 + CloudFront, nginx).
+   It is a single-page app: route unknown paths to `index.html` (see `frontend/nginx.conf`).
+
+## Deploying projects that AIForge generates
+
+The Vercel / Render / Neon providers in `backend/deployment/providers/` generate deployment
+configuration (`vercel.json`, `render.yaml`, …) for a generated project, but **do not call those
+platforms' APIs yet**. A deploy request returns `NOT_CONFIGURED` when the provider's token
+(`VERCEL_TOKEN`, `RENDER_API_KEY`, `NEON_API_KEY`) is missing and `MANUAL_DEPLOY_REQUIRED` with
+instructions when it is set; it never reports a URL for a deployment that did not happen.

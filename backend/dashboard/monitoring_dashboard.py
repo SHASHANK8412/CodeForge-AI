@@ -36,8 +36,9 @@ async def get_system_status():
         "memory_limit_mb": global_monitor.autoscaler.backend_memory_limit_mb,
     }
 
-@router.get("/metrics")
+@router.get("/dashboard/telemetry")
 def get_current_metrics():
+
     """
     Returns latest collected CPU, Memory, Disk, and API throughput metrics.
     """

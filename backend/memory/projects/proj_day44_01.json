@@ -5,15 +5,15 @@
   "quality_score": 97.5,
   "tags": [
     "fastapi",
+    "a",
     "fullstack",
-    "create",
-    "react",
-    "media",
+    "social",
+    "dashboard",
     "and",
     "management",
-    "social",
-    "a",
-    "dashboard",
+    "media",
+    "react",
+    "create",
     "with"
   ],
   "knowledge": {
@@ -48,8 +48,8 @@
       }
     ],
     "folder_structures": [
-      "frontend",
       "backend",
+      "frontend",
       "database"
     ],
     "reusable_prompts": [
@@ -64,5 +64,5 @@
     ],
     "testing_strategies": []
   },
-  "indexed_at": "2026-07-31T12:41:47Z"
+  "indexed_at": "2026-08-10T02:15:26Z"
 }

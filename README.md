@@ -1,150 +1,168 @@
-# 🚀 AIForge v1.0 – Autonomous Multi-Agent AI Software Engineering Platform
+# AIForge — Autonomous Multi-Agent Software Engineering Platform
 
-[![Build Status](https://img.shields.io/badge/Build-Passing-emerald?style=for-the-badge&logo=github)](https://github.com/SHASHANK8412/CodeForge-AI)
-[![Version](https://img.shields.io/badge/Version-v1.0.0--Release-indigo?style=for-the-badge)](https://github.com/SHASHANK8412/CodeForge-AI/releases)
-[![License](https://img.shields.io/badge/License-MIT-amber?style=for-the-badge)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.11+-blue?style=for-the-badge&logo=python)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/React-18.0+-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)](https://docker.com)
+AIForge turns a natural-language software requirement into a generated full-stack project. A
+LangGraph workflow of specialized agents plans, designs, writes, reviews, tests, repairs and
+packages the code, using **local LLMs through Ollama** — no cloud model API required.
 
-> **AIForge** is an enterprise-grade, self-improving, autonomous multi-agent AI software engineering platform. It transforms natural language software requirements into production-grade, tested, documented, containerized, and deployable applications.
+> **Status:** active development. This README describes what is implemented and verified today;
+> see [Feature status](#feature-status) and [Known limitations](#known-limitations).
 
 ---
 
-## 🌟 Key Highlights & v1.0 Capabilities
+## How it differs from a chatbot
 
-- 🤖 **12 Autonomous Specialized Agents**: Planner, Architect, Frontend, Backend, Database, API, Security, DevOps, Testing, Reviewer, Learning, and Refactor Agents.
-- ⚡ **Parallel Multi-Agent Architecture**: Built with LangGraph, FastAPI, and React/Vite. Executes frontend, backend, database, and documentation generation concurrently.
-- 🧠 **Continuous Learning & Semantic Project Memory**: SQLite long-term project memory database (`memory.db`), semantic vector similarity search, and automated lessons learned extraction.
-- 🤝 **AI Pair Programmer Mode**: Targeted incremental code modifications, file locator, dependency graph builder (`dependency_graph.json`), safe backup system (`.backup/`), and unified diff patch generator.
-- 🛠️ **Autonomous Refactoring & Debt Reduction**: AST code smell detection, Cyclomatic Complexity reduction (18 $\rightarrow$ 7), print statement to structured logger replacement, and security anti-pattern fixes.
-- 📊 **AI Reflection & Quality Scoring**: 6-category weighted score evaluation (Architecture, Code Quality, Security, Performance, Testing, Documentation $\rightarrow$ **95.6% Overall AI Score**).
-- 🏪 **Enterprise Plugin Marketplace**: Support for Planner Packs, UI Packs, Testing Packs, Architecture Packs, and Prompt Packs.
-- 🚀 **One-Click CI/CD & Deployment**: GitHub commit & push, Docker image packaging, and cloud deployment readiness.
-
----
-
-## 🏛️ System Architecture Workflow
+A chatbot answers in one turn. AIForge runs a **stateful, checkpointed pipeline** where each stage
+is a separate agent with its own prompt and model profile, and later stages consume earlier
+stages' structured output:
 
 ```text
-User Natural Language Request
-             │
-             ▼
-      Planner Agent
-             │
-             ▼
-     Architect Agent
-             │
- ┌───────────┼───────────┬───────────┬───────────┐
- ▼           ▼           ▼           ▼           ▼
-Frontend  Backend    Database     DevOps    Documentation
- │           │           │           │           │
- └───────────┴───────────┼───────────┴───────────┘
-                         ▼
-                   Testing Agent
-                         │
-                         ▼
-                   Reviewer Agent
-                         │
-                         ▼
-                  Refactor Agent
-           (AST Code Smell & Complexity Fixes)
-                         │
-                         ▼
-                Learning & Reflection Engine
-          (Long-Term SQLite Memory & Quality Scoring)
-                         │
-                         ▼
-         Docker Containerization & GitHub Export
+Requirement
+  → Planner → Architect → [Human approval]
+  → Frontend ║ Backend ║ Database      (parallel LangGraph branches)
+  → Assembly → Reviewer
+  → Build validation ║ Dependencies ║ Security scan ║ Performance
+  → Execution validation → Testing
+      ├─ pass → Documentation → [Human approval] → Packaging → Export
+      └─ fail → Debug → Patch → re-test   (self-healing loop, bounded by MAX_REPAIR_ATTEMPTS)
 ```
 
----
+- **LangGraph orchestration** with a persistent checkpointer, so a run can pause for human
+  approval and resume (`backend/graph/parallel_workflow.py`, `backend/generation/manager.py`).
+- **Live progress**: every agent transition is streamed to the UI over SSE
+  (`/api/generations/{id}/stream`) and shown as a live agent org chart.
+- **Local LLMs**: models are discovered from your Ollama install and routed per task profile
+  (`backend/models/model_router.py`).
+- **RAG** over project documents with ChromaDB and sentence-transformer embeddings.
+- **Export** of a finished generation as a ZIP (`/api/export/zip/{generationId}`) or to GitHub.
 
-## 🛠️ Technology Stack
+## Feature status
 
-| Layer | Technology |
+| Area | Status |
 |---|---|
-| **Core AI Agent Engine** | Python 3.11+, LangGraph, Ollama (Qwen), RAG Embeddings |
-| **Backend API** | FastAPI, Uvicorn, Pydantic, SQLAlchemy |
-| **Frontend UI** | React 18, Vite, TailwindCSS, Lucide Icons |
-| **Database & Caching** | SQLite, PostgreSQL, MongoDB, Redis |
-| **DevOps & Cloud** | Docker, Docker Compose, GitHub Actions CI/CD |
+| Planner / Architect / Frontend / Backend / Database agents (real LLM calls) | Working — see [verification](#verification) |
+| LangGraph pipeline with parallel branches and human-approval checkpoints | Working |
+| Live agent status (SSE) and agent org chart in the UI | Working |
+| Self-healing (test → debug → patch → retest) | Working — deterministic repairs (missing imports, missing requirements, unambiguous literal mismatches) with an LLM rewrite of the failing file as fallback; `tests/test_self_healing_demo.py` repairs a broken FastAPI project and its tests then pass. Bounded by `MAX_REPAIR_ATTEMPTS`; repeated failures escalate to a human |
+| ZIP export of a completed generation | Working (tests: `tests/test_export_zip_route.py`) |
+| GitHub export | Implemented (`backend/github/`); requires `GITHUB_TOKEN`. With `AIFORGE_AUTO_PUBLISH_GITHUB=1` the pipeline publishes each approved project to a private repo after a pre-publish secret scan (tested with a mocked publisher) |
+| Code-quality gate | Working — ruff (syntax errors, undefined names) and oxlint (JS/JSX parse and correctness errors) on the generated files; blocking issues fail the run like failing tests and go through the debug → patch loop |
+| Docker sandbox for generated tests | Working — dependencies install in one container; tests run in another with no network, as a non-root user, with CPU/memory/process limits and a timeout, then both are removed (without Docker, generated code is reported as not run; `AIFORGE_TEST_SANDBOX=local` opts into running it locally) |
+| Security gate | Every run is scanned and auto-remediated; findings that remain are shown in the final approval, which is marked "Security review required" |
+| Release report | Working — code-quality gate, Bandit and pip-audit results with a `ready` / `review_required` / `blocked` recommendation, shown in the final approval |
+| Token and cost tracking | Working — real token counts from Ollama per run and per agent, shown live on the build view and on the Usage page. Local models have no API cost; set `AIFORGE_COST_PER_1K_*` to price runs |
+| Docker / docker-compose for AIForge itself | Working — both images build, both containers report healthy, and the backend reaches the host's Ollama (verified 2026-10-06, Docker 29.6.2) |
+| Local deployment with smoke tests and rollback | Working — a failed deploy restores the last file checkpoint (`tests/deployment/`) |
+| Cloud deployment (Vercel / Render / Neon) | Implemented against the real REST APIs (Neon database → Render backend → Vercel frontend). Tested with mocked HTTP only; **not yet run against live accounts**. Without `VERCEL_TOKEN` / `RENDER_API_KEY` / `NEON_API_KEY` a provider reports `NOT_CONFIGURED`; Render also needs the project exported to GitHub first |
 
----
+More detail: [setup](docs/setup.md) · [architecture](docs/ARCHITECTURE.md) · [API](docs/api.md) · [security](docs/security.md) · [troubleshooting](docs/troubleshooting.md)
 
-## ⚡ Quick Start
+## Quick start (local)
 
-### 1. Prerequisites
-- Python 3.11+
-- Node.js 18+
-- Git & Docker (Optional)
+**Prerequisites:** Python 3.13, Node.js 20.19+ (or 22.12+), [Ollama](https://ollama.com) with at
+least one chat model pulled (e.g. `ollama pull qwen2.5-coder` or, on CPU-only machines,
+`ollama pull llama3.2:3b`).
 
-### 2. Clone & Setup
 ```bash
 git clone https://github.com/SHASHANK8412/CodeForge-AI.git
 cd CodeForge-AI
+cp .env.example .env          # then edit as needed
 ```
 
-### 3. Backend Setup
-```bash
-cd backend
-python -m venv venv
-# On Windows:
-venv\Scripts\activate
-# On Linux/macOS:
-source venv/bin/activate
+Backend (run from the repository root):
 
+```bash
+python -m venv .venv
+# Windows: .venv\Scripts\activate    macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
 python -m uvicorn backend.main:app --reload --port 8000
 ```
 
-### 4. Frontend Setup
+Frontend:
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
+Open http://localhost:5173, choose **New Project**, describe the app, and follow the run on the
+build dashboard. The run pauses once for architecture approval.
 
----
+## Docker
 
-## 🧪 Verification & Test Suite Execution
-
-Run the complete 100-Day verification suite:
 ```bash
-python tests/verify_day98_99_100_grand_finale.py
+docker compose up --build                    # uses the Ollama already running on your host
+docker compose --profile ollama up --build   # also runs Ollama in a container
 ```
 
-Expected Output:
-```text
-======================================================================
- DAY 98, 99 & 100 GRAND FINALE VERIFICATION SUMMARY: [PASS]
- Passed: 12 | Failed: 0
-======================================================================
+Frontend: http://localhost:8080 · API docs: http://localhost:8000/docs. Generated projects and
+app data persist in named volumes (separate from a local run's `generated_projects/`). Set
+`VITE_API_URL` (build arg) and `CORS_ORIGINS` when the frontend is served from a different origin.
+
+The container uses SQLite by default, even if `.env` sets a `DATABASE_URL`: a `localhost`
+database there is not reachable from inside the container. To use Postgres, set
+`DOCKER_DATABASE_URL` to an address the container can reach (for example
+`postgresql://user:pass@host.docker.internal:5432/aiforge`).
+
+## Configuration
+
+All settings are environment variables; see [`.env.example`](.env.example). The ones that matter
+most:
+
+| Variable | Purpose |
+|---|---|
+| `AIFORGE_GENERAL_MODEL`, `AIFORGE_CODING_MODEL` | Pin specific Ollama models instead of auto-selection |
+| `AIFORGE_LLM_TIMEOUT_SECONDS` | Ceiling for one LLM call (default 900; CPU-only inference is slow) |
+| `MAX_REPAIR_ATTEMPTS` | Bound on the debug → patch → re-test loop |
+| `CORS_ORIGINS`, `VITE_API_URL` | Hosting the frontend and backend on different origins |
+| `GITHUB_TOKEN` | GitHub export |
+| `VERCEL_TOKEN` (+ optional `VERCEL_TEAM_ID`), `RENDER_API_KEY`, `NEON_API_KEY` | One-click cloud deployment |
+
+## Verification
+
+Last end-to-end run (2026-10-06, CPU-only machine; `llama3.2:3b` for planning, `qwen2.5-coder`
+for code; prompt: a recipe box with a FastAPI backend and React frontend). The run **completed**
+in about 19 minutes:
+
+| Stage | Result |
+|---|---|
+| Planner, Architect | Real LLM calls (114s, 108s); paused for and resumed after architecture approval |
+| Frontend ∥ Backend ∥ Database | Ran in parallel (282s, 141s, 447s) |
+| Reviewer, Documentation | Real LLM calls (127s, 28s) |
+| Testing → self-healing | Generated tests were run against the generated code. They failed because the generated project imports packages (`passlib`, `selenium`) that are not installed; the debug → patch loop could not fix that, so the run paused for human review instead of retrying forever |
+| Final approval → packaging | Approved; one project folder written (`generated_projects/Recipe_Box_Where_Users`) |
+| ZIP export | `GET /api/export/zip/{generationId}` returned a 31-file archive (backend, frontend, schema, tests, Docker, docs) |
+
+Fixed along the way: generated tests imported AIForge's own `backend` package instead of the
+generated one; unnamed plans all wrote into one shared folder; the final step crashed on the
+quality-score format; and packaging rebuilt the project from raw agent output, discarding repairs.
+
+## Testing
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest tests
 ```
 
----
+Latest full run (each file in its own process): **779 passed, 52 failed, 3 errors**. The failures
+are in 21 older test files (Day 11–14 workflow and memory suites, the project-manager agent,
+plugins, RAG routes, the self-correction loop) that target APIs which have since changed. Ten
+further files are standalone scripts with no pytest tests. Tests never write to
+`backend/data/generations.json`: `tests/conftest.py` gives each test a temporary store.
 
-## 📄 License & Roadmap
+## Known limitations
 
-- License: [MIT License](LICENSE)
-- Roadmap: See [ROADMAP.md](ROADMAP.md) for v1.1 & v2.0 releases.
-- Deployment Guide: See [DEPLOYMENT.md](DEPLOYMENT.md).
+- **Speed depends heavily on hardware.** On a CPU-only machine each agent call takes one to a few
+  minutes, so a full run takes a long time; a GPU or a small model (`llama3.2:3b`) helps.
+- **Cloud deployment is untested against live accounts** (see feature status).
+- **Generated projects are tested in AIForge's own Python environment.** Their dependencies are
+  not installed per project, so tests that import packages AIForge doesn't have fail to collect.
+- **Some legacy modules still return sample data** where no real backend exists for them (for
+  example `backend/deployment/cicd_pipeline.py`). Pages backed by real APIs show real data or an
+  empty state.
+- **Part of the test suite is stale** — tests written against APIs that have since changed.
+  See [Testing](#testing) for current numbers.
 
+## License
 
-## Evolution Changelog
-* **Update Auth API**: Updated 1 files.
-
-
-
-## AIForge Autonomous Evolution Report
-* **Architecture Score**: 93.0/100
-* **Security Score**: 90.0/100
-* **Performance Score**: 88.0/100
-* **Maintainability Score**: 95.0/100
-* **Duplicate Code Files Resolved**: 998
-* **Unused Components Removed**: 7
-* **Estimated Speed Improvement**: 31%
-
+[MIT](LICENSE)

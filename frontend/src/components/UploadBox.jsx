@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState } from 'react';
 import { FaCloudUploadAlt, FaFileAlt, FaCheckCircle, FaExclamationCircle, FaSpinner } from 'react-icons/fa';
 
@@ -18,7 +19,7 @@ export default function UploadBox({ onUploadSuccess }) {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/upload', {
+      const response = await fetch(`${BACKEND_URL}/api/upload`, {
         method: 'POST',
         body: formData,
       });

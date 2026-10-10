@@ -1,0 +1,86 @@
+[
+  {
+    "id": "wf_weekly_review",
+    "title": "Weekly Sprint & Code Architecture Review",
+    "description": "Every Monday morning, triggers Research Agent and Coding Agent to analyze pull requests, summarize diffs, and generate sprint tasks.",
+    "is_active": true,
+    "trigger_type": "SCHEDULED_CRON",
+    "schedule_cron": "Every Monday at 9:00 AM",
+    "nodes": [
+      {
+        "id": "n1",
+        "type": "TRIGGER",
+        "label": "Scheduled: Every Mon 9 AM",
+        "config": {}
+      },
+      {
+        "id": "n2",
+        "type": "AGENT",
+        "label": "\ud83d\udd2c Research Agent: Benchmark PRs",
+        "config": {
+          "agent": "agent-research"
+        }
+      },
+      {
+        "id": "n3",
+        "type": "AGENT",
+        "label": "\ud83d\udcbb Coding Agent: SAST & Tests",
+        "config": {
+          "agent": "agent-coding"
+        }
+      },
+      {
+        "id": "n4",
+        "type": "OUTPUT",
+        "label": "\ud83d\udce2 Discord / Slack Summary",
+        "config": {
+          "channel": "engineering"
+        }
+      }
+    ],
+    "project_id": "aiforge-fooddelivery-ai",
+    "last_run_at": "2026-08-25 09:00:00",
+    "last_run_status": "SUCCESS",
+    "run_count": 4,
+    "created_at": "2026-08-30 15:55:37"
+  },
+  {
+    "id": "wf_new_feature_pipeline",
+    "title": "New Feature Autonomous Blueprint Pipeline",
+    "description": "Triggered when a new user feature goal is submitted: Decomposes requirements, generates PRD canvas, and scaffolds initial backend endpoints.",
+    "is_active": true,
+    "trigger_type": "MANUAL",
+    "schedule_cron": null,
+    "nodes": [
+      {
+        "id": "n1",
+        "type": "TRIGGER",
+        "label": "User Feature Input",
+        "config": {}
+      },
+      {
+        "id": "n2",
+        "type": "AI",
+        "label": "\ud83e\udde0 Intent & Task Decomposition",
+        "config": {}
+      },
+      {
+        "id": "n3",
+        "type": "TOOL",
+        "label": "\ud83c\udfa8 Create Live PRD Canvas",
+        "config": {}
+      },
+      {
+        "id": "n4",
+        "type": "AGENT",
+        "label": "\ud83d\udcbb Coding Agent: Generate Tests",
+        "config": {}
+      }
+    ],
+    "project_id": "aiforge-fooddelivery-ai",
+    "last_run_at": "2026-08-29 16:30:00",
+    "last_run_status": "SUCCESS",
+    "run_count": 7,
+    "created_at": "2026-08-30 15:55:37"
+  }
+]

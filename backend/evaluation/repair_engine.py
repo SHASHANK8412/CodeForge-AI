@@ -43,7 +43,7 @@ class AutonomousSelfRepairEngine:
                 continue
 
             dest_path = (target_dir / clean_rel).resolve()
-            if not str(dest_path).startswith(str(target_dir)):
+            if not Path(dest_path).is_relative_to(target_dir):
                 _logger.warning(f"Self-Repair path traversal rejected: '{rel_path}'")
                 continue
 

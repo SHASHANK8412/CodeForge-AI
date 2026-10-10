@@ -1,0 +1,32 @@
+[
+  {
+    "id": "mem_pref_ts",
+    "user_id": "user_default",
+    "project_id": "aiforge-fooddelivery-ai",
+    "memory_type": "LONG_TERM",
+    "key": "frontend_tech_stack",
+    "content": "User prefers React with Tailwind CSS and strict TypeScript types over JavaScript.",
+    "relevance_score": 0.96,
+    "created_at": "2026-08-30 16:04:00"
+  },
+  {
+    "id": "mem_arch_redis",
+    "user_id": "user_default",
+    "project_id": "aiforge-fooddelivery-ai",
+    "memory_type": "SEMANTIC",
+    "key": "geolocation_streaming",
+    "content": "Architecture decision: Courier real-time location stream uses Redis Streams with consumer groups for 50ms broadcast latency.",
+    "relevance_score": 0.94,
+    "created_at": "2026-08-30 16:04:00"
+  },
+  {
+    "id": "mem_sec_jwt",
+    "user_id": "user_default",
+    "project_id": "aiforge-fooddelivery-ai",
+    "memory_type": "LONG_TERM",
+    "key": "security_policy",
+    "content": "All API endpoints require asymmetric RS256 JWT tokens and rate-limiting bucket middleware.",
+    "relevance_score": 0.98,
+    "created_at": "2026-08-30 16:04:00"
+  }
+]

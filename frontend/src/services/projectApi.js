@@ -1,4 +1,5 @@
-const API = "http://127.0.0.1:8000";
+import { BACKEND_URL } from '../config/backend';
+const API = `${BACKEND_URL}`;
 
 /**
  * Calls the end-to-end project generation pipeline and waits for the full
@@ -173,7 +174,7 @@ export async function fetchLessons() {
  * Fetches dashboard trend metrics.
  */
 export async function fetchMetrics() {
-    const response = await fetch(`${API}/metrics`);
+    const response = await fetch(`${API}/reflection/metrics`);
     if (!response.ok) {
         throw new Error(`Failed to fetch metrics: ${response.status}`);
     }

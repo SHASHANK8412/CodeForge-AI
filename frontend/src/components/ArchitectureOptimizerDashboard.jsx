@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState } from 'react';
 import { FaSitemap, FaDollarSign, FaRocket, FaShieldAlt, FaLayerGroup, FaServer } from 'react-icons/fa';
 
@@ -36,7 +37,7 @@ export default function ArchitectureOptimizerDashboard() {
   const handleOptimize = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/architecture/optimize', {
+      const res = await fetch(`${BACKEND_URL}/api/v1/architecture/optimize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: 'Food Delivery Platform', target_users: targetUsers })

@@ -87,6 +87,22 @@ class PatchEngine:
             self._rollback_snapshots(snapshots)
             return ChangeSet(summary=f"Patch application failed and was rolled back: {str(e)}"), False
 
+    def apply_changes(self, root_path: str, changes: Dict[str, Optional[str]], reason: str = "") -> Tuple[List[str], bool]:
+        """
+        Applies a {relative path: new content} map from a repair; None deletes the file.
+        All-or-nothing: an unsafe path or failed write rolls everything back.
+        Returns (normalized paths changed, applied).
+        """
+        patches = [
+            FilePatch(path=rel.replace("\\", "/").lstrip("/"), operation="DELETE" if content is None else "MODIFY",
+                      updated_content=content or "", reason=reason)
+            for rel, content in (changes or {}).items()
+        ]
+        if not patches:
+            return [], True
+        _, ok = self.apply_patches(root_path, patches)
+        return ([p.path for p in patches] if ok else []), ok
+
     def _rollback_snapshots(self, snapshots: Dict[str, Optional[str]]):
         """Restores original files from snapshot dict."""
         for fpath, orig_content in snapshots.items():

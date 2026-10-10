@@ -134,7 +134,9 @@ async def test_testing_node_project_state_update(monkeypatch):
 
     state_update = await testing_node(state)
     assert "test_results" in state_update
-    assert state_update["test_results"]["success"] is True
+    # No project on disk: nothing was tested, so no pass may be inferred from earlier stages.
+    assert state_update["test_results"]["success"] is False
+    assert state_update["test_results"]["failure_category"] == "CONFIGURATION_ERROR"
 
 
 
