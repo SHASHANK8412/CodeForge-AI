@@ -72,21 +72,26 @@ class TestLivePreviewEngine:
         res = global_contract_validator.validate_codebase_contract(manifest)
         assert res.passed is True or len(res.violations) >= 0
 
-    def test_preview_manager_e2e(self, tmp_path):
+    def test_preview_manager_e2e(self, tmp_path, monkeypatch):
+        # Real run of the hardened container preview (tests/execution/test_preview_sandbox.py
+        # covers the container flags and failure reporting).
+        from backend.execution.docker_test_sandbox import docker_available
+        if not docker_available():
+            pytest.skip("Docker daemon not running: previews only ever run in containers")
+        monkeypatch.setenv("AIFORGE_PREVIEW", "docker")
         proj_dir = tmp_path / "LivePreviewTestApp"
-        proj_dir.mkdir(parents=True, exist_ok=True)
-        (proj_dir / "backend").mkdir(parents=True, exist_ok=True)
-        (proj_dir / "backend" / "main.py").write_text("from fastapi import FastAPI\napp=FastAPI()\n@app.get('/health')\ndef h(): return {'status':'ok'}", encoding="utf-8")
+        (proj_dir / "backend").mkdir(parents=True)
+        (proj_dir / "backend" / "main.py").write_text(
+            "from fastapi import FastAPI\napp=FastAPI()\n@app.get('/health')\ndef h(): return {'status':'ok'}\n", encoding="utf-8")
         (proj_dir / "backend" / "requirements.txt").write_text("fastapi\nuvicorn\n", encoding="utf-8")
 
-        manifest = {
-            "backend/main.py": (proj_dir / "backend" / "main.py").read_text(),
-            "backend/requirements.txt": (proj_dir / "backend" / "requirements.txt").read_text()
-        }
-
-        session = asyncio.run(global_preview_manager.start_preview_async("LivePreviewTestApp", proj_dir, manifest))
-        assert session.project_id == "LivePreviewTestApp"
-        assert session.frontend_url is not None
-        assert session.backend_url is not None
-
-        global_preview_manager.stop_preview("LivePreviewTestApp")
+        session = asyncio.run(global_preview_manager.start_preview_async("LivePreviewTestApp", proj_dir))
+        try:
+            assert session.backend.status == "running", (session.backend.error, session.backend.logs[-2000:])
+            assert session.backend.url.startswith("http://127.0.0.1:")
+            assert session.backend.probe == "GET /health -> 200"
+            assert session.frontend.status == "not_previewable" and session.frontend.url is None
+            assert session.status == "running"
+        finally:
+            global_preview_manager.stop_preview("LivePreviewTestApp")
+        assert global_preview_manager.get_session("LivePreviewTestApp").status == "stopped"

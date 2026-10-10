@@ -195,14 +195,24 @@ def _probe(url: str, timeout: float) -> Optional[str]:
     """First probe path that answers below 500, as 'GET /path -> code'; None if nothing answered."""
     import httpx
     deadline = time.time() + timeout
+    partial_rounds = 0
     while time.time() < deadline:
+        answers = {}
         for path in PROBE_PATHS:
             try:
-                res = httpx.get(url + path, timeout=3.0)
-                if res.status_code < 500:
-                    return f"GET {path} -> {res.status_code}"
+                answers[path] = httpx.get(url + path, timeout=3.0).status_code
             except httpx.HTTPError:
                 pass
+        # Once the server answers, re-check every path so a slow start does not pick "/ -> 404"
+        # over a /health that was simply not up yet (a path that keeps failing is given up on).
+        if answers and len(answers) < len(PROBE_PATHS) and partial_rounds < 3:
+            partial_rounds += 1
+            time.sleep(0.5)
+            continue
+        for ok in (lambda c: c < 400, lambda c: c < 500):
+            for path in PROBE_PATHS:
+                if path in answers and ok(answers[path]):
+                    return f"GET {path} -> {answers[path]}"
         time.sleep(1.0)
     return None
 

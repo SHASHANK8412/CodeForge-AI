@@ -25,3 +25,9 @@ def _local_test_sandbox(monkeypatch):
 def _no_llm_repair(monkeypatch):
     """Repair tests exercise the deterministic strategies; the LLM rewrite needs a live model."""
     monkeypatch.setenv("AIFORGE_LLM_REPAIR", "0")
+
+
+@pytest.fixture(autouse=True)
+def _no_container_previews(monkeypatch):
+    """Graph tests that reach live_deploy must not start containers; preview tests opt in."""
+    monkeypatch.setenv("AIFORGE_PREVIEW", "off")
