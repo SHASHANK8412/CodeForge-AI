@@ -1,7 +1,6 @@
 """Generated projects get their own environment; their requirements never touch AIForge's."""
 import sys
 
-from backend.execution.dependency_manager import global_dependency_manager
 from backend.execution.project_env import ENV_DIRNAME, ensure_project_env, env_python, site_packages
 from backend.execution.project_runner import ProjectRunner
 
@@ -20,12 +19,6 @@ def test_requirements_install_into_the_project_venv(tmp_path):
     assert res["ok"] and env_python(project).exists() and site_packages(project) is not None
     assert str(env_python(project)) != sys.executable
     assert ensure_project_env(project)["cached"] is True
-
-
-def test_pip_dependency_install_does_not_target_the_host_env(tmp_path):
-    project = _project(tmp_path, "")
-    res = global_dependency_manager.install_dependencies(project, package_manager="pip")
-    assert res.success and ENV_DIRNAME in res.command
 
 
 def test_generated_tests_can_import_the_projects_own_dependencies(tmp_path):

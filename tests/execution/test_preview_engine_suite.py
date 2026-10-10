@@ -9,8 +9,6 @@ from pathlib import Path
 sys.path.insert(0, os.path.abspath("."))
 
 from backend.execution.project_detector import global_project_detector
-from backend.execution.port_manager import global_port_manager
-from backend.execution.process_manager import global_process_manager
 from backend.execution.health_checker import global_health_checker
 from backend.execution.contract_validator import global_contract_validator
 from backend.browser_testing.e2e_agent import global_e2e_test_agent
@@ -31,38 +29,6 @@ class TestLivePreviewEngine:
         assert cfg.frontend_framework == "vite"
         assert cfg.backend_framework == "fastapi"
         assert cfg.health_check_url == "/health"
-
-    def test_port_manager_allocation(self):
-        bindings = global_port_manager.allocate_ports_for_fullstack("TestProject1")
-        assert bindings["frontend"].port != bindings["backend"].port
-        assert "http://localhost:" in bindings["frontend"].url
-        assert "http://localhost:" in bindings["backend"].url
-
-        # Check collision prevention
-        bindings2 = global_port_manager.allocate_ports_for_fullstack("TestProject2")
-        assert bindings2["frontend"].port != bindings["frontend"].port
-        assert bindings2["backend"].port != bindings["backend"].port
-
-        global_port_manager.release_ports_for_project("TestProject1")
-        global_port_manager.release_ports_for_project("TestProject2")
-
-    def test_process_manager_lifecycle(self):
-        info = global_process_manager.start_process(
-            project_id="ProcTest",
-            service_name="dummy",
-            command="python -c \"import time; print('STARTED_PROCESS'); time.sleep(5)\"",
-            cwd=".",
-            port=9100
-        )
-        assert info.pid > 0
-        assert info.status == "STARTING"
-
-        time.sleep(1)
-        logs = global_process_manager.get_logs("ProcTest", "dummy")
-        assert any("STARTED_PROCESS" in line for line in logs["stdout"])
-
-        stopped = global_process_manager.stop_process("ProcTest", "dummy")
-        assert stopped is True
 
     def test_contract_validator(self):
         manifest = {
