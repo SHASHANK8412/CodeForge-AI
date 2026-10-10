@@ -29,7 +29,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from backend.execution.docker_test_sandbox import IMAGE, PIP_CACHE_VOLUME, docker_available, docker_exe
+from backend.execution.docker_test_sandbox import IMAGE, PIP_CACHE_VOLUME, docker_available, docker_env, docker_exe
 from backend.execution.project_env import requirements_file
 
 _logger = logging.getLogger("aiforge.execution.preview_manager")
@@ -83,15 +83,44 @@ _lock = threading.Lock()
 
 
 def _docker(*args: str, timeout: float = 60) -> subprocess.CompletedProcess:
-    return subprocess.run([docker_exe() or "docker", *args], capture_output=True, text=True, timeout=timeout)
+    return subprocess.run([docker_exe() or "docker", *args], capture_output=True, text=True, timeout=timeout, env=docker_env())
 
 
 # --- What to run ------------------------------------------------------------------------------
 
+_BACKEND_CANDIDATES = (("backend/main.py", "backend", "main:app"), ("main.py", ".", "main:app"),
+                       ("app/main.py", ".", "app.main:app"), ("src/main.py", "src", "main:app"))
+
+
+def _binds_app(tree: ast.Module) -> bool:
+    """Whether a module binds `app` at top level (app = FastAPI() or from x import app)."""
+    for n in tree.body:
+        if isinstance(n, (ast.Assign, ast.AnnAssign)):
+            targets = n.targets if isinstance(n, ast.Assign) else [n.target]
+            if any(isinstance(t, ast.Name) and t.id == "app" for t in targets):
+                return True
+        elif isinstance(n, (ast.Import, ast.ImportFrom)):
+            if any((a.asname or a.name.split(".")[0]) == "app" for a in n.names):
+                return True
+    return False
+
+
+def backend_problem(project: Path) -> str:
+    """Why there is no backend to serve (for the preview status)."""
+    for rel, _, _ in _BACKEND_CANDIDATES:
+        path = project / rel
+        if path.is_file():
+            try:
+                ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+            except SyntaxError as e:
+                return f"{rel} has a syntax error (line {e.lineno}): {e.msg}"
+            return f"{rel} does not define `app`"
+    return "no FastAPI entry point (backend/main.py or main.py)"
+
+
 def backend_entry(project: Path) -> Optional[Dict[str, str]]:
     """The ASGI app to serve: (working dir inside /app, module:attribute), or None."""
-    for rel, workdir, module in (("backend/main.py", "backend", "main:app"), ("main.py", ".", "main:app"),
-                                 ("app/main.py", ".", "app.main:app"), ("src/main.py", "src", "main:app")):
+    for rel, workdir, module in _BACKEND_CANDIDATES:
         path = project / rel
         if not path.is_file():
             continue
@@ -99,12 +128,7 @@ def backend_entry(project: Path) -> Optional[Dict[str, str]]:
             tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
         except SyntaxError:
             return None
-        defines_app = any(
-            isinstance(n, (ast.Assign, ast.AnnAssign)) and any(
-                isinstance(t, ast.Name) and t.id == "app"
-                for t in (n.targets if isinstance(n, ast.Assign) else [n.target]))
-            for n in tree.body)
-        if defines_app:
+        if _binds_app(tree):
             return {"workdir": workdir, "module": module}
     return None
 
@@ -245,7 +269,7 @@ def _run_preview(preview: Preview, project: Path) -> None:
     be_entry, fe_rel = backend_entry(project), frontend_entry(project)
     if not be_entry and not fe_rel:
         preview.status = "failed"
-        preview.reason = "nothing to preview: no FastAPI app (main.py defining `app`) and no frontend with a build script"
+        preview.reason = f"nothing to preview: {backend_problem(project)}, and no frontend with a build script"
         return
 
     if be_entry:
@@ -261,7 +285,7 @@ def _run_preview(preview: Preview, project: Path) -> None:
             _start_service(preview.backend, cmds["run"], 8000)
     else:
         preview.backend.status = "not_previewable"
-        preview.backend.error = "no FastAPI app found (main.py defining `app`)"
+        preview.backend.error = backend_problem(project)
 
     if fe_rel:
         cmds = frontend_commands(project, run_id, fe_rel, ttl, preview.backend.url)

@@ -126,3 +126,21 @@ def test_preview_routes(tmp_path, monkeypatch):
     assert client.post("/api/projects/demo/preview/stop").json()["stopped"] is True
     assert client.post("/api/projects/missing/preview/start").status_code == 404
     assert client.post("/api/projects/..%2F..%2Fetc/preview/start").status_code == 404
+
+
+def test_backend_problem_and_imported_app(tmp_path):
+    (tmp_path / "backend").mkdir()
+    main = tmp_path / "backend" / "main.py"
+    main.write_text("```python\nfrom fastapi import FastAPI\n", encoding="utf-8")
+    assert pm.backend_entry(tmp_path) is None
+    assert pm.backend_problem(tmp_path).startswith("backend/main.py has a syntax error (line 1)")
+    main.write_text("from backend.routes import app\n", encoding="utf-8")
+    assert pm.backend_entry(tmp_path) == {"workdir": "backend", "module": "main:app"}
+    main.write_text("def handler():\n    pass\n", encoding="utf-8")
+    assert pm.backend_problem(tmp_path) == "backend/main.py does not define `app`"
+
+
+def test_docker_calls_can_find_the_credential_helper(monkeypatch):
+    from backend.execution import docker_test_sandbox as sandbox
+    monkeypatch.setattr(sandbox, "docker_exe", lambda: str(Path("C:/Docker/bin/docker.exe")))
+    assert sandbox.docker_env()["PATH"].split(__import__("os").pathsep)[0] == str(Path("C:/Docker/bin"))

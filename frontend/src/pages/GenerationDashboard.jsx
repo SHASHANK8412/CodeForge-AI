@@ -18,6 +18,7 @@ import CompletionActions from '../components/generation/CompletionActions';
 import RepairLoop from '../components/generation/RepairLoop';
 import ApprovalPanel from '../components/generation/ApprovalPanel';
 import DebugActivityPanel from '../components/generation/DebugActivityPanel';
+import LivePreview from '../components/workspace/LivePreview';
 import {
 
   connectGenerationStream,
@@ -417,6 +418,11 @@ export default function GenerationDashboard({
             onOpenWorkspace={handleOpenWorkspace}
             onViewQualityReport={handleViewQuality}
           />
+        )}
+
+        {/* Live preview: available once the project is on disk (review it before final approval) */}
+        {(status === 'completed' || (isWaitingApproval && approvalStage === 'final')) && (
+          <LivePreview generationId={genId} />
         )}
 
         {/* Overall Progress Bar */}

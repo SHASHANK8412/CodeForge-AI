@@ -118,6 +118,9 @@ def _project_summary(pdir: Path, generations: list) -> Dict[str, Any]:
 
     return {
         "generation_id": gen_id,
+        # The run that produced the folder (None for folders made outside a tracked run); the
+        # Build page needs this id - the folder name is not a generation id.
+        "latest_generation_id": (latest_run or {}).get("generation_id"),
         "project_name": meta.get("name") or pdir.name.replace("_", " "),
         "description": (latest_run or {}).get("prompt") or "",
         "status": status,

@@ -62,8 +62,19 @@ def should_use_docker() -> bool:
     return mode == "docker" or (mode == "auto" and docker_available())
 
 
+def docker_env() -> dict:
+    """Environment for docker calls: Docker's own bin folder on PATH, so the CLI finds its
+    credential helper (docker-credential-desktop) when it has to pull an image."""
+    env = dict(os.environ)
+    exe = docker_exe()
+    if exe:
+        env["PATH"] = str(Path(exe).parent) + os.pathsep + env.get("PATH", "")
+    return env
+
+
 def _docker(*args: str, timeout: float) -> subprocess.CompletedProcess:
-    return subprocess.run([docker_exe() or "docker", *args], capture_output=True, text=True, timeout=timeout)
+    return subprocess.run([docker_exe() or "docker", *args], capture_output=True, text=True, timeout=timeout,
+                          env=docker_env())
 
 
 def run_pytest_in_docker(project_path: Path, timeout_seconds: float = 900.0) -> ExecutionResult:

@@ -39,7 +39,38 @@ AGENT_DEFAULT_PATHS = {
 }
 
 
+_FENCE_LINE = re.compile(r"^\s*```[a-zA-Z0-9_+\-]*\s*$")
+
+
+def _strip_stray_fences(path: str, content: str) -> str:
+    """Drop fence lines left at the edges of a file, e.g. when a model double-wraps a block
+    (a generated main.py starting with '```python' cannot even be imported)."""
+    if path.lower().endswith((".md", ".markdown")):
+        return content
+    lines = content.split("\n")
+    # Leading: skip blank lines only while a fence follows them; trailing: fences and blanks.
+    start = 0
+    while start < len(lines) and not lines[start].strip():
+        start += 1
+    if start < len(lines) and _FENCE_LINE.match(lines[start]):
+        while start < len(lines) and (_FENCE_LINE.match(lines[start]) or not lines[start].strip()):
+            start += 1
+    else:
+        start = 0
+    end = len(lines)
+    while end > start and (_FENCE_LINE.match(lines[end - 1]) or not lines[end - 1].strip()):
+        end -= 1
+    stripped = "\n".join(lines[start:end])
+    return stripped + "\n" if stripped and content.endswith("\n") else stripped
+
+
 def extract_files_from_agent_output(text: str, agent_name: str = "", default_filename: str = "") -> Dict[str, str]:
+    """Files from an agent's output: {relative path: content} (see module docstring for formats)."""
+    files = _extract_files(text, agent_name, default_filename)
+    return {path: _strip_stray_fences(path, content) for path, content in files.items()}
+
+
+def _extract_files(text: str, agent_name: str = "", default_filename: str = "") -> Dict[str, str]:
     """Scans LLM output text for multi-file markdown code blocks with filepath annotations.
 
     If no annotations are found but code blocks exist, uses default_filename or agent's default path.

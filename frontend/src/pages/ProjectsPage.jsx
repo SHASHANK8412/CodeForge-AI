@@ -36,8 +36,10 @@ export default function ProjectsPage({ setView, setActiveProjectName, setActiveG
   }, [page, searchQuery, statusFilter]);
 
   const handleOpenProject = (proj) => {
+    // The Build page shows a generation run; a folder with no recorded run opens in the code view.
+    if (!proj.latest_generation_id) return handleOpenCode(proj);
     if (setActiveProjectName) setActiveProjectName(proj.project_name);
-    if (setActiveGenerationId) setActiveGenerationId(proj.generation_id);
+    if (setActiveGenerationId) setActiveGenerationId(proj.latest_generation_id);
     if (setView) setView("build");
   };
 

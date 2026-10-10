@@ -25,25 +25,3 @@ export async function fetchGitOverview(projectId) {
     return null;
   }
 }
-
-export async function fetchPreviewStatus(projectId) {
-  try {
-    const res = await axios.get(`${API_BASE_URL}/api/projects/${encodeURIComponent(projectId)}/preview/status`, {
-      timeout: 10000,
-    });
-    return res.data;
-  } catch (err) {
-    return null;
-  }
-}
-
-export async function fetchPreviewLogs(projectId) {
-  try {
-    const res = await axios.get(`${API_BASE_URL}/api/projects/${encodeURIComponent(projectId)}/preview/logs`, {
-      timeout: 10000,
-    });
-    return res.data;
-  } catch (err) {
-    return null;
-  }
-}

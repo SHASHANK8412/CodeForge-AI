@@ -220,6 +220,10 @@ class GenerationManager:
                 stage = _approval_stage(next_nodes, current_values)
 
                 _logger.info("[GENERATION] %s paused at approval checkpoint: %s", gen_id, stage)
+                if current_values.get("project_path"):
+                    # The project exists on disk by the final review: record it so it can be
+                    # previewed, exported and listed before approval.
+                    _store.set_output(gen_id, current_values["project_path"], len(current_values.get("files") or {}))
                 _store.update_status(gen_id, "waiting_for_approval")
                 _store.add_event(
                     gen_id, "approval_required",
