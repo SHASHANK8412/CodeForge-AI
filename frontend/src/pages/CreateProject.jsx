@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FaArrowLeft, FaArrowRight, FaSpinner, FaShieldAlt, FaVial, FaTools, FaUserCheck } from 'react-icons/fa';
-import { createGeneration } from '../services/generation';
+import { createGeneration, listTemplates } from '../services/generation';
 import { fetchInstalledModels } from '../services/models';
 
 const PENDING_PROMPT_KEY = 'aiforge_pending_prompt';
@@ -22,12 +22,6 @@ const EXAMPLES = [
     text: 'Build an expense tracker. Users record expenses with an amount, category and date, and see monthly totals per category.',
   },
 ];
-
-const STACK_CHOICES = {
-  frontend: [['React', 'React (Vite)'], ['Vue', 'Vue'], ['HTML/JS', 'Vanilla JS']],
-  backend: [['FastAPI', 'FastAPI'], ['Express', 'Express'], ['Django', 'Django']],
-  database: [['SQLite', 'SQLite'], ['PostgreSQL', 'PostgreSQL'], ['MongoDB', 'MongoDB']],
-};
 
 const FEATURES = [
   { key: 'authentication', label: 'User accounts', hint: 'Sign-up, login and protected routes' },
@@ -73,7 +67,10 @@ export default function CreateProject({ setView, onGenerateSuccess }) {
   useEffect(() => { sessionStorage.removeItem(PENDING_PROMPT_KEY); }, []);
 
   const [projectName, setProjectName] = useState('');
-  const [stack, setStack] = useState({ frontend: 'React', backend: 'FastAPI', database: 'SQLite' });
+  const [templates, setTemplates] = useState([]);
+  const [templatesError, setTemplatesError] = useState('');
+  const [template, setTemplate] = useState('fastapi-react');
+  const selected = templates.find((t) => t.id === template);
   const [features, setFeatures] = useState({ authentication: false, docker: true, documentation: true });
   const [engine, setEngine] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -89,6 +86,15 @@ export default function CreateProject({ setView, onGenerateSuccess }) {
   const effectiveName = projectName.trim() || suggestedName;
   const canSubmit = description.trim().length >= 15 && !submitting;
 
+  useEffect(() => {
+    listTemplates()
+      .then((res) => {
+        setTemplates(res.templates || []);
+        if (res.default) setTemplate((t) => t || res.default);
+      })
+      .catch((e) => setTemplatesError(`Could not load templates: ${e.message}`));
+  }, []);
+
   const handleBack = () => (setView ? setView('dashboard') : (window.location.href = '/'));
 
   const handleSubmit = async (e) => {
@@ -103,14 +109,14 @@ export default function CreateProject({ setView, onGenerateSuccess }) {
     const included = FEATURES.filter((f) => features[f.key]).map((f) => f.label.toLowerCase());
     const prompt = [
       effectiveName ? `Project name: ${effectiveName}.` : '',
-      `Tech stack: ${stack.frontend} frontend, ${stack.backend} backend, ${stack.database} database.`,
+      selected ? `Tech stack: ${Object.values(selected.stack).join(', ')}.` : '',
       included.length ? `Include: ${included.join(', ')}.` : '',
       `Requirements: ${description.trim()}`,
     ].filter(Boolean).join(' ');
     const projectId = effectiveName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'project';
 
     try {
-      const res = await createGeneration(projectId, prompt);
+      const res = await createGeneration(projectId, prompt, template);
       setSubmitting(false);
       if (onGenerateSuccess) onGenerateSuccess(res.generation_id, effectiveName);
       else if (setView) setView('build');
@@ -178,29 +184,31 @@ export default function CreateProject({ setView, onGenerateSuccess }) {
                   className="mt-2 block w-full rounded-xl border border-border-dark bg-bg-base px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted outline-none transition focus:border-accent-violet/70 focus:ring-4 focus:ring-accent-violet/10"
                 />
               </div>
-              {Object.entries(STACK_CHOICES).map(([key, choices]) => (
-                <div key={key}>
-                  <span className="text-sm font-medium capitalize">{key}</span>
-                  <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label={key}>
-                    {choices.map(([value, label]) => (
-                      <button
-                        key={value}
-                        type="button"
-                        role="radio"
-                        aria-checked={stack[key] === value}
-                        onClick={() => setStack({ ...stack, [key]: value })}
-                        className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
-                          stack[key] === value
-                            ? 'border-accent-violet/60 bg-accent-violet/15 text-text-primary'
-                            : 'border-border-dark bg-bg-base text-text-secondary hover:text-text-primary'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
+              <div>
+                <span className="text-sm font-medium">Project template</span>
+                <div className="mt-2 grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Project template">
+                  {templates.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={template === t.id}
+                      onClick={() => setTemplate(t.id)}
+                      className={`rounded-xl border p-3 text-left transition cursor-pointer ${
+                        template === t.id
+                          ? 'border-accent-violet/60 bg-accent-violet/15'
+                          : 'border-border-dark bg-bg-base hover:border-accent-violet/30'
+                      }`}
+                    >
+                      <span className="block text-sm font-semibold text-text-primary">{t.label}</span>
+                      <span className="mt-1 block text-[11px] leading-snug text-text-secondary">{t.description}</span>
+                    </button>
+                  ))}
+                  {!templates.length && (
+                    <p className="text-xs text-text-muted sm:col-span-3">{templatesError || 'Loading templates…'}</p>
+                  )}
                 </div>
-              ))}
+              </div>
             </section>
 
             {/* Features */}
@@ -225,7 +233,7 @@ export default function CreateProject({ setView, onGenerateSuccess }) {
             <div className="rounded-2xl border border-border-dark bg-surface-card p-5">
               <p className="text-xs uppercase tracking-wider text-text-muted">You're building</p>
               <p className="mt-1 truncate text-lg font-semibold">{effectiveName || 'Untitled project'}</p>
-              <p className="mt-1 text-xs text-text-secondary">{stack.frontend} · {stack.backend} · {stack.database}</p>
+              <p className="mt-1 text-xs text-text-secondary">{selected ? Object.values(selected.stack).join(' · ') : template}</p>
 
               <button
                 type="submit"

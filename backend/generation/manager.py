@@ -140,12 +140,15 @@ class GenerationManager:
         project_id: str,
         user_id: str,
         prompt: str,
+        template: Optional[str] = None,
     ) -> str:
         """
         Persist a new generation record and return the generation_id.
         Does NOT start execution — call run() next.
         """
         gen_id = _store.create(project_id, user_id, prompt)
+        if template:
+            _store._update_record(gen_id, {"template": template})
         _store.add_event(gen_id, "generation_queued", message="Generation queued")
         return gen_id
 
@@ -200,6 +203,7 @@ class GenerationManager:
             "prompt": prompt,
             "project_name": project_name,
             "session_id": gen_id,
+            "template": rec.get("template") or "fastapi-react",
             "requirements": [prompt],
             "files": existing_files,
             "dependencies": [],

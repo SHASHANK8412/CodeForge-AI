@@ -216,7 +216,7 @@ async def architect_node(state: ProjectState) -> dict:
                 "stream_events": ["✔ Architecture generated (Cached)"]
             }
 
-    arch_prompt = global_prompt_builder.build_architect_prompt(plan_json if isinstance(plan_json, dict) else {})
+    arch_prompt = global_prompt_builder.build_architect_prompt(plan_json if isinstance(plan_json, dict) else {}, state.get("template"))
     if user_feedback:
         _logger.info(f"✔ Architect incorporating human rejection feedback: {user_feedback[:80]}")
         arch_prompt += f"\n\n[CRITICAL HUMAN REVISION FEEDBACK]:\nThe user reviewed the previous architecture and requested the following changes:\n\"{user_feedback}\"\nYou MUST strictly update the architecture, tech stack, database, and components according to this feedback."
@@ -361,7 +361,7 @@ async def frontend_node(state: ProjectState) -> dict:
             "stream_events": ["✔ Frontend generated (Cached)"]
         }
 
-    fe_prompt = global_prompt_builder.build_frontend_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"))
+    fe_prompt = global_prompt_builder.build_frontend_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"), state.get("template"))
     with Timer() as timer:
         frontend_code = await frontend_agent.run_async(fe_prompt)
 
@@ -393,7 +393,7 @@ async def backend_node(state: ProjectState) -> dict:
             "stream_events": ["✔ Backend generated (Cached)"]
         }
 
-    be_prompt = global_prompt_builder.build_backend_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"))
+    be_prompt = global_prompt_builder.build_backend_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"), state.get("template"))
     with Timer() as timer:
         backend_code = await backend_agent.run_async(be_prompt)
 
@@ -425,7 +425,7 @@ async def database_node(state: ProjectState) -> dict:
             "stream_events": ["✔ Database generated (Cached)"]
         }
 
-    db_prompt = global_prompt_builder.build_database_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"))
+    db_prompt = global_prompt_builder.build_database_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"), state.get("template"))
     with Timer() as timer:
         database_code = await database_agent.run_async(db_prompt)
 
@@ -465,6 +465,15 @@ async def assembly_node(state: ProjectState) -> dict:
     files_map = assembled["files"]
     manifest = assembled["manifest"]
 
+    # Template configuration files the agents did not write (never overwriting theirs), and the
+    # template's required files that are still missing - reported, not invented.
+    from backend.generation.templates import apply_scaffold, missing_required_files
+    template_id = state.get("template")
+    scaffold = apply_scaffold(template_id, files_map)
+    files_map.update(scaffold)
+    template_check = {"template": template_id or "fastapi-react", "scaffolded": sorted(scaffold),
+                      "missing_required": missing_required_files(template_id, files_map)}
+
     # Write project safely to disk
     written_path = global_project_assembler.write_project_to_disk(proj_name, files_map)
 
@@ -480,6 +489,7 @@ async def assembly_node(state: ProjectState) -> dict:
     return {
         "project_path": str(written_path),
         "files": files_map,
+        "template_check": template_check,
         "assembly_manifest": manifest,
         "validation_report": val_report,
         "validation_status": val_report,
@@ -557,6 +567,7 @@ async def testing_node(state: ProjectState) -> dict:
         backend_code=str(state.get("backend", "")),
         frontend_code=str(state.get("frontend", "")),
         files=state.get("files") or {},
+        template=state.get("template"),
     )
 
     with Timer() as timer:
@@ -1225,6 +1236,9 @@ async def final_approval_node(state: ProjectState) -> dict:
     final_req["quality_gate"] = {"passed": gate.get("passed"), "error_count": gate.get("error_count"), "warning_count": gate.get("warning_count")}
     if not is_escalation and sec.get("gate_status") == "FAILED":
         final_req["deployment_readiness"] = "SECURITY REVIEW REQUIRED"
+    final_req["template_check"] = state.get("template_check") or {}
+    if final_req["template_check"].get("missing_required"):
+        final_req["deployment_readiness"] = "INCOMPLETE: missing " + ", ".join(final_req["template_check"]["missing_required"])
 
     # Release report from executed tools (quality gate, Bandit, pip-audit); critical findings block.
     project_path = state.get("project_path", "")

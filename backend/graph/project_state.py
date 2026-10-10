@@ -54,6 +54,8 @@ class ProjectState(TypedDict, total=False):
     # input alike - so every key a node writes or reads must be listed (tests/test_state_schema.py).
     session_id: str
     user_request: str
+    template: str
+    template_check: Dict[str, Any]
     errors: List[str]
     testing_report: str
     security_report: str

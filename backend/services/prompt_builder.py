@@ -23,26 +23,14 @@ OUTPUT_FORMAT = (
     "No prose between files, no placeholders, no TODOs."
 )
 
-BACKEND_LAYOUT = (
-    "- backend/main.py defines `app = FastAPI(...)`, adds CORS for http://localhost:5173, and has "
-    "GET /health returning {\"status\": \"ok\"}\n"
-    "- other backend modules live in backend/ and are imported as `from backend.<module> import ...`; "
-    "backend/__init__.py exists\n"
-    "- ORM models in backend/models.py, the engine/session in backend/database.py (SQLAlchemy, "
-    "DATABASE_URL from the environment, default sqlite:///./app.db), request/response schemas in "
-    "backend/schemas.py\n"
-    "- requirements.txt at the project root lists every third-party package imported (fastapi, "
-    "uvicorn, sqlalchemy, pydantic, httpx, ...)\n"
-    "- import only standard-library modules, packages in requirements.txt, and files you write here"
-)
+def _template(template_id: Optional[str]) -> Dict[str, Any]:
+    from backend.generation.templates import get_template
+    return get_template(template_id)
 
-FRONTEND_LAYOUT = (
-    "- frontend/package.json (react, react-dom, vite, @vitejs/plugin-react; scripts dev/build), "
-    "frontend/index.html, frontend/vite.config.js, frontend/src/main.jsx, frontend/src/App.jsx, "
-    "components in frontend/src/components/\n"
-    "- the API base URL is `import.meta.env.VITE_API_URL || 'http://localhost:8000'`\n"
-    "- only call the API endpoints listed above; handle loading and error states"
-)
+
+def _stack(template_id: Optional[str]) -> str:
+    stack = _template(template_id)["stack"]
+    return "Stack: " + ", ".join(f"{k} {v}" for k, v in stack.items())
 
 
 def _brief(plan: Optional[Dict[str, Any]]) -> str:
@@ -84,7 +72,7 @@ class ContextScopedPromptBuilder:
             f"User Prompt: {user_prompt}"
         )
 
-    def build_architect_prompt(self, plan_json: Dict[str, Any]) -> str:
+    def build_architect_prompt(self, plan_json: Dict[str, Any], template: Optional[str] = None) -> str:
         plan_json = plan_json if isinstance(plan_json, dict) else {}
         proj_name = plan_json.get("project_name", "")
         # The architect writes Markdown sections (its system prompt); the API Specifications,
@@ -92,7 +80,7 @@ class ContextScopedPromptBuilder:
         # they must be concrete: `METHOD /path` lines, one top-level bullet per table, file paths.
         return (
             f"{_context('architect', f'{proj_name} architecture design')}"
-            f"Design the architecture for this plan:\n{json.dumps(plan_json, indent=2)}\n\n"
+            f"Design the architecture for this plan:\n{json.dumps(plan_json, indent=2)}\n{_stack(template)}\n\n"
             "Write the Markdown sections from your instructions. Be concrete where the code agents "
             "will build from them:\n"
             "- API Specifications: one endpoint per line as `METHOD /path` - purpose\n"
@@ -101,38 +89,44 @@ class ContextScopedPromptBuilder:
             "List only the components, routes and models this project needs."
         )
 
-    def build_backend_prompt(self, arch_json: Dict[str, Any], plan: Optional[Dict[str, Any]] = None) -> str:
+    def build_backend_prompt(self, arch_json: Dict[str, Any], plan: Optional[Dict[str, Any]] = None,
+                             template: Optional[str] = None) -> str:
         arch_json = arch_json if isinstance(arch_json, dict) else {}
         routes, models = arch_json.get("routes", []), arch_json.get("models", [])
         return (
             f"{_context('backend', f'FastAPI REST routes {routes}')}"
-            f"{_brief(plan)}\n\n"
-            f"Build the FastAPI backend.\nAPI endpoints to implement:\n{_bullets(routes, 'derive them from the requirements')}\n"
+            f"{_brief(plan)}\n{_stack(template)}\n\n"
+            f"Build the backend.\nAPI endpoints to implement:\n{_bullets(routes, 'derive them from the requirements')}\n"
             f"Data models:\n{_bullets(models, 'derive them from the requirements')}\n\n"
-            f"File layout (other agents rely on it):\n{BACKEND_LAYOUT}\n\n{OUTPUT_FORMAT}"
+            f"File layout (other agents rely on it):\n{_template(template)['backend_layout']}\n\n{OUTPUT_FORMAT}"
         )
 
-    def build_frontend_prompt(self, arch_json: Dict[str, Any], plan: Optional[Dict[str, Any]] = None) -> str:
+    def build_frontend_prompt(self, arch_json: Dict[str, Any], plan: Optional[Dict[str, Any]] = None,
+                              template: Optional[str] = None) -> str:
         arch_json = arch_json if isinstance(arch_json, dict) else {}
         components, routes = arch_json.get("components", []), arch_json.get("routes", [])
         return (
             f"{_context('frontend', f'React UI {components}')}"
-            f"{_brief(plan)}\n\n"
-            f"Build the React (Vite) frontend.\nComponents:\n{_bullets(components, 'choose the components the pages need')}\n"
+            f"{_brief(plan)}\n{_stack(template)}\n\n"
+            f"Build the frontend.\nComponents:\n{_bullets(components, 'choose the components the pages need')}\n"
             f"Backend API endpoints available:\n{_bullets(routes, 'none listed - keep data local')}\n\n"
-            f"File layout:\n{FRONTEND_LAYOUT}\n\n{OUTPUT_FORMAT}"
+            f"File layout:\n{_template(template)['frontend_layout']}\n\n{OUTPUT_FORMAT}"
         )
 
-    def build_database_prompt(self, arch_json: Dict[str, Any], plan: Optional[Dict[str, Any]] = None) -> str:
+    def build_database_prompt(self, arch_json: Dict[str, Any], plan: Optional[Dict[str, Any]] = None,
+                              template: Optional[str] = None) -> str:
         arch_json = arch_json if isinstance(arch_json, dict) else {}
         models = arch_json.get("models", [])
         return (
             f"{_context('database', f'Database models {models}')}"
-            f"{_brief(plan)}\n\n"
-            f"Write the relational schema for these entities:\n{_bullets(models, 'derive them from the requirements')}\n\n"
-            "Write exactly one file, database/schema.sql: CREATE TABLE statements (portable SQL that "
-            "runs on SQLite and PostgreSQL), primary and foreign keys, and useful indexes. The "
-            "backend owns the SQLAlchemy models, so do not write Python files.\n\n" + OUTPUT_FORMAT
+            f"{_brief(plan)}\n{_stack(template)}\n\n"
+            f"Write the data schema for these entities:\n{_bullets(models, 'derive them from the requirements')}\n\n"
+            + ("Write exactly one file, database/schema.md: each collection with its fields, types, "
+               "indexes and references. The backend owns the Mongoose models, so do not write code.\n\n"
+               if "Mongo" in _template(template)["stack"]["database"] else
+               "Write exactly one file, database/schema.sql: CREATE TABLE statements (portable SQL that "
+               "runs on SQLite and PostgreSQL), primary and foreign keys, and useful indexes. The "
+               "backend owns the ORM models, so do not write application code.\n\n") + OUTPUT_FORMAT
         )
 
     def build_reviewer_prompt(
@@ -162,17 +156,20 @@ class ContextScopedPromptBuilder:
         )
 
     def build_testing_prompt(self, backend_code: str, frontend_code: str,
-                             files: Optional[Dict[str, str]] = None, max_chars: int = 9000) -> str:
+                             files: Optional[Dict[str, str]] = None, max_chars: int = 9000,
+                             template: Optional[str] = None) -> str:
         """
         Tests are written against the assembled backend files (all of them, up to max_chars),
         not the first 1500 characters of one agent's raw reply.
         """
+        python_backend = "Python" in _template(template)["stack"]["backend"]
+        source_ext = (".py",) if python_backend else (".js", ".mjs", ".ts")
         backend_files = {p: c for p, c in (files or {}).items()
-                         if p.endswith(".py") and not p.startswith("tests/") and "/tests/" not in p}
+                         if p.endswith(source_ext) and not p.startswith(("tests/", "frontend/")) and "/test" not in p}
         if backend_files:
             shown, used = [], 0
             for path, content in sorted(backend_files.items(), key=lambda kv: (kv[0] != "backend/main.py", kv[0])):
-                block = f"### {path}\n```python\n{content}\n```"
+                block = f"### {path}\n```\n{content}\n```"
                 if used + len(block) > max_chars:
                     shown.append(f"### {path}\n(omitted: {len(content)} characters)")
                     continue
@@ -183,10 +180,9 @@ class ContextScopedPromptBuilder:
             code = f"Backend Code\n{backend_code[:max_chars] or '(none generated)'}"
         return (
             f"{code}\n\n"
-            "Write pytest tests for this backend. Import the app with `from backend.main import app` "
-            "and use `fastapi.testclient.TestClient`. Only call endpoints and import names that exist "
-            "in the code above; assert on the status codes and JSON the code actually returns. Each "
-            "test must be independent (create the data it needs).\n\n"
+            f"Write tests for this backend. {_template(template)['test_instructions']} Only call endpoints "
+            "and import names that exist in the code above; assert on the status codes and JSON the code "
+            "actually returns. Each test must be independent (create the data it needs).\n\n"
             f"Frontend (for context only):\n{frontend_code[:1500] or '(none generated)'}"
         )
 

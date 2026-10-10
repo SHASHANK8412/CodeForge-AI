@@ -64,11 +64,16 @@ async function _apiFetch(path, opts = {}) {
  * @param {string} prompt
  * @returns {Promise<{generation_id: string, status: string}>}
  */
-export async function createGeneration(projectId, prompt) {
+export async function createGeneration(projectId, prompt, template) {
   return _apiFetch('/api/generations', {
     method: 'POST',
-    body: JSON.stringify({ project_id: projectId, prompt }),
+    body: JSON.stringify({ project_id: projectId, prompt, ...(template ? { template } : {}) }),
   });
+}
+
+/** Project templates the backend supports (FastAPI + React, MERN, Next.js). */
+export async function listTemplates() {
+  return _apiFetch('/api/generations/templates');
 }
 
 /**

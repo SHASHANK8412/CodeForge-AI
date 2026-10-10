@@ -43,6 +43,7 @@ router = APIRouter(prefix="/api/generations", tags=["Generation Engine"])
 class CreateGenerationRequest(BaseModel):
     project_id: str
     prompt: str
+    template: Optional[str] = None   # see GET /api/generations/templates; default fastapi-react
 
 
 class GenerationStatusResponse(BaseModel):
@@ -126,6 +127,13 @@ def _safe_status_response(rec: Dict[str, Any]) -> Dict[str, Any]:
 # POST /api/generations — create + start generation
 # ---------------------------------------------------------------------------
 
+@router.get("/templates")
+def list_generation_templates():
+    """Project templates a generation can target (stack, layout, required files)."""
+    from backend.generation.templates import DEFAULT_TEMPLATE, list_templates
+    return {"default": DEFAULT_TEMPLATE, "templates": list_templates()}
+
+
 @router.post("", status_code=status.HTTP_202_ACCEPTED)
 async def create_generation(
     req: CreateGenerationRequest,
@@ -142,10 +150,15 @@ async def create_generation(
         req.project_id, user_id, req.prompt,
     )
 
+    from backend.generation.templates import TEMPLATES
+    if req.template and req.template not in TEMPLATES:
+        raise HTTPException(status_code=400, detail=f"Unknown template '{req.template}'. Choose one of: {', '.join(TEMPLATES)}")
+
     gen_id = _manager.create(
         project_id=req.project_id,
         user_id=user_id,
         prompt=req.prompt,
+        template=req.template,
     )
 
     # Start the pipeline asynchronously — this does NOT block
