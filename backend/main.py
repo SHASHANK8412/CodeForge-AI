@@ -255,6 +255,8 @@ def register_routers() -> None:
     from backend.routes.export import router as export_router
     app.include_router(plugins_router)
     app.include_router(export_router)
+    from backend.routes.preview import router as preview_router
+    app.include_router(preview_router)
 
     from backend.routes.learning_routes import router as learning_engine_router
     app.include_router(learning_engine_router)

@@ -91,6 +91,8 @@ def run_pytest_in_docker(project_path: Path, timeout_seconds: float = 900.0) -> 
         inst = _docker(
             "run", "--rm", "--name", names[0],
             "-v", f"{project_path}:/app:ro", "-v", f"{deps_volume}:/deps", "-v", f"{PIP_CACHE_VOLUME}:/root/.cache/pip",
+            # Package builds can run code from the project's requirements: no capabilities either.
+            "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--pids-limit", "256",
             "--memory", "2g", "--cpus", "2", IMAGE,
             "sh", "-c", f"{install} > /tmp/pip.log 2>&1 || {{ tail -40 /tmp/pip.log; exit 3; }}; chmod -R a+rX /deps",
             timeout=timeout_seconds,

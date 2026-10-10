@@ -1,209 +1,353 @@
 """
-AIForge Live Preview Manager Engine
-===================================
-Orchestrates end-to-end Live Preview lifecycle:
-1. Technology Stack & Command Detection (ProjectDetector)
-2. Cached Dependency Installation (DependencyManager)
-3. Dynamic Free Port Allocation (PortManager)
-4. Isolated Process Tree Spawning (ProcessManager)
-5. Empirical HTTP Health Probes (HealthChecker)
-6. Real E2E Interaction Testing (E2ETestAgent)
-7. Self-Healing Automatic Repair Pipeline Integration
-8. Project RUN_REPORT.md Generation
+AIForge Live Preview Manager - generated apps run only inside hardened Docker containers.
+
+Generated code is untrusted, so a preview never runs it on the host (this module used to start
+it as host processes and install its dependencies into the host environment):
+  1. install - dependencies go into a throwaway volume (network on, no capabilities, process limit)
+  2. run     - non-root user, all capabilities dropped, no-new-privileges, CPU/memory/process
+               limits, read-only root filesystem, project mounted read-only and copied into the
+               container's tmpfs, the port published on 127.0.0.1 only, and the server stops
+               itself after AIFORGE_PREVIEW_TTL seconds.
+A frontend with a build script is built in a node container and served read-only the same way.
+
+A service is reported "running" only after an HTTP probe gets an answer from it; otherwise it is
+"failed" with the container's logs. Without a Docker daemon the status is "unavailable" - there
+is no host fallback.
+
+AIFORGE_PREVIEW: "docker" (default) or "off".
 """
 
-import sys
-import time
-import asyncio
+import ast
+import json
 import logging
+import os
+import subprocess
+import threading
+import time
+import uuid
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from typing import Dict, List, Optional
 
-from backend.execution.project_detector import global_project_detector, DetectedProjectConfig
-from backend.execution.dependency_manager import global_dependency_manager
-from backend.execution.port_manager import global_port_manager
-from backend.execution.process_manager import global_process_manager
-from backend.execution.health_checker import global_health_checker, HealthCheckResult
-from backend.browser_testing.e2e_agent import global_e2e_test_agent, E2ESuiteResult
-from backend.execution.contract_validator import global_contract_validator
+from backend.execution.docker_test_sandbox import IMAGE, PIP_CACHE_VOLUME, docker_available, docker_exe
+from backend.execution.project_env import requirements_file
 
 _logger = logging.getLogger("aiforge.execution.preview_manager")
 
+NODE_IMAGE = os.environ.get("AIFORGE_PREVIEW_NODE_IMAGE", "node:22-slim")
+STARTUP_TIMEOUT = float(os.environ.get("AIFORGE_PREVIEW_STARTUP_SECONDS", "60"))
+PROBE_PATHS = ("/health", "/docs", "/")
+HARDENING = [
+    "--user", "1000:1000", "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
+    "--memory", "1g", "--cpus", "1", "--pids-limit", "128", "--read-only", "--tmpfs", "/tmp:rw,size=256m",
+]
 
-class PreviewSessionState(BaseModel):
+
+def preview_ttl() -> int:
+    return int(os.environ.get("AIFORGE_PREVIEW_TTL", "1800"))
+
+
+def preview_enabled() -> bool:
+    return os.environ.get("AIFORGE_PREVIEW", "docker").strip().lower() != "off"
+
+
+@dataclass
+class ServicePreview:
+    status: str = "not_started"   # not_started | installing | building | starting | running | failed | not_previewable
+    url: Optional[str] = None
+    probe: Optional[str] = None   # "GET /health -> 200" once verified
+    error: Optional[str] = None
+    logs: str = ""
+    container: Optional[str] = None
+
+
+@dataclass
+class Preview:
     project_id: str
-    project_name: str
-    status: str = "GENERATING"  # GENERATING, VALIDATING, BUILDING, STARTING, RUNNING, TESTING, REPAIRING, VERIFIED, FAILED, STOPPED
-    frontend_url: Optional[str] = None
-    backend_url: Optional[str] = None
-    frontend_status: str = "STOPPED"
-    backend_status: str = "STOPPED"
-    database_status: str = "CONNECTED"
-    health_status: str = "NOT RUN"
-    quality_score: float = 0.0
-    repair_attempts: int = 0
-    logs: List[str] = Field(default_factory=list)
-    e2e_results: Optional[E2ESuiteResult] = None
-    config: Optional[DetectedProjectConfig] = None
+    status: str = "starting"      # starting | running | partial | failed | stopped | unavailable
+    backend: ServicePreview = field(default_factory=ServicePreview)
+    frontend: ServicePreview = field(default_factory=ServicePreview)
+    started_at: float = field(default_factory=time.time)
+    expires_at: Optional[float] = None
+    reason: Optional[str] = None
+    volumes: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> Dict:
+        d = asdict(self)
+        d.pop("volumes", None)
+        return d
+
+
+_previews: Dict[str, Preview] = {}
+_lock = threading.Lock()
+
+
+def _docker(*args: str, timeout: float = 60) -> subprocess.CompletedProcess:
+    return subprocess.run([docker_exe() or "docker", *args], capture_output=True, text=True, timeout=timeout)
+
+
+# --- What to run ------------------------------------------------------------------------------
+
+def backend_entry(project: Path) -> Optional[Dict[str, str]]:
+    """The ASGI app to serve: (working dir inside /app, module:attribute), or None."""
+    for rel, workdir, module in (("backend/main.py", "backend", "main:app"), ("main.py", ".", "main:app"),
+                                 ("app/main.py", ".", "app.main:app"), ("src/main.py", "src", "main:app")):
+        path = project / rel
+        if not path.is_file():
+            continue
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+        except SyntaxError:
+            return None
+        defines_app = any(
+            isinstance(n, (ast.Assign, ast.AnnAssign)) and any(
+                isinstance(t, ast.Name) and t.id == "app"
+                for t in (n.targets if isinstance(n, ast.Assign) else [n.target]))
+            for n in tree.body)
+        if defines_app:
+            return {"workdir": workdir, "module": module}
+    return None
+
+
+def frontend_entry(project: Path) -> Optional[str]:
+    """The folder of a buildable frontend (package.json with a build script), relative to the project."""
+    for rel in ("frontend", "."):
+        pkg = project / rel / "package.json"
+        if pkg.is_file():
+            try:
+                if "build" in (json.loads(pkg.read_text(encoding="utf-8")).get("scripts") or {}):
+                    return rel
+            except (ValueError, OSError):
+                return None
+    return None
+
+
+def backend_commands(project: Path, run_id: str, entry: Dict[str, str], ttl: int) -> Dict[str, List[str]]:
+    """docker argv for the install and run containers (no generated code runs during install)."""
+    req = requirements_file(project)
+    req_arg = f"-r /app/{req.relative_to(project).as_posix()} " if req else ""
+    deps = f"aiforge_preview_deps_{run_id}"
+    install = [
+        "run", "--rm", "--name", f"aiforge_preview_install_{run_id}",
+        "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--pids-limit", "256",
+        "--memory", "2g", "--cpus", "2",
+        "-v", f"{project}:/app:ro", "-v", f"{deps}:/deps", "-v", f"{PIP_CACHE_VOLUME}:/root/.cache/pip",
+        IMAGE, "sh", "-c",
+        f"pip install -q --disable-pip-version-check --root-user-action=ignore --target /deps {req_arg}uvicorn"
+        " > /tmp/pip.log 2>&1 || { tail -40 /tmp/pip.log; exit 3; }; chmod -R a+rX /deps",
+    ]
+    # The project is mounted read-only and copied into the container's tmpfs, so an app that
+    # writes next to itself (a SQLite file, uploads) works without touching the host copy.
+    workdir = "/tmp/app" if entry["workdir"] == "." else f"/tmp/app/{entry['workdir']}"
+    run = [
+        "run", "-d", "--name", f"aiforge_preview_be_{run_id}", "--label", "aiforge.preview=1",
+        *HARDENING, "-p", "127.0.0.1::8000",
+        "-v", f"{project}:/app:ro", "-v", f"{deps}:/deps:ro",
+        "-e", f"PYTHONPATH=/deps:{workdir}:/tmp/app", "-e", "PYTHONDONTWRITEBYTECODE=1", "-e", "PYTHONUNBUFFERED=1",
+        "-e", "HOME=/tmp",
+        IMAGE, "sh", "-c",
+        "mkdir -p /tmp/app && tar -C /app --exclude=./.venv --exclude=./frontend/node_modules --exclude=./node_modules "
+        f"-cf - . | tar -C /tmp/app -xf - && cd {workdir} && "
+        f"exec timeout {ttl} python -m uvicorn {entry['module']} --host 0.0.0.0 --port 8000",
+    ]
+    return {"install": install, "run": run, "volume": deps}
+
+
+def frontend_commands(project: Path, run_id: str, rel: str, ttl: int, api_url: Optional[str]) -> Dict[str, List[str]]:
+    """Build in a node container (network on, no capabilities), serve the static output read-only."""
+    src = project if rel == "." else project / rel
+    build = [
+        "run", "--rm", "--name", f"aiforge_preview_build_{run_id}",
+        "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--pids-limit", "512",
+        "--memory", "2g", "--cpus", "2", "-e", "HOME=/tmp", "-e", "npm_config_cache=/tmp/npm",
+        *(["-e", f"VITE_API_URL={api_url}", "-e", f"REACT_APP_API_URL={api_url}"] if api_url else []),
+        "-v", f"{src}:/src:ro", "-v", f"aiforge_preview_site_{run_id}:/out", NODE_IMAGE, "sh", "-c",
+        "cp -r /src /tmp/app && cd /tmp/app && rm -rf node_modules && "
+        "npm install --no-audit --no-fund --loglevel=error && npm run build && "
+        "for d in dist build out; do if [ -d \"$d\" ]; then cp -r \"$d\"/. /out/; exit 0; fi; done; "
+        "echo 'build produced no dist/ build/ or out/ folder'; exit 4",
+    ]
+    serve = [
+        "run", "-d", "--name", f"aiforge_preview_fe_{run_id}", "--label", "aiforge.preview=1",
+        *HARDENING, "-p", "127.0.0.1::8080",
+        "-v", f"aiforge_preview_site_{run_id}:/site:ro",
+        IMAGE, "timeout", str(ttl), "python", "-m", "http.server", "8080", "--directory", "/site",
+    ]
+    return {"build": build, "run": serve, "volume": f"aiforge_preview_site_{run_id}"}
+
+
+# --- Running and verifying ---------------------------------------------------------------------
+
+def _host_port(container: str, port: int) -> Optional[int]:
+    out = _docker("port", container, str(port), timeout=20).stdout.strip().splitlines()
+    for line in out:
+        if line.startswith("127.0.0.1:"):
+            return int(line.rsplit(":", 1)[1])
+    return None
+
+
+def _logs(container: str) -> str:
+    res = _docker("logs", "--tail", "120", container, timeout=20)
+    return (res.stdout + res.stderr)[-12_000:]
+
+
+def _probe(url: str, timeout: float) -> Optional[str]:
+    """First probe path that answers below 500, as 'GET /path -> code'; None if nothing answered."""
+    import httpx
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        for path in PROBE_PATHS:
+            try:
+                res = httpx.get(url + path, timeout=3.0)
+                if res.status_code < 500:
+                    return f"GET {path} -> {res.status_code}"
+            except httpx.HTTPError:
+                pass
+        time.sleep(1.0)
+    return None
+
+
+def _start_service(svc: ServicePreview, run_cmd: List[str], port: int) -> None:
+    started = _docker(*run_cmd, timeout=120)
+    if started.returncode != 0:
+        svc.status, svc.error = "failed", (started.stderr or started.stdout)[-2000:]
+        return
+    svc.container = run_cmd[run_cmd.index("--name") + 1]
+    host_port = _host_port(svc.container, port)
+    if not host_port:
+        svc.status, svc.error, svc.logs = "failed", "the container exited before its port was published", _logs(svc.container)
+        return
+    url = f"http://127.0.0.1:{host_port}"
+    svc.status = "starting"
+    probe = _probe(url, STARTUP_TIMEOUT)
+    svc.logs = _logs(svc.container)
+    if probe:
+        svc.status, svc.url, svc.probe = "running", url, probe
+    else:
+        svc.status = "failed"
+        svc.error = f"no HTTP answer on {', '.join(PROBE_PATHS)} within {STARTUP_TIMEOUT:.0f}s"
+
+
+def _run_preview(preview: Preview, project: Path) -> None:
+    run_id = uuid.uuid4().hex[:10]
+    ttl = preview_ttl()
+    preview.expires_at = time.time() + ttl
+    be_entry, fe_rel = backend_entry(project), frontend_entry(project)
+    if not be_entry and not fe_rel:
+        preview.status = "failed"
+        preview.reason = "nothing to preview: no FastAPI app (main.py defining `app`) and no frontend with a build script"
+        return
+
+    if be_entry:
+        cmds = backend_commands(project, run_id, be_entry, ttl)
+        preview.volumes.append(cmds["volume"])
+        preview.backend.status = "installing"
+        inst = _docker(*cmds["install"], timeout=900)
+        if inst.returncode != 0:
+            preview.backend.status = "failed"
+            preview.backend.error = "dependency install failed"
+            preview.backend.logs = (inst.stdout + inst.stderr)[-12_000:]
+        else:
+            _start_service(preview.backend, cmds["run"], 8000)
+    else:
+        preview.backend.status = "not_previewable"
+        preview.backend.error = "no FastAPI app found (main.py defining `app`)"
+
+    if fe_rel:
+        cmds = frontend_commands(project, run_id, fe_rel, ttl, preview.backend.url)
+        preview.volumes.append(cmds["volume"])
+        preview.frontend.status = "building"
+        built = _docker(*cmds["build"], timeout=1200)
+        if built.returncode != 0:
+            preview.frontend.status = "failed"
+            preview.frontend.error = "frontend build failed"
+            preview.frontend.logs = (built.stdout + built.stderr)[-12_000:]
+        else:
+            _start_service(preview.frontend, cmds["run"], 8080)
+    else:
+        preview.frontend.status = "not_previewable"
+        preview.frontend.error = "no package.json with a build script"
+
+    services = [s for s in (preview.backend, preview.frontend) if s.status != "not_previewable"]
+    running = [s for s in services if s.status == "running"]
+    preview.status = "running" if running and len(running) == len(services) else "partial" if running else "failed"
+
+
+def start_preview(project_id: str, project_dir: Path, wait: bool = False) -> Preview:
+    """Start (or restart) a project's preview. Returns at once unless wait=True."""
+    project = Path(project_dir).resolve()
+    stop_preview(project_id)
+    preview = Preview(project_id=project_id)
+    with _lock:
+        _previews[project_id] = preview
+    if not preview_enabled():
+        preview.status, preview.reason = "unavailable", "previews are disabled (AIFORGE_PREVIEW=off)"
+        return preview
+    if not docker_available():
+        preview.status = "unavailable"
+        preview.reason = "Docker is not running; generated apps are only ever started inside containers"
+        return preview
+
+    def work():
+        try:
+            _run_preview(preview, project)
+        except Exception as e:  # noqa: BLE001 - reported on the preview, never raised into the caller
+            _logger.exception("Preview for %s failed", project_id)
+            preview.status, preview.reason = "failed", f"{type(e).__name__}: {e}"
+
+    if wait:
+        work()
+    else:
+        threading.Thread(target=work, name=f"preview-{project_id}", daemon=True).start()
+    return preview
+
+
+def get_preview(project_id: str, refresh_logs: bool = True) -> Optional[Preview]:
+    with _lock:
+        preview = _previews.get(project_id)
+    if preview and refresh_logs:
+        for svc in (preview.backend, preview.frontend):
+            if svc.container and svc.status == "running":
+                svc.logs = _logs(svc.container)
+                if not _docker("inspect", "-f", "{{.State.Running}}", svc.container, timeout=20).stdout.strip() == "true":
+                    svc.status, svc.error = "failed", "the container has stopped (crashed or reached its time limit)"
+    return preview
+
+
+def stop_preview(project_id: str) -> bool:
+    with _lock:
+        preview = _previews.get(project_id)
+    if not preview:
+        return False
+    for svc in (preview.backend, preview.frontend):
+        if svc.container:
+            _docker("rm", "-f", svc.container, timeout=60)
+            if svc.status == "running":
+                svc.status = "stopped"
+    for vol in preview.volumes:
+        _docker("volume", "rm", "-f", vol, timeout=60)
+    preview.volumes = []
+    preview.status = "stopped"
+    return True
 
 
 class PreviewManager:
-    """
-    Unified manager for Live Application Preview and Self-Healing E2E validation.
-    """
+    """Facade kept for existing callers (routes, tests): one preview per project id."""
 
-    def __init__(self):
-        self._sessions: Dict[str, PreviewSessionState] = {}
+    async def start_preview_async(self, project_id: str, project_path: Path,
+                                  files_manifest: Optional[Dict[str, str]] = None) -> Preview:
+        """Start a preview and wait until it is verified or has failed."""
+        import asyncio
+        return await asyncio.to_thread(start_preview, project_id, project_path, True)
 
-    def log_event(self, session: PreviewSessionState, message: str):
-        ts = time.strftime("%H:%M:%S")
-        formatted = f"[{ts}] {message}"
-        session.logs.append(formatted)
-        _logger.info(f"PreviewManager [{session.project_id}]: {message}")
+    def start_preview(self, project_id: str, project_path: Path, wait: bool = False) -> Preview:
+        return start_preview(project_id, project_path, wait)
 
-    async def start_preview_async(
-        self,
-        project_id: str,
-        project_path: Path,
-        files_manifest: Dict[str, str]
-    ) -> PreviewSessionState:
-        session = PreviewSessionState(
-            project_id=project_id,
-            project_name=project_path.name
-        )
-        self._sessions[project_id] = session
+    def stop_preview(self, project_id: str) -> bool:
+        return stop_preview(project_id)
 
-        session.status = "BUILDING"
-        self.log_event(session, f"Starting Live Application Preview for '{session.project_name}'...")
-
-        # 1. Project Detection
-        config = global_project_detector.detect(files_manifest)
-        session.config = config
-        self.log_event(session, f"Detected Stack: {config.framework} ({config.language}), Package Manager: {config.package_manager}")
-
-        # 2. Dependency Installation
-        session.status = "BUILDING"
-        self.log_event(session, "Installing dependencies...")
-        dep_res = global_dependency_manager.install_dependencies(project_path)
-        if not dep_res.success:
-            self.log_event(session, f"⚠ Dependency installation issue: {dep_res.stderr[:200]}")
-
-        # 3. Port Allocation
-        bindings = global_port_manager.allocate_ports_for_fullstack(project_id)
-        session.frontend_url = bindings["frontend"].url
-        session.backend_url = bindings["backend"].url
-
-        # 4. Start Backend Process (if present)
-        session.status = "STARTING"
-        if config.backend_command:
-            be_cmd = config.backend_command.replace("{PORT}", str(bindings["backend"].port))
-            # Run the backend with the project's own environment when its dependencies include uvicorn.
-            from backend.execution.project_env import env_python, site_packages
-            venv_libs = site_packages(project_path)
-            if venv_libs and (venv_libs / "uvicorn").is_dir():
-                be_cmd = be_cmd.replace(f'"{sys.executable}"', f'"{env_python(project_path)}"')
-            self.log_event(session, f"Starting backend service on port {bindings['backend'].port}...")
-            global_process_manager.start_process(
-                project_id=project_id,
-                service_name="backend",
-                command=be_cmd,
-                cwd=str(project_path / "backend") if (project_path / "backend").exists() else str(project_path),
-                port=bindings["backend"].port
-            )
-            session.backend_status = "STARTING"
-
-        # 5. Start Frontend Process (if present)
-        if config.frontend_command:
-            fe_cmd = config.frontend_command.replace("{PORT}", str(bindings["frontend"].port))
-            self.log_event(session, f"Starting frontend service on port {bindings['frontend'].port}...")
-            global_process_manager.start_process(
-                project_id=project_id,
-                service_name="frontend",
-                command=fe_cmd,
-                cwd=str(project_path / "frontend") if (project_path / "frontend").exists() else str(project_path),
-                port=bindings["frontend"].port
-            )
-            session.frontend_status = "STARTING"
-
-        # 6. Empirical Health Probing
-        self.log_event(session, "Performing health check...")
-        be_health = await global_health_checker.wait_until_healthy(
-            service_name="backend",
-            url=f"{session.backend_url}{config.health_check_url}",
-            max_attempts=10
-        )
-        fe_health = await global_health_checker.wait_until_healthy(
-            service_name="frontend",
-            url=session.frontend_url,
-            max_attempts=10
-        )
-
-        if be_health.is_healthy:
-            session.backend_status = "RUNNING"
-        if fe_health.is_healthy:
-            session.frontend_status = "RUNNING"
-
-        session.health_status = "HEALTHY" if (be_health.is_healthy and fe_health.is_healthy) else "UNHEALTHY"
-        self.log_event(session, f"Health Check: {session.health_status} (Backend {be_health.status_code}, Frontend {fe_health.status_code})")
-
-        # 7. E2E Interaction Testing
-        session.status = "TESTING"
-        self.log_event(session, "Executing E2E interaction test suite...")
-        e2e_res = await global_e2e_test_agent.run_e2e_suite_async(
-            frontend_url=session.frontend_url,
-            backend_url=session.backend_url
-        )
-        session.e2e_results = e2e_res
-        self.log_event(session, f"E2E Test Results: {e2e_res.passed}/{e2e_res.total} Passed ({e2e_res.duration_seconds}s)")
-
-        # 8. Set Final Status & Quality Score
-        if session.health_status == "HEALTHY" and e2e_res.overall_status == "PASSED":
-            session.status = "VERIFIED"
-            session.quality_score = 96.0
-            self.log_event(session, "🟢 APPLICATION VERIFIED — Preview Ready!")
-        else:
-            session.status = "RUNNING" if fe_health.is_healthy else "FAILED"
-            session.quality_score = round((e2e_res.passed / max(1, e2e_res.total)) * 100.0, 1)
-
-        # 9. Generate RUN_REPORT.md on disk
-        self._write_run_report(project_path, session)
-
-        return session
-
-    def _write_run_report(self, project_path: Path, session: PreviewSessionState):
-        report_content = (
-            f"# AIForge Application Run & Preview Report\n\n"
-            f"**Project Name**: {session.project_name}\n"
-            f"**Status**: `{session.status}`\n"
-            f"**Quality Score**: `{session.quality_score}/100`\n"
-            f"**Frontend URL**: [{session.frontend_url}]({session.frontend_url})\n"
-            f"**Backend URL**: [{session.backend_url}]({session.backend_url})\n"
-            f"**Health Check**: `{session.health_status}`\n\n"
-            f"## E2E Interaction Results\n"
-            f"- **Total Tests**: {session.e2e_results.total if session.e2e_results else 0}\n"
-            f"- **Passed**: {session.e2e_results.passed if session.e2e_results else 0}\n"
-            f"- **Failed**: {session.e2e_results.failed if session.e2e_results else 0}\n\n"
-            f"## Startup Logs\n"
-            f"```text\n" + "\n".join(session.logs) + "\n```\n"
-        )
-        try:
-            (project_path / "RUN_REPORT.md").write_text(report_content, encoding="utf-8")
-        except Exception:
-            pass
-
-    def stop_preview(self, project_id: str):
-        global_process_manager.stop_process(project_id, "backend")
-        global_process_manager.stop_process(project_id, "frontend")
-        global_port_manager.release_ports_for_project(project_id)
-        session = self._sessions.get(project_id)
-        if session:
-            session.status = "STOPPED"
-            session.frontend_status = "STOPPED"
-            session.backend_status = "STOPPED"
-
-    def get_session(self, project_id: str) -> Optional[PreviewSessionState]:
-        return self._sessions.get(project_id)
+    def get_session(self, project_id: str) -> Optional[Preview]:
+        return get_preview(project_id)
 
 
 global_preview_manager = PreviewManager()
