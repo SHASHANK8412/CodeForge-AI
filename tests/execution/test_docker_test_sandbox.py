@@ -40,3 +40,31 @@ def test_failing_tests_are_reported_as_failures(tmp_path, monkeypatch):
     project = _project(tmp_path, "def test_broken():\n    assert 1 == 2\n")
     result = ProjectRunner().run_project(str(project))
     assert result.exit_code != 0 and "1 failed" in result.stdout
+
+
+@pytest.mark.skipif(not sandbox.docker_available(), reason="Docker daemon not reachable")
+def test_tests_run_without_network_or_root_and_are_cleaned_up(tmp_path, monkeypatch):
+    import subprocess
+    monkeypatch.setenv("AIFORGE_TEST_SANDBOX", "docker")
+    project = _project(tmp_path,
+        "import os, socket\n\n"
+        "def test_not_root():\n    assert os.getuid() != 0\n\n"
+        "def test_no_network():\n"
+        "    try:\n        socket.create_connection(('1.1.1.1', 53), timeout=3)\n        reached = True\n"
+        "    except OSError:\n        reached = False\n"
+        "    assert reached is False\n")
+    result = ProjectRunner().run_project(str(project))
+    assert result.exit_code == 0, result.stdout + result.stderr
+    assert "2 passed" in result.stdout
+
+    exe = sandbox.docker_exe()
+    leftovers = subprocess.run([exe, "ps", "-a", "--filter", "name=aiforge_test_", "-q"], capture_output=True, text=True).stdout.strip()
+    volumes = subprocess.run([exe, "volume", "ls", "--filter", "name=aiforge_deps_", "-q"], capture_output=True, text=True).stdout.strip()
+    assert leftovers == "" and volumes == ""
+
+
+@pytest.mark.skipif(not sandbox.docker_available(), reason="Docker daemon not reachable")
+def test_runaway_tests_are_stopped(tmp_path):
+    project = _project(tmp_path, "def test_forever():\n    while True:\n        pass\n")
+    result = sandbox.run_pytest_in_docker(project, timeout_seconds=60)
+    assert result.timed_out is True

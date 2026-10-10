@@ -62,45 +62,64 @@ def should_use_docker() -> bool:
     return mode == "docker" or (mode == "auto" and docker_available())
 
 
+def _docker(*args: str, timeout: float) -> subprocess.CompletedProcess:
+    return subprocess.run([docker_exe() or "docker", *args], capture_output=True, text=True, timeout=timeout)
+
+
 def run_pytest_in_docker(project_path: Path, timeout_seconds: float = 900.0) -> ExecutionResult:
+    """
+    Two containers, so generated code never runs with network access or as root:
+    1. install: network on, installs requirements + pytest into a throwaway volume (pip cache shared)
+    2. test:    --network none, non-root user, CPU/memory/process limits, deps volume read-only
+    """
     project_path = Path(project_path).resolve()
     req = requirements_file(project_path)
     req_rel = req.relative_to(project_path).as_posix() if req else None
-    install = (f"pip install -q --disable-pip-version-check --root-user-action=ignore -r {req_rel} pytest"
-               if req_rel else "pip install -q --disable-pip-version-check --root-user-action=ignore pytest")
-    script = (
-        f"{install} > /tmp/pip.log 2>&1 || {{ echo 'Dependency install failed:'; tail -40 /tmp/pip.log; exit 3; }}; "
-        "printf '[pytest]\\n' > /tmp/aiforge_pytest.ini; "
-        "python -m pytest -p no:cacheprovider --rootdir /app -c /tmp/aiforge_pytest.ini"
-    )
-    name = f"aiforge_test_{uuid.uuid4().hex[:12]}"
-    cmd = [
-        docker_exe() or "docker", "run", "--rm", "--name", name,
-        "-v", f"{project_path}:/app",
-        "-v", f"{PIP_CACHE_VOLUME}:/root/.cache/pip",
-        "-w", "/app",
-        "--memory", "2g", "--cpus", "2",
-        "-e", "PYTHONDONTWRITEBYTECODE=1", "-e", "PYTHONUNBUFFERED=1",
-        IMAGE, "sh", "-c", script,
-    ]
+    run_id = uuid.uuid4().hex[:12]
+    deps_volume = f"aiforge_deps_{run_id}"
+    names = [f"aiforge_install_{run_id}", f"aiforge_test_{run_id}"]
     started = time.perf_counter()
-    try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_seconds)
-    except subprocess.TimeoutExpired:
-        subprocess.run([cmd[0], "rm", "-f", name], capture_output=True)
-        return ExecutionResult(status=ExecutionStatus.TIMEOUT, exit_code=-1, timed_out=True,
-                               stderr=f"Tests did not finish within {timeout_seconds:.0f}s in the Docker sandbox.",
+
+    def result(status, code, out="", err="", timed_out=False):
+        return ExecutionResult(status=status, exit_code=code, stdout=out[-200_000:], stderr=err[-50_000:],
+                               timed_out=timed_out, duration_ms=round((time.perf_counter() - started) * 1000, 2),
                                language="python", execution_type=ExecutionType.PROJECT_TEST.value)
 
-    duration_ms = round((time.perf_counter() - started) * 1000, 2)
-    if proc.returncode == 3:
-        status = ExecutionStatus.INFRASTRUCTURE_ERROR
-    elif proc.returncode == 0:
-        status = ExecutionStatus.PASS
-    else:
-        status = ExecutionStatus.FAIL
-    return ExecutionResult(
-        status=status, exit_code=proc.returncode,
-        stdout=proc.stdout[-200_000:], stderr=proc.stderr[-50_000:],
-        duration_ms=duration_ms, language="python", execution_type=ExecutionType.PROJECT_TEST.value,
-    )
+    install = ("pip install -q --disable-pip-version-check --root-user-action=ignore --target /deps "
+               + (f"-r /app/{req_rel} " if req_rel else "") + "pytest")
+    try:
+        inst = _docker(
+            "run", "--rm", "--name", names[0],
+            "-v", f"{project_path}:/app:ro", "-v", f"{deps_volume}:/deps", "-v", f"{PIP_CACHE_VOLUME}:/root/.cache/pip",
+            "--memory", "2g", "--cpus", "2", IMAGE,
+            "sh", "-c", f"{install} > /tmp/pip.log 2>&1 || {{ tail -40 /tmp/pip.log; exit 3; }}; chmod -R a+rX /deps",
+            timeout=timeout_seconds,
+        )
+        if inst.returncode != 0:
+            return result(ExecutionStatus.INFRASTRUCTURE_ERROR, 3, inst.stdout,
+                          "Dependency install failed in the Docker sandbox:\n" + inst.stdout + inst.stderr)
+
+        remaining = max(30.0, timeout_seconds - (time.perf_counter() - started))
+        test = _docker(
+            "run", "--rm", "--name", names[1],
+            "--network", "none", "--user", "1000:1000",
+            "--memory", "2g", "--cpus", "2", "--pids-limit", "256", "--cap-drop", "ALL",
+            "--security-opt", "no-new-privileges",
+            "-v", f"{project_path}:/app", "-v", f"{deps_volume}:/deps:ro", "-w", "/app",
+            "-e", "PYTHONPATH=/deps", "-e", "PYTHONDONTWRITEBYTECODE=1", "-e", "PYTHONUNBUFFERED=1",
+            "-e", "HOME=/tmp",
+            IMAGE, "sh", "-c",
+            "printf '[pytest]\n' > /tmp/aiforge_pytest.ini; "
+            "python -m pytest -p no:cacheprovider --rootdir /app -c /tmp/aiforge_pytest.ini",
+            timeout=remaining,
+        )
+    except subprocess.TimeoutExpired:
+        return result(ExecutionStatus.TIMEOUT, -1,
+                      err=f"Tests did not finish within {timeout_seconds:.0f}s in the Docker sandbox.", timed_out=True)
+    finally:
+        for name in names:
+            subprocess.run([docker_exe() or "docker", "rm", "-f", name], capture_output=True)
+        subprocess.run([docker_exe() or "docker", "volume", "rm", "-f", deps_volume], capture_output=True)
+
+    status = ExecutionStatus.PASS if test.returncode == 0 else ExecutionStatus.FAIL
+    return result(status, test.returncode, test.stdout, test.stderr)
