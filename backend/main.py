@@ -361,7 +361,7 @@ def register_routers() -> None:
     from backend.browser_testing.routes import day17_browser_testing_router
     app.include_router(day17_browser_testing_router)
 
-    from backend.performance.routes import day18_performance_router
+    from backend.performance.routes import performance_router as day18_performance_router
     app.include_router(day18_performance_router)
 
     from backend.readiness.routes import day19_readiness_router

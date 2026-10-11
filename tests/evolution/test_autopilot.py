@@ -414,3 +414,20 @@ def test_api_flow_with_ownership_and_path_checks(api, project):
     assert "import os" not in (project / "app/main.py").read_text(encoding="utf-8")
     assert api.get("/api/projects/gen_theirs/evolution/executions").status_code == 403
     assert api.patch(f"{base}/findings/fnd_missing", json={"dismissed": True}).status_code == 404
+
+
+def test_a_regression_gets_one_bounded_repair_attempt(svc, project):
+    analyze(svc, project)
+    plan = approved_plan(svc, [findings_by_rule(svc)["MAINT-BARE-EXCEPT"][0].id])
+    prompts = []
+
+    def model(system, prompt):
+        prompts.append(prompt)
+        if len(prompts) == 1:                       # first answer introduces an undefined name
+            return "### app/util.py\n```python\n" + UTIL_FIXED.replace("int(value)", "int(valu)") + "```\n"
+        return "### app/util.py\n```python\n" + UTIL_FIXED + "```\n"
+    execution = svc.execute("p1", plan.id, "u1", project, generate=model, include_tests=False)
+    assert execution.status == "completed", execution.error
+    assert len(prompts) == 2 and "regress" in prompts[1] and "quality-gate errors" in prompts[1]
+    assert any("repair attempt 1: the checks pass" in n for n in execution.verdict["notes"])
+    assert (project / "app/util.py").read_text(encoding="utf-8") == UTIL_FIXED

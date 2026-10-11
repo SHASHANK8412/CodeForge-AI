@@ -10,7 +10,6 @@ from typing import Dict, Any, List, Optional
 
 from backend.devops.service import global_devops_service
 from backend.browser_testing.service import global_browser_service
-from backend.performance.service import global_performance_service
 
 _logger = logging.getLogger("aiforge.incidents.detector")
 

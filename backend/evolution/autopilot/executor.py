@@ -31,8 +31,18 @@ from backend.evolution.autopilot.workspace import (create_workspace, discard_wor
 _logger = logging.getLogger("aiforge.autopilot.executor")
 
 STAGES = ["prepare workspace", "baseline checks", "implement", "after checks", "compare", "apply", "re-analyze"]
+PERFORMANCE_STAGE = "performance (before/after measurement)"
+
+
+def stages_for(plan: Plan) -> List[str]:
+    """Performance plans add a measured before/after comparison between the correctness checks and apply."""
+    if plan.origin != "performance":
+        return list(STAGES)
+    i = STAGES.index("apply")
+    return STAGES[:i] + [PERFORMANCE_STAGE] + STAGES[i:]
 EXECUTION_DEADLINE_SECONDS = 45 * 60
 MODEL_ATTEMPTS = 2
+REPAIR_ROUNDS = 1           # model repairs after a check regressed (bounded self-repair)
 DIFF_LIMIT = 120_000
 AUTOPILOT_SYSTEM_PROMPT = (
     "You are a senior engineer fixing specific, reported problems in an existing project. Fix only the "
@@ -258,6 +268,47 @@ class _Run:
         return TaskResult(task_id=task.id, status="no_changes" if feedback == "no change was proposed" else "failed",
                           detail=feedback, attempts=attempts)
 
+    def repair(self, baseline, after, verdict):
+        """
+        Bounded self-repair: when a model-written change makes a check regress, the failing output is
+        given back to the model once (REPAIR_ROUNDS) and the checks run again. Deterministic fixers are
+        never retried. Returns the final (verdict, after checks).
+        """
+        model_tasks = [t for t in self.plan.tasks if t.strategy == "model"]
+        applied = {r.task_id for r in (self.store.get(self.project_id, "executions", self.execution_id).task_results)
+                   if r.status == "applied"}
+        rounds = 0
+        while not verdict["accepted"] and verdict["regressions"] and rounds < REPAIR_ROUNDS \
+                and any(t.id in applied for t in model_tasks):
+            rounds += 1
+            self.checkpoint()
+            failing = [c for c in after if c.status == "failed"]
+            feedback = ("the change made these checks regress: " + "; ".join(verdict["regressions"]) + "\n" +
+                        "\n".join(f"{c.label} output (end):\n{c.output[-1500:]}" for c in failing))
+            self.stage("compare", "running", f"regression; repair attempt {rounds}: " + "; ".join(verdict["regressions"]))
+            all_findings = {f.id: f for f in self.store.list(self.project_id, "findings")}
+            for task in model_tasks:
+                if task.id not in applied:
+                    continue
+                findings = [all_findings[i] for i in task.finding_ids if i in all_findings]
+                try:
+                    changes = self.fix_with_model(task, findings, feedback)
+                except Exception as e:  # noqa: BLE001 - the repair attempt failed; the regression stands
+                    _logger.warning("Autopilot repair of %s failed: %s", task.id, e)
+                    continue
+                if not changes or scope_violations(self.plan, list(changes)):
+                    continue
+                before_errors = self.syntax_errors(list(changes))
+                snapshot = {rel: self.read(rel) for rel in changes}
+                self.write_changes(changes, reason=f"autopilot {self.plan.id} {task.id} repair {rounds}")
+                if [e for e in self.syntax_errors(list(changes)) if e not in before_errors]:
+                    self.revert(snapshot)
+            after = validation.run_checks(self.workspace, include_tests=self.include_tests)
+            verdict = validation.compare(baseline, after)
+            verdict["notes"] = verdict.get("notes", []) + [
+                f"repair attempt {rounds}: " + ("the checks pass after it" if verdict["accepted"] else "still regressed")]
+        return verdict, after
+
     def revert(self, snapshot: Dict[str, Optional[str]]) -> None:
         apply_all(self.workspace, snapshot, "autopilot revert attempt")
         for rel, content in snapshot.items():
@@ -314,7 +365,7 @@ def run_execution(store, execution_id: str, project_id: str, project_dir: Path,
 
         def started(e: Execution):
             e.status, e.started_at = "running", now_iso()
-            e.stages = [Stage(name=n) for n in STAGES]
+            e.stages = [Stage(name=n) for n in stages_for(plan)]
         run.save(started)
 
         run.stage("prepare workspace", "running")
@@ -364,16 +415,43 @@ def run_execution(store, execution_id: str, project_id: str, project_dir: Path,
 
         run.stage("compare", "running")
         verdict = validation.compare(baseline, after)
-        run.save(lambda e: setattr(e, "verdict", verdict))
+        verdict, after = run.repair(baseline, after, verdict)
+        run.save(lambda e: (setattr(e, "verdict", verdict), setattr(e, "after", after),
+                            setattr(e, "changed_files", sorted(run.changes)), setattr(e, "diff", run.diff())))
         run.stage("compare", "done" if verdict["accepted"] else "failed",
                   "accepted" if verdict["accepted"] else "; ".join(verdict["regressions"] + verdict["unverified"]))
         if not verdict["accepted"]:
-            for name in ("apply", "re-analyze"):
+            for name in ([PERFORMANCE_STAGE] if plan.origin == "performance" else []) + ["apply", "re-analyze"]:
                 run.stage(name, "skipped", "changes rejected; the project was not modified")
             store.set_finding_status(project_id, plan.finding_ids, FindingStatus.FIX_FAILED.value)
             finish("rejected", "; ".join(verdict["regressions"] + verdict["unverified"]), PlanStatus.FAILED)
             return store.get(project_id, "executions", execution_id)
         run.checkpoint()
+
+        if plan.origin == "performance":
+            # Measured gate: the original project and the changed copy run side by side under the plan's workload.
+            from backend.performance.engineer.service import global_performance_engineer
+
+            def stopped() -> bool:
+                current = store.get(project_id, "executions", execution_id)
+                return bool(current and current.cancel_requested)
+            run.stage(PERFORMANCE_STAGE, "running")
+            comparison = global_performance_engineer.gate(
+                plan, project, run.workspace, execution_id, stopped,
+                lambda name, status: run.stage(PERFORMANCE_STAGE, "running", f"{name}: {status}"))
+            perf = {"decision": comparison.decision, "reasons": comparison.reasons[:12], "comparison_id": comparison.id}
+            verdict = {**verdict, "performance": perf}
+            run.save(lambda e: setattr(e, "verdict", verdict))
+            run.checkpoint()
+            if comparison.decision != "improved":
+                run.stage(PERFORMANCE_STAGE, "failed", f"{comparison.decision}: " + "; ".join(comparison.reasons[:4]))
+                for name in ("apply", "re-analyze"):
+                    run.stage(name, "skipped", f"performance gate: {comparison.decision}; the project was not modified")
+                status = "rejected" if comparison.decision == "regressed" else "inconclusive"
+                finish(status, f"performance gate: {comparison.decision} - " + "; ".join(comparison.reasons[:4]),
+                       PlanStatus.FAILED)
+                return store.get(project_id, "executions", execution_id)
+            run.stage(PERFORMANCE_STAGE, "done", "improved: " + "; ".join(comparison.reasons[:3]))
 
         run.stage("apply", "running")
         conflicts = [rel for rel in run.changes if file_hash(project / rel) != run.original_hash.get(rel)]

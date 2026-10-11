@@ -170,7 +170,7 @@ class AutopilotService:
 
     def execute(self, project_id: str, plan_id: str, user_id: str, project_dir: Path,
                 generate: Optional[Callable[[str, str], str]] = None, include_tests: bool = True) -> Execution:
-        from backend.evolution.autopilot.executor import STAGES, run_execution
+        from backend.evolution.autopilot.executor import run_execution, stages_for
         from backend.evolution.autopilot.models import Stage
         plan = self.store.get(project_id, "plans", plan_id)
         if plan is None:
@@ -178,7 +178,7 @@ class AutopilotService:
         if plan.status != PlanStatus.APPROVED:
             raise PlanError(f"the plan must be approved before it runs (it is '{plan.status.value}')")
         execution = Execution(id="exe_" + uuid.uuid4().hex[:12], plan_id=plan_id, project_id=project_id,
-                              user_id=user_id, stages=[Stage(name=n) for n in STAGES], started_at=now_iso())
+                              user_id=user_id, stages=[Stage(name=n) for n in stages_for(plan)], started_at=now_iso())
         self.store.put(project_id, "executions", execution)
         self._start(project_id, execution.id, lambda: run_execution(self.store, execution.id, project_id,
                                                                    Path(project_dir), generate, include_tests),

@@ -105,21 +105,24 @@ class ReadinessCheckCollector:
             )
         )
 
-        # 4. Performance Check
-        p_report = global_performance_service.profile_and_benchmark(project_id, is_optimized=True)
-        snap = p_report.latest_snapshot
-        checks.append(
-            ReadinessCheck(
-                id="chk_perf_01",
-                category="Performance",
-                name="API Latency & Database Performance Benchmark",
-                status=CheckStatus.PASS if snap.api_latency_ms < 300 else CheckStatus.WARN,
-                severity=CheckSeverity.MEDIUM,
-                score=p_report.overall_performance_score,
-                evidence=f"P95 Latency: {snap.p95_latency_ms}ms (Target <300ms), DB Queries: {snap.db_query_count}/req",
-                blocking=False
-            )
-        )
+        # 4. Performance Check: the latest real baseline run (Performance Engineer); never assumed
+        perf = global_performance_service.latest_measurement(project_id)
+        if perf is None or perf["worst_p95_ms"] is None:
+            checks.append(ReadinessCheck(
+                id="chk_perf_01", category="Performance", name="API Latency Baseline",
+                status=CheckStatus.NOT_AVAILABLE, severity=CheckSeverity.MEDIUM,
+                score=90.0,     # the scoring engine's default for a category without evidence
+                evidence="Not measured: run a baseline in the Performance Engineer to measure API latency.",
+                blocking=False))
+        else:
+            ok = perf["worst_p95_ms"] < 300 and perf["max_error_rate_pct"] == 0
+            checks.append(ReadinessCheck(
+                id="chk_perf_01", category="Performance", name="API Latency Baseline",
+                status=CheckStatus.PASS if ok else CheckStatus.WARN, severity=CheckSeverity.MEDIUM,
+                score=100.0 if ok else 75.0,
+                evidence=(f"Measured {perf['finished_at']}: worst p95 {perf['worst_p95_ms']} ms on {perf['worst_endpoint']} "
+                          f"(target < 300 ms), max error rate {perf['max_error_rate_pct']}% across {perf['endpoints']} endpoint(s)"),
+                blocking=False))
 
         # 5. Requirements Check
         traces = global_impact_engine.trace_requirements(project_id)

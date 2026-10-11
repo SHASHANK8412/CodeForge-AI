@@ -12,7 +12,6 @@ import logging
 from typing import Dict, Any, List
 
 from backend.observability.models import DistributedTrace, ObservabilityReadinessStatus
-from backend.performance.service import global_performance_service
 from backend.incidents.service import global_incident_service
 from backend.autopilot.recorder import global_flight_recorder
 from backend.readiness.service import global_readiness_service

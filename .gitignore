@@ -33,3 +33,6 @@ backend/data/evolution/
 
 # AIForge Digital Twin graphs and impact reports (runtime data)
 backend/data/twin/
+
+# AIForge Performance Engineer runs, findings and comparisons (runtime data)
+backend/data/performance/

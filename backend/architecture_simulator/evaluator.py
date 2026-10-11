@@ -11,7 +11,6 @@ from typing import Dict, Any
 from backend.architecture_simulator.models import (
     ArchitectureScenario, ImpactAssessment, SimulatorScorecard, EvidenceType
 )
-from backend.performance.service import global_performance_service
 from backend.security.service import global_security_service
 from backend.memory.service import global_engineering_memory_service
 
@@ -28,9 +27,6 @@ class ArchitectureEvaluator:
 
         # 1. Historical Memory Evidence
         memories = global_engineering_memory_service.retrieve(project_id, scenario.name, top_k=2)
-
-        # 2. Performance Baseline
-        perf_metrics = global_performance_service.profile_and_benchmark(project_id)
 
         # 3. Security Risk Assessment
         sec_report = global_security_service.run_full_security_scan(project_id, {"main.py": "pass"})
