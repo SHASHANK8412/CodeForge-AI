@@ -279,6 +279,7 @@ function FindingsExplorer({ projectId, version, onPlanned, onError }) {
 function PlanPanel({ projectId, plan, lastExecution, onChanged, onExecuted, onError }) {
   const [runTests, setRunTests] = useState(true);
   const [note, setNote] = useState('');
+  const [reviewed, setReviewed] = useState(false);
   const [busy, setBusy] = useState(false);
   if (!plan) return null;
   const extra = lastExecution?.plan_id === plan.id && lastExecution.status === 'needs_approval'
@@ -330,7 +331,14 @@ function PlanPanel({ projectId, plan, lastExecution, onChanged, onExecuted, onEr
             <>
               <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note (optional)"
                      className="min-w-0 flex-1 rounded-lg border border-border-dark bg-bg-base px-2 py-1 text-xs text-text-primary outline-none" />
-              <Btn tone="good" disabled={busy} onClick={() => decide('approve', extra.length ? { extra_files: extra } : {})}>
+              {plan.security_review_required && (
+                <label className="flex items-center gap-1.5 text-rose-200">
+                  <input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} />
+                  I reviewed the security impact of this authentication change
+                </label>
+              )}
+              <Btn tone="good" disabled={busy || (plan.security_review_required && !reviewed)}
+                   onClick={() => decide('approve', { ...(extra.length ? { extra_files: extra } : {}), security_reviewed: reviewed })}>
                 <FaCheck className="h-2.5 w-2.5" /> {extra.length ? 'Approve with extra files' : 'Approve'}
               </Btn>
               <Btn tone="bad" disabled={busy} onClick={() => decide('reject')}><FaTimes className="h-2.5 w-2.5" /> Reject</Btn>

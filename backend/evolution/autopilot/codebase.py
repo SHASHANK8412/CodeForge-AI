@@ -35,8 +35,11 @@ _JS_API_CALL = re.compile(r"\b(?:fetch|axios\.(?:get|post|put|patch|delete)|api\
 _NEXT_HANDLER = re.compile(r"export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\b")
 
 
-def iter_project_files(root: Path) -> Iterator[Tuple[str, Path, int]]:
-    """(relative path, absolute path, size) for every file the analysis may look at."""
+def iter_project_files(root: Path, stopped: Optional[list] = None) -> Iterator[Tuple[str, Path, int]]:
+    """
+    (relative path, absolute path, size) for every file the analysis may look at. If the walk ends
+    early (file-count or time limit), the reason is appended to `stopped`, so callers can report it.
+    """
     root = Path(root).resolve()
     deadline = time.monotonic() + SCAN_SECONDS
     count = 0
@@ -48,7 +51,14 @@ def iter_project_files(root: Path) -> Iterator[Tuple[str, Path, int]]:
         except OSError:
             continue
         for entry in entries:
-            if time.monotonic() > deadline or count >= MAX_FILES:
+            if count >= MAX_FILES:
+                if stopped is not None:
+                    stopped.append(f"the project has more than {MAX_FILES} files; the rest were not analyzed")
+                return
+            if time.monotonic() > deadline:
+                if stopped is not None:
+                    stopped.append(f"the file scan stopped at its {SCAN_SECONDS:.0f}s limit after {count} files; "
+                                   "the rest were not analyzed")
                 return
             rel = entry.relative_to(root).as_posix()
             if entry.is_symlink():
@@ -136,7 +146,8 @@ def build_project_map(project_dir: Any) -> Dict[str, Any]:
     files, tests, manifests, configs, too_large = [], [], {}, [], []
     languages: Dict[str, int] = {}
 
-    for rel, path, size in iter_project_files(root):
+    stopped: list = []
+    for rel, path, size in iter_project_files(root, stopped):
         files.append(rel)
         ext = path.suffix.lower()
         if ext:
@@ -175,7 +186,8 @@ def build_project_map(project_dir: Any) -> Dict[str, Any]:
         "root_name": root.name,
         "file_count": len(files),
         "files": files[:2000],
-        "truncated": len(files) >= MAX_FILES,
+        "truncated": bool(stopped),
+        "scan_stopped": stopped,
         "languages": dict(sorted(languages.items(), key=lambda kv: -kv[1])),
         "stack": stack,
         "entry_points": sorted(set(facts["entry_points"])),

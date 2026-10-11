@@ -37,13 +37,16 @@ from backend.evolution.autopilot.service import Busy, global_autopilot_service
 autopilot_evolution_router = APIRouter(tags=["AIForge Autopilot"])
 _PROJECT_ID = re.compile(r"^[A-Za-z0-9_.\-]{1,120}$")
 _SHARED_OWNERS = ("default", "demo_user")
+_READABLE = ("completed", "waiting_for_approval", "failed", "cancelled")
+# A generation paused for approval resumes and writes its files again, so only finished ones are changed.
+_WRITABLE = ("completed", "failed", "cancelled")
 
 
 def _user_id(user: dict) -> str:
     return str(user.get("id") or user.get("user_id") or "")
 
 
-def _project_dir(project_id: str, user: dict) -> Path:
+def _project_dir(project_id: str, user: dict, writable: bool = False) -> Path:
     """The project's folder, if `user` may work on it; 404/403 otherwise."""
     from backend.generation.store import global_generation_store
     from backend.routes.export import _safe_project_dir
@@ -55,7 +58,11 @@ def _project_dir(project_id: str, user: dict) -> Path:
     owner = rec.get("user_id")
     if owner != _user_id(user) and owner not in _SHARED_OWNERS:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "You do not have access to this project.")
-    if rec.get("status") not in ("completed", "waiting_for_approval", "failed"):
+    if writable and rec.get("status") not in _WRITABLE:
+        raise HTTPException(status.HTTP_409_CONFLICT,
+                            f"The generation is '{rec.get('status')}': it can still write its files. Finish or cancel it "
+                            "before Autopilot changes the project.")
+    if rec.get("status") not in _READABLE:
         raise HTTPException(status.HTTP_409_CONFLICT, f"The generation is '{rec.get('status')}'; wait for it to finish.")
     path = _safe_project_dir(rec.get("project_path") or "")
     if path is None:
@@ -87,7 +94,7 @@ def list_projects(user: dict = Depends(get_current_user)) -> Dict[str, Any]:
         if not gid or (rec.get("user_id") != uid and rec.get("user_id") not in _SHARED_OWNERS):
             continue
         path = _safe_project_dir(rec.get("project_path") or "")
-        if path is None or rec.get("status") not in ("completed", "waiting_for_approval", "failed"):
+        if path is None or rec.get("status") not in _READABLE:
             continue
         latest = global_autopilot_service.store.latest_analysis(gid)
         projects.append({
@@ -240,7 +247,7 @@ def cancel_plan(project_id: str, plan_id: str, body: DecisionRequest = DecisionR
 @autopilot_evolution_router.post("/api/projects/{project_id}/evolution/plans/{plan_id}/execute", status_code=202)
 def execute_plan(project_id: str, plan_id: str, body: ExecuteRequest = ExecuteRequest(),
                  user: dict = Depends(get_current_user)) -> Dict[str, Any]:
-    path = _project_dir(project_id, user)
+    path = _project_dir(project_id, user, writable=True)
     _get_or_404(project_id, "plans", plan_id)
     try:
         execution = global_autopilot_service.execute(project_id, plan_id, _user_id(user), path,

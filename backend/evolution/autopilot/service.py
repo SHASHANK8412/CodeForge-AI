@@ -41,9 +41,11 @@ class AutopilotService:
 
     # --- jobs ------------------------------------------------------------------------------
 
-    def _start(self, project_id: str, job_id: str, target: Callable[[], None]) -> None:
+    def _start(self, project_id: str, job_id: str, target: Callable[[], None], kind: str = "") -> None:
         with self._lock:
             if project_id in self._active:
+                if kind:                      # the record saved for this job would otherwise stay 'queued'
+                    self.store.delete(project_id, kind, job_id)
                 raise Busy(f"another Autopilot job ({self._active[project_id]}) is running for this project")
             self._active[project_id] = job_id
 
@@ -68,7 +70,8 @@ class AutopilotService:
         analysis = Analysis(id="ana_" + uuid.uuid4().hex[:12], project_id=project_id, user_id=user_id,
                             started_at=now_iso())
         self.store.put(project_id, "analyses", analysis)
-        self._start(project_id, analysis.id, lambda: self._analyze(analysis.id, project_id, Path(project_dir), run_tests))
+        self._start(project_id, analysis.id, lambda: self._analyze(analysis.id, project_id, Path(project_dir), run_tests),
+                    "analyses")
         return self.store.get(project_id, "analyses", analysis.id)
 
     def _analyze(self, analysis_id: str, project_id: str, project: Path, run_tests: bool) -> None:
@@ -178,7 +181,8 @@ class AutopilotService:
                               user_id=user_id, stages=[Stage(name=n) for n in STAGES], started_at=now_iso())
         self.store.put(project_id, "executions", execution)
         self._start(project_id, execution.id, lambda: run_execution(self.store, execution.id, project_id,
-                                                                   Path(project_dir), generate, include_tests))
+                                                                   Path(project_dir), generate, include_tests),
+                    "executions")
         return self.store.get(project_id, "executions", execution.id)
 
     def cancel_execution(self, project_id: str, execution_id: str) -> Optional[Execution]:

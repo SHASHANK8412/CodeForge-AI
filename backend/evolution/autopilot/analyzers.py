@@ -44,7 +44,8 @@ class Sources:
         self.javascript: Dict[str, str] = {}
         self.text: Dict[str, str] = {}
         self.files: List[str] = []
-        for rel, path, size in iter_project_files(self.project):
+        self.stopped: List[str] = []
+        for rel, path, size in iter_project_files(self.project, self.stopped):
             self.files.append(rel)
             if path.suffix.lower() in (".py", ".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".json", ".env",
                                        ".yml", ".yaml", ".toml", ".cfg", ".ini", ".txt") or path.name.startswith(".env"):
@@ -433,6 +434,8 @@ ANALYZERS: List[Tuple[str, Callable[..., Result]]] = [
 def run_analyzers(project: Path, run_tests: bool = False) -> Tuple[List[Raw], List[ToolRun], Sources]:
     src = Sources(project)
     raws, runs = [], []
+    if src.stopped:
+        runs.append(ToolRun(tool="file scan", status="partial", detail="; ".join(src.stopped)))
     for name, analyzer in ANALYZERS:
         try:
             r, t = analyzer(src, run_tests=run_tests) if name == "tests" else analyzer(src)

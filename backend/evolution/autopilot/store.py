@@ -88,6 +88,12 @@ class AutopilotStore:
             self._save(project_id, data)
             return item
 
+    def delete(self, project_id: str, kind: str, item_id: str) -> None:
+        with self._lock:
+            data = self._load(project_id)
+            if data[kind].pop(item_id, None) is not None:
+                self._save(project_id, data)
+
     def replace_findings(self, project_id: str, findings: Dict[str, Finding]) -> None:
         with self._lock:
             data = self._load(project_id)

@@ -102,6 +102,7 @@ class GraphBuilder:
         self.too_large: List[str] = []
         self.unparseable: List[str] = []
         self.dynamic_imports: List[str] = []
+        self.file_set: Set[str] = set()
 
     # --- graph helpers ------------------------------------------------------------------------
 
@@ -125,7 +126,8 @@ class GraphBuilder:
 
     def scan(self) -> None:
         count = 0
-        for rel, path, size in iter_project_files(self.project):
+        stopped: List[str] = []
+        for rel, path, size in iter_project_files(self.project, stopped):
             count += 1
             try:
                 mtime = path.stat().st_mtime_ns
@@ -148,9 +150,8 @@ class GraphBuilder:
                     self.nodes[file_id(rel)].meta["entry"] = True
             elif path.name in CONFIG_NAMES or path.name in MANIFESTS or path.name.startswith(".env.example"):
                 self.node(file_id(rel), "config", path=rel, meta={"kind": path.name})
-        from backend.evolution.autopilot.codebase import MAX_FILES
-        if count >= MAX_FILES:
-            self.limits.append(f"the project has more than {MAX_FILES} files; the rest were not analyzed")
+        self.file_set = {f for f, _, _ in self.files}
+        self.limits.extend(stopped)
 
     # --- python -----------------------------------------------------------------------------------
 
@@ -383,7 +384,7 @@ class GraphBuilder:
             if base.startswith(".."):
                 return None, "outside"
             for path in [base] + [base + e for e in JS_RESOLVE] + [f"{base}/index{e}" for e in JS_RESOLVE]:
-                if path in self.sources or (path in {f for f, _, _ in self.files} and file_id(path) in self.nodes):
+                if path in self.sources or (path in self.file_set and file_id(path) in self.nodes):
                     return path, certainty
         return None, "missing"
 
@@ -500,12 +501,16 @@ class GraphBuilder:
         for rel in self.sources:
             if self.nodes.get(file_id(rel)) and self.nodes[file_id(rel)].type == "file":
                 by_stem.setdefault(Path(rel).name.split(".")[0], []).append(rel)
+        linked_by_test: Dict[str, Set[str]] = {}
+        for e in self.edges.values():
+            if e.type == "tests":
+                linked_by_test.setdefault(e.source, set()).add(e.target)
         for rel in self.sources:
             if self.nodes.get(file_id(rel), Node(id="", type="")).type != "test":
                 continue
             name = Path(rel).name
             stem = re.sub(r"^test_|_test$", "", name.split(".")[0])
-            linked = {e.target for e in self.edges.values() if e.source == file_id(rel) and e.type == "tests"}
+            linked = linked_by_test.get(file_id(rel), set())
             candidates = by_stem.get(stem, [])
             if len(candidates) == 1 and file_id(candidates[0]) not in linked:
                 self.edge(file_id(rel), file_id(candidates[0]), "tests",

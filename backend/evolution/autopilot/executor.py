@@ -56,13 +56,16 @@ def apply_all(root: Path, changes: Dict[str, Optional[str]], reason: str) -> Tup
     items = list(changes.items())
     written: List[str] = []
     undo: Dict[str, Optional[str]] = {}
+    for rel, _ in items:                      # read everything first: nothing is written if a file is unreadable
+        path = root / rel
+        if path.exists() and not path.is_file():
+            return [], False
+        try:
+            undo[rel] = path.read_text(encoding="utf-8") if path.is_file() else None   # None = new file
+        except (OSError, UnicodeDecodeError):
+            return [], False                  # not a UTF-8 text file: never patched (and never deleted on undo)
     for i in range(0, len(items), MAX_FILES_PER_CHANGE):
         batch = dict(items[i:i + MAX_FILES_PER_CHANGE])
-        for rel in batch:
-            try:
-                undo[rel] = (root / rel).read_text(encoding="utf-8") if (root / rel).is_file() else None
-            except (OSError, UnicodeDecodeError):
-                undo[rel] = None
         applied, ok = global_patch_engine.apply_changes(str(root), batch, reason=reason)
         if not ok:
             if written:
@@ -133,11 +136,12 @@ class _Run:
         if not targets:
             return {}
         before = {f: self.read(f) for f in targets}
+        raw = {f: (self.workspace / f).read_bytes() for f in targets}
         subprocess.run([sys.executable, "-m", "ruff", "check", "--select", "F401", "--fix", "--no-cache",
                         *[str(self.workspace / f) for f in targets]], capture_output=True, text=True, timeout=120)
         after = {f: self.read(f) for f in targets}
-        for f, content in before.items():                     # re-applied through the patch engine below
-            (self.workspace / f).write_text(content, encoding="utf-8")
+        for f, content in raw.items():          # restore the exact bytes; the fix is re-applied through the patch engine
+            (self.workspace / f).write_bytes(content)
         return {f: after[f] for f in targets if after[f] is not None and after[f] != before[f]}
 
     def fix_requirements(self, findings) -> Dict[str, Optional[str]]:
@@ -389,7 +393,14 @@ def run_execution(store, execution_id: str, project_id: str, project_dir: Path,
 
         run.stage("re-analyze", "running")
         tests_passed = any(c.check_id == "tests" and c.status == "passed" for c in after)
-        verified, unresolved = reanalyze_after_execution(store, project_id, project, plan.finding_ids, tests_passed)
+        try:
+            verified, unresolved = reanalyze_after_execution(store, project_id, project, plan.finding_ids, tests_passed)
+        except Exception as e:  # noqa: BLE001 - the change is applied and validated; only verification is missing
+            _logger.exception("Autopilot re-analysis after %s failed", execution_id)
+            run.stage("re-analyze", "failed", f"{type(e).__name__}: {e}")
+            finish("completed", "the change was applied after passing its checks, but the re-analysis that verifies "
+                   f"the findings failed ({type(e).__name__}); run a new analysis", PlanStatus.COMPLETED)
+            return store.get(project_id, "executions", execution_id)
 
         def done(e: Execution):
             e.verified_findings, e.unresolved_findings = verified, unresolved

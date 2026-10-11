@@ -56,9 +56,11 @@ class TwinService:
             self._autopilot = global_autopilot_service
         return self._autopilot
 
-    def _start(self, project_id: str, job_id: str, target: Callable[[], None]) -> None:
+    def _start(self, project_id: str, job_id: str, target: Callable[[], None], kind: str = "") -> None:
         with self._lock:
             if project_id in self._active:
+                if kind:                      # the record saved for this job would otherwise stay 'queued'
+                    self.store.delete(project_id, kind, job_id)
                 raise Busy(f"another Digital Twin job ({self._active[project_id]}) is running for this project")
             self._active[project_id] = job_id
 
@@ -82,7 +84,7 @@ class TwinService:
     def start_analysis(self, project_id: str, project_dir: Path, user_id: str) -> GraphAnalysis:
         g = GraphAnalysis(id="grf_" + uuid.uuid4().hex[:12], project_id=project_id, user_id=user_id, started_at=now_iso())
         self.store.put(project_id, "graphs", g)
-        self._start(project_id, g.id, lambda: self._build(project_id, g.id, Path(project_dir)))
+        self._start(project_id, g.id, lambda: self._build(project_id, g.id, Path(project_dir)), "graphs")
         return self.store.get(project_id, "graphs", g.id)
 
     def _build(self, project_id: str, graph_id: str, project: Path) -> GraphAnalysis:
@@ -141,7 +143,8 @@ class TwinService:
             def generate(system, user):
                 return generate_text(system, user, task="planning")
         self._start(project_id, report.id, lambda: self._simulate(
-            project_id, report.id, Path(project_dir), target_files, alternatives, generate if use_model else None))
+            project_id, report.id, Path(project_dir), target_files, alternatives, generate if use_model else None),
+            "reports")
         return self.store.get(project_id, "reports", report.id)
 
     def _simulate(self, project_id, report_id, project: Path, target_files, alternatives, generate) -> None:

@@ -15,6 +15,17 @@ _PATTERNS = [
     (re.compile(r"(?i)\b((?:password|passwd|secret|token|api[_-]?key)\s*[=:]\s*)['\"]?[^\s'\",]{6,}"), r"\1[REDACTED]"),
 ]
 _ENV_MARKERS = ("KEY", "TOKEN", "SECRET", "PASSWORD", "PASSWD", "CREDENTIAL")
+_env_cache: dict = {"snapshot": None, "secrets": []}
+
+
+def _secret_env_values():
+    """(name, value) of secret-looking environment variables; recomputed only when the environment changes."""
+    snapshot = tuple(sorted(os.environ.items()))
+    if snapshot != _env_cache["snapshot"]:
+        _env_cache["snapshot"] = snapshot
+        _env_cache["secrets"] = [(name.upper(), value) for name, value in snapshot
+                                 if value and len(value) >= 8 and any(m in name.upper() for m in _ENV_MARKERS)]
+    return _env_cache["secrets"]
 
 
 def redact(text: str, limit: int = 0) -> str:
@@ -25,9 +36,9 @@ def redact(text: str, limit: int = 0) -> str:
     out = _redact_known_patterns(text)
     for pattern, replacement in _PATTERNS:
         out = pattern.sub(replacement, out)
-    for name, value in os.environ.items():
-        if value and len(value) >= 8 and any(m in name.upper() for m in _ENV_MARKERS) and value in out:
-            out = out.replace(value, f"[REDACTED_{name.upper()}]")
+    for name, value in _secret_env_values():
+        if value in out:
+            out = out.replace(value, f"[REDACTED_{name}]")
     if limit and len(out) > limit:
         out = out[:limit] + f"\n[... {len(out) - limit} characters truncated]"
     return out
