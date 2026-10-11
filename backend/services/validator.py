@@ -39,6 +39,28 @@ def _json_object(text: str) -> Optional[Dict[str, Any]]:
     return None
 
 
+def _normalize_json_contract(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Map common alternative JSON keys (api_endpoints, database_schema, ...) onto the contract."""
+    out = dict(data)
+    if not out.get("routes"):
+        endpoints = out.get("api_endpoints") or out.get("endpoints") or out.get("api") or []
+        routes = []
+        for e in endpoints if isinstance(endpoints, list) else []:
+            if isinstance(e, dict) and e.get("method") and e.get("path"):
+                routes.append(f"{str(e['method']).upper()} {e['path']}")
+            elif isinstance(e, str) and _ROUTE.search(e):
+                m = _ROUTE.search(e)
+                routes.append(f"{m.group(1)} {m.group(2)}")
+        if routes:
+            out["routes"] = routes
+    if not out.get("models"):
+        tables = out.get("database_schema") or out.get("tables") or out.get("entities") or []
+        models = [t.get("table") or t.get("name") for t in tables if isinstance(t, dict)] if isinstance(tables, list) else []
+        if any(models):
+            out["models"] = [m for m in models if m]
+    return out
+
+
 def _sections(markdown: str) -> Dict[str, str]:
     """Heading (lower-case, numbering removed) -> body, for the architect's `##` sections."""
     matches = list(_HEADING.finditer(markdown))
@@ -128,10 +150,15 @@ class StageValidatorService:
         if isinstance(arch_data, dict):
             arch_dict = dict(arch_data)
         else:
+            # Models often write the Markdown sections and then a JSON summary with their own key
+            # names; the summary used to replace the sections and lose the routes. Both are read.
             text = str(arch_data or "")
-            arch_dict = _json_object(text)
-            if arch_dict is None:
-                arch_dict = parse_architecture_markdown(text)
+            arch_dict = _normalize_json_contract(_json_object(text) or {})
+            for key, value in parse_architecture_markdown(text).items():
+                # Component and file names from the Folder Structure are concrete (BookmarkList.jsx);
+                # a JSON summary's "components" are often prose ("Frontend: React + Vite").
+                if value and (not arch_dict.get(key) or key in ("components", "folder_structure")):
+                    arch_dict[key] = value
             arch_dict.setdefault("document", text)
 
         for key in ("components", "routes", "models", "dependencies"):

@@ -68,3 +68,15 @@ def test_section_check_uses_the_same_document():
     complete, missing = validate_architecture_sections(ARCH_MD)
     assert complete is False
     assert "High-Level Architecture" not in missing and "Testing Strategy" in missing
+
+
+def test_markdown_plus_json_summary_keeps_the_routes():
+    # Seen in a real run (llama3.2/qwen2.5-coder): sections, then a JSON summary with other key
+    # names. The summary used to win and the code agents got no routes.
+    doc = ARCH_MD + (
+        '\n```json\n{"components": ["Frontend: React"], '
+        '"api_endpoints": [{"method": "GET", "path": "/api/contacts"}], '
+        '"database_schema": [{"table": "contacts", "fields": ["id"]}]}\n```\n')
+    ok, _, contract = StageValidatorService().validate_architecture(doc)
+    assert ok and contract["routes"] == ["GET /api/contacts"] and contract["models"] == ["contacts"]
+    assert contract["components"] == ["App", "ContactList"], "concrete component names win over prose"
