@@ -46,8 +46,8 @@ def test_file_save_endpoint_security(setup_dummy_project):
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
-    assert data["status"] == "VALIDATION REQUIRED"
-    
+    assert data["status"] == "SUCCESS"   # valid Python; invalid saves: test_syntax_validation_on_save
+
     # Verify file content written to disk
     file_path = GENERATED_PROJECTS_DIR / project_id / "backend/main.py"
     assert file_path.read_text(encoding="utf-8") == "print('updated python code')"

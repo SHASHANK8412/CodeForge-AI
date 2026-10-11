@@ -107,7 +107,7 @@ class DeploymentOrchestrator:
 
         if not prov_res.success:
             record.status = "FAILED"
-            self._log(record, f"🔴 Deployment provider failed: {prov_res.stderr}")
+            self._log(record, f"🔴 Deployment provider failed: {prov_res.error_message or prov_res.stderr or prov_res.status}")
             return record
 
         record.frontend_url = prov_res.frontend_url
@@ -116,8 +116,15 @@ class DeploymentOrchestrator:
         # 6. Empirical Health Check
         record.status = "HEALTH_CHECK"
         self._log(record, "Probing backend and frontend health endpoints...")
-        be_health = await global_health_checker.wait_until_healthy("backend", f"{record.backend_url}{spec.health_check_endpoint}", max_attempts=12)
-        fe_health = await global_health_checker.wait_until_healthy("frontend", record.frontend_url, max_attempts=12)
+        # Only the services that were started are probed (a backend-only project has no frontend
+        # URL, and probing None crashed the deploy).
+        from types import SimpleNamespace
+        not_started = SimpleNamespace(is_healthy=True, status_code=None, error_message=None)
+        be_health = (await global_health_checker.wait_until_healthy(
+            "backend", f"{record.backend_url}{spec.health_check_endpoint}", max_attempts=12)
+            if record.backend_url else not_started)
+        fe_health = (await global_health_checker.wait_until_healthy("frontend", record.frontend_url, max_attempts=12)
+                     if record.frontend_url else not_started)
 
         if not be_health.is_healthy or not fe_health.is_healthy:
             self._log(record, f"⚠ Health check failed (Backend: {be_health.status_code}, Frontend: {fe_health.status_code}). Triggering rollback...")

@@ -44,25 +44,27 @@ class SmokeTester:
         cases = []
 
         async with httpx.AsyncClient(timeout=4.0, follow_redirects=True) as client:
-            # 1. Homepage GET
-            t0 = time.time()
-            try:
-                res = await client.get(frontend_url)
-                ok = (res.status_code == 200)
-                cases.append(SmokeTestCase(
-                    name="GET / (Homepage)",
-                    passed=ok,
-                    status_code=res.status_code,
-                    duration_ms=round((time.time() - t0) * 1000, 2),
-                    error_message=None if ok else f"HTTP {res.status_code}"
-                ))
-            except Exception as e:
-                cases.append(SmokeTestCase(
-                    name="GET / (Homepage)",
-                    passed=False,
-                    duration_ms=round((time.time() - t0) * 1000, 2),
-                    error_message=str(e)
-                ))
+            # 1. Homepage GET (only when a frontend was deployed; probing None failed every
+            #    backend-only deploy)
+            if frontend_url:
+                t0 = time.time()
+                try:
+                    res = await client.get(frontend_url)
+                    ok = (res.status_code == 200)
+                    cases.append(SmokeTestCase(
+                        name="GET / (Homepage)",
+                        passed=ok,
+                        status_code=res.status_code,
+                        duration_ms=round((time.time() - t0) * 1000, 2),
+                        error_message=None if ok else f"HTTP {res.status_code}"
+                    ))
+                except Exception as e:
+                    cases.append(SmokeTestCase(
+                        name="GET / (Homepage)",
+                        passed=False,
+                        duration_ms=round((time.time() - t0) * 1000, 2),
+                        error_message=str(e)
+                    ))
 
             # 2. Backend Health GET
             t0 = time.time()

@@ -468,10 +468,19 @@ def health():
     except httpx.HTTPError:
         ollama = "down"
     from backend.execution.docker_test_sandbox import docker_available
+    try:
+        import sqlite3
+        from backend.memory.database import ConversationDatabase
+        with sqlite3.connect(ConversationDatabase().database_path, timeout=2) as conn:
+            conn.execute("SELECT 1")
+        database = "up"
+    except Exception:  # noqa: BLE001 - reported, not raised
+        database = "down"
     return {
         "status": "healthy",
         "ai_mode": ai_mode,
-        "services": {"api": "up", "ollama": ollama, "docker_sandbox": "up" if docker_available() else "down"},
+        "services": {"api": "up", "database": database, "ollama": ollama,
+                     "docker_sandbox": "up" if docker_available() else "down"},
     }
 
 

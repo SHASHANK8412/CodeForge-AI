@@ -13,9 +13,10 @@ def test_system_health_endpoint():
     data = res.json()
     assert data["status"] == "healthy"
     assert "services" in data
-    assert data["services"]["database"] == "healthy"
-    assert data["services"]["ollama"] == "healthy"
-    assert data["services"]["langgraph"] == "healthy"
+    # Each service is actually checked (they used to be hardcoded "healthy").
+    assert data["services"]["api"] == "up"
+    assert data["services"]["database"] == "up"
+    assert data["services"]["ollama"] in ("up", "down", "error")
 
 
 def test_user_registration_login_flow():

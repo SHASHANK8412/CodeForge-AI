@@ -72,10 +72,47 @@ class TestAutonomousDevOpsDeployment:
             "DATABASE_URL": "postgresql://user:pass@localhost:5432/appdb"
         })
 
+        # Previews are off in tests (no containers): the deploy fails and says why. It used to
+        # report RUNNING from a host-process fallback that started the app on this machine.
         record = asyncio.run(global_deployment_orchestrator.deploy_project_async("DevOpsE2EApp", proj_dir, manifest))
         assert record.project_id == "DevOpsE2EApp"
-        assert record.status in ["VERIFIED", "RUNNING"]
+        assert record.status == "FAILED"
+        assert any("AIFORGE_PREVIEW=off" in line for line in record.logs)
         assert record.git_checkpoint is not None
+
+        # With a provider whose app really answers, health checks pass and the deploy completes.
+        import http.server
+        import threading
+        from unittest.mock import patch
+        from backend.deployment.providers.base_provider import ProviderDeploymentResult
+        from backend.deployment.providers.local_docker_provider import global_local_docker_provider
+
+        class Ok(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b'{"status": "ok"}')
+
+            def do_POST(self):          # no auth route in this app
+                self.send_response(404)
+                self.end_headers()
+
+            def log_message(self, *args):
+                pass
+
+        server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Ok)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        url = f"http://127.0.0.1:{server.server_address[1]}"
+        running = ProviderDeploymentResult(success=True, provider_name="stub", status="RUNNING",
+                                           backend_url=url, frontend_url=None)
+        try:
+            with patch.object(global_local_docker_provider, "deploy", return_value=running):
+                record = asyncio.run(global_deployment_orchestrator.deploy_project_async("DevOpsE2EApp", proj_dir, manifest))
+        finally:
+            server.shutdown()
+        assert record.status in ["VERIFIED", "RUNNING"], record.logs[-3:]
+        assert record.backend_url == url and record.git_checkpoint is not None
 
         # Clean up
         global_local_docker_provider.destroy("DevOpsE2EApp")
