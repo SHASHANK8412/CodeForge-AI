@@ -377,8 +377,8 @@ def register_routers() -> None:
     from backend.copilot.routes import day23_copilot_router
     app.include_router(day23_copilot_router)
 
-    from backend.evolution.routes import day24_evolution_router
-    app.include_router(day24_evolution_router)
+    from backend.evolution.routes import autopilot_evolution_router
+    app.include_router(autopilot_evolution_router)
 
     from backend.architecture_simulator.routes import day25_architect_router
     app.include_router(day25_architect_router)

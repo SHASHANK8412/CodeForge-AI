@@ -16,7 +16,7 @@ import logging
 import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 _logger = logging.getLogger("aiforge.generation.project_editor")
 
@@ -119,17 +119,14 @@ def _worse(before: Dict[str, Any], after: Dict[str, Any]) -> Optional[str]:
     return None
 
 
-def edit_project(project_dir: Path, request: str, project_id: str = "",
-                 generate: Optional[Callable[[str, str], str]] = None) -> EditResult:
-    """Apply a follow-up request to a project on disk. `generate(system, prompt)` defaults to the coding model."""
-    from backend.repository.patch_engine import global_patch_engine
+def propose_changes(project: Path, request: str, files: Dict[str, str], context: List[str], project_id: str = "",
+                    generate: Optional[Callable[[str, str], str]] = None,
+                    system_prompt: str = SYSTEM_PROMPT) -> Tuple[Dict[str, str], Dict[str, str]]:
+    """
+    Ask the coding model for the files a request changes. Returns (changes, rejected paths):
+    unchanged files are dropped and every path is validated; nothing is written.
+    """
     from backend.validation.code_extractor import extract_files_from_agent_output
-
-    project = Path(project_dir).resolve()
-    files = _read_files(project)
-    context = relevant_files(project, request, files)
-    result = EditResult(status="no_changes", request=request, context_files=context)
-
     shown, used = [], 0
     for path in context:
         block = f"### {path}\n```\n{files[path]}\n```"
@@ -148,12 +145,25 @@ def edit_project(project_dir: Path, request: str, project_id: str = "",
 
         def generate(system, user):
             return generate_text(system, user, task="coding")
-    reply = generate(SYSTEM_PROMPT, prompt)
+    reply = generate(system_prompt, prompt)
 
     changes = {p.replace("\\", "/").lstrip("/"): c for p, c in extract_files_from_agent_output(reply).items()}
     changes = {p: c for p, c in changes.items() if files.get(p) != c}
-    result.rejected_paths = _validate_paths(project, changes)
-    changes = {p: c for p, c in changes.items() if p not in result.rejected_paths}
+    rejected = _validate_paths(project, changes)
+    return {p: c for p, c in changes.items() if p not in rejected}, rejected
+
+
+def edit_project(project_dir: Path, request: str, project_id: str = "",
+                 generate: Optional[Callable[[str, str], str]] = None) -> EditResult:
+    """Apply a follow-up request to a project on disk. `generate(system, prompt)` defaults to the coding model."""
+    from backend.repository.patch_engine import global_patch_engine
+
+    project = Path(project_dir).resolve()
+    files = _read_files(project)
+    context = relevant_files(project, request, files)
+    result = EditResult(status="no_changes", request=request, context_files=context)
+
+    changes, result.rejected_paths = propose_changes(project, request, files, context, project_id, generate)
     if not changes:
         result.reason = "the model proposed no applicable changes"
         return result

@@ -27,3 +27,6 @@ scratch/
 
 # Locally generated JWT signing key (backend/auth/security.py)
 backend/data/jwt_secret.key
+
+# AIForge Autopilot analyses, findings, plans and executions (runtime data)
+backend/data/evolution/
