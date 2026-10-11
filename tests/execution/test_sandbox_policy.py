@@ -149,3 +149,23 @@ def test_sandbox_manager_host_runs_get_no_secrets(tmp_path, monkeypatch):
     (tmp_path / "show.py").write_text("import os\nprint(os.environ.get('GITHUB_TOKEN', 'absent'))\n", encoding="utf-8")
     res = SandboxedExecutionManager().execute_command("python show.py", cwd=str(tmp_path))
     assert res.stdout.strip() == "absent"
+
+
+def test_mern_backend_tests_are_found_and_sent_to_docker(tmp_path, monkeypatch):
+    (tmp_path / "backend").mkdir()
+    (tmp_path / "backend" / "package.json").write_text('{"scripts": {"test": "node --test"}}', encoding="utf-8")
+    monkeypatch.setenv("AIFORGE_TEST_SANDBOX", "auto")
+    monkeypatch.setattr(sandbox, "docker_available", lambda: True)
+    calls = []
+    monkeypatch.setattr(sandbox, "run_npm_in_docker", lambda path, script: calls.append((path, script)) or "ran")
+    assert ProjectRunner().run_project(str(tmp_path)) == "ran"
+    assert calls == [((tmp_path / "backend").resolve(), "test")]
+
+
+def test_docker_unavailable_is_rechecked(monkeypatch):
+    import time
+    monkeypatch.setattr(sandbox, "_docker_ok", False)
+    monkeypatch.setattr(sandbox, "_docker_checked_at", time.time() - 60)
+    monkeypatch.setattr(sandbox, "docker_exe", lambda: "docker")
+    monkeypatch.setattr(sandbox.subprocess, "run", lambda *a, **k: type("R", (), {"returncode": 0})())
+    assert sandbox.docker_available() is True, "a stale 'not running' is re-checked"

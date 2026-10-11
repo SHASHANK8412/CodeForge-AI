@@ -88,6 +88,17 @@ class ProjectRunner:
                 pass
             return [npm_cmd, "run", "build"], "javascript"
 
+        # A Node backend in a subfolder (the MERN template keeps its tests in backend/).
+        npm_cmd = "npm.cmd" if sys.platform == "win32" and shutil.which("npm.cmd") else "npm"
+        for sub in ("backend", "server", "api"):
+            sub_pkg = project_path / sub / "package.json"
+            if sub_pkg.is_file():
+                try:
+                    if "test" in (json.loads(sub_pkg.read_text(encoding="utf-8")).get("scripts") or {}):
+                        return [npm_cmd, "--prefix", sub, "run", "test"], "javascript"
+                except (ValueError, OSError):
+                    pass
+
         if py_files:
             return [sys.executable, "-m", "compileall", "-e", "."], "python"
 
@@ -177,6 +188,8 @@ class ProjectRunner:
             _logger.info("ProjectRunner: running '%s' for '%s' in the Docker sandbox", " ".join(cmd[-2:]), proj_path)
             if lang == "python":
                 return run_pytest_in_docker(proj_path)
+            if "--prefix" in cmd:
+                return run_npm_in_docker(proj_path / cmd[cmd.index("--prefix") + 1], cmd[-1])
             return run_npm_in_docker(proj_path, cmd[-1])
 
         # Python projects run against their own dependencies (<project>/.venv), which are put on

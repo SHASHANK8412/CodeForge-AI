@@ -10,7 +10,9 @@ and can be removed after a reboot.
 
 Usage:  powershell -ExecutionPolicy Bypass -File scripts\start-docker.ps1
 #>
-$ErrorActionPreference = "Stop"
+# Not "Stop": Windows PowerShell 5.1 turns a native command's stderr into a terminating error, so
+# the "daemon not running" message from `docker info` aborted the script before it started Docker.
+$ErrorActionPreference = "Continue"
 $docker = Join-Path $env:LOCALAPPDATA "Programs\DockerDesktop\resources\bin\docker.exe"
 $app = Join-Path $env:LOCALAPPDATA "Programs\DockerDesktop\Docker Desktop.exe"
 if (-not (Test-Path $app)) {

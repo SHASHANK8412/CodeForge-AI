@@ -47,15 +47,21 @@ def docker_exe() -> Optional[str]:
     return None
 
 
+_docker_checked_at = 0.0
+
+
 def docker_available() -> bool:
-    """Whether a Docker daemon answers (cached for the process; it is checked once)."""
-    global _docker_ok
-    if _docker_ok is None:
+    """Whether a Docker daemon answers. A "yes" is cached for the process; a "no" is rechecked
+    after 30 seconds, so starting Docker Desktop later does not need an AIForge restart."""
+    global _docker_ok, _docker_checked_at
+    if _docker_ok is None or (_docker_ok is False and time.time() - _docker_checked_at > 30):
         exe = docker_exe()
         try:
-            _docker_ok = bool(exe) and subprocess.run([exe, "info"], capture_output=True, timeout=10).returncode == 0
+            _docker_ok = bool(exe) and subprocess.run([exe, "info"], capture_output=True, timeout=10,
+                                                      env=docker_env()).returncode == 0
         except (OSError, subprocess.SubprocessError):
             _docker_ok = False
+        _docker_checked_at = time.time()
     return _docker_ok
 
 
