@@ -28,6 +28,15 @@ class SecurityReport(BaseModel):
     sbom: Dict[str, Any] = Field(default_factory=dict)
     summary: str = ""
 
+    # Earlier SecurityAgent API (report.is_secure / report.vulnerabilities), kept for callers.
+    @property
+    def is_secure(self) -> bool:
+        return self.gate_status == "PASSED" and not self.findings
+
+    @property
+    def vulnerabilities(self) -> List[SecurityFinding]:
+        return list(self.findings)
+
 
 class SecurityManager:
     """

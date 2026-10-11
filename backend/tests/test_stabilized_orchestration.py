@@ -71,19 +71,40 @@ class TestStabilizedOrchestration(unittest.TestCase):
         print("✓ Solution 10: Real multi-file project workspace builder validated")
 
     def test_05_parallel_workflow_execution(self):
+        # The graph is checkpointed (a thread id is required) and pauses for architecture approval;
+        # the model calls are stubbed so this runs without Ollama. The whole pipeline is covered by
+        # tests/test_pipeline_integration.py.
+        from unittest.mock import AsyncMock, patch
+        from langgraph.checkpoint.memory import MemorySaver
+        from backend.graph import parallel_workflow as wf
+
+        graph = wf.compile_parallel_graph(MemorySaver())
+        config = {"configurable": {"thread_id": "stabilized-05"}}
+        arch = "## 12. API Specifications\n- `GET /races` - list races\n## 11. Database Schema\n- **races**: id (int)\n"
+        code = "### backend/main.py\n```python\nfrom fastapi import FastAPI\napp = FastAPI()\n```\n"
+
         async def _run():
-            initial_state = {
-                "user_prompt": "Build Formula 1 Racing Portal",
-                "prompt": "Build Formula 1 Racing Portal"
-            }
-            final_state = await parallel_graph.ainvoke(initial_state)
-            self.assertIn("plan", final_state)
-            self.assertIn("architecture", final_state)
-            self.assertIn("frontend", final_state)
-            self.assertIn("backend", final_state)
-            self.assertIn("database", final_state)
-            self.assertIn("stream_events", final_state)
-            self.assertGreater(len(final_state["stream_events"]), 5)
+            with patch.object(wf.planner, "run_async", AsyncMock(return_value='{"project_name": "Formula Racing Portal"}')), \
+                 patch.object(wf.architect, "run_async", AsyncMock(return_value=arch)), \
+                 patch.object(wf.frontend_agent, "run_async", AsyncMock(return_value=code)), \
+                 patch.object(wf.backend_agent, "run_async", AsyncMock(return_value=code)), \
+                 patch.object(wf.database_agent, "run_async", AsyncMock(return_value=code)), \
+                 patch.object(wf.global_cache_service, "get", return_value=None), \
+                 patch.object(wf.global_cache_service, "set", return_value=None):
+                await graph.ainvoke({"user_prompt": "Build Formula 1 Racing Portal",
+                                     "prompt": "Build Formula 1 Racing Portal"}, config=config)
+                paused = graph.get_state(config)
+                self.assertEqual(paused.next, ("human_approval",))
+                self.assertIn("plan", paused.values)
+                self.assertEqual(paused.values["architecture"]["routes"], ["GET /races"])
+                graph.update_state(config, {"approval_status": "approved"}, as_node="human_approval")
+                # Run only through the parallel stage: stop before assembly writes to disk.
+                async for _ in graph.astream(None, config=config, interrupt_before=["assembly"]):
+                    pass
+            values = graph.get_state(config).values
+            for key in ("frontend", "backend", "database", "stream_events"):
+                self.assertIn(key, values)
+            self.assertGreater(len(values["stream_events"]), 5)
 
         asyncio.run(_run())
         print("✓ Solution 3, 4 & 11: Parallel execution & stream progress events validated")
