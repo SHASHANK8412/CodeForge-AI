@@ -135,6 +135,10 @@ def run_checks(project: Any, include_tests: bool = True, disposable: bool = Fals
     return checks
 
 
+def _fmt(counts: Dict[str, int]) -> str:
+    return ", ".join(f"{v} {k}" for k, v in counts.items()) or "no counts"
+
+
 def _by_id(checks: List[CheckResult]) -> Dict[str, CheckResult]:
     return {c.check_id: c for c in checks}
 
@@ -183,6 +187,9 @@ def compare(baseline: List[CheckResult], after: List[CheckResult]) -> Dict[str, 
                     regressions.append(f"failing tests {bad_b} -> {bad_a}")
                 if not b.counts and not a.counts:
                     unverified.append("tests failed before and after; without counts no comparison is possible")
+                else:
+                    notes.append("the test suite was already failing before the change and still fails "
+                                 f"({_fmt(b.counts)} -> {_fmt(a.counts)})")
             elif b.status == "failed" and a.status == "passed":
                 notes.append("tests that failed before the change pass after it")
         elif check_id == "tests" and b is not None and b.status in ("blocked", "error", "not_run") and a.status == "passed":

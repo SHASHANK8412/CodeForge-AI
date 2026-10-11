@@ -189,6 +189,7 @@ export default function Sidebar({
         { key: "ci-pipeline", label: "CI/CD Pipeline", icon: <FaProjectDiagram size={12} /> },
         { key: "github", label: "GitHub Integration", icon: <FaRocket size={12} /> },
         { key: "code", label: "Code Workspace", icon: <FaCode size={12} /> },
+        { key: "evolution-autopilot", label: "AIForge Autopilot", icon: <FaShieldAlt size={12} /> },
         { key: "autopilot", label: "Autopilot Engine", icon: <FaRocket size={12} /> },
         { key: "xray", label: "Project X-Ray", icon: <FaBrain size={12} /> },
         { key: "dna", label: "DNA Graph", icon: <FaProjectDiagram size={12} /> },

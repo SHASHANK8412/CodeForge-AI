@@ -241,8 +241,12 @@ def _brief(f: Optional[Finding], fid: str) -> Dict[str, Any]:
 
 def _statement(e: Execution, verdict: Dict[str, Any]) -> str:
     if e.status == "completed":
+        tests = next((c for c in e.after if c.check_id == "tests"), None)
+        caveat = " The project's tests were failing before the change and still fail." \
+            if tests is not None and tests.status == "failed" else ""
         return (f"Changes applied to {len(e.changed_files)} file(s). Evidence: {verdict.get('evidence', 'n/a')}. "
-                f"{len(e.verified_findings)} finding(s) no longer detected; {len(e.unresolved_findings)} still detected.")
+                f"{len(e.verified_findings)} finding(s) no longer detected; {len(e.unresolved_findings)} still detected."
+                + caveat)
     if e.status == "rejected":
         return "Changes were made in the working copy but rejected by the checks; the project was not modified."
     if e.status == "needs_approval":

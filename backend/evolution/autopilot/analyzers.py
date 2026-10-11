@@ -139,12 +139,21 @@ def _ruff_unused(project: Path) -> Result:
         except ValueError:
             continue
         line = (f.get("location") or {}).get("row")
+        if rel.endswith("__init__.py"):
+            # Usually a deliberate re-export: removing it can break `from package import name`.
+            found.append(_raw(f"PY-{f.get('code')}", "ruff", "quality", f"{f.get('code')}: {f.get('message', '')[:120]}",
+                              f.get("message", "") + " In a package __init__ this is often an intended re-export.",
+                              "info", "likely", rel, line,
+                              evidence=f"{rel}:{line}: [{f.get('code')}] {f.get('message', '')}",
+                              remediation="List the name in __all__ if it is a re-export; otherwise remove it.",
+                              validation="ruff no longer reports it; imports of the package still resolve"))
+            continue
         found.append(_raw(f"PY-{f.get('code')}", "ruff", "quality", f"{f.get('code')}: {f.get('message', '')[:120]}",
                           f.get("message", ""), "low", "confirmed", rel, line,
                           evidence=f"{rel}:{line}: [{f.get('code')}] {f.get('message', '')}",
                           remediation="Remove the unused import or variable.",
                           validation="ruff no longer reports it; tests and quality gate do not regress",
-                          fix_strategy="ruff_fix"))
+                          fix_strategy="ruff_fix" if f.get("code") == "F401" else "model"))
     return found, ToolRun(tool="ruff F401/F841", status="ran", detail=f"{len(found)} unused imports/variables")
 
 

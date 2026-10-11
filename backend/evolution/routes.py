@@ -189,7 +189,7 @@ def create_plan(project_id: str, body: PlanRequest, user: dict = Depends(get_cur
     try:
         plan = global_autopilot_service.create_plan(project_id, _user_id(user), body.finding_ids, body.objective)
     except PlanError as e:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e))
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return {"plan": plan.model_dump(mode="json")}
 
 

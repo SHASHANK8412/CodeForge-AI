@@ -58,6 +58,7 @@ const InfrastructureDashboardPage = lazy(() => import("./pages/InfrastructureDas
 const FinOpsDashboardPage = lazy(() => import("./pages/FinOpsDashboardPage"));
 const EvaluationCenter = lazy(() => import("./pages/EvaluationCenter"));
 const AutopilotDashboard = lazy(() => import("./pages/AutopilotDashboard"));
+const AutopilotEvolutionPage = lazy(() => import("./pages/AutopilotEvolutionPage"));
 const FlightRecorder = lazy(() => import("./pages/FlightRecorder"));
 const SimulatorPage = lazy(() => import("./pages/SimulatorPage"));
 const DnaGraphPage = lazy(() => import("./pages/DnaGraphPage"));
@@ -345,6 +346,11 @@ function AppContent() {
                     {view === "evaluations" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
                             <EvaluationCenter />
+                        </ProtectedRoute>
+                    )}
+                    {view === "evolution-autopilot" && (
+                        <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                            <AutopilotEvolutionPage activeProjectId={activeGenerationId} />
                         </ProtectedRoute>
                     )}
                     {view === "autopilot" && (
