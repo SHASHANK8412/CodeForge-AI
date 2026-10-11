@@ -31,15 +31,22 @@ from backend.evolution.autopilot.workspace import (create_workspace, discard_wor
 _logger = logging.getLogger("aiforge.autopilot.executor")
 
 STAGES = ["prepare workspace", "baseline checks", "implement", "after checks", "compare", "apply", "re-analyze"]
-PERFORMANCE_STAGE = "performance (before/after measurement)"
+# Plans from the Performance Engineer and the Chaos Engineer add a measured before/after gate between the
+# correctness checks and apply: origin -> (stage name, module, service attribute, verdict key).
+MEASURED_GATES = {
+    "performance": ("performance (before/after measurement)", "backend.performance.engineer.service",
+                    "global_performance_engineer", "performance"),
+    "chaos": ("chaos experiment (before/after)", "backend.chaos.service", "global_chaos_engineer", "chaos"),
+}
+PERFORMANCE_STAGE = MEASURED_GATES["performance"][0]
 
 
 def stages_for(plan: Plan) -> List[str]:
-    """Performance plans add a measured before/after comparison between the correctness checks and apply."""
-    if plan.origin != "performance":
+    gate = MEASURED_GATES.get(plan.origin)
+    if gate is None:
         return list(STAGES)
     i = STAGES.index("apply")
-    return STAGES[:i] + [PERFORMANCE_STAGE] + STAGES[i:]
+    return STAGES[:i] + [gate[0]] + STAGES[i:]
 EXECUTION_DEADLINE_SECONDS = 45 * 60
 MODEL_ATTEMPTS = 2
 REPAIR_ROUNDS = 1           # model repairs after a check regressed (bounded self-repair)
@@ -421,37 +428,40 @@ def run_execution(store, execution_id: str, project_id: str, project_dir: Path,
         run.stage("compare", "done" if verdict["accepted"] else "failed",
                   "accepted" if verdict["accepted"] else "; ".join(verdict["regressions"] + verdict["unverified"]))
         if not verdict["accepted"]:
-            for name in ([PERFORMANCE_STAGE] if plan.origin == "performance" else []) + ["apply", "re-analyze"]:
+            gate_stage = [MEASURED_GATES[plan.origin][0]] if plan.origin in MEASURED_GATES else []
+            for name in gate_stage + ["apply", "re-analyze"]:
                 run.stage(name, "skipped", "changes rejected; the project was not modified")
             store.set_finding_status(project_id, plan.finding_ids, FindingStatus.FIX_FAILED.value)
             finish("rejected", "; ".join(verdict["regressions"] + verdict["unverified"]), PlanStatus.FAILED)
             return store.get(project_id, "executions", execution_id)
         run.checkpoint()
 
-        if plan.origin == "performance":
-            # Measured gate: the original project and the changed copy run side by side under the plan's workload.
-            from backend.performance.engineer.service import global_performance_engineer
+        if plan.origin in MEASURED_GATES:
+            # Measured gate: the original project and the changed copy are measured the same way (a performance
+            # workload, or the chaos experiment that showed the failure); applied only on "improved".
+            import importlib
+            stage_name, module, attribute, key = MEASURED_GATES[plan.origin]
+            service = getattr(importlib.import_module(module), attribute)
 
             def stopped() -> bool:
                 current = store.get(project_id, "executions", execution_id)
                 return bool(current and current.cancel_requested)
-            run.stage(PERFORMANCE_STAGE, "running")
-            comparison = global_performance_engineer.gate(
-                plan, project, run.workspace, execution_id, stopped,
-                lambda name, status: run.stage(PERFORMANCE_STAGE, "running", f"{name}: {status}"))
-            perf = {"decision": comparison.decision, "reasons": comparison.reasons[:12], "comparison_id": comparison.id}
-            verdict = {**verdict, "performance": perf}
+            run.stage(stage_name, "running")
+            comparison = service.gate(plan, project, run.workspace, execution_id, stopped,
+                                      lambda name, status: run.stage(stage_name, "running", f"{name}: {status}"))
+            result = {"decision": comparison.decision, "reasons": comparison.reasons[:12], "comparison_id": comparison.id}
+            verdict = {**verdict, key: result}
             run.save(lambda e: setattr(e, "verdict", verdict))
             run.checkpoint()
             if comparison.decision != "improved":
-                run.stage(PERFORMANCE_STAGE, "failed", f"{comparison.decision}: " + "; ".join(comparison.reasons[:4]))
+                run.stage(stage_name, "failed", f"{comparison.decision}: " + "; ".join(comparison.reasons[:4]))
                 for name in ("apply", "re-analyze"):
-                    run.stage(name, "skipped", f"performance gate: {comparison.decision}; the project was not modified")
+                    run.stage(name, "skipped", f"{key} gate: {comparison.decision}; the project was not modified")
                 status = "rejected" if comparison.decision == "regressed" else "inconclusive"
-                finish(status, f"performance gate: {comparison.decision} - " + "; ".join(comparison.reasons[:4]),
+                finish(status, f"{key} gate: {comparison.decision} - " + "; ".join(comparison.reasons[:4]),
                        PlanStatus.FAILED)
                 return store.get(project_id, "executions", execution_id)
-            run.stage(PERFORMANCE_STAGE, "done", "improved: " + "; ".join(comparison.reasons[:3]))
+            run.stage(stage_name, "done", "improved: " + "; ".join(comparison.reasons[:3]))
 
         run.stage("apply", "running")
         conflicts = [rel for rel in run.changes if file_hash(project / rel) != run.original_hash.get(rel)]

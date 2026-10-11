@@ -385,6 +385,9 @@ def register_routers() -> None:
     from backend.twin.routes import twin_router
     app.include_router(twin_router)
 
+    from backend.chaos.routes import chaos_router
+    app.include_router(chaos_router)
+
     from backend.architecture_simulator.routes import day25_architect_router
     app.include_router(day25_architect_router)
 
