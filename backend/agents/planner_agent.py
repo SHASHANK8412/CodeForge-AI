@@ -19,6 +19,12 @@ def project_name_from_prompt(prompt: str) -> str:
     A readable project name from the user's prompt, for plans that did not name the project.
     The name picks the output folder, so different prompts must not collapse onto one default.
     """
+    # "Project name: Bookmark Saver. ..." (how the New Project page phrases it) names the project.
+    named = re.search(r"project\s+name\s*:\s*([^.\n]+)", prompt or "", re.IGNORECASE)
+    if named:
+        words = re.findall(r"[A-Za-z0-9]+", named.group(1))[:6]
+        if words:
+            return " ".join(w if w.isupper() else w.capitalize() for w in words)
     words = [w for w in re.findall(r"[A-Za-z0-9]+", prompt or "") if w.lower() not in _NAME_FILLER]
     return " ".join(w.capitalize() for w in words[:4]) or DEFAULT_PROJECT_NAME
 

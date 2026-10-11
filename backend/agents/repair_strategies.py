@@ -113,6 +113,46 @@ def fix_missing_modules(files: Dict[str, str], output: str) -> Dict[str, str]:
     return {reqs_key: (current.rstrip("\n") + "\n" if current.strip() else "") + "\n".join(additions) + "\n"}
 
 
+def fix_misplaced_imports(files: Dict[str, str], errors: List[Dict[str, Any]]) -> Dict[str, str]:
+    """
+    A well-known library name imported from a project module that does not define it, e.g.
+    `from backend.database import engine, Session` where Session is SQLAlchemy's: import it from
+    the library instead (seen in a real run with qwen2.5-coder).
+    """
+    wanted: Dict[str, Dict[int, set]] = {}
+    for e in errors or []:
+        m = re.search(r"`([^`]+)` is not defined in local module", e.get("message", ""))
+        if e.get("code") == "AIF-missing-name" and m and m.group(1) in KNOWN_IMPORTS and e.get("file") in files:
+            wanted.setdefault(e["file"], {}).setdefault(int(e.get("line") or 0), set()).add(m.group(1))
+
+    changes: Dict[str, str] = {}
+    for rel, by_line in wanted.items():
+        source = files[rel]
+        try:
+            tree = ast.parse(source)
+        except SyntaxError:
+            continue
+        lines = source.split("\n")
+        moved: List[str] = []
+        for node in sorted((n for n in tree.body if isinstance(n, ast.ImportFrom) and n.lineno in by_line),
+                           key=lambda n: n.lineno, reverse=True):
+            names = by_line[node.lineno]
+            keep = [a for a in node.names if a.name not in names]
+            moved += [a.name for a in node.names if a.name in names]
+            module = "." * node.level + (node.module or "")
+            new_line = (f"from {module} import " + ", ".join(
+                a.name + (f" as {a.asname}" if a.asname else "") for a in keep)) if keep else None
+            start, end = node.lineno - 1, (node.end_lineno or node.lineno)
+            lines[start:end] = [new_line] if new_line else []
+        fixed = "\n".join(lines)
+        for name in sorted(set(moved)):
+            if KNOWN_IMPORTS[name] not in fixed:
+                fixed = _insert_import(fixed, KNOWN_IMPORTS[name])
+        if fixed != source:
+            changes[rel] = fixed
+    return changes
+
+
 def fix_shadowed_module(files: Dict[str, str], errors: List[Dict[str, Any]]) -> Dict[str, Optional[str]]:
     """
     `x.py` next to a package `x/` is unreachable: `import x` loads the package. When the package's
@@ -235,6 +275,7 @@ def propose_repairs(files: Dict[str, str], output: str, errors: List[Dict[str, A
     for name, strategy in (
         ("add_missing_imports", lambda: fix_undefined_names(files, errors, output)),
         ("merge_shadowed_module", lambda: fix_shadowed_module(files, errors)),
+        ("fix_misplaced_imports", lambda: fix_misplaced_imports(files, errors)),
         ("add_missing_requirements", lambda: fix_missing_modules(files, output)),
         ("fix_literal_assertion", lambda: fix_literal_assertion(files, output)),
         ("llm_rewrite_file", lambda: llm_rewrite_file(files, output, errors)),
