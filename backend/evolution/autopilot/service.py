@@ -31,6 +31,13 @@ class AutopilotService:
         self.background = background
         self._active: Dict[str, str] = {}               # project_id -> job id
         self._lock = threading.Lock()
+        if background:
+            try:
+                closed = self.store.mark_interrupted()
+                if closed:
+                    _logger.warning("Autopilot: closed %d job(s) interrupted by a restart", closed)
+            except Exception as e:  # noqa: BLE001 - recovery must not stop the server starting
+                _logger.warning("Autopilot: could not check for interrupted jobs: %s", e)
 
     # --- jobs ------------------------------------------------------------------------------
 

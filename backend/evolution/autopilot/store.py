@@ -107,6 +107,37 @@ class AutopilotStore:
                     if items[k].get("status") not in ("queued", "running"):
                         del items[k]
 
+    def mark_interrupted(self) -> int:
+        """
+        Jobs run in server threads; after a restart, records still 'queued'/'running' can never
+        finish. They are closed as failed (a run that had not reached 'apply' left the project as it was).
+        """
+        from backend.evolution.autopilot.models import now_iso
+        closed = 0
+        if not self.root.is_dir():
+            return 0
+        with self._lock:
+            for path in self.root.glob("*.json"):
+                project_id = path.stem
+                if not _SAFE_ID.match(project_id) or path.name.endswith(".corrupt.json"):
+                    continue
+                data = self._load(project_id)
+                changed = False
+                for kind in ("analyses", "executions"):
+                    for item in data[kind].values():
+                        if item.get("status") in ("queued", "running"):
+                            item["status"], item["finished_at"] = "failed", now_iso()
+                            item["error"] = "interrupted: the server stopped while this was running" + (
+                                "" if kind == "analyses" or not item.get("applied_to_project") else
+                                " (after the changes had been written)")
+                            changed, closed = True, closed + 1
+                for plan in data["plans"].values():
+                    if plan.get("status") == "running":
+                        plan["status"], changed = "failed", True
+                if changed:
+                    self._save(project_id, data)
+        return closed
+
     def latest_analysis(self, project_id: str) -> Optional[Analysis]:
         analyses = self.list(project_id, "analyses")
         return max(analyses, key=lambda a: a.started_at or "", default=None)

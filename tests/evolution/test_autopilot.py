@@ -354,6 +354,18 @@ def test_files_with_secrets_are_not_sent_to_the_model(svc, project):
     assert execution.status == "failed" and not execution.applied_to_project
 
 
+def test_jobs_interrupted_by_a_restart_are_closed(tmp_path):
+    from backend.evolution.autopilot.models import Analysis, Execution
+    store = AutopilotStore(tmp_path / "store")
+    store.put("p1", "analyses", Analysis(id="ana_1", project_id="p1", user_id="u1", status="running"))
+    store.put("p1", "executions", Execution(id="exe_1", plan_id="pln_1", project_id="p1", user_id="u1", status="running"))
+    store.put("p1", "executions", Execution(id="exe_2", plan_id="pln_1", project_id="p1", user_id="u1", status="completed"))
+    AutopilotService(store, background=True)            # what the server does at start-up
+    assert store.get("p1", "analyses", "ana_1").status == "failed"
+    assert "interrupted" in store.get("p1", "executions", "exe_1").error
+    assert store.get("p1", "executions", "exe_2").status == "completed"
+
+
 # 20 -----------------------------------------------------------------------------------------------
 @pytest.fixture
 def api(tmp_path, project, monkeypatch):
