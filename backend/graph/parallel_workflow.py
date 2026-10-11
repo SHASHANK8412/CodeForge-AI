@@ -955,11 +955,14 @@ async def debug_node(state: ProjectState) -> dict:
     existing_causes = list(state.get("root_causes", []) or [])
 
     # Structured Diagnosis via DiagnosticAgent & DebugAgent
-    diag_res = global_diagnostic_agent.diagnose_failure(
+    # The diagnosis may call the model (tens of seconds): off the event loop, so live progress
+    # streams and other requests keep being served during a repair.
+    diag_res = await asyncio.to_thread(
+        global_diagnostic_agent.diagnose_failure,
         execution_report=exec_res,
         files_manifest=files_map,
         architecture_spec=state.get("architecture"),
-        previous_fixes=fixes
+        previous_fixes=fixes,
     )
     diag_dict = diag_res.model_dump()
 

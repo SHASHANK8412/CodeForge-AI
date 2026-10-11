@@ -203,6 +203,11 @@ def pipeline(tmp_path, monkeypatch):
     monkeypatch.setattr(wf.global_cache_service, "get", lambda *a, **k: None)
     monkeypatch.setattr(wf.global_cache_service, "set", lambda *a, **k: None)
     monkeypatch.setattr(wf, "memory_manager", _Memory())
+
+    def no_model(*_a, **_k):
+        raise RuntimeError("no model in tests")
+    # The repair loop's diagnosis uses its deterministic fallback, not a live Ollama call.
+    monkeypatch.setattr(wf.global_diagnostic_agent, "generate", no_model)
     # Dependencies: the generated tests use fastapi/httpx, already in AIForge's interpreter, so the
     # per-project venv install (network) is skipped; pip-audit (network) likewise.
     monkeypatch.setattr("backend.execution.project_env.ensure_project_env", lambda *_a, **_k: {"ok": True})
