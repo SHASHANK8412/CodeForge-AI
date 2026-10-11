@@ -57,6 +57,7 @@ const KubernetesDashboardPage = lazy(() => import("./pages/KubernetesDashboardPa
 const InfrastructureDashboardPage = lazy(() => import("./pages/InfrastructureDashboardPage"));
 const FinOpsDashboardPage = lazy(() => import("./pages/FinOpsDashboardPage"));
 const EvaluationCenter = lazy(() => import("./pages/EvaluationCenter"));
+const BenchmarkLabPage = lazy(() => import("./pages/BenchmarkLabPage"));
 const AutopilotDashboard = lazy(() => import("./pages/AutopilotDashboard"));
 const AutopilotEvolutionPage = lazy(() => import("./pages/AutopilotEvolutionPage"));
 const DigitalTwinPage = lazy(() => import("./pages/DigitalTwinPage"));
@@ -348,6 +349,11 @@ function AppContent() {
                     {view === "evaluations" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
                             <EvaluationCenter />
+                        </ProtectedRoute>
+                    )}
+                    {view === "benchmark-lab" && (
+                        <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                            <BenchmarkLabPage />
                         </ProtectedRoute>
                     )}
                     {view === "performance-engineer" && (

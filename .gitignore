@@ -36,3 +36,7 @@ backend/data/twin/
 
 # AIForge Performance Engineer runs, findings and comparisons (runtime data)
 backend/data/performance/
+
+# Benchmark Lab run artifacts (generated code and outputs)
+benchmarks/runs/
+backend/data/benchmark_lab/

@@ -3,7 +3,7 @@ import {
     FaHome, FaCommentAlt, FaFolderOpen, FaBrain, FaBookmark, FaHistory, 
     FaCog, FaPlus, FaSearch, FaTrash, FaPen, FaCode, FaRocket, FaShieldAlt, 
     FaUserCircle, FaSignOutAlt, FaBolt, FaProjectDiagram, FaServer, FaTimes, FaRobot, FaPaintBrush,
-    FaTasks, FaChartLine
+    FaTasks, FaChartLine, FaFlask
 } from "react-icons/fa";
 import { useAuth } from "../auth/useAuth";
 import {
@@ -199,6 +199,7 @@ export default function Sidebar({
         { key: "bug-bounty", label: "Bug Hunter SAST", icon: <FaShieldAlt size={12} /> },
         { key: "metrics", label: "Quality Center", icon: <FaBrain size={12} /> },
         { key: "observability", label: "Observability APM", icon: <FaBolt size={12} /> },
+        { key: "benchmark-lab", label: "Benchmark Lab", icon: <FaFlask size={12} /> },
         { key: "deploy", label: "Cloud Deployments", icon: <FaServer size={12} /> },
     ];
 
