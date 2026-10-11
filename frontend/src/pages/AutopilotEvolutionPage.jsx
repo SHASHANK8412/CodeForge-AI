@@ -282,7 +282,7 @@ function PlanPanel({ projectId, plan, lastExecution, onChanged, onExecuted, onEr
   const [busy, setBusy] = useState(false);
   if (!plan) return null;
   const extra = lastExecution?.plan_id === plan.id && lastExecution.status === 'needs_approval'
-    ? [...new Set((lastExecution.task_results || []).filter((r) => r.status === 'out_of_scope').flatMap((r) => r.files))] : [];
+    ? [...new Set((lastExecution.task_results || []).filter((r) => r.status === 'out_of_scope').flatMap((r) => (r.outside?.length ? r.outside : r.files)))] : [];
 
   const act = async (fn) => {
     setBusy(true);

@@ -114,6 +114,8 @@ class PlanTask(BaseModel):
     strategy: str
     agent: str
     depends_on: List[str] = Field(default_factory=list)
+    request: str = ""                    # a change request (Digital Twin plans) instead of findings to fix
+    context_files: List[str] = Field(default_factory=list)   # read-only context shown to the model
 
 
 class Decision(BaseModel):
@@ -140,6 +142,9 @@ class Plan(BaseModel):
     status: PlanStatus = PlanStatus.AWAITING_APPROVAL
     decisions: List[Decision] = Field(default_factory=list)
     created_at: str = Field(default_factory=now_iso)
+    origin: str = "findings"             # findings | digital_twin
+    origin_ref: Optional[str] = None     # the Digital Twin impact report it came from
+    security_review_required: bool = False   # approval must acknowledge a security review
 
 
 class CheckResult(BaseModel):
@@ -165,6 +170,7 @@ class TaskResult(BaseModel):
     task_id: str
     status: str               # applied | no_changes | out_of_scope | failed | skipped
     files: List[str] = Field(default_factory=list)
+    outside: List[str] = Field(default_factory=list)   # out_of_scope: the files the plan did not list
     detail: str = ""
     attempts: int = 0
 

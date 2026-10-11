@@ -177,6 +177,7 @@ class PlanRequest(BaseModel):
 class DecisionRequest(BaseModel):
     note: str = ""
     extra_files: List[str] = Field(default_factory=list, max_length=20)
+    security_reviewed: bool = False      # required to approve plans that change authentication
 
 
 class ExecuteRequest(BaseModel):
@@ -211,7 +212,8 @@ def _decide(project_id: str, plan_id: str, user: dict, decision: str, body: Deci
     _get_or_404(project_id, "plans", plan_id)
     try:
         plan = global_autopilot_service.decide(project_id, plan_id, _user_id(user), decision, body.note,
-                                               body.extra_files if decision == "approved" else None)
+                                               body.extra_files if decision == "approved" else None,
+                                               security_reviewed=body.security_reviewed)
     except PlanError as e:
         raise HTTPException(status.HTTP_409_CONFLICT, str(e))
     return {"plan": plan.model_dump(mode="json")}

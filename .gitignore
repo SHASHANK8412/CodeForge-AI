@@ -30,3 +30,6 @@ backend/data/jwt_secret.key
 
 # AIForge Autopilot analyses, findings, plans and executions (runtime data)
 backend/data/evolution/
+
+# AIForge Digital Twin graphs and impact reports (runtime data)
+backend/data/twin/

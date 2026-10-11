@@ -23,8 +23,13 @@ KEEP_EXECUTIONS = 50
 
 
 class AutopilotStore:
+    KINDS: Dict[str, Type[BaseModel]] = _KINDS
+    # (kind, records kept, sort key): older finished records beyond the limit are dropped
+    PRUNE = (("analyses", KEEP_ANALYSES, "started_at"), ("executions", KEEP_EXECUTIONS, "started_at"))
+    ENV_DIR, DEFAULT_ROOT = "AIFORGE_EVOLUTION_DIR", _DEFAULT_ROOT
+
     def __init__(self, root: Optional[Path] = None):
-        self.root = Path(root or os.environ.get("AIFORGE_EVOLUTION_DIR") or _DEFAULT_ROOT)
+        self.root = Path(root or os.environ.get(self.ENV_DIR) or self.DEFAULT_ROOT)
         self._lock = threading.RLock()
 
     def _path(self, project_id: str) -> Path:
@@ -42,7 +47,7 @@ class AutopilotStore:
             # Keep a corrupt file for inspection instead of overwriting it.
             path.replace(path.with_suffix(".corrupt.json"))
             data = {}
-        return {kind: data.get(kind, {}) for kind in _KINDS}
+        return {kind: data.get(kind, {}) for kind in self.KINDS}
 
     def _save(self, project_id: str, data: Dict[str, Any]) -> None:
         path = self._path(project_id)
@@ -56,12 +61,12 @@ class AutopilotStore:
     def get(self, project_id: str, kind: str, item_id: str) -> Optional[BaseModel]:
         with self._lock:
             raw = self._load(project_id)[kind].get(item_id)
-        return _KINDS[kind](**raw) if raw else None
+        return self.KINDS[kind](**raw) if raw else None
 
     def list(self, project_id: str, kind: str) -> List[BaseModel]:
         with self._lock:
             items = list(self._load(project_id)[kind].values())
-        return [_KINDS[kind](**raw) for raw in items]
+        return [self.KINDS[kind](**raw) for raw in items]
 
     def put(self, project_id: str, kind: str, item: BaseModel) -> None:
         with self._lock:
@@ -77,7 +82,7 @@ class AutopilotStore:
             raw = data[kind].get(item_id)
             if raw is None:
                 return None
-            item = _KINDS[kind](**raw)
+            item = self.KINDS[kind](**raw)
             change(item)
             data[kind][item_id] = item.model_dump(mode="json")
             self._save(project_id, data)
@@ -97,9 +102,8 @@ class AutopilotStore:
                     data["findings"][fid]["status"] = status
             self._save(project_id, data)
 
-    @staticmethod
-    def _prune(data: Dict[str, Dict[str, Any]]) -> None:
-        for kind, keep, key in (("analyses", KEEP_ANALYSES, "started_at"), ("executions", KEEP_EXECUTIONS, "started_at")):
+    def _prune(self, data: Dict[str, Dict[str, Any]]) -> None:
+        for kind, keep, key in self.PRUNE:
             items = data[kind]
             if len(items) > keep:
                 ordered = sorted(items, key=lambda k: items[k].get(key) or "")
@@ -123,17 +127,18 @@ class AutopilotStore:
                     continue
                 data = self._load(project_id)
                 changed = False
-                for kind in ("analyses", "executions"):
+                for kind in self.KINDS:
+                    if kind == "plans":
+                        for plan in data[kind].values():
+                            if plan.get("status") == "running":
+                                plan["status"], changed = "failed", True
+                        continue
                     for item in data[kind].values():
                         if item.get("status") in ("queued", "running"):
                             item["status"], item["finished_at"] = "failed", now_iso()
                             item["error"] = "interrupted: the server stopped while this was running" + (
-                                "" if kind == "analyses" or not item.get("applied_to_project") else
-                                " (after the changes had been written)")
+                                " (after the changes had been written)" if item.get("applied_to_project") else "")
                             changed, closed = True, closed + 1
-                for plan in data["plans"].values():
-                    if plan.get("status") == "running":
-                        plan["status"], changed = "failed", True
                 if changed:
                     self._save(project_id, data)
         return closed

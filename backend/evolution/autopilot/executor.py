@@ -172,15 +172,23 @@ class _Run:
         from backend.routes.export import _read_project_dir
         files = _read_project_dir(self.workspace)
         context = [f for f in task.files if f in files]
+        context += [f for f in task.context_files if f in files and f not in context]
         if TEST_DIR in task.files or not context:
-            context = (context + relevant_files(self.workspace, task.title, files, limit=4))[:6]
+            context = (context + relevant_files(self.workspace, task.request or task.title, files, limit=4))[:6]
+        context = context[:8]
         leaked = [f for f in context if redact(files[f]) != files[f]]
         if leaked:
             raise PermissionError("not sent to the model: secret-like values in " + ", ".join(leaked))
-        problems = "\n".join(f"- {f.title} ({f.file or 'project'}{':' + str(f.line_start) if f.line_start else ''})\n"
-                             f"  evidence: {f.evidence[:400]}\n  expected fix: {f.remediation}" for f in findings)
-        request = (f"Fix these reported problems:\n{problems}\n\nYou may change only: {', '.join(task.files)}"
-                   + (f"\n\nThe previous attempt was rejected: {feedback}" if feedback else ""))
+        allowed = ", ".join(task.files) + (" (new files may be created inside the listed folders)"
+                                           if any(f.endswith("/") for f in task.files) else "")
+        if task.request:
+            request = f"{task.request}\n\nYou may change only: {allowed}"
+        else:
+            problems = "\n".join(f"- {f.title} ({f.file or 'project'}{':' + str(f.line_start) if f.line_start else ''})\n"
+                                 f"  evidence: {f.evidence[:400]}\n  expected fix: {f.remediation}" for f in findings)
+            request = f"Fix these reported problems:\n{problems}\n\nYou may change only: {allowed}"
+        if feedback:
+            request += f"\n\nThe previous attempt was rejected: {feedback}"
         changes, rejected = propose_changes(self.workspace, request, files, context, self.project_id,
                                             self.generate, AUTOPILOT_SYSTEM_PROMPT)
         if rejected:
@@ -232,7 +240,7 @@ class _Run:
                 continue
             outside = scope_violations(self.plan, list(changes))
             if outside:
-                return TaskResult(task_id=task.id, status="out_of_scope", files=outside, attempts=attempts,
+                return TaskResult(task_id=task.id, status="out_of_scope", files=sorted(changes), outside=outside, attempts=attempts,
                                   detail="the change touches files the plan did not list")
             syntax_before = self.syntax_errors(list(changes))
             snapshot = {rel: self.read(rel) for rel in changes}
@@ -328,7 +336,7 @@ def run_execution(store, execution_id: str, project_id: str, project_dir: Path,
         applied = [r for r in current.task_results if r.status == "applied"]
         summary = ", ".join(f"{r.task_id}: {r.status}" for r in current.task_results)
         if out_of_scope:
-            files = sorted({f for r in out_of_scope for f in r.files})
+            files = sorted({f for r in out_of_scope for f in (r.outside or r.files)})
             run.stage("implement", "failed", "needs approval for files outside the plan: " + ", ".join(files))
             run.save(lambda e: (setattr(e, "changed_files", sorted(run.changes)), setattr(e, "diff", run.diff())))
             finish("needs_approval", "the changes touch files the plan did not list: " + ", ".join(files)

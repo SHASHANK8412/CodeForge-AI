@@ -126,10 +126,12 @@ class AutopilotService:
         return plan
 
     def decide(self, project_id: str, plan_id: str, user_id: str, decision: str, note: str = "",
-               extra_files: Optional[List[str]] = None) -> Plan:
+               extra_files: Optional[List[str]] = None, security_reviewed: bool = False) -> Plan:
         plan = self.store.get(project_id, "plans", plan_id)
         if plan is None:
             raise KeyError(plan_id)
+        if decision == "approved" and plan.security_review_required and not security_reviewed:
+            raise PlanError("this plan changes authentication or authorization: confirm the security review to approve it")
         allowed = {
             "approved": {PlanStatus.AWAITING_APPROVAL, PlanStatus.DRAFT},
             "rejected": {PlanStatus.AWAITING_APPROVAL, PlanStatus.DRAFT, PlanStatus.APPROVED},
@@ -151,7 +153,9 @@ class AutopilotService:
                 p.expected_files = sorted(set(p.expected_files) | set(extra_files))
             p.decisions.append(Decision(decision="scope_approved" if extra_files and decision == "approved" else decision,
                                         user_id=user_id, note=note[:500] + (
-                                            f" (added files: {', '.join(extra_files)})" if extra_files else "")))
+                                            f" (added files: {', '.join(extra_files)})" if extra_files else "")
+                                        + (" [security review confirmed]" if security_reviewed and decision == "approved"
+                                           and p.security_review_required else "")))
         plan = self.store.update(project_id, "plans", plan_id, change)
         if decision in ("rejected", "cancelled"):
             self.store.set_finding_status(project_id, [i for i in plan.finding_ids

@@ -107,6 +107,7 @@ from backend.routes.verifiable_routes import router as verifiable_router
 from backend.routes.autonomous_workflow_routes import router as autonomous_workflow_router
 from backend.routes.ai_os_routes import router as ai_os_router
 from backend.routes.sprint_routes import router as sprint_routes
+from backend.benchmark_lab.routes import router as benchmark_lab_router
 
 app = FastAPI(
     title="AIForge API",
@@ -141,6 +142,7 @@ app.include_router(verifiable_router)
 app.include_router(autonomous_workflow_router)
 app.include_router(ai_os_router)
 app.include_router(sprint_routes)
+app.include_router(benchmark_lab_router)
 
 from backend.observability.service import global_opentelemetry_service
 
@@ -379,6 +381,9 @@ def register_routers() -> None:
 
     from backend.evolution.routes import autopilot_evolution_router
     app.include_router(autopilot_evolution_router)
+
+    from backend.twin.routes import twin_router
+    app.include_router(twin_router)
 
     from backend.architecture_simulator.routes import day25_architect_router
     app.include_router(day25_architect_router)
