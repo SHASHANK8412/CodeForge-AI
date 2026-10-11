@@ -102,6 +102,7 @@ export default function CommandPalette({
 
       // Specialized Engineering Tools Suite
       { id: "tool-workspace", category: "AI Tools", title: "Code Workspace (Monaco IDE & Agent Panel)", icon: <FaCode className="text-violet-400" />, action: () => setView("code") },
+      { id: "tool-digital-twin", category: "AI Tools", title: "Digital Twin (Predict Change Impact)", icon: <FaRocket className="text-violet-400" />, action: () => setView("digital-twin") },
       { id: "tool-evolution-autopilot", category: "AI Tools", title: "AIForge Autopilot (Analyze & Improve Projects)", icon: <FaRocket className="text-emerald-400" />, action: () => setView("evolution-autopilot") },
       { id: "tool-autopilot", category: "AI Tools", title: "Autopilot Engine (Autonomous Coding)", icon: <FaRocket className="text-cyan-400" />, action: () => setView("autopilot") },
       { id: "tool-xray", category: "AI Tools", title: "Project X-Ray (Deep Structural Inspection)", icon: <FaBrain className="text-emerald-400" />, action: () => setView("xray") },

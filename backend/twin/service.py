@@ -292,8 +292,16 @@ def compare_outcome(report: ImpactReport, execution) -> Outcome:
     inside = [f for f in actual if f in predicted or (folders and f.startswith(tuple(d for d in folders if d != "./")))]
     unexpected = sorted(set(actual) - set(inside))
     failures = list((execution.verdict or {}).get("regressions", [])) + list((execution.verdict or {}).get("unverified", []))
-    failures += [f"{c.label}: {c.status}" + (f" ({', '.join(f'{k} {v}' for k, v in c.counts.items())})" if c.counts else "")
-                 for c in execution.after if c.status in ("failed", "error")]
+    before = {c.check_id: c for c in execution.baseline}
+    for c in execution.after:
+        if c.status not in ("failed", "error"):
+            continue
+        counts = f" ({', '.join(f'{k} {v}' for k, v in c.counts.items())})" if c.counts else ""
+        b = before.get(c.check_id)
+        already = " - already failing before the change" + (
+            f" ({', '.join(f'{k} {v}' for k, v in b.counts.items())})" if b.counts else "") \
+            if b is not None and b.status in ("failed", "error") else " - new since the change"
+        failures.append(f"{c.label}: {c.status}{counts}{already}")
     failures += [f"task {t.task_id}: {t.status} - {t.detail}" for t in execution.task_results if t.status == "failed"]
     limitations = ["Only modified files are compared; whether the predicted dependent files actually broke is shown "
                    "only by the checks, not by this comparison."]

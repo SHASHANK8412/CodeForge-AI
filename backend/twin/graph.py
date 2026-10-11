@@ -79,7 +79,10 @@ def routes_match(route: str, call: str) -> bool:
     if len(c) < len(r):
         return False
     tail = c[len(c) - len(r):]
-    return all(a == b or a == "*" or b == "*" for a, b in zip(r, tail))
+    # a route parameter matches any value; a value only known at runtime (`${id}`) matches only a parameter
+    if not all(a == b or a == "*" for a, b in zip(r, tail)):
+        return False
+    return any(a == b and a != "*" for a, b in zip(r, tail))    # at least one literal segment agrees
 
 
 class GraphBuilder:
@@ -218,6 +221,7 @@ class GraphBuilder:
                 names.update((a.asname or a.name).split(".")[0] for n in ast.walk(node)
                              if isinstance(n, (ast.Import, ast.ImportFrom)) for a in n.names)
         prefixes: Dict[str, str] = {}
+        model_kinds: Dict[str, str] = {}
         for node in tree.body:
             if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
                 call = node.value
@@ -237,10 +241,13 @@ class GraphBuilder:
                              for b in node.bases}
                     has_table = any(isinstance(s, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "__tablename__"
                                                                       for t in s.targets) for s in node.body)
-                    if has_table or bases & {"Model", "Document"}:
+                    inherited = [model_kinds[b] for b in bases if b in model_kinds]   # subclass of a model above
+                    if has_table or bases & {"Model", "Document"} or "orm" in inherited:
                         type_, meta["kind"] = "model", "orm"
-                    elif bases & {"BaseModel", "SQLModel"}:
+                    elif bases & {"BaseModel", "SQLModel"} or inherited:
                         type_, meta["kind"] = "model", "schema"
+                    if type_ == "model":
+                        model_kinds[node.name] = meta["kind"]
                 else:
                     type_ = "function"
                 sid = self.node(f"{type_}:{rel}#{node.name}", type_, path=rel, symbol=node.name, language="python", meta=meta)
@@ -473,6 +480,11 @@ class GraphBuilder:
                 if not url.startswith(("/", "http", "${")):
                     continue
                 method = (m.group(1) or m.group(2) or "").upper()
+                if not method and m.group(0).startswith("fetch"):
+                    # fetch(url, { method: 'POST' }): read the options up to the next call; fetch defaults to GET
+                    rest = source[m.end(): m.end() + 400].split("fetch(")[0]
+                    found = re.search(r"method\s*:\s*['\"`](\w+)['\"`]", rest)
+                    method = found.group(1).upper() if found else "GET"
                 line = _line_of(source, m.start())
                 for r in routes:
                     if r.path == rel:

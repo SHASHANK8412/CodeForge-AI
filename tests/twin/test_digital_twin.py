@@ -137,6 +137,12 @@ def test_javascript_typescript_imports_components_and_api_calls(project):
     assert ("file:frontend/src/api.ts", "package:axios", "depends_on", "established") in edges(b)
     assert b.nodes["file:frontend/src/api.ts"].language == "javascript"
     assert routes_match("/items/{item_id}", "`${API}/api/items/${id}`") and not routes_match("/users", "/api/items/1")
+    assert not routes_match("/health", "${API}/api/items/${id}")          # a runtime value is not a literal segment
+    assert not routes_match("/{item_id}", "/api/items")                    # no literal segment agrees
+    write(project, {"frontend/src/Delete.jsx": "export default function Delete({ id }) {\n"
+                                               "  fetch(`/api/items/${id}`, { method: 'DELETE' })\n  return null\n}\n"})
+    b = build_graph(project)
+    assert not [e for e in b.edges.values() if e.type == "calls_api" and e.source == "file:frontend/src/Delete.jsx"]
 
 
 # 3 ------------------------------------------------------------------------------------------------
