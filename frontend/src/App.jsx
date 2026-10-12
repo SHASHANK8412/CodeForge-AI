@@ -35,6 +35,7 @@ const ComputerAgentPage = lazy(() => import("./pages/ComputerAgentPage"));
 const IntelligencePlatformPage = lazy(() => import("./pages/IntelligencePlatformPage"));
 const KnowledgeGraphPage = lazy(() => import("./pages/KnowledgeGraphPage"));
 const SwarmPage = lazy(() => import("./pages/SwarmPage"));
+const RealitySimulatorPage = lazy(() => import("./pages/RealitySimulatorPage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const CreateProject = lazy(() => import("./pages/CreateProject"));
 const GenerationDashboard = lazy(() => import("./pages/GenerationDashboard"));
@@ -378,6 +379,11 @@ function AppContent() {
                     {view === "time-machine" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
                             <TimeMachinePage activeProjectId={activeGenerationId} />
+                        </ProtectedRoute>
+                    )}
+                    {view === "reality-simulator" && (
+                        <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                            <RealitySimulatorPage activeProjectId={activeGenerationId} />
                         </ProtectedRoute>
                     )}
                     {view === "performance-engineer" && (

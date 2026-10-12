@@ -27,7 +27,7 @@ import time
 import uuid
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from backend.execution.docker_test_sandbox import IMAGE, PIP_CACHE_VOLUME, docker_available, docker_env, docker_exe
 from backend.execution.project_env import requirements_file
@@ -146,8 +146,11 @@ def frontend_entry(project: Path) -> Optional[str]:
     return None
 
 
-def backend_commands(project: Path, run_id: str, entry: Dict[str, str], ttl: int) -> Dict[str, List[str]]:
-    """docker argv for the install and run containers (no generated code runs during install)."""
+def backend_commands(project: Path, run_id: str, entry: Dict[str, str], ttl: int,
+                     resources: Optional[Dict[str, Any]] = None) -> Dict[str, List[str]]:
+    """docker argv for the install and run containers (no generated code runs during install).
+    `resources` (cpus, memory_mb, workers) replaces the default 1 CPU / 1 GB / 1 worker of the app container,
+    within the caller's validated bounds; the other hardening flags are unchanged."""
     req = requirements_file(project)
     req_arg = f"-r /app/{req.relative_to(project).as_posix()} " if req else ""
     deps = f"aiforge_preview_deps_{run_id}"
@@ -163,16 +166,24 @@ def backend_commands(project: Path, run_id: str, entry: Dict[str, str], ttl: int
     # The project is mounted read-only and copied into the container's tmpfs, so an app that
     # writes next to itself (a SQLite file, uploads) works without touching the host copy.
     workdir = "/tmp/app" if entry["workdir"] == "." else f"/tmp/app/{entry['workdir']}"
+    hardening, workers = list(HARDENING), ""
+    if resources:
+        if resources.get("cpus"):
+            hardening[hardening.index("--cpus") + 1] = str(float(resources["cpus"]))
+        if resources.get("memory_mb"):
+            hardening[hardening.index("--memory") + 1] = f"{int(resources['memory_mb'])}m"
+        if int(resources.get("workers") or 1) > 1:
+            workers = f" --workers {int(resources['workers'])}"
     run = [
         "run", "-d", "--name", f"aiforge_preview_be_{run_id}", "--label", "aiforge.preview=1",
-        *HARDENING, "-p", "127.0.0.1::8000",
+        *hardening, "-p", "127.0.0.1::8000",
         "-v", f"{project}:/app:ro", "-v", f"{deps}:/deps:ro",
         "-e", f"PYTHONPATH=/deps:{workdir}:/tmp/app", "-e", "PYTHONDONTWRITEBYTECODE=1", "-e", "PYTHONUNBUFFERED=1",
         "-e", "HOME=/tmp",
         IMAGE, "sh", "-c",
         "mkdir -p /tmp/app && tar -C /app --exclude=./.venv --exclude=./frontend/node_modules --exclude=./node_modules "
         f"-cf - . | tar -C /tmp/app -xf - && cd {workdir} && "
-        f"exec timeout {ttl} python -m uvicorn {entry['module']} --host 0.0.0.0 --port 8000",
+        f"exec timeout {ttl} python -m uvicorn {entry['module']} --host 0.0.0.0 --port 8000{workers}",
     ]
     return {"install": install, "run": run, "volume": deps}
 

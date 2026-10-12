@@ -22,7 +22,7 @@ import threading
 import time
 import uuid
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from backend.evolution.autopilot.redact import redact
 from backend.performance.engineer.models import Endpoint, Environment, Measurement, Resources, Workload
@@ -128,8 +128,12 @@ def _requirements_key(project: Path) -> str:
 
 
 def measure(projects: Dict[str, Path], workload: Workload, should_stop: Optional[Callable[[], bool]] = None,
-            on_stage: Optional[Callable[[str, str], None]] = None) -> Tuple[Dict[str, Measurement], Environment]:
-    """Run `workload` against each project version. Returns {label: Measurement} and the environment."""
+            on_stage: Optional[Callable[[str, str], None]] = None, resources: Optional[Dict[str, Any]] = None,
+            drive: Optional[Callable[[str, Callable[[], bool]], Dict[str, Any]]] = None
+            ) -> Tuple[Dict[str, Measurement], Environment]:
+    """Run `workload` against each project version. Returns {label: Measurement} and the environment.
+    `resources` sets the app container's CPU / memory / workers; `drive(url, stop)` replaces the workload with
+    the caller's own traffic (its result is stored in Measurement.custom; CPU and memory are still sampled)."""
     from backend.execution.docker_test_sandbox import docker_available
     from backend.execution.preview_manager import (_docker, _host_port, _logs, backend_commands, backend_entry,
                                                    backend_problem)
@@ -155,7 +159,7 @@ def measure(projects: Dict[str, Path], workload: Workload, should_stop: Optional
                 a.measurement.status, a.measurement.error = "unavailable", f"not a supported FastAPI app: {backend_problem(a.project)}"
                 continue
             key = _requirements_key(a.project)
-            cmds = backend_commands(a.project, f"{run_id}_{a.label}", entry, CONTAINER_TTL_SECONDS)
+            cmds = backend_commands(a.project, f"{run_id}_{a.label}", entry, CONTAINER_TTL_SECONDS, resources)
             if key not in volumes:
                 inst = _docker(*cmds["install"], timeout=900)
                 if inst.returncode != 0:
@@ -199,6 +203,16 @@ def measure(projects: Dict[str, Path], workload: Workload, should_stop: Optional
         stage("start and readiness check", "done")
 
         live = [a for a in apps if a.measurement.status == "pending"]
+        if drive is not None:
+            stage("workload", "running")
+            for a in live:
+                with StatsSampler(a.container, _docker) as sampler:
+                    a.measurement.custom = drive(a.url, stop)
+                a.measurement.resources = resources_of(sampler.samples)
+                a.measurement.logs_tail = redact(_logs(a.container)[-2000:])
+                a.measurement.status = "measured"
+            stage("workload", "done")
+            live = []
         if live and not workload.endpoints:
             workload.endpoints = endpoints_from_openapi(live[0].url)
             env.notes.append("endpoints taken from the app's /openapi.json: GET operations without path or "

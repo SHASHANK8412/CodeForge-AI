@@ -86,6 +86,7 @@ class Measurement(BaseModel):
     endpoints: List[EndpointStats] = Field(default_factory=list)
     resources: Resources = Field(default_factory=Resources)
     logs_tail: str = ""
+    custom: Dict[str, Any] = Field(default_factory=dict)      # results of a caller-provided drive (Reality Simulator)
 
 
 class Environment(BaseModel):
