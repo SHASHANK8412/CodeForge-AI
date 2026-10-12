@@ -1,6 +1,7 @@
 /**
  * AIForge Swarm Intelligence: missions (task graph, artifacts, messages, conflicts, gates), the agent registry,
- * approval to run, human decisions on escalated conflicts, cancellation and delivery (an Autopilot plan).
+ * approval to run, human decisions on escalated conflicts, cancellation, delivery (an Autopilot plan) and the
+ * evidence-backed mission report (findings, runtime contract tests, repair history).
  * Failed requests reject with { status, error } (see services/api.js).
  */
 import api from './api';
@@ -17,3 +18,5 @@ export const cancelMission = (projectId, id) => api.post(`${base(projectId)}/${e
 export const decideConflict = (projectId, id, conflictId, proposalId) =>
   api.post(`${base(projectId)}/${encodeURIComponent(id)}/decide`, { conflict_id: conflictId, proposal_id: proposalId }, long);
 export const deliverMission = (projectId, id) => api.post(`${base(projectId)}/${encodeURIComponent(id)}/deliver`, {}, long);
+export const getMissionReport = (projectId, id, format = 'markdown') =>
+  api.get(`${base(projectId)}/${encodeURIComponent(id)}/report`, { params: { format }, ...(format === 'markdown' ? { responseType: 'text' } : {}) });

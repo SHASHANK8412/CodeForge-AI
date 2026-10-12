@@ -124,3 +124,92 @@ def scripted_agents(frontend_fixes_on_feedback=True, backend=None):
         return "no change"
     generate.calls = calls
     return generate
+
+
+# --- v2: a typed contract (JSON Schema subset) and component variants for the contract-aware tests ----------------
+
+ORDER = {"type": "object", "properties": {"id": {"type": "integer"}, "item": {"type": "string"}, "quantity": {"type": "integer"}},
+         "required": ["id", "item", "quantity"]}
+CONTRACT_V2 = Contract(name="orders", endpoints=[
+    Endpoint(method="POST", path="/api/orders", description="create an order",
+             request_schema={"type": "object", "properties": {"item": {"type": "string"}, "quantity": {"type": "integer", "minimum": 1}},
+                             "required": ["item", "quantity"]},
+             responses={"201": {"content_type": "application/json", "schema": ORDER}},
+             errors={"422": {"content_type": "application/json", "description": "invalid order"}}),
+    Endpoint(method="GET", path="/api/orders/{order_id}", description="read an order", path_params={"order_id": {"type": "integer"}},
+             responses={"200": {"content_type": "application/json", "schema": ORDER}},
+             errors={"404": {"content_type": "application/json", "description": "unknown order"},
+                     "422": {"content_type": "application/json", "description": "invalid id"}}),
+])
+
+BACKEND_V2 = BACKEND.replace('@app.post("/api/orders")', '@app.post("/api/orders", status_code=201)')
+BACKEND_V2_TESTS = BACKEND_TESTS
+# each departs from CONTRACT_V2 in exactly one way
+BACKEND_V2_STATUS_200 = BACKEND                                                    # POST answers 200, not 201
+BACKEND_V2_TEXT = BACKEND_V2.replace("from fastapi import FastAPI, HTTPException",
+                                     "from fastapi import FastAPI, HTTPException\nfrom fastapi.responses import PlainTextResponse").replace(
+    '''        raise HTTPException(status_code=404, detail="order not found")
+    return ORDERS[order_id]''', '''        raise HTTPException(status_code=404, detail="order not found")
+    return PlainTextResponse(str(ORDERS[order_id]))''')           # GET answers text/plain
+BACKEND_V2_MISSING_FIELD = BACKEND_V2.replace(
+    '''detail="order not found")
+    return ORDERS[order_id]
+''', '''detail="order not found")
+    return {"id": order_id, "item": ORDERS[order_id]["item"]}
+''')                                                                 # GET omits quantity
+BACKEND_V2_WRONG_TYPE = BACKEND_V2.replace(
+    '''    ORDERS[order_id] = {"id": order_id, "item": order.item, "quantity": order.quantity}''',
+    '''    ORDERS[order_id] = {"id": str(order_id), "item": order.item, "quantity": order.quantity}''').replace(
+    "    if order_id not in ORDERS:", "    if order_id not in ORDERS and str(order_id) not in [o['id'] for o in ORDERS.values()]:").replace(
+    "    return ORDERS[order_id]\n", "    return ORDERS.get(order_id) or next(o for o in ORDERS.values() if o['id'] == str(order_id))\n")   # id is a string
+BACKEND_V2_LIST = BACKEND_V2.replace('not found")\n    return ORDERS[order_id]\n', 'not found")\n    return [ORDERS[order_id]]\n')       # GET answers a list
+BACKEND_V2_INSECURE = BACKEND_V2.replace("from fastapi import FastAPI, HTTPException",
+                                         "import subprocess\n\nfrom fastapi import FastAPI, HTTPException").replace(
+    "    order_id = len(ORDERS) + 1\n",
+    "    order_id = len(ORDERS) + 1\n    subprocess.run(\"echo \" + order.item, shell=True)\n")   # a repair that adds command injection
+
+CLIENT_V2 = '''const API = import.meta.env.VITE_API_URL || "";
+
+export async function createOrder(item, qty) {
+  const response = await fetch(`${API}/api/orders`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ item, quantity: qty }),
+  });
+  if (!response.ok) throw new Error(`createOrder failed: ${response.status}`);
+  return response.json();
+}
+
+export async function getOrder(id) {
+  const response = await fetch(`${API}/api/orders/${id}`);
+  if (!response.ok) throw new Error(`getOrder failed: ${response.status}`);
+  return response.json();
+}
+'''
+CLIENT_V2_WRONG = CLIENT_WRONG                                      # POST /api/order with {item, qty}
+CLIENT_V2_STRING_QTY = CLIENT_V2.replace("quantity: qty }", "quantity: String(qty) }")   # quantity sent as a string
+CLIENT_V2_THROWS = CLIENT_V2.replace("  return response.json();\n}\n\nexport async function getOrder",
+                                     "  const data = await response.json();\n  return data.order.id;\n}\n\nexport async function getOrder")
+
+
+def staged_agents(backend=(BACKEND_V2,), client=(CLIENT_V2,), tests=BACKEND_V2_TESTS):
+    """Fixed agent answers by attempt: the n-th request to an agent gets the n-th version (the last one repeats).
+    Requests are counted in generate.calls; the requests themselves are kept in generate.prompts."""
+    calls = {"backend": 0, "frontend": 0}
+    prompts = {"backend": [], "frontend": []}
+
+    def generate(system, prompt):
+        if "Agent: backend_agent" in prompt:
+            calls["backend"] += 1
+            prompts["backend"].append(prompt)
+            code = backend[min(calls["backend"], len(backend)) - 1]
+            return f"### backend/main.py\n```python\n{code}```\n### backend/tests/test_orders.py\n```python\n{tests}```\n"
+        if "Agent: frontend_agent" in prompt:
+            calls["frontend"] += 1
+            prompts["frontend"].append(prompt)
+            code = client[min(calls["frontend"], len(client)) - 1]
+            return f"### frontend/src/api/client.js\n```javascript\n{code}```\n"
+        return "no change"
+    generate.calls = calls
+    generate.prompts = prompts
+    return generate

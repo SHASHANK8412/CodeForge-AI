@@ -23,8 +23,16 @@ def project(tmp_path):
     return write_sample(tmp_path / "shop")
 
 
-def engine(tmp_path, gen=None, background=False):
-    return SwarmEngine(SwarmStore(tmp_path / "swarm"), background=background, generate=gen or scripted_agents())
+def engine(tmp_path, gen=None, background=False, autopilot=None):
+    """Integration tests run on the test-only LocalRuntime (tests/swarm/local_runtime.py), which reports itself as
+    not isolated; the isolation gate is therefore declared not required here. The genuine Docker tests use the
+    production DockerRuntime with isolation required."""
+    from backend.evolution.autopilot.service import AutopilotService
+    from backend.evolution.autopilot.store import AutopilotStore
+    from tests.swarm.local_runtime import LocalRuntime
+    ap = autopilot or AutopilotService(AutopilotStore(tmp_path / "autopilot"), background=False)
+    return SwarmEngine(SwarmStore(tmp_path / "swarm"), background=background, generate=gen or scripted_agents(),
+                       runtime=LocalRuntime, require_isolation=False, autopilot=ap)
 
 
 def run_mission(eng, project, contract=CONTRACT, settings=None):
@@ -160,7 +168,7 @@ def test_independent_tasks_run_concurrently(tmp_path, project):
         time.sleep(1.0)
         return base(system, prompt)
     for conc, overlap in ((2, True), (1, False)):
-        eng = SwarmEngine(SwarmStore(tmp_path / f"s{conc}"), background=False, generate=slow)
+        eng = engine(tmp_path / f"s{conc}", slow)
         m = eng.create("p1", "u1", "orders", CONTRACT, settings={"concurrency": conc})
         eng.run("p1", project, "u1", m.id, approved=True)
         m = eng.store.get("p1", "missions", m.id)
@@ -234,7 +242,7 @@ def test_cancellation(tmp_path, project):
     def slow(system, prompt):
         time.sleep(2)
         return base(system, prompt)
-    eng2 = SwarmEngine(SwarmStore(tmp_path / "bg"), background=True, generate=slow)
+    eng2 = engine(tmp_path / "bg", slow, background=True)
     m2 = eng2.create("p1", "u1", "orders", CONTRACT)
     eng2.run("p1", project, "u1", m2.id, approved=True)
     time.sleep(0.5)
@@ -271,7 +279,7 @@ def test_delivery_is_an_autopilot_plan_awaiting_approval(tmp_path, project, monk
     from backend.evolution.autopilot.store import AutopilotStore
     ap = AutopilotService(AutopilotStore(tmp_path / "ap"), background=False)
     monkeypatch.setattr(aps, "global_autopilot_service", ap)
-    eng = engine(tmp_path)
+    eng = engine(tmp_path, autopilot=ap)
     m = eng.create("p1", "u1", "orders", CONTRACT)
     with pytest.raises(SwarmError):
         eng.deliver("p1", "u1", m.id)

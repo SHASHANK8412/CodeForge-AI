@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaCheck, FaPlay, FaPlus, FaProjectDiagram, FaRocket, FaStop, FaTrash } from 'react-icons/fa';
 import {
-  cancelMission, createMission, decideConflict, deliverMission, getMission, listMissions, listSwarmAgents, runMission,
+  cancelMission, createMission, decideConflict, deliverMission, getMission, getMissionReport, listMissions, listSwarmAgents, runMission,
 } from '../services/swarm';
 import { listAutopilotProjects } from '../services/evolutionAutopilot';
 
@@ -10,8 +10,10 @@ const BAD = 'bg-rose-500/15 text-rose-300 border-rose-500/30';
 const WARN = 'bg-amber-500/15 text-amber-300 border-amber-500/30';
 const GREY = 'bg-slate-700/50 text-slate-300 border-slate-600';
 const TONE = {
-  completed: GOOD, passed: GOOD, resolved: GOOD, valid: GOOD, ok: GOOD, selected: GOOD,
-  failed: BAD, blocked: BAD, invalid: BAD, mismatch: BAD, escalated: WARN, critical: BAD, high: BAD,
+  completed: GOOD, passed: GOOD, resolved: GOOD, valid: GOOD, ok: GOOD, selected: GOOD, SUCCEEDED: GOOD, repaired: GOOD, succeeded: GOOD,
+  failed: BAD, blocked: BAD, invalid: BAD, mismatch: BAD, escalated: WARN, critical: BAD, high: BAD, FAILED: BAD, verified: BAD,
+  repair_failed: BAD, BLOCKED: WARN, NEEDS_HUMAN_REVIEW: WARN, needs_human_review: WARN, unresolved: WARN, inconclusive: WARN,
+  unverified: GREY, resolved_by_rerun: GREY,
   awaiting_review: WARN, awaiting_decision: WARN, resolving: WARN, medium: WARN, flaky: WARN, unavailable: WARN, interrupted: WARN,
   pending: GREY, planned: GREY, cancelled: GREY, not_applicable: GREY, not_run: GREY, low: GREY, rejected: BAD, escalate: WARN,
 };
@@ -48,11 +50,15 @@ function Builder({ projectId, agents, busy, act, onCreated }) {
   const [acceptance, setAcceptance] = useState('');
   const [endpoints, setEndpoints] = useState([{ method: 'POST', path: '/api/orders', request_fields: 'item, quantity', response_fields: 'id, item, quantity' }]);
   const [concurrency, setConcurrency] = useState(2);
+  const [contractJson, setContractJson] = useState('');
   const set = (i, k) => (e) => setEndpoints(endpoints.map((x, j) => (j === i ? { ...x, [k]: e.target.value } : x)));
   const submit = () => act(async () => {
+    let contract = { name: 'api', endpoints: endpoints.map((e) => ({ method: e.method, path: e.path.trim(), request_fields: split(e.request_fields), response_fields: split(e.response_fields) })) };
+    if (contractJson.trim()) {
+      try { contract = JSON.parse(contractJson); } catch (e) { throw { error: `The contract JSON is not valid: ${e.message}` }; }
+    }
     const r = await createMission(projectId, {
-      objective, constraints: split(constraints), acceptance: split(acceptance), settings: { concurrency: Number(concurrency) },
-      contract: { name: 'api', endpoints: endpoints.map((e) => ({ method: e.method, path: e.path.trim(), request_fields: split(e.request_fields), response_fields: split(e.response_fields) })) },
+      objective, constraints: split(constraints), acceptance: split(acceptance), settings: { concurrency: Number(concurrency) }, contract,
     });
     onCreated(r.mission);
   });
@@ -73,6 +79,10 @@ function Builder({ projectId, agents, busy, act, onCreated }) {
               <td className="pr-1"><input className={`${inputCls} w-40`} value={e.response_fields} onChange={set(i, 'response_fields')} /></td>
               <td><button className="text-text-muted" onClick={() => setEndpoints(endpoints.filter((_, j) => j !== i))}><FaTrash className="h-2.5 w-2.5" /></button></td></tr>
           ))}</tbody></table>
+        <details><summary className="cursor-pointer text-[11px] text-text-muted">Full contract (JSON Schema per endpoint: path/query params, auth, request schema, responses by status, documented errors) — replaces the table when filled</summary>
+          <textarea rows={8} className={`${inputCls} mt-1 w-full font-mono`} value={contractJson} onChange={(e) => setContractJson(e.target.value)}
+            placeholder={'{"name": "orders", "endpoints": [{"method": "POST", "path": "/api/orders", "auth": "none",\n  "request_schema": {"type": "object", "properties": {"item": {"type": "string"}}, "required": ["item"]},\n  "responses": {"201": {"content_type": "application/json", "schema": {"type": "object", "required": ["id"]}}},\n  "errors": {"422": {"description": "invalid order"}}}]}'} />
+          <p className="text-[10px]">Field-name-only rows (the table) are upgraded automatically: their fields become required properties of open type.</p></details>
         <div className="flex flex-wrap items-center gap-2">
           <Btn onClick={() => setEndpoints([...endpoints, { method: 'GET', path: '/api/', request_fields: '', response_fields: '' }])}><FaPlus className="h-2.5 w-2.5" /> Endpoint</Btn>
           <label className="flex items-center gap-1 text-[11px]">concurrency <input type="number" min="1" max="4" className={`${inputCls} w-14`} value={concurrency} onChange={(e) => setConcurrency(e.target.value)} /></label>
@@ -167,6 +177,90 @@ function Integration({ m }) {
   );
 }
 
+const PHASES = ['PLANNING', 'CONTRACT_READY', 'PARALLEL_GENERATION', 'STATIC_VALIDATION', 'INTEGRATION_TESTING', 'FAILURE_CLASSIFICATION',
+  'REPAIR_REQUIRED', 'REVALIDATION', 'SECURITY_VERIFICATION', 'AUTOPILOT_REVIEW'];
+
+function Lifecycle({ m }) {
+  const seen = new Set((m.phase_history || []).map((x) => x.phase));
+  return (
+    <Card title="Mission lifecycle" actions={<span className="flex items-center gap-2 text-[11px]">outcome <Badge value={m.outcome || 'in progress'} /></span>}>
+      <ol className="flex flex-wrap gap-1 text-[10px]">{PHASES.map((ph) => (
+        <li key={ph} className={`rounded border px-2 py-0.5 ${m.phase === ph ? 'border-cyan-400 text-cyan-200' : seen.has(ph) ? 'border-emerald-700 text-emerald-300' : 'border-slate-700 text-slate-500'}`}>{label(ph).toLowerCase()}</li>))}</ol>
+      <details className="mt-2"><summary className="cursor-pointer text-[11px] text-text-muted">phase_history ({(m.phase_history || []).length})</summary>
+        <ul className="text-[11px] text-text-secondary">{(m.phase_history || []).map((x, i) => <li key={i}><span className="font-mono text-text-muted">{x.at.slice(11, 19)}</span> {label(x.phase).toLowerCase()} — {x.note}</li>)}</ul></details>
+    </Card>
+  );
+}
+
+function RuntimeTests({ m }) {
+  if (!(m.runtime || []).length) return null;
+  return (
+    <Card title="Integration testing — runtime contract tests in the isolated environment">
+      <div className="space-y-3 text-[11px] text-text-secondary">
+        {m.runtime.map((r) => (
+          <div key={r.id} className="rounded-lg border border-border-subtle p-2">
+            <p className="flex flex-wrap items-center gap-2"><span className="font-mono text-text-primary">{r.id}</span> round {r.round} <Badge value={r.status} />
+              <span className="text-text-muted">{r.environment} · {Object.entries(r.counts || {}).map(([k, v]) => `${v} ${k}`).join(', ') || 'no checks'} · {r.seconds}s{r.rerun ? ' · failures re-run once' : ''}</span></p>
+            {r.error && <p className="text-rose-200">{r.error}</p>}
+            {(r.checks || []).length > 0 && <table className="mt-1 w-full text-left"><thead className="text-[10px] uppercase text-text-muted"><tr><th className="py-1">Check</th><th>Operation</th><th>Result</th><th>Expected / observed</th></tr></thead>
+              <tbody>{r.checks.map((c) => <tr key={c.id} className="border-t border-border-subtle align-top"><td className="py-1 font-mono">{c.id}</td><td className="font-mono">{c.endpoint}</td><td><Badge value={c.status} /></td>
+                <td><span className="text-text-muted">expected</span> {c.expected}<br /><span className="text-text-muted">observed</span> {c.observed}</td></tr>)}</tbody></table>}
+            <p className="mt-1 text-text-muted">Isolation: {r.isolation?.verified === true ? 'verified from Docker' : r.isolation?.verified === false ? 'NOT verified' : 'not inspected'}{(r.egress || []).length > 0 && ` · outside reachable: ${r.egress.filter((x) => x.reachable).length}/${r.egress.length}`} · cleanup: {r.cleanup?.verified ? 'verified' : 'not verified'}</p>
+          </div>))}
+        {Object.keys(m.properties || {}).length > 0 && <details><summary className="cursor-pointer text-text-muted">Static (code) vs declared (OpenAPI) vs verified (runtime) — the runtime decides</summary><Pre>{JSON.stringify(m.properties, null, 1)}</Pre></details>}
+      </div>
+    </Card>
+  );
+}
+
+function Findings({ m }) {
+  const items = m.findings || [];
+  if (!items.length) return null;
+  return (
+    <Card title={`Findings (${items.length})`}>
+      <table className="w-full text-left text-[11px] text-text-secondary"><thead className="text-[10px] uppercase text-text-muted"><tr><th className="py-1">Status</th><th>Category</th><th>Operation</th><th>Basis</th><th>Responsible</th><th>Expected / observed</th><th>Correction</th></tr></thead>
+        <tbody>{items.map((f) => <tr key={f.id} className="border-t border-border-subtle align-top"><td className="py-1"><Badge value={f.status} /><br /><span className="text-text-muted">round {f.round}</span></td>
+          <td>{label(f.category)} <Badge value={f.severity} /></td><td className="font-mono">{f.endpoint}</td><td>{f.basis}</td><td>{f.responsible || <span className="text-amber-200">not established</span>}</td>
+          <td><span className="text-text-muted">expected</span> {f.expected}<br /><span className="text-text-muted">observed</span> {f.observed}</td><td>{f.recommended_correction}</td></tr>)}</tbody></table>
+      <p className="mt-1 text-[10px] text-text-muted">Verified = observed by a runtime check with an established responsible component. Static and declared findings stay unverified until a runtime check confirms them; agents' statements are never evidence.</p>
+    </Card>
+  );
+}
+
+function Repairs({ m }) {
+  if (!(m.repairs || []).length) return null;
+  return (
+    <Card title="Repair history (at most one automatic repair per mismatch)">
+      <ul className="space-y-2 text-[11px] text-text-secondary">{m.repairs.map((r) => (
+        <li key={r.id} className="rounded-lg border border-border-subtle p-2">
+          <p className="flex flex-wrap items-center gap-2"><span className="font-mono text-text-primary">{r.id}</span> {r.component} <Badge value={r.outcome} />
+            <span className="text-text-muted">requested by {r.requested_by} at {r.requested_at.slice(0, 19)} · author {r.author || '—'} · {r.artifact_before} → {r.artifact_after || '…'}</span></p>
+          <p>changed: {r.changed_files.join(', ') || '—'} · remaining mismatches: {(r.validation?.mismatches_remaining || []).length} · security after repair: {r.validation?.security_after_repair || '—'}</p>
+          <details><summary className="cursor-pointer text-text-muted">repair request (evidence sent to the agent)</summary><Pre>{r.request}</Pre></details>
+        </li>))}</ul>
+    </Card>
+  );
+}
+
+function AutopilotReview({ m, onDownload, busy }) {
+  const r = m.autopilot_review || {};
+  if (!r.outcome) return null;
+  return (
+    <Card title="Autopilot review" actions={<span className="flex gap-1"><Btn disabled={busy} onClick={() => onDownload('markdown')}>Report (md)</Btn><Btn disabled={busy} onClick={() => onDownload('json')}>Report (json)</Btn></span>}>
+      <div className="grid gap-2 text-[11px] text-text-secondary md:grid-cols-2">
+        <p>Outcome <Badge value={r.outcome} /> · contract version <span className="font-mono">{r.contract_version}</span></p>
+        <p>Approval: {r.approval_status} · project modified: {String(r.project_modified)} · deployed: {String(r.deployed)}</p>
+        <p>Backend version: <span className="font-mono">{r.backend_version ? `${r.backend_version.artifact} (v${r.backend_version.version}, ${r.backend_version.content_hash})` : '—'}</span></p>
+        <p>Frontend version: <span className="font-mono">{r.frontend_version ? `${r.frontend_version.artifact} (v${r.frontend_version.version}, ${r.frontend_version.content_hash})` : '—'}</span></p>
+        <p>Integration tests: {r.integration_tests?.status} {JSON.stringify(r.integration_tests?.counts || {})}</p>
+        <p>Security: {r.security?.status || '—'} · isolation: {r.isolation?.status || '—'} · generated tests: {r.generated_tests?.status || '—'}</p>
+      </div>
+      <p className="mt-2 text-[10px] uppercase text-text-muted">Proposed actions</p>
+      <ul className="text-[11px] text-text-secondary">{(r.proposed_actions || []).map((a, i) => <li key={i}>• {a}</li>)}</ul>
+    </Card>
+  );
+}
+
 function Timeline({ m }) {
   return (
     <Card title={`Collaboration timeline (${m.messages.length} messages)`}>
@@ -191,7 +285,7 @@ function Report({ m, busy, onDeliver }) {
         <div><p className="text-text-muted">Unresolved conflicts</p>{(r.unresolved_conflicts || []).map((x) => <p key={x}>{x}</p>)}{!r.unresolved_conflicts?.length && <p>none</p>}</div>
         <div><p className="text-text-muted">Known limitations</p>{(r.limitations || []).map((x) => <p key={x}>• {x}</p>)}</div>
       </div>
-      {m.delivery?.autopilot_plan_id && <p className="mt-2 text-xs text-emerald-200">Delivery plan {m.delivery.autopilot_plan_id} is awaiting approval in Autopilot ({m.delivery.files.join(', ')}). Nothing has been written to the project yet.</p>}
+      {m.delivery?.autopilot_plan_id && <p className="mt-2 text-xs text-emerald-200">{m.delivery.kind === 'review' ? 'Review' : 'Delivery'} plan {m.delivery.autopilot_plan_id} is awaiting approval in Autopilot{m.delivery.files?.length ? ` (${m.delivery.files.join(', ')})` : ' (proposed actions only)'}. Nothing has been written to the project.</p>}
     </Card>
   );
 }
@@ -257,24 +351,34 @@ export default function SwarmPage({ activeProjectId }) {
         <Builder projectId={projectId} agents={agents} busy={busy} act={act} onCreated={(x) => setSelected(x.id)} />
         {missions.length > 0 && <Card title="Missions">
           <ul className="space-y-1 text-[11px] text-text-secondary">{missions.map((x) => (
-            <li key={x.id} className="flex flex-wrap items-center gap-2"><Badge value={x.status} /><span className="text-text-primary">{x.objective.slice(0, 90)}</span>
+            <li key={x.id} className="flex flex-wrap items-center gap-2"><Badge value={x.outcome || x.status} /><span className="text-text-primary">{x.objective.slice(0, 90)}</span>
               <span className="text-text-muted">{new Date(x.created_at).toLocaleString()} · {x.conflicts} conflict(s)</span><Btn onClick={() => setSelected(x.id)}>Open</Btn></li>))}</ul>
         </Card>}
         {m && (<>
           {m.plan_errors.length > 0 && <p className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">Plan rejected: {m.plan_errors.join('; ')}</p>}
-          {['planned', 'interrupted'].includes(m.status) && (
+          {['planned', 'interrupted', 'blocked'].includes(m.status) && (
             <div className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-xs">
               <label className="flex items-center gap-1.5 text-amber-100"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-                I approve running these agents: they generate code with the local model and run it only in isolated copies and the Docker sandbox</label>
-              <Btn tone="good" disabled={busy || !consent} onClick={() => act(() => runMission(projectId, m.id))}><FaPlay className="h-2.5 w-2.5" /> {m.status === 'interrupted' ? 'Resume' : 'Run'} mission</Btn>
+                I approve running these agents: they generate code with the local model and run it only in isolated copies, the Docker sandbox and an internal Docker network (backend + node client harness)</label>
+              <Btn tone="good" disabled={busy || !consent} onClick={() => act(() => runMission(projectId, m.id))}><FaPlay className="h-2.5 w-2.5" /> {m.status === 'planned' ? 'Run' : 'Resume'} mission</Btn>
             </div>
           )}
           {m.status === 'running' && <Btn tone="bad" disabled={busy || m.cancel_requested} onClick={() => act(() => cancelMission(projectId, m.id))}><FaStop className="h-2.5 w-2.5" /> {m.cancel_requested ? 'Cancelling…' : 'Cancel mission'}</Btn>}
+          <Lifecycle m={m} />
           <SwarmGraph m={m} />
+          <RuntimeTests m={m} />
+          <Findings m={m} />
+          <Repairs m={m} />
           <Debate m={m} busy={busy} onDecide={(c, p) => act(() => decideConflict(projectId, m.id, c, p))} />
           <Integration m={m} />
           <Timeline m={m} />
           <Report m={m} busy={busy} onDeliver={() => act(() => deliverMission(projectId, m.id))} />
+          <AutopilotReview m={m} busy={busy} onDownload={(format) => act(async () => {
+            const r = await getMissionReport(projectId, m.id, format);
+            const blob = new Blob([format === 'json' ? JSON.stringify(r, null, 2) : r], { type: format === 'json' ? 'application/json' : 'text/markdown' });
+            const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `swarm-${m.id}.${format === 'json' ? 'json' : 'md'}`; a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          })} />
           {m.contract && <details className="text-[11px] text-text-muted"><summary className="cursor-pointer">Mission contract and settings</summary><Pre>{JSON.stringify({ contract: m.contract, settings: m.settings, constraints: m.constraints, acceptance: m.acceptance }, null, 1)}</Pre></details>}
         </>)}
       </>)}

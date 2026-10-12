@@ -9,14 +9,18 @@ AIForge Swarm Intelligence REST API (project access is checked as for Autopilot)
   POST /api/projects/{id}/swarm/missions/{mid}/cancel
   POST /api/projects/{id}/swarm/missions/{mid}/decide          {"conflict_id", "proposal_id"} (escalated conflicts)
   POST /api/projects/{id}/swarm/missions/{mid}/deliver         the integrated files as an Autopilot plan awaiting approval
+  GET  /api/projects/{id}/swarm/missions/{mid}/report          ?format=markdown|json: the evidence-backed mission report
 """
 
+import json
 from typing import Any, Dict, List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
 from backend.auth.dependencies import get_current_user
+from backend.evolution.autopilot.redact import redact
 from backend.evolution.routes import _project_dir, _user_id
 from backend.swarm.models import Contract
 from backend.swarm.registry import REGISTRY
@@ -81,7 +85,8 @@ def create(project_id: str, body: MissionRequest, user: dict = Depends(get_curre
 def missions(project_id: str, user: dict = Depends(get_current_user)) -> Dict[str, Any]:
     _project_dir(project_id, user)
     items = sorted(_engine().store.list(project_id, "missions"), key=lambda m: m.created_at, reverse=True)
-    return {"missions": [{"id": m.id, "objective": m.objective, "status": m.status, "created_at": m.created_at,
+    return {"missions": [{"id": m.id, "objective": m.objective, "status": m.status, "outcome": m.outcome, "phase": m.phase,
+                          "created_at": m.created_at,
                           "finished_at": m.finished_at, "tasks": {t.id: t.status for t in m.tasks},
                           "conflicts": len(m.conflicts)} for m in items[:50]]}
 
@@ -129,3 +134,42 @@ def deliver(project_id: str, mid: str, user: dict = Depends(get_current_user)) -
     _project_dir(project_id, user)
     _mission(project_id, mid)
     return {"mission": _guard(lambda: _engine().deliver(project_id, _user_id(user), mid)).model_dump(mode="json")}
+
+
+@swarm_router.get(BASE + "/{mid}/report")
+def report(project_id: str, mid: str, format: str = Query("markdown", pattern="^(markdown|json)$"),
+           user: dict = Depends(get_current_user)):
+    _project_dir(project_id, user)
+    m = _mission(project_id, mid)
+    if format == "json":
+        return json.loads(redact(json.dumps({"mission": m.id, "objective": m.objective, "status": m.status, "outcome": m.outcome,
+                                             "phase_history": m.phase_history, "autopilot_review": m.autopilot_review,
+                                             "findings": [f.model_dump() for f in m.findings],
+                                             "repairs": [r.model_dump() for r in m.repairs],
+                                             "runtime": m.runtime, "properties": m.properties,
+                                             "gates": [g.model_dump() for g in m.gates], "report": m.report})))
+    r = m.autopilot_review or {}
+    lines = [f"# Swarm mission report - {m.objective[:100]}", "",
+             f"Mission `{m.id}`: **{m.outcome or m.status}** (phase {m.phase}). Contract version `{r.get('contract_version')}`.",
+             "The swarm never writes to the project or deploys anything; results go to Autopilot for approval.", "",
+             "## Versions", "", f"- backend: {r.get('backend_version')}", f"- frontend: {r.get('frontend_version')}", "",
+             "## Integration test runs (isolated environment)", ""]
+    for run in m.runtime:
+        lines.append(f"### Run {run.get('id')} (round {run.get('round')}): {run.get('status')} {run.get('counts')} - {run.get('environment')}")
+        if run.get("error"):
+            lines.append(f"- error: {run['error']}")
+        lines += [f"- [{c['status']}] {c['id']} {c['endpoint']}: expected {c['expected']}; observed {c['observed']}" for c in run.get("checks", [])]
+        lines.append(f"- cleanup: {run.get('cleanup')}")
+        lines.append("")
+    lines += ["## Findings", ""] + [f"- [{f.status}] {f.category} ({f.basis}, responsible: {f.responsible or 'not established'}) "
+                                    f"{f.endpoint}: expected {f.expected}; observed {f.observed}" for f in m.findings]
+    lines += ["", "## Repair history", ""] + [f"- {x.id} {x.component} requested by {x.requested_by} at {x.requested_at}; author "
+                                              f"{x.author}; changed {x.changed_files}; {x.artifact_before} -> {x.artifact_after}; "
+                                              f"outcome {x.outcome}; validation {x.validation}" for x in m.repairs] or ["- none"]
+    lines += ["", "## Gates", ""] + [f"- {g.name} ({'mandatory' if g.mandatory else 'optional'}): {g.status} - {g.detail}" for g in m.gates]
+    lines += ["", "## Autopilot review", "", f"- approval status: {r.get('approval_status')}",
+              f"- project modified: {r.get('project_modified')}; deployed: {r.get('deployed')}"]
+    lines += [f"- proposed: {a}" for a in r.get("proposed_actions", [])]
+    lines += ["", "## Limitations", ""] + [f"- {x}" for x in (m.report or {}).get("limitations", [])]
+    return PlainTextResponse(redact("\n".join(lines)), media_type="text/markdown",
+                             headers={"Content-Disposition": f'attachment; filename="swarm-{mid}.md"'})
