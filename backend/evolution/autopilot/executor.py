@@ -38,6 +38,8 @@ MEASURED_GATES = {
                     "global_performance_engineer", "performance"),
     "chaos": ("chaos experiment (before/after)", "backend.chaos.service", "global_chaos_engineer", "chaos"),
     "security": ("security re-check (before/after)", "backend.guardian.service", "global_security_guardian", "security"),
+    "evolution": ("evolution re-measure (before/after)", "backend.evolution_engine.service", "global_evolution_engine",
+                  "evolution"),
 }
 PERFORMANCE_STAGE = MEASURED_GATES["performance"][0]
 
@@ -66,6 +68,53 @@ class Cancelled(Exception):
 
 class HiddenLineChanged(Exception):
     """The model altered a line that was hidden from it because it holds a secret; retried with feedback."""
+
+
+def model_changes(workspace: Path, project_id: str, allowed_files: List[str], context_files: List[str], request: str,
+                  generate: Optional[Callable[[str, str], str]], feedback: str = "", topic: str = "",
+                  system_prompt: Optional[str] = None) -> Dict[str, Optional[str]]:
+    """
+    Ask the coding model for changes to `workspace` (never the project itself). Paths are validated by
+    propose_changes; lines holding secret-like values are hidden from the model and restored in its
+    answer (HiddenLineChanged when it alters them); a file whose secrets cannot be hidden is not sent.
+    Returns {path: new content}; scope (allowed_files) is checked by the caller.
+    """
+    from backend.generation.project_editor import propose_changes, relevant_files
+    from backend.routes.export import _read_project_dir
+    files = _read_project_dir(workspace)
+    context = [f for f in allowed_files if f in files]
+    context += [f for f in context_files if f in files and f not in context]
+    if TEST_DIR in allowed_files or not context:
+        context = (context + relevant_files(workspace, topic or request, files, limit=4))[:6]
+    context = context[:8]
+    hidden: Dict[str, Dict[str, str]] = {}
+    shown = dict(files)
+    for f in context:
+        if redact(files[f]) != files[f]:
+            shown[f], hidden[f] = mask_secret_lines(f, files[f])
+    leaked = [f for f in context if redact(shown[f]) != shown[f]]
+    if leaked:
+        raise PermissionError("not sent to the model: secret-like values in " + ", ".join(leaked))
+    allowed = ", ".join(allowed_files) + (" (new files may be created inside the listed folders)"
+                                          if any(f.endswith("/") for f in allowed_files) else "")
+    request = f"{request}\n\nYou may change only: {allowed}"
+    if feedback:
+        request += f"\n\nThe previous attempt was rejected: {feedback}"
+    changes, rejected = propose_changes(workspace, request, shown, context, project_id, generate,
+                                        system_prompt or AUTOPILOT_SYSTEM_PROMPT)
+    if rejected:
+        _logger.info("Autopilot: model proposed rejected paths %s", rejected)
+    for p in list(changes):
+        if p in hidden:
+            try:
+                changes[p] = unmask_secret_lines(changes[p], hidden[p])
+            except ValueError as e:
+                raise HiddenLineChanged(str(e)) from None
+            if changes[p] == files[p]:
+                del changes[p]
+    # Code blocks lose the final newline; keep files ending the way they did (new files end with one).
+    return {p: c if c.endswith("\n") or (files.get(p) is not None and not files[p].endswith("\n")) else c + "\n"
+            for p, c in changes.items()}
 
 
 def apply_all(root: Path, changes: Dict[str, Optional[str]], reason: str) -> Tuple[List[str], bool]:
@@ -194,48 +243,14 @@ class _Run:
         return changes
 
     def fix_with_model(self, task, findings, feedback: str = "") -> Dict[str, Optional[str]]:
-        from backend.generation.project_editor import propose_changes, relevant_files
-        from backend.routes.export import _read_project_dir
-        files = _read_project_dir(self.workspace)
-        context = [f for f in task.files if f in files]
-        context += [f for f in task.context_files if f in files and f not in context]
-        if TEST_DIR in task.files or not context:
-            context = (context + relevant_files(self.workspace, task.request or task.title, files, limit=4))[:6]
-        context = context[:8]
-        # Lines holding secret-like values are hidden from the model and put back in its answer.
-        hidden: Dict[str, Dict[str, str]] = {}
-        shown = dict(files)
-        for f in context:
-            if redact(files[f]) != files[f]:
-                shown[f], hidden[f] = mask_secret_lines(f, files[f])
-        leaked = [f for f in context if redact(shown[f]) != shown[f]]
-        if leaked:
-            raise PermissionError("not sent to the model: secret-like values in " + ", ".join(leaked))
-        allowed = ", ".join(task.files) + (" (new files may be created inside the listed folders)"
-                                           if any(f.endswith("/") for f in task.files) else "")
         if task.request:
-            request = f"{task.request}\n\nYou may change only: {allowed}"
+            request = task.request
         else:
             problems = "\n".join(f"- {f.title} ({f.file or 'project'}{':' + str(f.line_start) if f.line_start else ''})\n"
                                  f"  evidence: {f.evidence[:400]}\n  expected fix: {f.remediation}" for f in findings)
-            request = f"Fix these reported problems:\n{problems}\n\nYou may change only: {allowed}"
-        if feedback:
-            request += f"\n\nThe previous attempt was rejected: {feedback}"
-        changes, rejected = propose_changes(self.workspace, request, shown, context, self.project_id,
-                                            self.generate, AUTOPILOT_SYSTEM_PROMPT)
-        if rejected:
-            _logger.info("Autopilot: model proposed rejected paths %s", rejected)
-        for p in list(changes):
-            if p in hidden:
-                try:
-                    changes[p] = unmask_secret_lines(changes[p], hidden[p])
-                except ValueError as e:
-                    raise HiddenLineChanged(str(e)) from None
-                if changes[p] == files[p]:
-                    del changes[p]
-        # Code blocks lose the final newline; keep files ending the way they did (new files end with one).
-        return {p: c if c.endswith("\n") or (files.get(p) is not None and not files[p].endswith("\n")) else c + "\n"
-                for p, c in changes.items()}
+            request = f"Fix these reported problems:\n{problems}"
+        return model_changes(self.workspace, self.project_id, task.files, task.context_files, request,
+                             self.generate, feedback, topic=task.request or task.title)
 
     # --- the run ---------------------------------------------------------------------------------------
 

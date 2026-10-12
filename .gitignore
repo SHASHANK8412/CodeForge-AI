@@ -44,3 +44,4 @@ backend/data/benchmark_lab/
 # AIForge Chaos Engineer assessments, findings and repair gates (runtime data)
 backend/data/chaos/
 backend/data/guardian/
+backend/data/evolution_engine/

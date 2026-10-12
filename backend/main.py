@@ -388,6 +388,9 @@ def register_routers() -> None:
     from backend.guardian.routes import guardian_router
     app.include_router(guardian_router)
 
+    from backend.evolution_engine.routes import evolution_engine_router
+    app.include_router(evolution_engine_router)
+
     from backend.architecture_simulator.routes import day25_architect_router
     app.include_router(day25_architect_router)
 

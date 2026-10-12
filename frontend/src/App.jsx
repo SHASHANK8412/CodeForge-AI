@@ -64,6 +64,7 @@ const DigitalTwinPage = lazy(() => import("./pages/DigitalTwinPage"));
 const PerformanceEngineerPage = lazy(() => import("./pages/PerformanceEngineerPage"));
 const ChaosEngineerPage = lazy(() => import("./pages/ChaosEngineerPage"));
 const SecurityGuardianPage = lazy(() => import("./pages/SecurityGuardianPage"));
+const EvolutionEnginePage = lazy(() => import("./pages/EvolutionEnginePage"));
 const FlightRecorder = lazy(() => import("./pages/FlightRecorder"));
 const SimulatorPage = lazy(() => import("./pages/SimulatorPage"));
 const DnaGraphPage = lazy(() => import("./pages/DnaGraphPage"));
@@ -366,6 +367,11 @@ function AppContent() {
                     {view === "security-guardian" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
                             <SecurityGuardianPage activeProjectId={activeGenerationId} />
+                        </ProtectedRoute>
+                    )}
+                    {view === "evolution-engine" && (
+                        <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                            <EvolutionEnginePage activeProjectId={activeGenerationId} />
                         </ProtectedRoute>
                     )}
                     {view === "performance-engineer" && (

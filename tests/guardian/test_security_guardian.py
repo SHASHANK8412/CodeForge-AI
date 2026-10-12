@@ -485,10 +485,11 @@ SQLI_FIX = ("    rows = conn.execute(f\"SELECT id, name, email FROM users WHERE 
 
 
 @pytest.mark.skipif(not _docker_ok(), reason="Docker is not available: the genuine remediation was NOT run")
-def test_genuine_remediation_is_tested_reverified_and_applied(guardian, sample):
+def test_genuine_remediation_is_tested_reverified_and_applied(guardian, sample, monkeypatch):
     """Assessment -> verification -> plan -> approval -> isolated fix, project tests and the new regression
     test in Docker -> the same verification before/after -> applied. The 'model' is a fixed answer so the
     test does not depend on a local LLM; it receives the file with the secret line hidden."""
+    monkeypatch.setenv("AIFORGE_TEST_SANDBOX", "docker")          # the project's tests run in the Docker sandbox
     _, by = assessed(guardian, sample)
     f = by["PY-SQLI GET /api/users/search"]
     guardian.start_verification("p1", sample, "u1", [f.id], approved=True)
@@ -507,6 +508,7 @@ def test_genuine_remediation_is_tested_reverified_and_applied(guardian, sample):
     assert e.status == "completed", (e.error, [(s.name, s.status, s.detail) for s in e.stages])
     tests_after = next(c for c in e.after if c.check_id == "tests")
     assert tests_after.status == "passed" and tests_after.counts.get("passed") == 5      # 4 existing + the regression test
+    assert tests_after.environment.startswith("Docker")
     g = guardian.store.get("p1", "gates", e.id)
     assert g.decision == "improved" and g.original.status == "verified" and g.changed.status == "not_reproduced"
     assert guardian.store.get("p1", "findings", f.id).state == "fix_verified"

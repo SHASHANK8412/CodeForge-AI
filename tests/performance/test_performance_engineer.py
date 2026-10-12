@@ -301,6 +301,26 @@ def test_performance_comparison_rules():
 
 
 # 13 -----------------------------------------------------------------------------------------------
+def test_a_large_improvement_is_not_hidden_by_the_faster_versions_own_spread():
+    """Regression (found by the Evolution Engine on a real run): a candidate 8x faster had repetition medians
+    of 8.8/21.0/9.8 ms against 84.7/85.1/75.6 ms. Its spread relative to its own small median was 124%, which
+    made the -88% change look like noise; in milliseconds the spread is far smaller than the change."""
+    t = Thresholds()
+    row = gate.endpoint_change(stats("/a", [84.65, 85.078, 75.633]), stats("/a", [8.811, 20.968, 9.824]), t)
+    assert row["verdict"] == "faster" and row["noise_pct"] < 20
+    # a change that really is within the noise stays undecided
+    noisy = gate.endpoint_change(stats("/a", [100.0, 60.0, 140.0]), stats("/a", [70.0, 95.0, 50.0]), t)
+    assert noisy["verdict"] == "no_clear_change"
+    # measured on Docker Desktop: one disturbed baseline repetition (28 ms) among 49-65 ms; with 5 repetitions the
+    # extremes are left out of the spread, while every repetition must still be separated
+    real = gate.endpoint_change(stats("/a", [48.901, 60.128, 60.272, 65.325, 28.446]),
+                                stats("/a", [10.752, 21.425, 11.933, 19.781, 11.381]), t)
+    assert real["verdict"] == "faster"
+    overlap = gate.endpoint_change(stats("/a", [48.9, 60.1, 60.3, 65.3, 12.0]),
+                                   stats("/a", [10.8, 21.4, 11.9, 19.8, 11.4]), t)
+    assert overlap["verdict"] == "no_clear_change"                  # one baseline repetition as fast: not proven
+
+
 def test_noisy_or_small_differences_are_inconclusive():
     t = Thresholds()
     noisy_before = measurement("baseline", [stats("/a", [100.0, 140.0, 120.0])])

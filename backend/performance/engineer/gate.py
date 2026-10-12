@@ -3,7 +3,8 @@ Performance regression gate: decides whether a candidate is faster than the base
 
 Per endpoint, the median latency of all requests is compared. A difference counts only if
   * it is at least the threshold (min_improvement_pct / max_regression_pct), and
-  * it is larger than noise_factor x the run-to-run spread of either version, and
+  * it is larger than noise_factor x the run-to-run spread of either version (max - min of the
+    per-repetition medians in ms; with 5+ repetitions the highest and lowest are left out), and
   * the per-repetition medians do not overlap (every candidate repetition is faster than every
     baseline repetition, or the reverse),
 otherwise the endpoint is "no clear change". The decision:
@@ -24,9 +25,22 @@ def _pct(after: Optional[float], before: Optional[float]) -> Optional[float]:
     return round((after - before) / before * 100, 2)
 
 
+def _spread_ms(e: EndpointStats) -> float:
+    """Run-to-run spread of the per-repetition medians. With 5 or more repetitions the single highest and
+    lowest are left out, so one disturbed repetition (seen on Docker Desktop) does not mask a real change;
+    every repetition still has to be separated from the other version's (no overlap), see endpoint_change."""
+    reps = sorted(e.rep_medians_ms)
+    if len(reps) >= 5:
+        reps = reps[1:-1]
+    return (reps[-1] - reps[0]) if len(reps) > 1 else 0.0
+
+
 def endpoint_change(b: EndpointStats, a: EndpointStats, t: Thresholds) -> Dict[str, Any]:
     delta = _pct(a.median_ms, b.median_ms)
-    noise = max(b.spread_pct or 0.0, a.spread_pct or 0.0)
+    # Run-to-run noise in milliseconds (the larger of the two versions' spreads), expressed relative to the
+    # baseline median. A spread taken relative to each version's own median would make large improvements
+    # unprovable: a candidate 8x faster has a tiny median, so its spread looks huge in percent.
+    noise = round(max(_spread_ms(b), _spread_ms(a)) / b.median_ms * 100, 2) if b.median_ms else 0.0
     no_overlap_faster = bool(a.rep_medians_ms and b.rep_medians_ms and max(a.rep_medians_ms) < min(b.rep_medians_ms))
     no_overlap_slower = bool(a.rep_medians_ms and b.rep_medians_ms and min(a.rep_medians_ms) > max(b.rep_medians_ms))
     single_rep = len(a.rep_medians_ms) < 2 or len(b.rep_medians_ms) < 2
