@@ -27,6 +27,14 @@ from backend.validation.validation_pipeline import ValidationPipeline
 
 client = TestClient(app)
 
+# The diagnostic agent asks the local model for a JSON diagnosis. These tests used to call the real model
+# (about 40 s each, and the result depended on its answer); a double gives a fixed, deliberately imperfect
+# answer - a non-standard category and paths that do not exist - which the agent must not trust.
+SLOPPY_DIAGNOSIS = (
+    '```json\n{"root_cause": "No module named jwt", "error_category": "ModuleNotFoundError", '
+    '"affected_files": ["auth.py", "../../etc/passwd"], "severity": "HIGH", "confidence": 0.7}\n```'
+)
+
 
 class TestProjectDetector:
     """Verifies automatic detection of language, framework, and build/test commands."""
@@ -95,6 +103,7 @@ class TestDiagnosticAndRepairAgents:
 
     def test_diagnostic_agent_structured_output(self):
         agent = DiagnosticAgent()
+        agent.generate = lambda prompt: SLOPPY_DIAGNOSIS
         exec_report = {
             "failed_command": "python -m pytest",
             "error_message": "ModuleNotFoundError: No module named 'jwt'",
@@ -103,6 +112,14 @@ class TestDiagnosticAndRepairAgents:
         diag = agent.diagnose_failure(exec_report, {"backend/auth.py": "import jwt"})
         assert diag.error_category == "IMPORT_ERROR"
         assert "jwt" in diag.root_cause.lower() or "import" in diag.root_cause.lower()
+        assert diag.affected_files == ["backend/auth.py"]          # invented and traversal paths are dropped
+
+    def test_diagnostic_agent_falls_back_when_the_model_answer_is_unusable(self):
+        agent = DiagnosticAgent()
+        agent.generate = lambda prompt: "I think the import is broken."
+        diag = agent.diagnose_failure({"failed_command": "python -m pytest", "stderr": "ModuleNotFoundError: No module named 'jwt'"},
+                                      {"backend/auth.py": "import jwt"})
+        assert diag.error_category == "IMPORT_ERROR" and diag.affected_files == ["backend/auth.py"]
 
     def test_repair_agent_code_patch(self):
         agent = RepairAgent()
@@ -179,7 +196,9 @@ class TestSelfHealingFailureDemo:
 
         # 3. Diagnose
         diag_agent = DiagnosticAgent()
+        diag_agent.generate = lambda prompt: '{"root_cause": "syntax", "affected_files": ["main.py"]}'
         diag = diag_agent.diagnose_failure(report.model_dump(), broken_files)
+        assert diag.affected_files and all(f in broken_files for f in diag.affected_files)
 
         # 4. Repair
         repair_agent = RepairAgent()

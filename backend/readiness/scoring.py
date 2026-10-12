@@ -14,8 +14,8 @@ Weighted Criteria:
 - Deployment:             2%
 """
 
-from typing import Dict, Any, List
-from backend.readiness.models import ReadinessCheck
+from typing import Dict, List
+from backend.readiness.models import CheckStatus, ReadinessCheck
 
 CATEGORY_WEIGHTS: Dict[str, float] = {
     "Security": 0.20,
@@ -37,11 +37,12 @@ class ReadinessScoringEngine:
     """
 
     def calculate_score(self, checks: List[ReadinessCheck]) -> float:
-        if not checks:
-            return 0.0
-
+        """Weighted average over the categories that have evidence; NOT_AVAILABLE checks and missing
+        categories are left out (never assumed). 0.0 when nothing was evaluated - see evidence_coverage."""
         cat_scores: Dict[str, List[float]] = {}
         for c in checks:
+            if c.status == CheckStatus.NOT_AVAILABLE:
+                continue
             cat_name = c.category
             if cat_name not in cat_scores:
                 cat_scores[cat_name] = []
@@ -55,16 +56,17 @@ class ReadinessScoringEngine:
                 avg_cat = sum(cat_scores[cat]) / len(cat_scores[cat])
                 weighted_total += avg_cat * weight
                 weight_sum += weight
-            else:
-                # Default 90% score for unpopulated minor categories
-                weighted_total += 90.0 * weight
-                weight_sum += weight
 
         if weight_sum > 0:
             final_score = weighted_total / weight_sum
             return round(final_score, 1)
 
         return 0.0
+
+    def evidence_coverage(self, checks: List[ReadinessCheck]) -> float:
+        """Share (0-100) of the scoring weight that is backed by evidence."""
+        evaluated = {c.category for c in checks if c.status != CheckStatus.NOT_AVAILABLE}
+        return round(100.0 * sum(w for cat, w in CATEGORY_WEIGHTS.items() if cat in evaluated) / sum(CATEGORY_WEIGHTS.values()), 1)
 
 
 global_scoring_engine = ReadinessScoringEngine()

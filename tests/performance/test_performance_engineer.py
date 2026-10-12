@@ -407,13 +407,13 @@ def test_readiness_reports_unmeasured_performance_honestly(monkeypatch, services
     _, pe = services
     import backend.performance.engineer.service as svc_module
     from backend.readiness.checks import ReadinessCheckCollector
-    checks = ReadinessCheckCollector().collect_all_checks("never_measured_project", simulate_security_block=False)
+    checks = ReadinessCheckCollector().collect_all_checks("never_measured_project")
     perf = next(c for c in checks if c.category == "Performance")
     assert perf.status.value == "NOT_AVAILABLE" and "Not measured" in perf.evidence
     monkeypatch.setattr(runner, "measure", fake_measure({"baseline": SLOW}))
     pe.start_analysis("p1", sample, "u1")
     assert svc_module.global_performance_engineer is pe
-    perf = next(c for c in ReadinessCheckCollector().collect_all_checks("p1", simulate_security_block=False)
+    perf = next(c for c in ReadinessCheckCollector().collect_all_checks("p1")
                 if c.category == "Performance")
     assert perf.status.value == "WARN" and "3045.0 ms" in perf.evidence              # real numbers, not a constant
     from backend.evolution.autopilot.executor import STAGES, stages_for

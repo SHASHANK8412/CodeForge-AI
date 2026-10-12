@@ -10,6 +10,7 @@ from typing import List, Tuple
 from backend.readiness.models import ReadinessCheck, CheckStatus, CheckSeverity, ReadinessStatus
 
 _logger = logging.getLogger("aiforge.readiness.policy")
+REQUIRED_EVIDENCE = ("Security", "Testing")
 
 
 class HardBlockingPolicyEngine:
@@ -30,6 +31,10 @@ class HardBlockingPolicyEngine:
 
         if blocking_issues:
             return ReadinessStatus.BLOCKED, blocking_issues, warnings
+        missing = [c for c in checks if c.category in REQUIRED_EVIDENCE and c.status == CheckStatus.NOT_AVAILABLE]
+        if missing:
+            # without security and test evidence nothing can be called ready
+            return ReadinessStatus.INCOMPLETE, [], [f"[{c.category}] {c.name}: {c.evidence}" for c in missing] + warnings
         elif warnings:
             return ReadinessStatus.READY_WITH_WARNINGS, [], warnings
         else:

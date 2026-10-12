@@ -7,12 +7,17 @@ _logger = logging.getLogger("aiforge.sre")
 
 class RecoveryEngine:
     """
-    Executes automated self-healing procedures (restarts, scale-ups, cache clears, configuration refreshes)
-    based on SRE policies, LLM recommendations, and knowledge base performance logs.
+    Chooses recovery strategies (restarts, scale-ups, cache clears, configuration refreshes) from SRE policies,
+    recommendations and the knowledge base. No executor is connected: execute_recovery only simulates the
+    action (and says so), and the SRE monitor does not call it - it reports a recommendation instead.
     """
 
     def __init__(self, knowledge_base: IncidentKnowledgeBase) -> None:
         self.knowledge_base = knowledge_base
+
+    def recommend(self, signature: str, recommendation: Dict[str, Any]) -> str:
+        """The strategy a person (or a future executor) should apply; nothing is run."""
+        return self.knowledge_base.get_best_strategy(signature) or recommendation.get("recommended_action") or "Investigate"
 
     def execute_recovery(
         self,
@@ -63,6 +68,6 @@ class RecoveryEngine:
             time.sleep(0.8)
 
         duration = time.time() - start_time
-        _logger.info(f"Recovery action '{strategy}' executed in {duration:.2f}s")
+        _logger.info(f"Recovery action '{strategy}' simulated in {duration:.2f}s (nothing was executed)")
         
         return strategy, duration

@@ -1,21 +1,21 @@
 """
 AIForge Day 19 — Centralized ProductionReadinessService
 =======================================================
-Manages readiness runs, human approval gates, automatic blocking issue repairs
-(Debug -> Repair -> Retest loop, max 3 attempts), snapshot history, version diffs, and Flight Recorder logging.
+Manages readiness runs (evidence only, see checks.py), human approval, the history of real runs,
+version diffs, and Flight Recorder logging. Readiness never repairs anything itself: fixes go through
+the Security Guardian / Autopilot, and readiness is evaluated again afterwards.
 """
 
 import json
 import logging
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Dict, List
 
 from backend.readiness.models import (
     ReadinessReport, ReadinessHistory, ReadinessDiff, ReadinessStatus
 )
 from backend.readiness.gate import global_readiness_gate
 from backend.autopilot.recorder import global_flight_recorder
-from backend.dna.impact import global_impact_engine
 
 _logger = logging.getLogger("aiforge.readiness.service")
 
@@ -34,8 +34,8 @@ class ProductionReadinessService:
     def run_readiness_check(
         self,
         project_id: str,
-        generation_id: str = "aiforge-demo",
-        simulate_security_block: bool = False
+        generation_id: str = "",
+        project=None,
     ) -> ReadinessReport:
         _logger.info(f"[ReadinessService] Running readiness check for project '{project_id}'")
 
@@ -45,9 +45,7 @@ class ProductionReadinessService:
             pass
 
         version = len(self._history.get(project_id, [])) + 1
-        report = global_readiness_gate.evaluate_project(
-            project_id, generation_id, version, simulate_security_block
-        )
+        report = global_readiness_gate.evaluate_project(project_id, generation_id or project_id, version, project)
 
         if project_id not in self._history:
             self._history[project_id] = []
@@ -82,9 +80,11 @@ class ProductionReadinessService:
         return self.run_readiness_check(project_id)
 
     def approve_deployment(self, project_id: str, approver: str = "Chief Architect") -> bool:
+        """Records a person's approval of the latest evaluation; refused when it is BLOCKED or INCOMPLETE.
+        Approval does not deploy anything."""
         report = self.get_latest_report(project_id)
-        if report.status == ReadinessStatus.BLOCKED:
-            _logger.warning(f"[ReadinessService] Cannot approve deployment for '{project_id}' — Gate is BLOCKED.")
+        if report.status in (ReadinessStatus.BLOCKED, ReadinessStatus.INCOMPLETE):
+            _logger.warning("[ReadinessService] Cannot approve '%s': readiness is %s.", project_id, report.status.value)
             return False
 
         report.approval_status = "APPROVED"
@@ -93,7 +93,6 @@ class ProductionReadinessService:
 
         try:
             global_flight_recorder.record_event(project_id, "HumanApprover", "approval_granted", {"approver": approver})
-            global_flight_recorder.record_event(project_id, "Deployer", "deployment_started", {"score": report.overall_score})
         except Exception:
             pass
 
@@ -110,25 +109,16 @@ class ProductionReadinessService:
 
         return True
 
-    def autofix_blocking_issues(self, project_id: str) -> ReadinessReport:
-        _logger.info(f"[ReadinessService] Auto-fixing blocking issues for '{project_id}'")
-        report = self.run_readiness_check(project_id, simulate_security_block=False)
-        return report
-
     def get_history(self, project_id: str) -> ReadinessHistory:
-        reports = self._history.get(project_id, [])
-        if not reports:
-            # Seed demo history snapshots
-            r1 = global_readiness_gate.evaluate_project(project_id, version=1, simulate_security_block=True)
-            r2 = global_readiness_gate.evaluate_project(project_id, version=2, simulate_security_block=False)
-            reports = [r1, r2]
-            self._history[project_id] = reports
-        return ReadinessHistory(project_id=project_id, snapshots=reports)
+        return ReadinessHistory(project_id=project_id, snapshots=list(self._history.get(project_id, [])))
 
     def get_diff(self, project_id: str, v1: int = 1, v2: int = 2) -> ReadinessDiff:
+        """Raises KeyError when either version was never evaluated."""
         history = self.get_history(project_id)
-        r1 = next((r for r in history.snapshots if r.version == v1), history.snapshots[0])
-        r2 = next((r for r in history.snapshots if r.version == v2), history.snapshots[-1])
+        r1 = next((r for r in history.snapshots if r.version == v1), None)
+        r2 = next((r for r in history.snapshots if r.version == v2), None)
+        if r1 is None or r2 is None:
+            raise KeyError(f"readiness version {v1 if r1 is None else v2} was not evaluated")
 
         return ReadinessDiff(
             old_version=v1,

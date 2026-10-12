@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 
 from backend.agents.base_agent import BaseAgent
 from backend.models.model_router import global_model_router
-from backend.execution.error_classifier import global_error_classifier
+from backend.execution.error_classifier import STANDARD_CATEGORIES, global_error_classifier
 
 _logger = logging.getLogger("aiforge.agents.diagnostic_agent")
 
@@ -89,11 +89,16 @@ class DiagnosticAgent(BaseAgent):
                 clean_json = clean_json.split("```")[1].split("```")[0].strip()
             data = json.loads(clean_json)
 
-
+            # The model's answer is advisory: the deterministic classification wins unless it found nothing,
+            # an unknown label is never taken, and only files that exist in the project are kept.
+            model_category = str(data.get("error_category") or "").strip().upper()
+            category = classified_category if classified_category != "UNKNOWN_ERROR" else (
+                model_category if model_category in STANDARD_CATEGORIES else classified_category)
+            model_files = [f for f in (data.get("affected_files") or []) if isinstance(f, str) and f in files_manifest]
             return DiagnosticResult(
                 root_cause=data.get("root_cause") or f"Execution failure in command '{failed_cmd}'",
-                error_category=data.get("error_category") or classified_category,
-                affected_files=data.get("affected_files") or affected_files,
+                error_category=category,
+                affected_files=model_files or affected_files,
                 severity=data.get("severity", "HIGH"),
                 confidence=float(data.get("confidence", 0.90)),
                 recommended_fix=data.get("recommended_fix") or "Apply minimal syntax and dependency correction.",

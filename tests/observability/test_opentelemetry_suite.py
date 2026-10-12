@@ -111,12 +111,18 @@ class TestOpenTelemetryObservability:
         assert alert.regression_ratio >= 1.5
         assert alert.slowest_span_duration_ms == 350.0
 
-    def test_readiness_gate_collector_integration(self):
+    def test_readiness_gate_collector_integration(self, tmp_path):
         from backend.readiness.checks import global_readiness_check_collector
+        # an unknown project has no files to inspect: no evidence, not a pass
         checks = global_readiness_check_collector.collect_all_checks("proj_test")
+        assert next(c for c in checks if c.category == "Observability").status.value == "NOT_AVAILABLE"
+        (tmp_path / "main.py").write_text(
+            "import logging\nfrom opentelemetry import trace\nlogger = logging.getLogger('app')\ntracer = trace.get_tracer('app')\n",
+            encoding="utf-8")
+        checks = global_readiness_check_collector.collect_all_checks("proj_test", tmp_path)
         otel_chk = next((c for c in checks if c.category == "Observability"), None)
         assert otel_chk is not None
-        assert otel_chk.status.value == "PASS"
+        assert otel_chk.status.value == "PASS" and "OpenTelemetry" in otel_chk.evidence
         assert not otel_chk.blocking
 
     def test_fastapi_middleware_trace_header(self, client):

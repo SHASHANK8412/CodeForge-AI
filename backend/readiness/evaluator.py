@@ -31,30 +31,42 @@ class CTOReviewAgent:
         if status == ReadinessStatus.BLOCKED:
             return CTOReview(
                 recommendation=ReadinessStatus.BLOCKED,
-                executive_summary="DEPLOYMENT BLOCKED. The project contains critical security vulnerabilities or hard blocking issues.",
+                executive_summary="BLOCKED. " + "; ".join(blocking_issues[:3]),
                 major_risks=blocking_issues,
                 required_actions=[
-                    "Resolve all critical security findings and secret leaks.",
-                    "Re-run Security Scan and Production Readiness Gate before attempting deployment."
+                    "Resolve the blocking issues listed above.",
+                    "Evaluate readiness again after the fixes."
                 ]
             )
+
+        evaluated = [c for c in checks if c.status.value != "NOT_AVAILABLE"]
+        missing = [c.category for c in checks if c.status.value == "NOT_AVAILABLE"]
+        if status == ReadinessStatus.INCOMPLETE:
+            return CTOReview(
+                recommendation=ReadinessStatus.INCOMPLETE,
+                executive_summary=(f"INSUFFICIENT EVIDENCE. {len(evaluated)} of {len(checks)} checks have evidence; "
+                                   f"missing: {', '.join(missing)}. Readiness cannot be judged without security and test results."),
+                major_risks=warnings,
+                required_actions=["Run a Security Guardian assessment and the project's tests (Autopilot), then evaluate again."])
 
         if status == ReadinessStatus.READY_WITH_WARNINGS:
             return CTOReview(
                 recommendation=ReadinessStatus.READY_WITH_WARNINGS,
-                executive_summary=f"READY WITH WARNINGS (Score: {overall_score}/100). All core security, testing, and architecture checks passed.",
+                executive_summary=(f"READY WITH WARNINGS (Score: {overall_score}/100 over the evaluated checks). No blocking issue "
+                                   f"was found; {len(warnings)} warning(s)" + (f"; no evidence for: {', '.join(missing)}" if missing else "") + "."),
                 major_risks=warnings,
                 required_actions=[
-                    "Review non-blocking documentation and browser warning items before final production rollout."
+                    "Review the warnings before deploying."
                 ]
             )
 
         return CTOReview(
             recommendation=ReadinessStatus.READY,
-            executive_summary=f"READY FOR PRODUCTION DEPLOYMENT (Score: {overall_score}/100). All engineering pipeline checks passed with zero blockers.",
+            executive_summary=(f"READY (Score: {overall_score}/100). All {len(evaluated)} evaluated checks passed"
+                               + (f"; no evidence for: {', '.join(missing)}" if missing else "") + "."),
             major_risks=[],
             required_actions=[
-                "Obtain human approval and execute deployment pipeline."
+                "Obtain human approval before deploying."
             ]
         )
 

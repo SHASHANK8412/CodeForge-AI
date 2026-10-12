@@ -6,7 +6,7 @@ Historical Snapshots, and Readiness Version Diffs.
 """
 
 from enum import Enum
-from typing import Dict, Any, List, Optional
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -58,7 +58,8 @@ class ReadinessReport(BaseModel):
     generation_id: str = "aiforge-demo"
     version: int = 1
     status: ReadinessStatus = ReadinessStatus.READY
-    overall_score: float = 96.0
+    overall_score: float = 0.0
+    evidence_coverage: float = 0.0     # % of the scoring weight backed by evidence
     checks: List[ReadinessCheck] = Field(default_factory=list)
     blocking_issues: List[str] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
