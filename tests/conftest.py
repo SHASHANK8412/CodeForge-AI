@@ -31,3 +31,9 @@ def _no_llm_repair(monkeypatch):
 def _no_container_previews(monkeypatch):
     """Graph tests that reach live_deploy must not start containers; preview tests opt in."""
     monkeypatch.setenv("AIFORGE_PREVIEW", "off")
+
+
+@pytest.fixture(autouse=True)
+def _isolated_time_machine(tmp_path_factory, monkeypatch):
+    """Engineering events emitted by any test go to a temp ledger, never backend/data/time_machine."""
+    monkeypatch.setenv("AIFORGE_TIME_MACHINE_DIR", str(tmp_path_factory.mktemp("time_machine")))

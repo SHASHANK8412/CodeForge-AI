@@ -215,6 +215,15 @@ class SecurityGuardian:
                 a.summary = correlate.summarize(findings)
                 self._audit(a, "completed", findings=len(findings))
             self.store.update(project_id, "assessments", aid, done)
+            from backend.time_machine.recorder import emit
+            summary = correlate.summarize(findings)
+            emit(project_id, "security_finding", "Security Guardian",
+                 f"assessment: {summary['open']} open finding(s), {summary['critical_high_open']} critical/high",
+                 "failure" if summary["critical_high_open"] else "success", task_id=aid, refs={"assessment_id": aid},
+                 project_dir=project, data={"summary": summary, "tools": {r.tool: r.status for r in runs},
+                                            "findings": [{"id": f.id, "rule": f.rule_id, "severity": f.severity,
+                                                          "file": f.file, "line": f.line, "state": f.state}
+                                                         for f in findings[:100]]})
         except InterruptedError:
             self.store.update(project_id, "assessments", aid, lambda a: (
                 setattr(a, "status", "aborted"), setattr(a, "finished_at", now_iso()),
@@ -277,6 +286,12 @@ class SecurityGuardian:
                     x.priority, x.priority_reasons = correlate.prioritize(x)
                 self.store.update(project_id, "findings", f.id, apply)
             outcome = "failed" if error else "aborted" if stopped() else "completed"
+            from backend.time_machine.recorder import emit
+            emit(project_id, "security_verification", "Security Guardian",
+                 f"verification {outcome}: " + ", ".join(f"{k}: {v.status}" for k, v in results.items()),
+                 "error" if error else "cancelled" if outcome == "aborted" else "info", task_id=jid,
+                 refs={"verification_id": jid}, project_dir=project, error=error,
+                 data={"results": {k: {"status": v.status, "conclusion": v.conclusion} for k, v in results.items()}})
             self.store.update(project_id, "assessments", jid, lambda a: (
                 setattr(a, "status", outcome), setattr(a, "finished_at", now_iso()), setattr(a, "error", error),
                 setattr(a, "summary", {k: (results[k].status if k in results else "not run") for k in a.verification_ids})))
@@ -290,6 +305,9 @@ class SecurityGuardian:
         f = self.store.update(project_id, "findings", finding_id, change)
         if f is None:
             raise KeyError(finding_id)
+        from backend.time_machine.recorder import emit
+        emit(project_id, "approval_granted", f"user {user_id}", f"risk accepted: {f.title}", "success",
+             task_id=finding_id, refs={"finding_id": finding_id}, data={"note": f.accepted_note, "rule": f.rule_id})
         return f
 
     # --- remediation ---------------------------------------------------------------------------------------

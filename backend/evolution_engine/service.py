@@ -88,12 +88,15 @@ class EvolutionStore(AutopilotStore):
 def source_revision(root: Path) -> str:
     """Content hash of the project's sources (the files a working copy contains)."""
     root = Path(root).resolve()
-    h = hashlib.sha256()
-    for p in sorted(root.rglob("*")):
+    files = {}
+    for p in root.rglob("*"):
         rel = p.relative_to(root)
         if COPY_SKIP & set(rel.parts) or p.is_symlink() or not p.is_file():
             continue
-        h.update(rel.as_posix().encode() + b"\0" + hashlib.sha256(p.read_bytes()).digest())
+        files[rel.as_posix()] = p
+    h = hashlib.sha256()
+    for rel in sorted(files):        # by the path string: the same order on every platform (and in time_machine.state)
+        h.update(rel.encode() + b"\0" + hashlib.sha256(files[rel].read_bytes()).digest())
     return h.hexdigest()
 
 
@@ -318,6 +321,17 @@ class EvolutionEngine:
             exp.audit.append({"at": now_iso(), "action": f"evaluated: {outcome}", "selected": selected or "-"})
             self.store.put(project_id, "experiments", exp)
             memory.record_experiment(exp, self.store)
+            from backend.time_machine.recorder import emit
+            emit(project_id, "experiment_evaluated", "Evolution Engine", f"{exp.opportunity.title}: {outcome}",
+                 {"awaiting_approval": "success", "no_improvement": "info", "regression": "failure"}.get(outcome, "inconclusive"),
+                 task_id=eid, refs={"experiment_id": eid}, project_dir=project,
+                 data={"selected": selected, "reasons": reasons, "source_revision": exp.source_revision,
+                       "candidates": [{"id": c.id, "strategy": c.strategy, "eligible": c.eligible, "score": c.score,
+                                       "failure_kind": c.failure_kind, "performance": c.performance.get("decision"),
+                                       "tests": (c.correctness.get("tests") or {}).get("counts"), "patch_hash": c.patch_hash}
+                                      for c in exp.candidates]},
+                 config={"strategies": [st.id for st in exp.plan.strategies], "workload": exp.plan.workload.model_dump(),
+                         "models": {c.id: c.model for c in exp.candidates}})
         except InterruptedError as e:
             why = str(e)
             save(lambda x: (setattr(x, "status", "cancelled"), setattr(x, "outcome", "inconclusive"),
@@ -482,6 +496,10 @@ class EvolutionEngine:
             setattr(e, "approval", approval), setattr(e, "status", "approved"),
             e.audit.append({"at": now_iso(), "action": "approved", "user": user_id, "candidate": cid,
                             "source_revision": current[:12], "patch_hash": (cand.patch_hash or "")[:12]})))
+        from backend.time_machine.recorder import emit
+        emit(project_id, "approval_granted", f"user {user_id}", f"Evolution candidate {cid} ({cand.strategy}) approved",
+             "success", task_id=experiment_id, refs={"experiment_id": experiment_id}, project_dir=project,
+             parent_ref=("experiment_id", experiment_id), data={"candidate": cid, "patch_hash": cand.patch_hash})
         return self.store.get(project_id, "experiments", experiment_id)
 
     def promote(self, project_id: str, project: Path, user_id: str, experiment_id: str) -> Experiment:
@@ -554,6 +572,7 @@ class EvolutionEngine:
             final = validation.check_tests(project)
             promo(lambda p: setattr(p, "final_tests", final))
             if final.status != "passed":
+                promoted = {rel: ((project / rel).read_bytes().decode("utf-8") if (project / rel).is_file() else None) for rel in files}
                 restore = {rel: c for rel, c in originals.items() if c is not None}
                 written, ok = apply_all(project, restore, f"roll back Evolution experiment {eid}")
                 for rel, c in originals.items():
@@ -563,6 +582,12 @@ class EvolutionEngine:
                           f"contents" + ("" if ok else " (the rollback could not write every file: check them)"))
                 promo(lambda p: (setattr(p, "status", "rolled_back"), setattr(p, "rolled_back", True),
                                  setattr(p, "rollback_detail", detail), setattr(p, "finished_at", now_iso())))
+                from backend.time_machine.recorder import emit, file_records
+                emit(project_id, "rollback_performed", "Evolution Engine", detail, "success" if ok else "error",
+                     task_id=eid, refs={"experiment_id": eid}, parent_ref=("experiment_id", eid), project_dir=project,
+                     files=file_records(promoted, {rel: ((project / rel).read_bytes().decode("utf-8") if (project / rel).is_file()
+                                                         else None) for rel in files}),
+                     data={"final_tests": final.status})
                 self._finish(project_id, eid, "regression", [detail])
                 return
             promo(lambda p: (setattr(p, "status", "promoted"), setattr(p, "finished_at", now_iso())))
@@ -576,6 +601,11 @@ class EvolutionEngine:
             self._finish(project_id, eid, "inconclusive", [f"promotion failed: {msg}"])
 
     def _finish(self, project_id: str, eid: str, outcome: str, reasons: List[str]) -> None:
+        from backend.time_machine.recorder import emit
+        emit(project_id, "task_completed" if outcome == "validated_improvement" else "task_failed", "Evolution Engine",
+             f"promotion finished: {outcome}", "success" if outcome == "validated_improvement" else
+             "failure" if outcome == "regression" else "inconclusive", task_id=eid, refs={"experiment_id": eid},
+             parent_ref=("experiment_id", eid), data={"reasons": reasons})
         self.store.update(project_id, "experiments", eid, lambda e: (
             setattr(e, "status", "completed"), setattr(e, "outcome", outcome), setattr(e, "outcome_reasons", reasons),
             e.audit.append({"at": now_iso(), "action": f"promotion finished: {outcome}"})))

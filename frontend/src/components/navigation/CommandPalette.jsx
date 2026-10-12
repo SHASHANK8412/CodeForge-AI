@@ -105,6 +105,7 @@ export default function CommandPalette({
       { id: "tool-chaos-engineer", category: "AI Tools", title: "Chaos Engineer (Resilience Testing)", icon: <FaRocket className="text-rose-400" />, action: () => setView("chaos-engineer") },
       { id: "tool-security-guardian", category: "AI Tools", title: "Security Guardian (Findings, Verification, Fixes)", icon: <FaShieldAlt className="text-emerald-400" />, action: () => setView("security-guardian") },
       { id: "tool-evolution-engine", category: "AI Tools", title: "Evolution Engine (Experiments, Candidates, Engineering Memory)", icon: <FaRocket className="text-violet-400" />, action: () => setView("evolution-engine") },
+      { id: "tool-time-machine", category: "AI Tools", title: "Time Machine (History, Regression Detective, Restore)", icon: <FaHistory className="text-sky-400" />, action: () => setView("time-machine") },
       { id: "tool-performance-engineer", category: "AI Tools", title: "Performance Engineer (Measure & Optimize)", icon: <FaRocket className="text-amber-400" />, action: () => setView("performance-engineer") },
       { id: "tool-digital-twin", category: "AI Tools", title: "Digital Twin (Predict Change Impact)", icon: <FaRocket className="text-violet-400" />, action: () => setView("digital-twin") },
       { id: "tool-evolution-autopilot", category: "AI Tools", title: "AIForge Autopilot (Analyze & Improve Projects)", icon: <FaRocket className="text-emerald-400" />, action: () => setView("evolution-autopilot") },

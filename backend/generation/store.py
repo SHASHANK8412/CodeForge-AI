@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import secrets
 import threading
 import time
@@ -95,6 +96,19 @@ def _gen_id() -> str:
 
 def _evt_id() -> str:
     return f"evt_{secrets.token_urlsafe(8)}"
+
+
+def _tm(gen_id: str, type: str, source: str, summary: str, outcome: str = "info", data=None, config=None,
+        error=None, project_path=None) -> None:
+    """Report a generation lifecycle event to the Time Machine ledger (best effort, never raises)."""
+    try:
+        from pathlib import Path as _P
+        from backend.time_machine.recorder import emit
+        emit(gen_id, type, source, summary, outcome, task_id=gen_id, refs={"generation_id": gen_id},
+             parent_ref=("generation_id", gen_id), data=data, config=config, error=error,
+             project_dir=_P(project_path) if project_path and _P(project_path).is_dir() else None)
+    except Exception:  # noqa: BLE001
+        pass
 
 
 class GenerationStore:
@@ -214,6 +228,8 @@ class GenerationStore:
             data[gen_id] = record
             self._save(data)
         _logger.info("[GENERATION] %s created (project=%s user=%s)", gen_id, project_id, user_id)
+        _tm(gen_id, "task_created", "Generation pipeline", "generation requested", data={"prompt": prompt[:2000], "user": user_id},
+            config={k: os.environ.get(k) for k in ("AIFORGE_GENERAL_MODEL", "AIFORGE_CODING_MODEL", "AIFORGE_DEBUG_MODEL")})
         return gen_id
 
     # ------------------------------------------------------------------
@@ -231,10 +247,17 @@ class GenerationStore:
             updates["error"] = error
         self._update_record(gen_id, updates)
         _logger.info("[GENERATION] %s status → %s", gen_id, status)
+        if status in ("completed", "failed", "cancelled"):
+            rec = self.get(gen_id, {}) or {}
+            _tm(gen_id, "task_completed" if status == "completed" else "task_failed", "Generation pipeline",
+                f"generation {status}", {"completed": "success", "cancelled": "cancelled"}.get(status, "failure"),
+                error=error, project_path=rec.get("project_path"))
 
     def set_output(self, gen_id: str, project_path: str, files_count: int) -> None:
         """Record where the finished project was written so it can be exported later."""
         self._update_record(gen_id, {"project_path": project_path, "files_count": files_count})
+        _tm(gen_id, "artifact_generated", "Generation pipeline", f"project written: {files_count} file(s)", "success",
+            data={"files_count": files_count}, project_path=project_path)
 
     def _get_progress(self, gen_id: str) -> int:
         rec = self._get_record(gen_id)
@@ -262,6 +285,7 @@ class GenerationStore:
             rec["progress"] = self._compute_progress(rec["agents"])
             self._save(data)
         _logger.info("[%s] started", agent_name.upper())
+        _tm(gen_id, "agent_started", agent_name, f"{agent_name} started")
 
     def agent_completed(self, gen_id: str, agent_name: str, duration: float = 0.0) -> None:
         now = _now_iso()
@@ -279,6 +303,8 @@ class GenerationStore:
             rec["progress"] = self._compute_progress(rec["agents"])
             self._save(data)
         _logger.info("[%s] completed duration=%.2fs", agent_name.upper(), duration)
+        _tm(gen_id, "agent_completed", agent_name, f"{agent_name} completed in {duration:.1f}s", "success",
+            data={"duration_s": round(duration, 3)})
 
     def agent_failed(self, gen_id: str, agent_name: str, error: str = "") -> None:
         now = _now_iso()
@@ -295,6 +321,7 @@ class GenerationStore:
                     break
             self._save(data)
         _logger.warning("[%s] failed: %s", agent_name.upper(), error[:120])
+        _tm(gen_id, "agent_completed", agent_name, f"{agent_name} failed", "failure", error=error[:500])
 
     def agent_retrying(self, gen_id: str, agent_name: str) -> None:
         with self._lock:

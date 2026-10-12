@@ -257,6 +257,16 @@ class PerformanceEngineer:
                 r.status = {"measured": "completed", "cancelled": "cancelled", "unavailable": "unavailable"}.get(m.status, "failed")
                 r.error = m.error
                 r.finished_at = now_iso()
+            from backend.time_machine.recorder import emit
+            emit(project_id, "performance_measured", "Performance Engineer",
+                 f"baseline run {m.status}: " + "; ".join(f"{e.method} {e.path} median {e.median_ms} ms" for e in m.endpoints[:5]),
+                 "success" if m.status == "measured" else "error", task_id=run_id, refs={"run_id": run_id},
+                 project_dir=project, error=m.error,
+                 data={"endpoints": [{"endpoint": f"{e.method} {e.path}", "median_ms": e.median_ms, "p95_ms": e.p95_ms,
+                                      "error_rate_pct": e.error_rate_pct, "rep_medians_ms": e.rep_medians_ms}
+                                     for e in m.endpoints],
+                       "resources": m.resources.model_dump()},
+                 config={"workload": workload.model_dump(), "environment": env.model_dump() if env else None})
             return self.store.update(project_id, "runs", run_id, done)
         except Exception as e:  # noqa: BLE001
             _logger.exception("Baseline run %s failed", run_id)

@@ -391,6 +391,9 @@ def register_routers() -> None:
     from backend.evolution_engine.routes import evolution_engine_router
     app.include_router(evolution_engine_router)
 
+    from backend.time_machine.routes import time_machine_router
+    app.include_router(time_machine_router)
+
     from backend.architecture_simulator.routes import day25_architect_router
     app.include_router(day25_architect_router)
 

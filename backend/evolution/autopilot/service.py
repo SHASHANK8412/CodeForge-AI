@@ -164,6 +164,12 @@ class AutopilotService:
             self.store.set_finding_status(project_id, [i for i in plan.finding_ids
                                                        if (f := self.store.get(project_id, "findings", i))
                                                        and f.status == FindingStatus.PLANNED], FindingStatus.OPEN.value)
+        from backend.time_machine.recorder import emit
+        emit(project_id, "approval_granted" if decision == "approved" else "approval_rejected", f"user {user_id}",
+             f"plan {decision}: {plan.objective}", "success" if decision == "approved" else "rejected", task_id=plan.id,
+             refs={"plan_id": plan.id, "origin": plan.origin, "origin_ref": plan.origin_ref or ""},
+             data={"files": plan.expected_files, "tasks": [t.strategy for t in plan.tasks], "note": note[:300],
+                   "security_reviewed": security_reviewed})
         return plan
 
     # --- executions ---------------------------------------------------------------------------------

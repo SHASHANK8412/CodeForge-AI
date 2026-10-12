@@ -245,6 +245,13 @@ class ChaosEngineer:
             x.status, x.error, x.finished_at, x.current = outcome, error, now_iso(), None
             self._audit(x, f"finished: {outcome}", score=sc.get("overall"))
         update(done)
+        from backend.time_machine.recorder import emit
+        emit(project_id, "resilience_assessed", "Chaos Engineer",
+             f"chaos assessment {outcome}: score {sc.get('overall')}; " + ", ".join(f"{r.scenario}: {r.status}" for r in results),
+             "success" if outcome == "completed" else "error" if outcome == "failed" else "inconclusive",
+             task_id=assessment_id, refs={"chaos_assessment_id": assessment_id}, project_dir=project, error=error,
+             data={"score": sc, "results": [{"scenario": r.scenario, "status": r.status, "recovery_seconds": r.recovery_seconds}
+                                            for r in results], "findings": [f.id for f in findings]})
 
     def _save_findings(self, project_id: str, findings: List[ChaosFinding]) -> None:
         previous = {f.id: f for f in self.store.list(project_id, "findings")}

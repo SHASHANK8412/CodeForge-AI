@@ -18,7 +18,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from backend.evolution.autopilot import validation
 from backend.evolution.autopilot.models import (Execution, FindingStatus, Plan, PlanStatus, Stage, TaskResult,
@@ -386,6 +386,32 @@ class _Run:
         return redact("\n".join(chunks), DIFF_LIMIT)
 
 
+def execution_config(include_tests: bool, generate) -> Dict[str, Any]:
+    """What decides an execution's output besides the plan: recorded with it, compared by Time Machine reruns."""
+    import os
+    return {"include_tests": include_tests, "generator": "injected" if generate else "local coding model",
+            **{k: os.environ.get(k) for k in ("AIFORGE_CODING_MODEL", "AIFORGE_GENERAL_MODEL")},
+            "test_sandbox": os.environ.get("AIFORGE_TEST_SANDBOX", "auto")}
+
+
+def _exact_text(path: Path) -> Optional[str]:
+    """File content exactly as on disk (line endings kept); None if it does not exist or is not UTF-8."""
+    try:
+        return path.read_bytes().decode("utf-8") if path.is_file() else None
+    except (OSError, UnicodeDecodeError):
+        return None
+
+
+def _emit_tests(emit, check_data, project_id, execution_id, refs, checks, phase, where) -> None:
+    tests = next((c for c in checks if c.check_id == "tests"), None)
+    if tests is None or tests.status == "not_run":
+        return
+    emit(project_id, "test_executed", "Autopilot", f"tests {tests.status} - {phase}",
+         {"passed": "success", "failed": "failure"}.get(tests.status, "error"), task_id=execution_id, refs=refs,
+         parent_ref=("execution_id", execution_id), project_dir=where,
+         data={"phase": phase, "checks": check_data(checks), "output_tail": tests.output[-1500:]})
+
+
 def run_execution(store, execution_id: str, project_id: str, project_dir: Path,
                   generate: Optional[Callable[[str, str], str]] = None, include_tests: bool = True) -> Execution:
     from backend.evolution.autopilot.service import reanalyze_after_execution
@@ -393,6 +419,8 @@ def run_execution(store, execution_id: str, project_id: str, project_dir: Path,
     plan: Plan = store.get(project_id, "plans", execution.plan_id)
     project = Path(project_dir).resolve()
     run = _Run(store, execution, plan, project, generate, include_tests)
+    from backend.time_machine.recorder import check_data, emit, file_records
+    refs = {"plan_id": plan.id, "execution_id": execution_id, "origin": plan.origin, "origin_ref": plan.origin_ref or ""}
 
     def finish(status: str, error: Optional[str] = None, plan_status: Optional[PlanStatus] = None):
         def change(e: Execution):
@@ -402,6 +430,12 @@ def run_execution(store, execution_id: str, project_id: str, project_dir: Path,
         run.save(change)
         if plan_status is not None:
             store.update(project_id, "plans", plan.id, lambda p: setattr(p, "status", plan_status))
+        emit(project_id, "task_completed" if status == "completed" else "task_failed", "Autopilot",
+             f"execution {status}: {plan.objective}" + (f" - {error}" if error else ""),
+             {"completed": "success", "rejected": "rejected", "cancelled": "cancelled",
+              "inconclusive": "inconclusive"}.get(status, "failure"), task_id=execution_id, refs=refs,
+             parent_ref=("execution_id", execution_id), project_dir=project,
+             data={"status": status, "changed_files": sorted(run.changes)})
 
     try:
         if plan.status != PlanStatus.APPROVED:
@@ -413,6 +447,10 @@ def run_execution(store, execution_id: str, project_id: str, project_dir: Path,
             e.status, e.started_at = "running", now_iso()
             e.stages = [Stage(name=n) for n in stages_for(plan)]
         run.save(started)
+        emit(project_id, "agent_started", "Autopilot", f"execution started: {plan.objective}", task_id=execution_id,
+             refs=refs, parent_ref=("plan_id", plan.id), project_dir=project,
+             data={"tasks": [{"id": t.id, "strategy": t.strategy, "files": t.files} for t in plan.tasks]},
+             config=execution_config(include_tests, generate))
 
         run.stage("prepare workspace", "running")
         try:
@@ -428,6 +466,7 @@ def run_execution(store, execution_id: str, project_id: str, project_dir: Path,
         baseline = validation.run_checks(run.workspace, include_tests=include_tests)
         run.save(lambda e: setattr(e, "baseline", baseline))
         run.stage("baseline checks", "done", ", ".join(f"{c.check_id}: {c.status}" for c in baseline))
+        _emit_tests(emit, check_data, project_id, execution_id, refs, baseline, "baseline (the project before the change)", project)
         run.checkpoint()
 
         run.stage("implement", "running")
@@ -458,6 +497,7 @@ def run_execution(store, execution_id: str, project_id: str, project_dir: Path,
         after = validation.run_checks(run.workspace, include_tests=include_tests)
         run.save(lambda e: setattr(e, "after", after))
         run.stage("after checks", "done", ", ".join(f"{c.check_id}: {c.status}" for c in after))
+        _emit_tests(emit, check_data, project_id, execution_id, refs, after, "after (the changed working copy)", run.workspace)
 
         run.stage("compare", "running")
         verdict = validation.compare(baseline, after)
@@ -510,6 +550,7 @@ def run_execution(store, execution_id: str, project_id: str, project_dir: Path,
             finish("failed", "the project changed while Autopilot was working (" + ", ".join(conflicts)
                    + "); nothing was overwritten. Run the plan again.", PlanStatus.FAILED)
             return store.get(project_id, "executions", execution_id)
+        pre_apply = {rel: _exact_text(project / rel) for rel in run.changes}     # exact bytes, for the ledger
         written, ok = apply_all(project, dict(run.changes), f"AIForge Autopilot plan {plan.id}")
         if not ok:
             run.stage("apply", "failed", "the patch could not be written; the project is unchanged")
@@ -517,6 +558,10 @@ def run_execution(store, execution_id: str, project_id: str, project_dir: Path,
             return store.get(project_id, "executions", execution_id)
         run.save(lambda e: setattr(e, "applied_to_project", True))
         run.stage("apply", "done", f"{len(written)} file(s) written")
+        emit(project_id, "patch_applied", "Autopilot", f"{plan.objective}: {len(written)} file(s) written ({', '.join(written[:6])})",
+             "success", task_id=execution_id, refs=refs, parent_ref=("execution_id", execution_id), project_dir=project,
+             files=file_records(pre_apply, {rel: _exact_text(project / rel) for rel in run.changes}),
+             data={"verdict": {k: v for k, v in verdict.items() if k in ("accepted", "regressions", "notes")}})
 
         run.stage("re-analyze", "running")
         tests_passed = any(c.check_id == "tests" and c.status == "passed" for c in after)
