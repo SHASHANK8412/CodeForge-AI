@@ -404,7 +404,7 @@ class EvolutionEngine:
 
     def _security_findings(self, project_id: str, root: Path) -> Dict[str, Any]:
         from backend.guardian.service import analyze
-        findings, runs, _ = analyze(project_id, root)
+        findings, runs, _ = analyze(project_id, root, dependency_audit=False)   # candidates never touch dependency files
         return {"serious": {f"{f.rule_id}|{f.file}" for f in findings if f.severity in ("critical", "high")},
                 "all": {f"{f.rule_id}|{f.file}": f for f in findings},
                 "tools": {r.tool: r.status for r in runs}}

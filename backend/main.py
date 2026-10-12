@@ -101,7 +101,6 @@ from backend.routes.mission_control_routes import router as mission_control_rout
 from backend.routes.sentinel_routes import router as sentinel_router
 from backend.routes.ai_core_routes import router as ai_core_router
 from backend.routes.knowledge_graph_routes import router as knowledge_graph_router
-from backend.routes.multi_agent_routes import router as multi_agent_router
 from backend.routes.cyber_copilot_routes import router as cyber_copilot_router
 from backend.routes.verifiable_routes import router as verifiable_router
 from backend.routes.autonomous_workflow_routes import router as autonomous_workflow_router
@@ -136,7 +135,6 @@ app.include_router(mission_control_router)
 app.include_router(sentinel_router)
 app.include_router(ai_core_router)
 app.include_router(knowledge_graph_router)
-app.include_router(multi_agent_router)
 app.include_router(cyber_copilot_router)
 app.include_router(verifiable_router)
 app.include_router(autonomous_workflow_router)
@@ -393,6 +391,9 @@ def register_routers() -> None:
 
     from backend.time_machine.routes import time_machine_router
     app.include_router(time_machine_router)
+
+    from backend.swarm.routes import swarm_router
+    app.include_router(swarm_router)
 
     from backend.architecture_simulator.routes import day25_architect_router
     app.include_router(day25_architect_router)

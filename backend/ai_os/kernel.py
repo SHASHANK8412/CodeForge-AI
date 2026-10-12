@@ -20,7 +20,6 @@ from pathlib import Path
 
 from backend.ai_core.agent_runtime import global_agent_runtime, AgentMode
 from backend.knowledge_graph.graph_rag import global_graph_rag
-from backend.multi_agent.multi_agent_orchestrator import global_multi_agent_orchestrator
 from backend.security.cyber_copilot_service import global_cyber_copilot
 from backend.blockchain.verifiable_ledger import global_verifiable_ledger, RecordType
 from backend.workflow_engine.autonomous_runtime import global_autonomous_engine
@@ -172,21 +171,19 @@ class AIForgeOSKernel:
                 "duration_seconds": round(time.time() - start_time, 3)
             }
 
-        # 4. Multi-Agent Team Routing (Default for complex goals)
-        team_run = global_multi_agent_orchestrator.dispatch_collaborative_mission(command)
+        # 4. Multi-agent work runs as a Swarm Intelligence mission (with a contract, an approval and real
+        #    verification); the kernel does not run agents itself or report results it did not observe.
         return {
-            "route": "MULTI_AGENT_ORCHESTRATOR",
-            "summary": "Dispatched multi-agent specialist team with consensus verification.",
-            "payload": team_run.model_dump(),
+            "route": "SWARM_INTELLIGENCE",
+            "summary": "Multi-agent work runs as a Swarm Intelligence mission: create one for a project "
+                       "(POST /api/projects/{project_id}/swarm/missions) and approve it to run. Nothing was executed.",
+            "payload": None,
             "duration_seconds": round(time.time() - start_time, 3)
         }
 
     def dispatch_autonomous_goal(self, objective: str, autonomy_level: AutonomyLevel = AutonomyLevel.LEVEL_2_APPROVAL_REQUIRED) -> AutonomousGoal:
         start_time = time.time()
 
-        # Multi-Agent execution
-        team_run = global_multi_agent_orchestrator.dispatch_collaborative_mission(objective)
-        
         # Ledger Anchor
         anchor = global_verifiable_ledger.create_and_anchor_record(
             title=f"AIForge OS Goal: {objective[:45]}",
@@ -195,11 +192,10 @@ class AIForgeOSKernel:
             signer_id="agent_verifier"
         )
 
+        # The goal is recorded, not executed: nothing here runs agents or checks results, so nothing is claimed.
         success_criteria = [
-            f"✓ Goal analyzed by AIForge OS Universal Context Engine",
-            f"✓ Multi-agent collaborative execution verified with {Math_round_helper(team_run.consensus_score)}% consensus",
-            f"✓ Zero-trust security policy compliance confirmed",
-            f"✓ Milestone anchored into Immutable Block #{anchor.block_number}"
+            f"Goal recorded (ledger block #{anchor.block_number}); not executed yet",
+            "Run it as a Swarm Intelligence mission for a project to get verified results",
         ]
 
         duration = round(time.time() - start_time, 3)
@@ -207,11 +203,11 @@ class AIForgeOSKernel:
         goal = AutonomousGoal(
             objective=objective.strip(),
             autonomy_level=autonomy_level,
-            status=GoalStatus.COMPLETED,
+            status=GoalStatus.ACTIVE,
             success_criteria=success_criteria,
-            active_agents=team_run.agents_involved,
+            active_agents=[],
             verifiable_ref=anchor.ledger_reference,
-            output_deliverable=team_run.final_synthesis,
+            output_deliverable="not executed: create a Swarm Intelligence mission to carry it out",
             duration_seconds=duration
         )
 

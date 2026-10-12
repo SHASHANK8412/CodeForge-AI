@@ -59,7 +59,7 @@ def test_ai_os_universal_command_routing():
     assert res.status_code == 200
     data = res.json()
     assert data["success"] is True
-    assert data["result"]["route"] in ["CYBER_COPILOT_SOC", "GRAPH_RAG_INTELLIGENCE", "MULTI_AGENT_ORCHESTRATOR"]
+    assert data["result"]["route"] in ["CYBER_COPILOT_SOC", "GRAPH_RAG_INTELLIGENCE", "SWARM_INTELLIGENCE"]
 
 
 def test_ai_os_goal_dispatch():
@@ -91,13 +91,12 @@ def test_knowledge_graph_endpoints():
         assert "evidence_summary" in rag_data
 
 
-def test_multi_agent_collaboration_endpoint():
-    """Verify Multi-Agent collaboration mission execution."""
-    res = client.post("/api/multi-agent/collaborate", json={"objective": "Cross-service latency audit and code verification"})
-    if res.status_code == 200:
-        data = res.json()
-        assert data["success"] is True
-        assert data["run"]["consensus_score"] >= 0.8
+def test_simulated_multi_agent_missions_are_retired():
+    """The old /api/multi-agent missions hardcoded COMPLETED tasks and VERIFIED findings; they were replaced by
+    Swarm Intelligence (real agents, artifacts with provenance, verified integration)."""
+    assert client.get("/api/multi-agent/missions").status_code == 404
+    assert client.post("/api/multi-agent/missions/dispatch", json={"objective": "x"}).status_code == 404
+    assert client.get("/api/swarm/agents").status_code == 200
 
 
 def test_blockchain_verifiable_ledger():

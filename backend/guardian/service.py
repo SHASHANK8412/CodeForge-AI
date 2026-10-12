@@ -87,8 +87,9 @@ def read_sources(project: Path) -> Dict[str, str]:
 
 
 def analyze(project_id: str, project: Path, should_stop: Callable[[], bool] = lambda: False,
-            on_event: Callable[[str], None] = lambda s: None):
-    """(findings, tool runs, coverage) for a project. Read-only."""
+            on_event: Callable[[str], None] = lambda s: None, dependency_audit: bool = True):
+    """(findings, tool runs, coverage) for a project. Read-only. dependency_audit=False skips the advisory
+    lookups (pip-audit / npm audit) for re-checks of source changes that leave the dependency files alone."""
     project = Path(project).resolve()
     files = read_sources(project)
     runs: List[ToolRun] = []
@@ -101,7 +102,10 @@ def analyze(project_id: str, project: Path, should_stop: Callable[[], bool] = la
     runs.append(ToolRun(tool="Guardian Python rules (ast)", status="ran", detail=f"{len(py)} files"))
     steps = [("bandit", lambda: scanners.bandit(project)), ("secrets", lambda: scanners.secrets(project, files)),
              ("javascript", lambda: scanners.js_rules(files)), ("configuration", lambda: scanners.config_rules(files)),
-             ("pip-audit", lambda: scanners.pip_audit(project)), ("npm audit", lambda: scanners.npm_audit(project))]
+             ("pip-audit", lambda: scanners.pip_audit(project) if dependency_audit else
+              ([], ToolRun(tool="pip-audit", status="skipped", detail="not part of this re-check (dependency files unchanged)"))),
+             ("npm audit", lambda: scanners.npm_audit(project) if dependency_audit else
+              ([], ToolRun(tool="npm audit", status="skipped", detail="not part of this re-check (dependency files unchanged)")))]
     for name, step in steps:
         if should_stop():
             raise InterruptedError("aborted")

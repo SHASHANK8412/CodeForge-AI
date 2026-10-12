@@ -34,7 +34,7 @@ const AiOsControlCenterPage = lazy(() => import("./pages/AiOsControlCenterPage")
 const ComputerAgentPage = lazy(() => import("./pages/ComputerAgentPage"));
 const IntelligencePlatformPage = lazy(() => import("./pages/IntelligencePlatformPage"));
 const KnowledgeGraphPage = lazy(() => import("./pages/KnowledgeGraphPage"));
-const MultiAgentPage = lazy(() => import("./pages/MultiAgentPage"));
+const SwarmPage = lazy(() => import("./pages/SwarmPage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const CreateProject = lazy(() => import("./pages/CreateProject"));
 const GenerationDashboard = lazy(() => import("./pages/GenerationDashboard"));
@@ -196,9 +196,9 @@ function AppContent() {
                             <AgentsPage setView={setView} activeProjectId={activeProjectName || activeGenerationId} />
                         </ProtectedRoute>
                     )}
-                    {view === "multi-agent" && (
+                    {(view === "multi-agent" || view === "swarm") && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <MultiAgentPage setView={setView} activeProjectId={activeProjectName || activeGenerationId} />
+                            <SwarmPage activeProjectId={activeGenerationId} />
                         </ProtectedRoute>
                     )}
                     {view === "projects" && (

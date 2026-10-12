@@ -127,7 +127,7 @@ export default function CommandPalette({
       { id: "nav-mission-control", category: "Navigation", title: "Mission Control (Autonomous Computer Layer)", icon: <FaRocket className="text-rose-400" />, action: () => setView("mission-control") },
       { id: "nav-chat", category: "Navigation", title: "AI Chat Assistant", icon: <FaComments className="text-cyan-400" />, action: () => setView("chat") },
       { id: "nav-agents", category: "Navigation", title: "AI Agents Center", icon: <FaRobot className="text-indigo-400" />, action: () => setView("agents") },
-      { id: "nav-multi-agent", category: "Navigation", title: "Multi-Agent Team Collaboration", icon: <FaRobot className="text-pink-400" />, action: () => setView("multi-agent") },
+      { id: "nav-multi-agent", category: "Navigation", title: "Swarm Intelligence (Multi-Agent Missions)", icon: <FaRobot className="text-pink-400" />, action: () => setView("swarm") },
       { id: "nav-projects", category: "Navigation", title: "Projects Explorer", icon: <FaFolder className="text-blue-400" />, action: () => setView("projects") },
       { id: "nav-tools", category: "Navigation", title: "AI Tools Directory", icon: <FaBrain className="text-indigo-400" />, action: () => setView("tools") },
       { id: "nav-canvas", category: "Navigation", title: "Live AI Canvas (Interactive Split Workspace)", icon: <FaPaintBrush className="text-pink-400" />, action: () => setView("canvas") },
