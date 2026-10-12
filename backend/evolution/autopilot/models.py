@@ -116,6 +116,7 @@ class PlanTask(BaseModel):
     depends_on: List[str] = Field(default_factory=list)
     request: str = ""                    # a change request (Digital Twin plans) instead of findings to fix
     context_files: List[str] = Field(default_factory=list)   # read-only context shown to the model
+    contents: Dict[str, str] = Field(default_factory=dict)  # strategy "write_files": exact files to add (e.g. generated tests)
 
 
 class Decision(BaseModel):

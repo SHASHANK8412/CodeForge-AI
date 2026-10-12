@@ -24,7 +24,7 @@ from backend.evolution.autopilot import validation
 from backend.evolution.autopilot.models import (Execution, FindingStatus, Plan, PlanStatus, Stage, TaskResult,
                                                 now_iso)
 from backend.evolution.autopilot.plans import TEST_DIR, scope_violations
-from backend.evolution.autopilot.redact import redact
+from backend.evolution.autopilot.redact import mask_secret_lines, redact, unmask_secret_lines
 from backend.evolution.autopilot.workspace import (create_workspace, discard_workspace, file_hash,
                                                    WorkspaceError)
 
@@ -37,6 +37,7 @@ MEASURED_GATES = {
     "performance": ("performance (before/after measurement)", "backend.performance.engineer.service",
                     "global_performance_engineer", "performance"),
     "chaos": ("chaos experiment (before/after)", "backend.chaos.service", "global_chaos_engineer", "chaos"),
+    "security": ("security re-check (before/after)", "backend.guardian.service", "global_security_guardian", "security"),
 }
 PERFORMANCE_STAGE = MEASURED_GATES["performance"][0]
 
@@ -61,6 +62,10 @@ AUTOPILOT_SYSTEM_PROMPT = (
 
 class Cancelled(Exception):
     pass
+
+
+class HiddenLineChanged(Exception):
+    """The model altered a line that was hidden from it because it holds a secret; retried with feedback."""
 
 
 def apply_all(root: Path, changes: Dict[str, Optional[str]], reason: str) -> Tuple[List[str], bool]:
@@ -197,7 +202,13 @@ class _Run:
         if TEST_DIR in task.files or not context:
             context = (context + relevant_files(self.workspace, task.request or task.title, files, limit=4))[:6]
         context = context[:8]
-        leaked = [f for f in context if redact(files[f]) != files[f]]
+        # Lines holding secret-like values are hidden from the model and put back in its answer.
+        hidden: Dict[str, Dict[str, str]] = {}
+        shown = dict(files)
+        for f in context:
+            if redact(files[f]) != files[f]:
+                shown[f], hidden[f] = mask_secret_lines(f, files[f])
+        leaked = [f for f in context if redact(shown[f]) != shown[f]]
         if leaked:
             raise PermissionError("not sent to the model: secret-like values in " + ", ".join(leaked))
         allowed = ", ".join(task.files) + (" (new files may be created inside the listed folders)"
@@ -210,10 +221,18 @@ class _Run:
             request = f"Fix these reported problems:\n{problems}\n\nYou may change only: {allowed}"
         if feedback:
             request += f"\n\nThe previous attempt was rejected: {feedback}"
-        changes, rejected = propose_changes(self.workspace, request, files, context, self.project_id,
+        changes, rejected = propose_changes(self.workspace, request, shown, context, self.project_id,
                                             self.generate, AUTOPILOT_SYSTEM_PROMPT)
         if rejected:
             _logger.info("Autopilot: model proposed rejected paths %s", rejected)
+        for p in list(changes):
+            if p in hidden:
+                try:
+                    changes[p] = unmask_secret_lines(changes[p], hidden[p])
+                except ValueError as e:
+                    raise HiddenLineChanged(str(e)) from None
+                if changes[p] == files[p]:
+                    del changes[p]
         # Code blocks lose the final newline; keep files ending the way they did (new files end with one).
         return {p: c if c.endswith("\n") or (files.get(p) is not None and not files[p].endswith("\n")) else c + "\n"
                 for p, c in changes.items()}
@@ -248,8 +267,13 @@ class _Run:
                     changes = self.fix_requirements(findings)
                 elif task.strategy == "import_repair":
                     changes = self.fix_imports(task.files)
+                elif task.strategy == "write_files":
+                    changes = {p: c for p, c in task.contents.items() if self.read(p) != c}
                 else:
                     changes = self.fix_with_model(task, findings, feedback)
+            except HiddenLineChanged as e:
+                feedback = str(e)
+                continue
             except (PermissionError, ValueError) as e:
                 return TaskResult(task_id=task.id, status="failed", detail=redact(str(e), 500), attempts=attempts)
             except Exception as e:  # noqa: BLE001 - the model or a fixer failed; recorded, other tasks go on

@@ -12,7 +12,7 @@ import logging
 from typing import Dict, Any, List, Tuple
 
 from backend.copilot.models import CopilotPlan, CopilotActionResult, ActionCategory
-from backend.security.service import global_security_service
+from backend.guardian.service import security_status
 from backend.readiness.service import global_readiness_service
 from backend.devops.service import global_devops_service
 
@@ -53,7 +53,7 @@ class CopilotExecutor:
             )
 
         # Standard mutating / safe action
-        sec_report = global_security_service.run_full_security_scan(project_id, {"main.py": "pass"})
+        sec = security_status(project_id)     # the latest real Security Guardian assessment
         readiness = global_readiness_service.run_readiness_check(project_id)
 
         exec_ms = (time.perf_counter() - start_t) * 1000
@@ -61,10 +61,11 @@ class CopilotExecutor:
             action_id=f"act_{secrets.token_urlsafe(6)}",
             plan_id=plan.plan_id,
             status="COMPLETED",
-            message=f"Successfully executed '{plan.request}'. All validation gates PASSED.",
+            message=f"Executed '{plan.request}'. Readiness: {readiness.status}; security: {sec['decision']}.",
             execution_time_ms=exec_ms,
             validation_evidence={
-                "security": sec_report.decision,
+                "security": sec["decision"],
+                "security_detail": sec["detail"],
                 "readiness": readiness.status,
                 "score": getattr(readiness, "overall_score", getattr(readiness, "score", 92.0))
             }

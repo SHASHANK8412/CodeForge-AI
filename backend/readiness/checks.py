@@ -9,7 +9,7 @@ import logging
 from typing import List, Dict, Any
 
 from backend.readiness.models import ReadinessCheck, CheckStatus, CheckSeverity
-from backend.security.service import global_security_service
+from backend.guardian.service import security_status
 from backend.browser_testing.service import global_browser_service
 from backend.performance.service import global_performance_service
 from backend.dna.impact import global_impact_engine
@@ -61,19 +61,27 @@ class ReadinessCheckCollector:
                 )
             )
         else:
-            sec_report = global_security_service.run_full_security_scan(project_id, {"main.py": "pass"})
-            checks.append(
-                ReadinessCheck(
-                    id="chk_sec_01",
-                    category="Security",
-                    name="Security Center Vulnerability Audit",
-                    status=CheckStatus.PASS if sec_report.decision != "BLOCK" else CheckStatus.FAIL,
-                    severity=CheckSeverity.CRITICAL if sec_report.decision == "BLOCK" else CheckSeverity.LOW,
-                    score=sec_report.security_score,
-                    evidence=f"0 Critical, 0 Secrets detected ({len(sec_report.findings)} total findings)",
-                    blocking=sec_report.decision == "BLOCK"
-                )
-            )
+            # The latest real Security Guardian assessment; never assumed
+            sec = security_status(project_id)
+            if sec["decision"] == "NOT_ASSESSED":
+                checks.append(ReadinessCheck(
+                    id="chk_sec_01", category="Security", name="Security Guardian Assessment",
+                    status=CheckStatus.NOT_AVAILABLE, severity=CheckSeverity.HIGH,
+                    score=90.0,     # the scoring engine's default for a category without evidence
+                    evidence="Not assessed: run an assessment in the Security Guardian.",
+                    blocking=False))
+            else:
+                blocked = sec["decision"] == "BLOCK"
+                warn = sec["decision"] == "REVIEW_NEEDED" or bool(sec["tools_unavailable"])
+                checks.append(ReadinessCheck(
+                    id="chk_sec_01", category="Security", name="Security Guardian Assessment",
+                    status=CheckStatus.FAIL if blocked else (CheckStatus.WARN if warn else CheckStatus.PASS),
+                    severity=CheckSeverity.CRITICAL if blocked else (CheckSeverity.MEDIUM if warn else CheckSeverity.LOW),
+                    score=40.0 if blocked else (85.0 if warn else 100.0),
+                    evidence=sec["detail"] + ("" if blocked else ". No known blockers is not proof of security."),
+                    blocking=blocked,
+                    recommendation="Fix or explicitly accept the open critical/high findings." if blocked else
+                    "Review the critical/high findings that need a decision in the Security Guardian." if sec["decision"] == "REVIEW_NEEDED" else None))
 
         # 2. Testing Check
         checks.append(

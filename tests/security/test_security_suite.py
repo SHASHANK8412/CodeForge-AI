@@ -123,14 +123,8 @@ class TestSecurityFoundation:
         marked = service.mark_false_positive("proj_1", "sec_123", "False positive confirmed by AppSec")
         assert marked is True
 
-    def test_security_rest_endpoints(self, client):
-        response = client.post("/api/security/scan?project_id=aiforge-demo")
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "success"
-        assert "report" in data
-        assert "security_score" in data["report"]
-
-        report_res = client.get("/api/security/aiforge-demo/report")
-        assert report_res.status_code == 200
-        assert report_res.json()["report"]["project_id"] == "aiforge-demo"
+    def test_retired_sample_scan_endpoints_no_longer_report_results(self, client):
+        # /api/security/scan and /report scanned hardcoded sample files, not the project; they were
+        # retired in favour of the Security Guardian (/api/projects/{id}/guardian/...)
+        assert client.post("/api/security/scan?project_id=aiforge-demo").status_code == 404
+        assert client.get("/api/security/aiforge-demo/report").status_code == 404

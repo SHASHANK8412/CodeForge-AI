@@ -349,9 +349,6 @@ def register_routers() -> None:
     app.include_router(talk_router)
     app.include_router(cto_router)
 
-    from backend.security.routes import security_router
-    app.include_router(security_router)
-
     from backend.dna.routes import dna_router as day15_dna_router
     app.include_router(day15_dna_router)
 
@@ -387,6 +384,9 @@ def register_routers() -> None:
 
     from backend.chaos.routes import chaos_router
     app.include_router(chaos_router)
+
+    from backend.guardian.routes import guardian_router
+    app.include_router(guardian_router)
 
     from backend.architecture_simulator.routes import day25_architect_router
     app.include_router(day25_architect_router)

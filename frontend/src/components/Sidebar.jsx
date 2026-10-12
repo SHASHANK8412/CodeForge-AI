@@ -193,6 +193,7 @@ export default function Sidebar({
         { key: "digital-twin", label: "Digital Twin", icon: <FaProjectDiagram size={12} /> },
         { key: "performance-engineer", label: "Performance Engineer", icon: <FaBolt size={12} /> },
         { key: "chaos-engineer", label: "Chaos Engineer", icon: <FaShieldAlt size={12} /> },
+        { key: "security-guardian", label: "Security Guardian", icon: <FaShieldAlt size={12} /> },
         { key: "autopilot", label: "Autopilot Engine", icon: <FaRocket size={12} /> },
         { key: "xray", label: "Project X-Ray", icon: <FaBrain size={12} /> },
         { key: "dna", label: "DNA Graph", icon: <FaProjectDiagram size={12} /> },

@@ -172,11 +172,10 @@ class TestSecurityRepairAgent:
 class TestSecurityAPIRoutes:
     """Verifies REST API endpoints for security audit, auto-fix, and SBOM."""
 
-    def test_get_security_endpoint(self):
-        res = client.get("/api/projects/sec_demo_1/security")
-        assert res.status_code == 200
-        data = res.json()
-        assert "security_score" in data
+    def test_sample_manifest_audit_endpoints_are_retired(self):
+        # GET /security, /security-report and /sbom audited hardcoded sample manifests, not the project
+        for path in ("security", "security-report", "sbom"):
+            assert client.get(f"/api/projects/sec_demo_1/{path}").status_code in (404, 405)
 
     def test_post_security_fix_endpoint(self):
         res = client.post(
@@ -188,8 +187,3 @@ class TestSecurityAPIRoutes:
         assert data["status"] == "success"
         assert ".env.example" in data["modified_files"]
 
-    def test_get_sbom_endpoint(self):
-        res = client.get("/api/projects/sec_demo_1/sbom")
-        assert res.status_code == 200
-        data = res.json()
-        assert "spdx_version" in data

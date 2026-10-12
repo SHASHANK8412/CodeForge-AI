@@ -10,7 +10,7 @@ import logging
 from typing import Dict, Any, List, Tuple
 
 from backend.incidents.models import Incident, RemediationPlan, IncidentSeverity, AutonomyPolicy
-from backend.security.service import global_security_service
+from backend.guardian.service import security_status
 from backend.browser_testing.service import global_browser_service
 from backend.readiness.service import global_readiness_service
 
@@ -52,15 +52,17 @@ class RemediationEngine:
             return False, "Validation failed: Unit test test_order_creation() failed after patch"
 
         # Multi-metric validation
-        sec_report = global_security_service.run_full_security_scan(project_id, {"main.py": "pass"})
-        if sec_report.decision == "BLOCK":
-            return False, "Validation failed: Security scan detected critical finding"
+        sec = security_status(project_id)     # the latest real Security Guardian assessment
+        if sec["decision"] == "BLOCK":
+            return False, "Validation failed: Security Guardian has open critical/high findings (" + sec["detail"] + ")"
 
         readiness = global_readiness_service.run_readiness_check(project_id)
         if readiness.status == "BLOCKED":
             return False, "Validation failed: Production Readiness Gate BLOCKED"
 
-        return True, "All validation gates passed (Tests PASS, Security PASS, Browser PASS, Readiness READY)"
+        return True, ("Validation gates passed (Readiness not blocked; security: "
+                      + {"NOT_ASSESSED": "not assessed", "REVIEW_NEEDED": "critical/high findings need review",
+                         "NO_KNOWN_BLOCKERS": "no known blockers"}.get(sec["decision"], sec["decision"]) + ")")
 
 
 global_remediation_engine = RemediationEngine()

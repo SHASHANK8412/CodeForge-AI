@@ -11,7 +11,6 @@ from typing import Dict, Any
 from backend.architecture_simulator.models import (
     ArchitectureScenario, ImpactAssessment, SimulatorScorecard, EvidenceType
 )
-from backend.security.service import global_security_service
 from backend.memory.service import global_engineering_memory_service
 
 _logger = logging.getLogger("aiforge.architecture.evaluator")
@@ -27,9 +26,6 @@ class ArchitectureEvaluator:
 
         # 1. Historical Memory Evidence
         memories = global_engineering_memory_service.retrieve(project_id, scenario.name, top_k=2)
-
-        # 3. Security Risk Assessment
-        sec_report = global_security_service.run_full_security_scan(project_id, {"main.py": "pass"})
 
         s_name = scenario.name.lower()
         if "redis" in s_name:

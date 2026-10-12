@@ -342,16 +342,42 @@ def test_comparison_rules():
 
 
 # 19 -----------------------------------------------------------------------------------------------
-def test_files_with_secrets_are_not_sent_to_the_model(svc, project):
+def test_secret_values_are_never_sent_to_the_model(svc, project):
+    secret_line = f"TOKEN = '{SECRET}'"
+    write(project, {"app/util.py": UTIL + f"\n{secret_line}\n"})
+    analyze(svc, project)
+    plan = approved_plan(svc, [findings_by_rule(svc)["MAINT-BARE-EXCEPT"][0].id])
+    prompts = []
+
+    def model(system, prompt):
+        # the model sees a marker instead of the secret line and keeps it
+        prompts.append(prompt)
+        marker = next(line for line in prompt.splitlines() if "AIFORGE_HIDDEN_LINE_1" in line)
+        return "### app/util.py\n```python\n" + UTIL_FIXED + "\n" + marker + "\n```\n"
+
+    execution = svc.execute("p1", plan.id, "u1", project, generate=model, include_tests=False)
+    assert prompts and all(SECRET not in p for p in prompts)
+    assert execution.status == "completed", execution.error
+    assert (project / "app/util.py").read_text(encoding="utf-8") == UTIL_FIXED + f"\n{secret_line}\n"
+    assert SECRET not in execution.diff
+
+
+def test_a_model_that_alters_a_hidden_secret_line_is_rejected(svc, project):
     write(project, {"app/util.py": UTIL + f"\nTOKEN = '{SECRET}'\n"})
     analyze(svc, project)
     plan = approved_plan(svc, [findings_by_rule(svc)["MAINT-BARE-EXCEPT"][0].id])
-    calls = []
-    execution = svc.execute("p1", plan.id, "u1", project, generate=lambda s, p: calls.append(p) or "",
-                            include_tests=False)
-    assert calls == []
-    assert execution.task_results[0].status == "failed" and "secret-like" in execution.task_results[0].detail
+    prompts = []
+
+    def model(system, prompt):
+        prompts.append(prompt)      # drops the hidden line: the secret cannot be restored, so nothing is applied
+        return "### app/util.py\n```python\n" + UTIL_FIXED + "```\n"
+
+    execution = svc.execute("p1", plan.id, "u1", project, generate=model, include_tests=False)
+    assert len(prompts) == 2 and "AIFORGE_HIDDEN_LINE" in prompts[1] and "removed or changed" in prompts[1]
+    assert all(SECRET not in p for p in prompts)
+    assert execution.task_results[0].status == "failed" and "hidden from the model" in execution.task_results[0].detail
     assert execution.status == "failed" and not execution.applied_to_project
+    assert (project / "app/util.py").read_text(encoding="utf-8") == UTIL + f"\nTOKEN = '{SECRET}'\n"
 
 
 def test_jobs_interrupted_by_a_restart_are_closed(tmp_path):

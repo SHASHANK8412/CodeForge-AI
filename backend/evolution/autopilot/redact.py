@@ -42,3 +42,31 @@ def redact(text: str, limit: int = 0) -> str:
     if limit and len(out) > limit:
         out = out[:limit] + f"\n[... {len(out) - limit} characters truncated]"
     return out
+
+
+def mask_secret_lines(path: str, text: str):
+    """
+    For sending a file to a model: every line that holds a secret-like value is replaced by a marker
+    comment, so the model sees the code but never the value. Returns (masked text, {marker: original line}).
+    """
+    hidden = {}
+    lines = text.split("\n")
+    comment = "//" if path.endswith((".js", ".jsx", ".ts", ".tsx")) else "#"
+    for i, line in enumerate(lines):
+        if redact(line) != line:
+            marker = f"{comment} AIFORGE_HIDDEN_LINE_{len(hidden) + 1}: holds a secret; keep this line exactly as it is"
+            hidden[marker] = line
+            lines[i] = line[:len(line) - len(line.lstrip())] + marker
+    return "\n".join(lines), hidden
+
+
+def unmask_secret_lines(text: str, hidden: dict) -> str:
+    """Put the original lines back. Raises ValueError when the model dropped, changed or duplicated a marker."""
+    lines = text.split("\n")
+    for marker, original in hidden.items():
+        at = [i for i, line in enumerate(lines) if line.strip() == marker]
+        if len(at) != 1:
+            raise ValueError("a line hidden from the model because it holds a secret was removed or changed; "
+                             "keep every AIFORGE_HIDDEN_LINE marker exactly as it is")
+        lines[at[0]] = original
+    return "\n".join(lines)

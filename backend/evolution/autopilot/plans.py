@@ -18,6 +18,7 @@ STRATEGY_AGENT = {
     "import_repair": "Debug Agent - repair strategies (missing / misplaced / shadowed imports)",
     "model": "Coding Agent - project editor (coding model, validated patch)",
     "manual": "Not automated - needs a person",
+    "write_files": "Testing Agent - add generated files (templated tests), exactly as listed",
 }
 TEST_DIR = "tests/"
 MAX_FINDINGS_PER_PLAN = 40
