@@ -124,10 +124,17 @@ class ProjectRunner:
 
         cmd = [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", "--rootdir", str(project_path)]
         if not any((project_path / name).exists() for name in ("pytest.ini", "pyproject.toml", "setup.cfg", "tox.ini")):
-            empty_ini = Path(tempfile.gettempdir()) / "aiforge_isolated_pytest.ini"
+            # The empty config lives in a directory of its own, and conftest discovery stops at the project:
+            # pytest's collection tree starts at the config file's directory, and a config directly in the
+            # shared temp folder made it walk every other process's temporary workspace there (one deleted
+            # mid-scan failed the collection, which then looked like the change broke the tests) and could
+            # load a conftest.py from outside the project.
+            ini_dir = Path(tempfile.gettempdir()) / "aiforge_isolated_pytest"
+            ini_dir.mkdir(exist_ok=True)
+            empty_ini = ini_dir / "pytest.ini"
             if not empty_ini.exists():
                 empty_ini.write_text("[pytest]\n", encoding="utf-8")
-            cmd += ["-c", str(empty_ini)]
+            cmd += ["-c", str(empty_ini), "--confcutdir", str(project_path)]
         return cmd
 
     def run_project(
