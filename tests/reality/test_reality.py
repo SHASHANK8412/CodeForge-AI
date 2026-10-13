@@ -158,7 +158,7 @@ def doubles(monkeypatch):
     from backend.performance.engineer.models import EndpointStats, Environment, Measurement, Resources as R
     box = {"load": {}}
 
-    def measure(projects, workload, stop=None, on_stage=None, resources=None, drive=None):
+    def measure(projects, workload, stop=None, on_stage=None, resources=None, drive=None, pre_drive=None):
         label = next(iter(projects))
         m = Measurement(label=label, status="measured", resources=R(samples=3, cpu_avg_pct=box.get("cpu", 40.0), mem_max_mb=80.0))
         if drive is None:
@@ -222,7 +222,8 @@ def test_calibrated_estimates_need_enough_comparable_history(tmp_path):
     engine = sim(tmp_path)
     pred = analytical.predict({**BASELINE, "endpoints": {"GET /api/compute": {**BASELINE["endpoints"]["GET /api/compute"], "mean_ms": 20.5}}},
                               {"GET /api/compute": 1}, 20, 1, 1.0, None, [], 10)
-    key = f"{pred['method']}|mean_ms|load|stable"
+    from backend.reality.calibration import group_key
+    key = group_key(pred, "mean_ms")                      # model, method, metric, state, workers, CPU limit, utilisation band
     assert engine.calibrated(pred)["mean_ms"]["value"] is None                       # no history: no correction
     for i, ratio in enumerate([2.0, 2.4, 2.2, 1.9, 2.1]):
         engine.store.put(CALIBRATION_KEY, "calibration", CalibrationRecord(
@@ -230,7 +231,7 @@ def test_calibrated_estimates_need_enough_comparable_history(tmp_path):
             predicted=10.0, observed=10.0 * ratio, error_pct=(ratio - 1) * 100, within_bounds=False, comparable_key=key))
     engine.store.put(CALIBRATION_KEY, "calibration", CalibrationRecord(
         id="other", project_id="p", simulation_id="s", alternative="a", method=pred["method"], metric="mean_ms",
-        predicted=10.0, observed=100.0, error_pct=900, within_bounds=False, comparable_key=key.replace("stable", "saturated")))
+        predicted=10.0, observed=100.0, error_pct=900, within_bounds=False, comparable_key=key.replace("|stable|", "|saturated|")))
     cal = engine.calibrated(pred)["mean_ms"]
     assert cal["records"] == 5 and cal["factor"] == pytest.approx(2.1) and cal["value"] == pytest.approx(pred["mean_ms"] * 2.1, rel=0.01)
     assert "still an estimate" in cal["note"]                                          # the saturated record was not mixed in

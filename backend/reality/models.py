@@ -95,10 +95,13 @@ class Simulation(BaseModel):
     revision: Optional[str] = None
     application: Dict[str, Any] = Field(default_factory=dict)        # Digital Twin facts with their evidence
     baseline: Dict[str, Any] = Field(default_factory=dict)           # measured service times (low load)
-    predictions: Dict[str, Any] = Field(default_factory=dict)        # alternative id -> analytical prediction
+    predictions: Dict[str, Any] = Field(default_factory=dict)        # alternative id -> analytical prediction (raw, model v1)
+    predictions_v2: Dict[str, Any] = Field(default_factory=dict)     # alternative id -> model v2 (measured capacity), made before its run
     measurements: Dict[str, Any] = Field(default_factory=dict)       # alternative id -> load-run results
     comparisons: Dict[str, Any] = Field(default_factory=dict)        # alternative id -> predicted vs observed
     bottlenecks: List[Dict[str, Any]] = Field(default_factory=list)
+    findings: List[Dict[str, Any]] = Field(default_factory=list)      # v2 evidence-based bottleneck findings
+    experiment_plan: Dict[str, Any] = Field(default_factory=dict)    # the workload and limits that were approved
     costs: Dict[str, Any] = Field(default_factory=dict)
     recommendation: Dict[str, Any] = Field(default_factory=dict)
     stages: List[Dict[str, Any]] = Field(default_factory=list)
@@ -124,3 +127,11 @@ class CalibrationRecord(BaseModel):
     within_bounds: bool
     comparable_key: str                          # only records with the same key are aggregated
     recorded_at: str = Field(default_factory=now_iso)
+    # v2 (records written before v2 keep the defaults and are reported as legacy groups)
+    model_version: str = "reality-model/1"
+    kind: str = "raw"                            # raw (model v1) | v2 (measured capacity)
+    absolute_error: Optional[float] = None
+    relative_error: Optional[float] = None       # observed / predicted - 1 (> 0: the model was optimistic)
+    calibration_method: Optional[str] = None
+    group: Dict[str, Any] = Field(default_factory=dict)
+    predicted_at: Optional[str] = None           # when the prediction was made (always before the run)

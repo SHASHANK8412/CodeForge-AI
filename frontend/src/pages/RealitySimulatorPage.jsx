@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { FaDownload, FaFlask, FaGlobe, FaPlay, FaPlus, FaStop, FaTrash } from 'react-icons/fa';
 import {
-  cancelSimulation, getApplicationModel, getCalibration, getSimulation, getSimulationReport, listSimulations, startSimulation,
+  cancelSimulation, getApplicationModel, getCalibration, getSimulation, getSimulationReport, listSimulations, previewExperimentPlan,
+  startSimulation,
 } from '../services/reality';
 import { listAutopilotProjects } from '../services/evolutionAutopilot';
 
@@ -13,6 +14,8 @@ const TONE = {
   completed: GOOD, measured: GOOD, 'measured bottleneck': BAD, failed: BAD, unavailable: WARN, cancelled: GREY,
   'model-predicted bottleneck': WARN, 'static-analysis suspicion': GREY, 'insufficient evidence': GREY, predicted: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
   assumption: 'bg-sky-500/10 text-sky-200 border-sky-500/25', 'insufficient history': GREY, 'measured accuracy': GOOD,
+  strong: BAD, moderate: WARN, weak: GREY, contradiction: WARN, '-': GREY, calibrated: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
+  'model v2': 'bg-violet-500/15 text-violet-300 border-violet-500/30',
 };
 const label = (s) => String(s ?? '').replace(/_/g, ' ');
 const Badge = ({ value }) => (value == null ? null :
@@ -50,6 +53,7 @@ function Builder({ projectId, model, busy, act, onStarted }) {
   const [prices, setPrices] = useState({ vcpu_hour: '', gb_hour: '' });
   const [assumptions, setAssumptions] = useState('');
   const [consent, setConsent] = useState(false);
+  const [plan, setPlan] = useState(null);
   useEffect(() => { setMix((cur) => (Object.keys(cur).length ? cur : Object.fromEntries(endpoints.slice(0, 3).map((e) => [e, 1])))); }, [model]); // eslint-disable-line react-hooks/exhaustive-deps
   const t = (k) => (e) => setTraffic({ ...traffic, [k]: e.target.value });
   const a = (i, k) => (e) => setAlts(alts.map((x, j) => (j === i ? { ...x, [k]: e.target.value } : x)));
@@ -68,7 +72,9 @@ function Builder({ projectId, model, busy, act, onStarted }) {
       prices: prices.vcpu_hour !== '' ? { vcpu_hour: Number(prices.vcpu_hour), gb_hour: Number(prices.gb_hour || 0) } : null,
     };
   };
-  const go = (runLoad) => act(async () => onStarted((await startSimulation(projectId, scenario(), runLoad)).simulation));
+  const go = (runLoad) => act(async () => onStarted((await startSimulation(projectId, scenario(), runLoad, plan?.hash)).simulation));
+  const preview = () => act(async () => { setConsent(false); setPlan((await previewExperimentPlan(projectId, scenario(), true)).plan); });
+  useEffect(() => { setPlan(null); setConsent(false); }, [name, traffic, mix, alts, dependent, dependency]);
   return (
     <Card title="Scenario builder">
       <div className="space-y-2 text-xs text-text-secondary">
@@ -107,15 +113,67 @@ function Builder({ projectId, model, busy, act, onStarted }) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Btn tone="primary" disabled={busy || !Object.values(mix).some((w) => Number(w) > 0)} onClick={() => go(false)}><FaFlask className="h-2.5 w-2.5" /> Predict (baseline measurement + model)</Btn>
-          <label className="flex items-center gap-1.5 text-amber-100"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} /> I approve running this workload against isolated copies of the app (bounded: ≤200 rps, ≤120 s, ≤20,000 requests)</label>
-          <Btn tone="good" disabled={busy || !consent || !Object.values(mix).some((w) => Number(w) > 0)} onClick={() => go(true)}><FaPlay className="h-2.5 w-2.5" /> Predict and run</Btn>
+          <Btn disabled={busy || !Object.values(mix).some((w) => Number(w) > 0)} onClick={preview}>Preview experiment plan</Btn>
         </div>
+        {plan && <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-2 text-[11px]">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-amber-200">Experiment plan <span className="font-mono text-text-muted">#{plan.hash}</span></p>
+          <ul className="mt-1 space-y-0.5">{plan.steps.map((st) => <li key={st.step}><span className="text-text-primary">{st.step}</span> — {st.container}; {st.probe ? `${st.probe}; ` : ''}{st.workload}</li>)}</ul>
+          <p className="mt-1 text-text-muted">Limits: {Object.entries(plan.limits).map(([k, v]) => `${label(k)} ${v}`).join(' · ')}</p>
+          <ul className="mt-1 text-text-muted">{plan.isolation.map((x) => <li key={x}>• {x}</li>)}<li>• {plan.cleanup}</li></ul>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-1.5 text-amber-100"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} /> I approve exactly this plan (it is run only against isolated copies of the app)</label>
+            <Btn tone="good" disabled={busy || !consent} onClick={() => go(true)}><FaPlay className="h-2.5 w-2.5" /> Predict and run</Btn>
+          </div>
+        </div>}
       </div>
     </Card>
   );
 }
 
 // --- results ---------------------------------------------------------------------------------------------------
+
+function V2Row({ p2, rows }) {
+  if (p2.status !== 'predicted') return <tr><td /><td colSpan={6} className="pb-1 text-[10px] text-text-muted"><Badge value="model v2" /> not available: {p2.reason}</td></tr>;
+  return (
+    <tr><td /><td colSpan={6} className="pb-1 text-[10px] text-text-secondary">
+      <Badge value="model v2" /> <Badge value="predicted" /> {p2.stage}: utilisation {fmt(p2.utilization)}, {fmt(p2.throughput_rps)} rps, mean {fmt(p2.mean_ms, ' ms')}, p95 {fmt(p2.p95_ms, ' ms')}, capacity {fmt(p2.capacity_rps, ' rps')}
+      {p2.probe_fallback?.length > 0 && <span className="text-amber-200"> · probe unavailable for {p2.probe_fallback.join(', ')} (v1 scaling used)</span>}
+      {(rows || []).length > 0 && <span> · vs measured: {rows.map((r) => `${r.metric} ${r.predicted} → ${r.observed} (${r.error_pct > 0 ? '+' : ''}${r.error_pct}%)`).join(' · ')}</span>}
+      {p2.calibrated && <span className="text-text-muted"> · <Badge value="calibrated" /> {Object.entries(p2.calibrated).map(([k, v]) => `${k} ${v.value != null ? `${v.value} (×${v.factor}, ${v.records} runs, held-out error ${v.held_out_error_range_pct?.join('…')}%)` : `none (${v.records} of 5 runs)`}`).join(' · ')}</span>}
+    </td></tr>
+  );
+}
+
+function Measurements({ s }) {
+  const rows = Object.entries(s.measurements).filter(([, m]) => m.throughput_rps !== undefined);
+  if (!rows.length) return null;
+  return (
+    <Card title="Measurements (load runs)">
+      <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-[11px] text-text-secondary">
+        <thead className="text-[10px] uppercase text-text-muted"><tr><th className="py-1">Alternative</th><th>Requests</th><th>Latency ms (median / p90 / p95 / p99)</th><th>CPU (cgroup)</th><th>Throttling</th><th>Load generator</th><th>Cleanup</th></tr></thead>
+        <tbody>{rows.map(([aid, m]) => { const cs = m.cpu_stat || {}; const g = m.generator || {}; return (
+          <tr key={aid} className="border-t border-border-subtle align-top"><td className="py-1 text-text-primary">{aid}</td>
+            <td>{m.sent} sent · {m.completed_ok} ok · {m.errors} failed ({m.timeouts ?? '—'} timeouts) · {fmt(m.success_rate_pct, '%')} success</td>
+            <td>{fmt(m.median_ms)} / {fmt(m.p90_ms)} / {fmt(m.p95_ms)} / {fmt(m.p99_ms)}</td>
+            <td>{cs.available ? `${Math.round((cs.cpu_utilization_of_limit ?? 0) * 100)}% of the limit (${cs.cpu_seconds} CPU-s)` : <span className="text-text-muted">unavailable{cs.reason ? `: ${cs.reason}` : ''}</span>}</td>
+            <td>{cs.available && cs.throttled_ratio != null ? `throttled in ${Math.round(cs.throttled_ratio * 100)}% of periods (${cs.throttled_ms} ms)` : <span className="text-text-muted">unavailable</span>}</td>
+            <td>{g.sustained === false ? <span className="text-rose-200">did not sustain the rate: {(g.reasons || []).join('; ')}</span> : `sustained ${fmt(g.achieved_send_rps)} of ${fmt(g.scheduled_rps)} rps`}{g.process_cpu_pct_of_one_core != null && ` · generator CPU ${g.process_cpu_pct_of_one_core}% of a core`}</td>
+            <td>{m.cleanup?.verified ? 'verified' : <span className="text-amber-200">not verified</span>}</td></tr>); })}</tbody></table></div>
+      <p className="mt-1 text-[10px] text-text-muted">“unavailable” means the runtime could not observe the metric — it is never shown as zero. The load generator runs on this machine and is measured separately from the app.</p>
+    </Card>
+  );
+}
+
+function Findings({ s }) {
+  if (!(s.findings || []).length) return null;
+  return (
+    <Card title="Bottleneck findings (evidence-based)">
+      <ul className="space-y-1 text-[11px] text-text-secondary">{s.findings.map((f) => (
+        <li key={f.id}><Badge value={f.evidence} /> <span className="font-mono text-text-muted">{f.id}</span> <span className="text-text-primary">{label(f.kind)}</span> — {f.impact}
+          <div className="pl-4 text-[10px] text-text-muted">measured: {JSON.stringify(f.measurements)} · method: {f.method} · next experiment: {f.recommended_experiment}</div></li>))}</ul>
+    </Card>
+  );
+}
 
 function Results({ s }) {
   const sc = s.scenario;
@@ -144,7 +202,8 @@ function Results({ s }) {
                     <td className="pr-2">{measured ? fmt(m.throughput_rps) : m.slowed ? '—' : ''}</td><td className="pr-2">{measured ? fmt(m.mean_ms) : m.slowed ? `${fmt(m.normal?.mean_ms)} → ${fmt(m.slowed?.mean_ms)}` : ''}</td>
                     <td className="pr-2">{measured ? fmt(m.p95_ms) : ''}</td><td className="pr-2">{measured ? `${m.error_rate_pct}%${m.dropped_by_generator ? `, ${m.dropped_by_generator} dropped by the generator` : ''}` : ''}</td></tr>
                   {p.note && <tr><td /><td colSpan={6} className="pb-1 text-[10px] text-amber-200">{p.note}</td></tr>}
-                  {p.calibrated && <tr><td /><td colSpan={6} className="pb-1 text-[10px] text-text-muted">calibrated estimate: {Object.entries(p.calibrated).map(([k, v]) => `${k} ${v.value != null ? `${v.value} (×${v.factor}, ${v.records} runs)` : v.note}`).join(' · ')}</td></tr>}
+                  {p.calibrated && <tr><td /><td colSpan={6} className="pb-1 text-[10px] text-text-muted">calibrated estimate (raw model): {Object.entries(p.calibrated).map(([k, v]) => `${k} ${v.value != null ? `${v.value} (×${v.factor}, ${v.records} runs)` : v.note}`).join(' · ')}</td></tr>}
+                  {s.predictions_v2?.[alt.id] && <V2Row p2={s.predictions_v2[alt.id]} rows={c.rows_v2} />}
                 </React.Fragment>);
             })}</tbody>
           </table>
@@ -153,6 +212,8 @@ function Results({ s }) {
           <ul className="mt-1 list-disc pl-4 font-mono text-[10px] text-text-secondary">{Object.values(s.predictions)[0].formulas.map((f) => <li key={f}>{f}</li>)}</ul>
           <ul className="mt-1 list-disc pl-4 text-[11px] text-text-secondary">{Object.values(s.predictions)[0].assumptions.map((f) => <li key={f}>{f}</li>)}</ul></details>}
       </Card>
+      <Measurements s={s} />
+      <Findings s={s} />
       <Card title="Capacity analysis and recommendation">
         <ul className="space-y-0.5 text-[11px] text-text-secondary">{s.bottlenecks.map((b, i) => <li key={i}><Badge value={b.label} /> {b.alternative || b.endpoint} — {b.detail}</li>)}{!s.bottlenecks.length && <li>No bottleneck found in the available evidence (this is not proof there is none).</li>}</ul>
         {s.recommendation?.reason && <p className="mt-2 text-xs"><span className="text-text-muted">Recommendation: </span><span className="text-text-primary">{s.recommendation.recommendation || 'none'}</span> <Badge value={s.recommendation.basis} /> — {s.recommendation.reason}</p>}
@@ -242,9 +303,10 @@ export default function RealitySimulatorPage({ activeProjectId }) {
         {sim && <Results s={sim} />}
         <Card title="Prediction calibration (all projects)">
           {!cal?.groups?.length ? <p className="text-xs text-text-muted">No prediction has been compared with a measurement yet.</p> : (
-            <table className="w-full text-left text-[11px] text-text-secondary"><thead className="text-[10px] uppercase text-text-muted"><tr><th className="py-1">Comparable group</th><th>Records</th><th>Mean |error|</th><th>Within bounds</th><th>Assessment</th></tr></thead>
-              <tbody>{cal.groups.map((g) => <tr key={g.key} className="border-t border-border-subtle"><td className="py-1 font-mono">{g.key}</td><td>{g.records}</td><td>{g.mean_abs_error_pct}%</td><td>{g.within_bounds_pct}%</td><td><Badge value={g.assessment} /></td></tr>)}</tbody></table>)}
-          {cal?.note && <p className="mt-1 text-[10px] text-text-muted">{cal.note}</p>}
+            <table className="w-full text-left text-[11px] text-text-secondary"><thead className="text-[10px] uppercase text-text-muted"><tr><th className="py-1">Comparable group</th><th>Records</th><th>Mean |error|</th><th>Bias</th><th>Held-out error after correction</th><th>Within bounds</th><th>Assessment</th></tr></thead>
+              <tbody>{cal.groups.map((g) => <tr key={g.key} className="border-t border-border-subtle align-top"><td className="py-1 font-mono">{g.key}{g.legacy && <span className="text-text-muted"> (v1 record)</span>}</td><td>{g.records}</td><td>{g.mean_abs_error_pct}%</td><td>{fmt(g.bias_pct, '%')}</td>
+                <td>{g.loo_mean_abs_error_pct != null ? `${g.loo_mean_abs_error_pct}% (${g.correction_validated ? 'correction applied' : 'not better: not applied'})` : '—'}</td><td>{g.within_bounds_pct}%</td><td><Badge value={g.assessment} /></td></tr>)}</tbody></table>)}
+          {cal?.note && <p className="mt-1 text-[10px] text-text-muted">{cal.note}{cal.method ? ` · method: ${cal.method}` : ''}</p>}
         </Card>
       </>)}
     </div>

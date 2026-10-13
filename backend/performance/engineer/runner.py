@@ -85,6 +85,57 @@ class StatsSampler:
         self._thread.join(timeout=30)
 
 
+CGROUP_CPU_STAT = ("/sys/fs/cgroup/cpu.stat", "/sys/fs/cgroup/cpu/cpu.stat", "/sys/fs/cgroup/cpu,cpuacct/cpu.stat")
+
+
+def read_cpu_stat(container: str, docker: Callable[..., object]) -> Optional[Dict[str, Any]]:
+    """The container's kernel CPU counters (cgroup cpu.stat), read with `docker exec cat` (read-only). cgroup v2 gives
+    usage_usec, nr_periods, nr_throttled and throttled_usec; v1 gives nr_periods, nr_throttled and throttled_time (ns).
+    None when no file is readable (the caller reports the metrics as unavailable, never as zero)."""
+    for path in CGROUP_CPU_STAT:
+        try:
+            res = docker("exec", container, "cat", path, timeout=20)
+        except Exception:  # noqa: BLE001 - a missing counter is reported as unavailable
+            continue
+        if getattr(res, "returncode", 1) != 0 or not (getattr(res, "stdout", "") or "").strip():
+            continue
+        values: Dict[str, Any] = {}
+        for line in res.stdout.splitlines():
+            parts = line.split()
+            if len(parts) == 2 and parts[1].lstrip("-").isdigit():
+                values[parts[0]] = int(parts[1])
+        if "throttled_time" in values and "throttled_usec" not in values:
+            values["throttled_usec"] = values["throttled_time"] // 1000
+        values["source"] = path
+        values["read_at"] = time.monotonic()
+        return values
+    return None
+
+
+def cpu_stat_delta(before: Optional[Dict[str, Any]], after: Optional[Dict[str, Any]], cpus: Optional[float]) -> Dict[str, Any]:
+    """Kernel CPU accounting over a run: CPU seconds used, utilisation of the CPU limit, and CFS throttling."""
+    if not before or not after:
+        return {"available": False, "reason": "the container's cgroup cpu.stat could not be read"}
+    wall = after["read_at"] - before["read_at"]
+
+    def d(key):
+        return after[key] - before[key] if key in before and key in after else None
+    usage, periods, throttled, throttled_us = d("usage_usec"), d("nr_periods"), d("nr_throttled"), d("throttled_usec")
+    out: Dict[str, Any] = {"available": True, "source": f"cgroup {after['source']} (kernel counters, read before and after the run)",
+                           "wall_seconds": round(wall, 3)}
+    out["cpu_seconds"] = round(usage / 1e6, 3) if usage is not None else None
+    out["cpu_utilization_of_limit"] = (round(usage / 1e6 / (wall * cpus), 4) if usage is not None and wall > 0 and cpus else None)
+    out["periods"], out["throttled_periods"] = periods, throttled
+    out["throttled_ratio"] = round(throttled / periods, 4) if periods else (0.0 if periods == 0 else None)
+    out["throttled_ms"] = round(throttled_us / 1000, 1) if throttled_us is not None else None
+    missing = [k for k in ("cpu_seconds", "periods", "throttled_ms") if out[k] is None]
+    if missing:
+        out["unavailable"] = missing
+    if periods == 0:
+        out["note"] = "no CFS periods were accounted: the container has no CPU quota to throttle against"
+    return out
+
+
 def resources_of(samples: List[Tuple[float, float]]) -> Resources:
     if not samples:
         return Resources(samples=0, method="docker stats returned no samples (not measured)")
@@ -129,11 +180,14 @@ def _requirements_key(project: Path) -> str:
 
 def measure(projects: Dict[str, Path], workload: Workload, should_stop: Optional[Callable[[], bool]] = None,
             on_stage: Optional[Callable[[str, str], None]] = None, resources: Optional[Dict[str, Any]] = None,
-            drive: Optional[Callable[[str, Callable[[], bool]], Dict[str, Any]]] = None
+            drive: Optional[Callable[[str, Callable[[], bool]], Dict[str, Any]]] = None,
+            pre_drive: Optional[Callable[[str, Callable[[], bool]], Dict[str, Any]]] = None
             ) -> Tuple[Dict[str, Measurement], Environment]:
     """Run `workload` against each project version. Returns {label: Measurement} and the environment.
     `resources` sets the app container's CPU / memory / workers; `drive(url, stop)` replaces the workload with
-    the caller's own traffic (its result is stored in Measurement.custom; CPU and memory are still sampled)."""
+    the caller's own traffic (its result is stored in Measurement.custom; CPU and memory are still sampled, and the
+    container's cgroup CPU counters are read before and after it). `pre_drive(url, stop)` runs in the same container
+    just before `drive`, outside the sampled window (its result is stored as custom["pre_drive"])."""
     from backend.execution.docker_test_sandbox import docker_available
     from backend.execution.preview_manager import (_docker, _host_port, _logs, backend_commands, backend_entry,
                                                    backend_problem)
@@ -206,8 +260,14 @@ def measure(projects: Dict[str, Path], workload: Workload, should_stop: Optional
         if drive is not None:
             stage("workload", "running")
             for a in live:
+                pre = pre_drive(a.url, stop) if pre_drive is not None else None
+                before = read_cpu_stat(a.container, _docker)
                 with StatsSampler(a.container, _docker) as sampler:
                     a.measurement.custom = drive(a.url, stop)
+                if pre is not None:
+                    a.measurement.custom["pre_drive"] = pre
+                a.measurement.cpu_stat = cpu_stat_delta(before, read_cpu_stat(a.container, _docker),
+                                                        float((resources or {}).get("cpus") or 1.0))
                 a.measurement.resources = resources_of(sampler.samples)
                 a.measurement.logs_tail = redact(_logs(a.container)[-2000:])
                 a.measurement.status = "measured"
@@ -257,6 +317,13 @@ def measure(projects: Dict[str, Path], workload: Workload, should_stop: Optional
                 _docker("rm", "-f", a.container, timeout=60)
         for vol in volumes.values():
             _docker("volume", "rm", "-f", vol, timeout=60)
+        try:                                     # verified, not assumed: nothing of this run may remain
+            left = (_docker("ps", "-a", "-q", "--filter", f"name=aiforge_preview_be_{run_id}", timeout=30).stdout or "").split()
+            vols = [v for v in (_docker("volume", "ls", "-q", timeout=30).stdout or "").split() if v in volumes.values()]
+            env.cleanup = {"containers_removed": sum(1 for a in apps if a.container), "volumes_removed": len(volumes),
+                           "leftover_containers": len(left), "leftover_volumes": len(vols), "verified": not left and not vols}
+        except Exception as e:  # noqa: BLE001
+            env.cleanup = {"verified": False, "error": type(e).__name__}
         stage("clean up", "done")
     return {a.label: a.measurement for a in apps}, env
 

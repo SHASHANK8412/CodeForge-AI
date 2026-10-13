@@ -87,10 +87,12 @@ class Measurement(BaseModel):
     resources: Resources = Field(default_factory=Resources)
     logs_tail: str = ""
     custom: Dict[str, Any] = Field(default_factory=dict)      # results of a caller-provided drive (Reality Simulator)
+    cpu_stat: Dict[str, Any] = Field(default_factory=dict)    # cgroup CPU accounting over a drive (usage, CFS throttling)
 
 
 class Environment(BaseModel):
     method: str
+    cleanup: Dict[str, Any] = Field(default_factory=dict)     # verified removal of the run's containers and volumes
     image: str = ""
     limits: Dict[str, str] = Field(default_factory=dict)
     load_generator: str = ""
