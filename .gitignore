@@ -10,7 +10,7 @@ backend/rag/chroma_db/
 backend/rag/documents/
 generated_projects/
 *.db
-workspace/
+/workspace/
 workspace_test_env/
 *.sqlite3
 logs/*.log
@@ -20,5 +20,31 @@ backend/vector_store/
 backend/memory/vector_store.json
 v2/logs/
 *.log
+scratch/
+.pytest_cache/
 
 
+
+# Locally generated JWT signing key (backend/auth/security.py)
+backend/data/jwt_secret.key
+
+# AIForge Autopilot analyses, findings, plans and executions (runtime data)
+backend/data/evolution/
+
+# AIForge Digital Twin graphs and impact reports (runtime data)
+backend/data/twin/
+
+# AIForge Performance Engineer runs, findings and comparisons (runtime data)
+backend/data/performance/
+
+# Benchmark Lab run artifacts (generated code and outputs)
+benchmarks/runs/
+backend/data/benchmark_lab/
+
+# AIForge Chaos Engineer assessments, findings and repair gates (runtime data)
+backend/data/chaos/
+backend/data/guardian/
+backend/data/evolution_engine/
+backend/data/time_machine/
+backend/data/swarm/
+backend/data/reality/

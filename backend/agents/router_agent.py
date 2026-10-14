@@ -126,6 +126,22 @@ class RouterAgent:
             self._log_decision(prompt, rule_result)
             return rule_result
 
+        # Step 1b: a follow-up the rules cannot place ("Continue", "add a length check to it")
+        # carries on the previous turn's task.
+        if rule_result is None or rule_result.get("intent") == Intent.UNKNOWN.value:
+            previous = self._previous_turn_intent(context_result)
+            if previous:
+                res = self._format_result(
+                    intent=previous,
+                    confidence=0.90,
+                    reason=f"Follow-up to the previous {previous.value} turn.",
+                    source="context",
+                    original_prompt=prompt,
+                    normalized_prompt=normalized
+                )
+                self._log_decision(prompt, res)
+                return res
+
         # Step 2: Layer B - LLM Fallback Classification
         llm_result = self._apply_llm_classification(prompt, normalized)
         if llm_result:
@@ -187,7 +203,14 @@ class RouterAgent:
         # 2. Resume & ATS -> RESUME
         resume_keywords = ["analyze my resume", "ats score", "improve my ats", "linkedin profile", "curriculum vitae", "cv review", "my cv", "optimize my cv"]
         is_concept_explanation = p_lower.startswith("explain") or p_lower.startswith("what is")
-        if (any(kw in p_lower for kw in resume_keywords) or p_lower.startswith("cv ") or p_lower.endswith(" cv")) and not is_concept_explanation:
+        # "improve my resume", "generate resume" - but not "resume the build" (resume = continue).
+        resume_document_request = re.search(
+            r"\b(improve|generate|write|create|build|review|update|tailor|optimi[sz]e|format|rewrite)\b"
+            r"(\s+\w+){0,3}?\s+(resume|cv)\b"
+            r"(?!\s+(builder|parser|app|application|website|site|generator|api|tool|system|platform|analy[sz]er|scanner|screener))",
+            p_lower) is not None
+        if (any(kw in p_lower for kw in resume_keywords) or resume_document_request
+                or p_lower.startswith("cv ") or p_lower.endswith(" cv")) and not is_concept_explanation:
             return self._format_result(
                 intent=Intent.RESUME,
                 confidence=0.98,
@@ -267,7 +290,8 @@ class RouterAgent:
 
         # 7. Debugging & Error Resolution -> DEBUGGING
         error_terms = ["nullpointerexception", "indexerror", "typeerror", "syntaxerror", "modulenotfounderror", "traceback", "syntax error", "error in", "error"]
-        has_error_term = any(t in p_lower for t in error_terms)
+        # "bug" as a word: "fix the previous bug", but not "explain debugging".
+        has_error_term = any(t in p_lower for t in error_terms) or re.search(r"\bbugs?\b", p_lower) is not None
 
         debug_verbs = ["fix", "debug", "why", "solve error", "crash", "crashing", "failing", "fails"]
         has_debug_verb = any(dv in p_lower for dv in debug_verbs)
@@ -407,6 +431,22 @@ class RouterAgent:
         except Exception as e:
             _logger.debug(f"LLM classification fallback failed/skipped: {e}")
             return None
+
+    @staticmethod
+    def _previous_turn_intent(context_result: Optional[Any]) -> Optional[Intent]:
+        """Intent of the latest assistant turn, when this prompt is a follow-up to it."""
+        if not context_result or not getattr(context_result, "is_follow_up", False):
+            return None
+        for msg in reversed(getattr(context_result, "selected_messages", None) or []):
+            if getattr(msg, "role", "") != "assistant":
+                continue
+            value = getattr(msg, "intent", None) or (getattr(msg, "metadata", None) or {}).get("intent")
+            try:
+                intent = Intent(str(value).upper())
+            except ValueError:
+                return None
+            return None if intent == Intent.UNKNOWN else intent
+        return None
 
     def _format_result(
         self,

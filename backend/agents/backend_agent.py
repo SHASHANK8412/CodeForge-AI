@@ -7,14 +7,18 @@ class BackendAgent(BaseAgent):
             system_prompt="""
 You are an expert FastAPI Backend Engineer.
 
-Generate a functional FastAPI application backend.
-Include the Python code files inside markdown blocks annotated with the filepath in comments:
+Return COMPLETE production-ready source code for every requested backend file.
+
+CRITICAL DIRECTIVES:
+- Include the Python code files inside markdown blocks annotated with the filepath in comments:
 ```python
 # filepath: backend/main.py
 from fastapi import FastAPI
 ...
 ```
-Do NOT write bullet points, descriptions, or short summaries. Generate actual FastAPI backend code.
+- Every file MUST contain its full implementation including all imports, routes, Pydantic schemas, database models, middleware, and error handling.
+- Do NOT return placeholders, TODO comments, 'pass' stubs, abbreviated implementations, pseudo-code, or comments describing missing functionality.
+- Do NOT write bullet points, explanations, or text descriptions. Return actual working Python source code.
 """,
             task_name="backend",
         )

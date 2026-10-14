@@ -7,7 +7,6 @@ from time import perf_counter
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
-from backend.graph.workflow import graph
 from backend.memory.conversation_manager import ConversationManager
 from backend.memory.crud import generate_conversation_title
 from backend.schemas.chat import ChatMessageRequest, ConversationCreateRequest, ConversationRenameRequest
@@ -52,6 +51,7 @@ def create_conversation(request: ConversationCreateRequest | None = None):
 
 from backend.services.generation_service import global_generation_pipeline
 from backend.config import DEBUG_ROUTING
+from backend.memory.ai_memory_service import global_ai_memory_service
 
 
 @router.post("/message")
@@ -68,11 +68,31 @@ async def chat_message(request: ChatMessageRequest):
         conversation = conversation_manager.create_conversation(title=generate_conversation_title(request.message))
         conversation_id = conversation.conversation_id
 
-    # Execute Canonical Generation Pipeline
+    # 1. Smart Memory Recall (if memory_enabled)
+    recalled_data = {"recalled_memories": [], "context_prompt": "", "total_recalled": 0, "memory_active": False}
+    effective_prompt = request.message
+
+    if request.memory_enabled:
+        recalled_data = global_ai_memory_service.smart_recall(
+            user_prompt=request.message,
+            project_id=request.project_id
+        )
+        if recalled_data["context_prompt"]:
+            effective_prompt = f"{recalled_data['context_prompt']}\n\nUser Request: {request.message}"
+
+    # 2. Execute Canonical Generation Pipeline
     gen_result = await global_generation_pipeline.generate(
-        user_prompt=request.message,
+        user_prompt=effective_prompt,
         conversation_id=conversation_id
     )
+
+    # 3. Detect Memory Suggestions
+    memory_suggestions = []
+    if request.memory_enabled:
+        memory_suggestions = global_ai_memory_service.generate_memory_suggestions(
+            user_prompt=request.message,
+            assistant_response=gen_result.response
+        )
 
     # Save ONLY clean accepted response into conversation memory
     msg_metadata = {
@@ -84,7 +104,9 @@ async def chat_message(request: ChatMessageRequest):
         "execution_time_seconds": gen_result.execution_time_seconds,
         "files": gen_result.files_map,
         "retry_count": gen_result.attempts - 1,
-        "validated": gen_result.validation_passed
+        "validated": gen_result.validation_passed,
+        "memory_active": recalled_data["memory_active"],
+        "recalled_memories": recalled_data["recalled_memories"]
     }
 
     conversation_manager.record_turn(
@@ -114,6 +136,11 @@ async def chat_message(request: ChatMessageRequest):
         "retry_count": gen_result.attempts - 1,
         "quality": gen_result.quality_metadata,
         "messages": [_message_payload(message) for message in messages],
+        "memory": {
+            "active": recalled_data["memory_active"],
+            "recalled": recalled_data["recalled_memories"],
+            "suggestions": memory_suggestions
+        }
     }
 
     if DEBUG_ROUTING:
@@ -190,18 +217,16 @@ def delete_conversation(conversation_id: str):
 
 @router.post("/stream")
 async def chat_stream(request: ChatMessageRequest):
-    conversation = conversation_manager.get_conversation(request.conversation_id) if request.conversation_id else None
-    conversation_id = conversation.conversation_id if conversation is not None else conversation_manager.create_conversation(title=generate_conversation_title(request.message)).conversation_id
+    """
+    Server-Sent Events version of /chat/message: one 'message' event with the same payload,
+    then a timing event. (It used to run the full project-generation graph for every chat
+    message.)
+    """
     started_at = perf_counter()
-    payload = {
-        "prompt": request.message,
-        "session_id": conversation_id,
-    }
+    payload = await chat_message(request)
 
     def event_stream():
-        for chunk in graph.stream(payload):
-            yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
-
+        yield f"data: {json.dumps({'type': 'message', **payload}, ensure_ascii=False, default=str)}\n\n"
         elapsed_ms = (perf_counter() - started_at) * 1000
         yield f"data: {json.dumps({'type': 'timing', 'route': 'chat_stream', 'elapsed_ms': round(elapsed_ms, 1)}, ensure_ascii=False)}\n\n"
 

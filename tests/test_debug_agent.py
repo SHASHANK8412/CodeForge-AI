@@ -134,8 +134,9 @@ def test_correct_root_cause_extraction():
     }
 
     diag = agent.diagnose_and_repair(state)
-    assert diag.success is True
+    # Diagnosed, but with no project files there is nothing to patch: no fix may be claimed.
     assert diag.root_cause != ""
+    assert diag.success is False and diag.changes == {}
 
 
 def test_correct_file_identification():

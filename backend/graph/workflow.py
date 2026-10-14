@@ -24,6 +24,9 @@ from backend.graph.conditions import (
     should_retry_reviewer,
 )
 
+# Re-exported: the architecture completeness check lives in its own module.
+from backend.graph.architecture_check import enforce_architecture_sections, validate_architecture_sections  # noqa: F401,E402
+
 logger = logging.getLogger("aiforge.graph.workflow")
 
 

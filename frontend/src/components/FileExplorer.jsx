@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import { useState, useEffect } from "react";
 import { FaFolder, FaFolderOpen, FaFile, FaFileCode, FaSync, FaDownload } from "react-icons/fa";
 import { fetchProjects, fetchProjectFiles } from "../services/projectApi";
@@ -133,7 +134,7 @@ function FileExplorer({ activeProjectName, onFileSelect, onProjectChange }) {
                         </button>
                         {selectedProject && (
                             <a
-                                href={`http://127.0.0.1:8000/download-project/${encodeURIComponent(selectedProject)}`}
+                                href={`${BACKEND_URL}/download-project/${encodeURIComponent(selectedProject)}`}
                                 download
                                 className="p-1.5 rounded bg-[#6366F1] hover:bg-[#5053e1] text-white transition-colors"
                                 title="Download Project ZIP"

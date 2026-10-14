@@ -14,35 +14,15 @@ _logger = logging.getLogger("aiforge.performance")
 GENERATED_PROJECTS_DIR = Path(__file__).resolve().parent.parent.parent / "generated_projects"
 
 
+from backend.validation.code_extractor import extract_files_from_agent_output
+
+
 def extract_code_files(text: str) -> dict[str, str]:
     """
-    Scans a text block for markdown code blocks containing file annotations
-    such as `# filepath: backend/main.py` or `// filename: src/App.jsx`.
-    Returns a dictionary of relative_path -> file_content.
+    Scans a text block for markdown code blocks containing file annotations.
+    Delegates to centralized code_extractor.
     """
-    files = {}
-    if not text:
-        return files
-
-    # Look for code blocks with path annotations:
-    # ```language
-    # # filepath: relative/path/to/file
-    # content
-    # ```
-    pattern = re.compile(
-        r"```[a-zA-Z0-9_\-]*\s*\n(?:#|//)\s*(?:filepath|filename|file|path):\s*([^\n\r]+)\s*\n(.*?)\n```",
-        re.DOTALL | re.IGNORECASE
-    )
-
-    for match in pattern.finditer(text):
-        filepath = match.group(1).strip()
-        # Remove common code blocks delimiters or extra leading/trailing whitespace
-        content = match.group(2)
-        # Normalize path delimiters for cross-platform compatibility
-        normalized_path = filepath.replace("\\", "/")
-        files[normalized_path] = content
-
-    return files
+    return extract_files_from_agent_output(text)
 
 
 def build_project(project_name: str, state: dict[str, Any]) -> Path:

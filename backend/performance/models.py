@@ -1,8 +1,8 @@
 """
-AIForge Quality Recovery Day 14 — Performance & Reliability Data Models
+AIForge Quality Recovery & Day 18 Autonomous Performance Engineer Models
 ========================================================================
 Typed data models for execution policy, tracing, metrics, caching, 
-resilience, checkpoints, and error taxonomy.
+resilience, checkpoints, error taxonomy, and Day 18 Performance Engineering.
 """
 
 import time
@@ -108,7 +108,7 @@ class RequestTrace(BaseModel):
     model_calls: int = 0
     tool_calls: int = 0
     cache_hits: int = 0
-    errors: List[Dict[str, Any]] = Field(default_factory=list)
+    errors: List[Dict[str, Any]] = Field(default_factory=dict)
 
 
 class ProgressEvent(BaseModel):

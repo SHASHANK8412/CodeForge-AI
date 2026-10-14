@@ -31,7 +31,20 @@ class TestDay3ModelRoutingEndToEnd(unittest.TestCase):
         self.explanation_agent = ExplanationAgent()
         self.coding_agent = CodingAgent()
         self.debug_agent = DebugAgent()
-        self.installed_models = discover_installed_models()
+        # Routing depends on which Ollama models are installed (the first general model wins), so
+        # the documented default install is pinned instead of whatever this machine has.
+        from unittest.mock import patch
+        import backend.models.model_router as model_router_module
+        pinned = patch.object(model_router_module, "discover_installed_models",
+                              lambda force_refresh=False: ["qwen2.5:latest", "qwen2.5-coder:latest"])
+        pinned.start()
+        self.addCleanup(pinned.stop)
+        env = patch.dict("os.environ", {}, clear=False)
+        env.start()
+        self.addCleanup(env.stop)
+        for var in ("AIFORGE_GENERAL_MODEL", "AIFORGE_CODING_MODEL", "AIFORGE_DEBUG_MODEL"):
+            __import__("os").environ.pop(var, None)
+        self.installed_models = model_router_module.discover_installed_models()
 
     def test_e2e_explain_formula_1_model_routing(self):
         prompt = "Explain Formula 1"

@@ -1,138 +1,72 @@
-from backend.graph import workflow
-from backend.services.llm import select_model
-from backend.config import OLLAMA_SMALL_MODEL, OLLAMA_MEDIUM_MODEL
-
-
-class DummyPlanner:
-    def __init__(self):
-        self.calls = 0
-
-    def run(self, prompt, memory_context="", previous_output=""):
-        self.calls += 1
-        return f"PLAN::{prompt[:20]}"
-
-
-class DummyArchitect:
-    def __init__(self):
-        self.calls = 0
-
-    def run(self, plan, memory_context="", previous_output=""):
-        self.calls += 1
-        return """# Project Architecture
-# Folder Structure
-# Frontend Files
-# Backend Files
-# Database Schema
-# API Routes
-# Dependencies
 """
+Day 14: efficiency - small models and short paths for simple requests.
+
+The path tests were written against the removed router graph in backend/graph/workflow.py; they
+now check the generation pipeline's fast paths. Model selection depends on which Ollama models are
+installed, so the tests pin the installed set instead of depending on the machine.
+"""
+import pytest
+
+from backend.config import OLLAMA_MEDIUM_MODEL, OLLAMA_SMALL_MODEL
+from backend.services.llm import select_model
+
+from tests._pipeline_doubles import EXPLANATION, RESUME, PipelineDoubles
+
+CODING_MODEL = "qwen2.5-coder:latest"
 
 
-class DummyRouter:
-    def __init__(self):
-        self.calls = 0
-
-    def route(self, prompt, memory_context=""):
-        self.calls += 1
-        text = prompt.lower()
-        if "fix" in text or "bug" in text:
-            return "debug"
-        if "resume" in text:
-            return "resume"
-        if "explain" in text:
-            return "explanation"
-        return "coding"
+@pytest.fixture
+def default_models(monkeypatch):
+    """The documented default install: one general model and one coding model, no env overrides."""
+    from backend.models import model_router
+    monkeypatch.setattr(model_router, "discover_installed_models", lambda force_refresh=False: [OLLAMA_SMALL_MODEL, CODING_MODEL])
+    for var in ("AIFORGE_GENERAL_MODEL", "AIFORGE_CODING_MODEL", "AIFORGE_DEBUG_MODEL"):
+        monkeypatch.delenv(var, raising=False)
 
 
-class DummyMemoryManager:
-    def build_context_block(self, session_id, prompt):
-        return {
-            "history_text": "recent: create login page",
-            "project_text": "current project: aiforge",
-            "relevant_text": "login flow",
-        }
-
-    def build_compact_memory_context(self, session_id, prompt):
-        return "Recent History\n- create login page\nProject Snapshot\nAIForge\nRelevant Memory\nlogin flow"
-
-    def save_interaction(self, **kwargs):
-        self.last_saved = kwargs
-        return kwargs
-
-
-class CaptureAgent:
-    def __init__(self, name):
-        self.name = name
-        self.calls = []
-
-    def run(self, user_prompt, memory_context="", previous_output=""):
-        self.calls.append(
-            {
-                "prompt": user_prompt,
-                "memory_context": memory_context,
-                "previous_output": previous_output,
-            }
-        )
-        return f"{self.name.upper()}::{len(user_prompt)}"
-
-    def process(self, user_prompt, memory_context="", previous_output=""):
-        return self.run(user_prompt, memory_context, previous_output)
-
-
-
-def configure_dummies():
-    workflow.planner = DummyPlanner()
-    workflow.architect = DummyArchitect()
-    workflow.router = DummyRouter()
-    workflow.coding = CaptureAgent("coding")
-    workflow.debug = CaptureAgent("debug")
-    workflow.resume = CaptureAgent("resume")
-    workflow.explanation = CaptureAgent("explanation")
-    workflow.reviewer = CaptureAgent("reviewer")
-    workflow.testing_agent = CaptureAgent("testing")
-    workflow.memory_manager = DummyMemoryManager()
-    return workflow
-
-
-def test_select_model_uses_small_default_for_simple_tasks():
+def test_select_model_uses_small_default_for_simple_tasks(default_models):
     assert select_model("explanation", "explain this code") == OLLAMA_SMALL_MODEL
     assert select_model("resume", "improve my resume") == OLLAMA_SMALL_MODEL
 
 
-def test_select_model_uses_medium_for_planning_and_architecture():
+def test_select_model_uses_medium_for_planning_and_architecture(default_models):
     assert select_model("planner", "build a full stack app") == OLLAMA_MEDIUM_MODEL
-    assert select_model("architect", "project architecture") == OLLAMA_MEDIUM_MODEL
+    # Architecture is produced by the coding model: it writes the folder layout, schema and API contracts.
+    assert select_model("architect", "project architecture") == CODING_MODEL
 
 
-def test_fast_explanation_path_skips_planner_and_reviewer():
-    wf = configure_dummies()
-    result = wf.graph.invoke({"prompt": "Explain previous code", "session_id": "fast-1"})
-
-    assert result["route"] == "explanation"
-    assert wf.planner.calls == 0
-    assert len(wf.reviewer.calls) == 0
-    assert len(wf.explanation.calls) == 1
-    assert result["response"].startswith("EXPLANATION::")
+def test_select_model_honours_env_override(default_models, monkeypatch):
+    monkeypatch.setenv("AIFORGE_GENERAL_MODEL", CODING_MODEL)
+    assert select_model("explanation", "explain this code") == CODING_MODEL
 
 
-def test_resume_path_skips_planner_and_reviewer():
-    wf = configure_dummies()
-    wf.memory_manager.format_compact_context = lambda context: ""
-    result = wf.graph.invoke({"prompt": "Generate Resume", "session_id": "fast-2"})
+def test_fast_explanation_path_skips_planner_and_reviewer(monkeypatch):
+    doubles = PipelineDoubles(monkeypatch)
+    result = doubles.run("Explain previous code", session_id="fast-1")
 
-    assert result["route"] == "resume"
-    assert wf.planner.calls == 0
-    assert len(wf.reviewer.calls) == 0
-    assert len(wf.resume.calls) == 1
-    assert result["response"].startswith("RESUME::")
+    assert result.intent == "EXPLANATION"
+    assert result.execution_strategy == "DIRECT"
+    assert doubles.calls == ["fast_explanation"], "one model call, no planner, no reviewer"
+    assert result.response.strip() == EXPLANATION
 
 
-def test_full_coding_path_runs_reviewer_and_explanation():
-    wf = configure_dummies()
-    result = wf.graph.invoke({"prompt": "Create Login API", "session_id": "full-1"})
+def test_resume_path_skips_planner_and_reviewer(monkeypatch):
+    doubles = PipelineDoubles(monkeypatch)
+    result = doubles.run("Generate Resume", session_id="fast-2")
 
-    assert result["route"] == "coding"
-    assert wf.planner.calls == 1
-    assert len(wf.reviewer.calls) == 1
-    assert len(wf.explanation.calls) == 1
-    assert result["response"].startswith("EXPLANATION::")
+    assert result.intent == "RESUME"
+    assert "planner" not in doubles.calls and "reviewer" not in doubles.calls
+    assert doubles.calls == ["resume"]
+    assert result.response.strip() == RESUME.strip()
+
+
+def test_full_coding_path_runs_reviewer_and_explanation(monkeypatch):
+    doubles = PipelineDoubles(monkeypatch)
+    result = doubles.run("Create Login API", session_id="full-1")
+
+    assert result.intent == "PROJECT_GENERATION"
+    # The full project workflow runs exactly once; it has its own planner/architect/reviewer stages.
+    assert doubles.calls == ["project"]
+    from backend.graph.parallel_workflow import parallel_graph
+    nodes = set(parallel_graph.get_graph().nodes)
+    assert {"planner", "architect", "reviewer", "testing", "documentation"} <= nodes

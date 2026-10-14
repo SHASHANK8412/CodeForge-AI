@@ -44,7 +44,10 @@ class TestAgentPromptIsolation(unittest.TestCase):
 
     def test_coding_agent_system_prompt_boundaries(self):
         self.assertIn("Coding Agent", CODING_SYSTEM_PROMPT)
-        self.assertIn("UI components, scripts, or REST endpoints", CODING_SYSTEM_PROMPT)
+        # The prompt was rewritten (commit cda04cf); its boundaries are complete, working code and
+        # no placeholder stubs.
+        self.assertIn("complete, working code", CODING_SYSTEM_PROMPT)
+        self.assertIn("placeholder stubs", CODING_SYSTEM_PROMPT)
 
     def test_debug_agent_system_prompt_boundaries(self):
         self.assertIn("Debugging Agent", DEBUG_SYSTEM_PROMPT)

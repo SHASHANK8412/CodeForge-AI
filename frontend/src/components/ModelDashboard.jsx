@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState, useEffect } from 'react';
 import { FaBrain, FaCheckCircle, FaProjectDiagram, FaTachometerAlt, FaFlask, FaSlidersH, FaServer } from 'react-icons/fa';
 
@@ -11,7 +12,7 @@ export default function ModelDashboard() {
 
   const fetchModels = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/models');
+      const res = await fetch(`${BACKEND_URL}/api/models`);
       if (res.ok) {
         const data = await res.json();
         setModels(data.models || []);
@@ -32,7 +33,7 @@ export default function ModelDashboard() {
 
   const handleTestRoute = async (taskName) => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/models/route', {
+      const res = await fetch(`${BACKEND_URL}/api/models/route`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ task_name: taskName })
@@ -49,7 +50,7 @@ export default function ModelDashboard() {
   const handleRunConsensus = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/models/consensus', {
+      const res = await fetch(`${BACKEND_URL}/api/models/consensus`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: 'Design Microservices Architecture for Social Media', task_name: 'architecture' })
@@ -67,7 +68,7 @@ export default function ModelDashboard() {
 
   const handleRunBenchmark = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/models/benchmark', {
+      const res = await fetch(`${BACKEND_URL}/api/models/benchmark`, {
         method: 'POST'
       });
       if (res.ok) {

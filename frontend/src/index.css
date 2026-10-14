@@ -1,42 +1,101 @@
 @import "tailwindcss";
 
-html {
-    scroll-behavior: smooth;
+@theme {
+    --color-bg-base: #08090D;
+    --color-surface-card: #0F1117;
+    --color-surface-elevated: #151821;
+    --color-surface-hover: #1E2330;
+    --color-border-dark: #242833;
+    --color-border-subtle: #1C202B;
+    --color-text-primary: #F5F7FA;
+    --color-text-secondary: #9AA1B2;
+    --color-text-muted: #64748B;
+    --color-accent-violet: #8D5CF6;
+    --color-accent-blue: #6366F1;
+    --color-accent-cyan: #06B6D4;
+    --color-accent-emerald: #10B981;
+    --color-accent-amber: #F59E0B;
+    --color-accent-rose: #F43F5E;
+    
+    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, monospace;
 }
 
-body {
-    font-family: 'Inter', sans-serif;
-    background: #0B0F19;
+html,
+body,
+#root {
+    width: 100%;
+    height: 100%;
     margin: 0;
+    padding: 0;
+    overflow: hidden;
+    scroll-behavior: smooth;
+    background-color: #08090D;
+    color: #F5F7FA;
 }
 
 ::selection {
-    background: rgba(99, 102, 241, 0.35);
+    background: rgba(141, 92, 246, 0.35);
     color: #fff;
 }
 
-/* Slim, theme-matched scrollbars for the app's dark surfaces */
+/* Glassmorphism & premium panel effects */
+.glass-panel {
+    background: rgba(15, 17, 23, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(36, 40, 51, 0.7);
+}
+
+.glass-card {
+    background: rgba(21, 24, 33, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(36, 40, 51, 0.8);
+}
+
+.glass-dropdown {
+    background: rgba(15, 17, 23, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(36, 40, 51, 0.9);
+}
+
+/* Subtle glow effects */
+.glow-violet {
+    box-shadow: 0 0 25px -5px rgba(141, 92, 246, 0.25);
+}
+
+.glow-cyan {
+    box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.25);
+}
+
+.glow-emerald {
+    box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.25);
+}
+
+/* Slim scrollbars matching developer platform aesthetics */
 .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+    background: #08090D;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #1e293b;
-    border-radius: 8px;
+    background-color: #242833;
+    border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: #334155;
+    background-color: #8D5CF6;
 }
 
 * {
     scrollbar-width: thin;
-    scrollbar-color: #1e293b transparent;
+    scrollbar-color: #242833 #08090D;
 }
 
 @keyframes fade-in {
@@ -51,7 +110,20 @@ body {
 }
 
 .animate-fade-in {
-    animation: fade-in 0.2s ease-out;
+    animation: fade-in 0.2s ease-out forwards;
+}
+
+@keyframes pulse-subtle {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.animate-pulse-subtle {
+    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes spin-slow {
@@ -66,3 +138,34 @@ body {
 .animate-spin-slow {
     animation: spin-slow 3s linear infinite;
 }
+
+/* Directional "data flowing along a wire" effect for active org-chart / graph edges */
+@keyframes dash-flow {
+    to {
+        stroke-dashoffset: -20;
+    }
+}
+
+.animate-dash-flow {
+    animation: dash-flow 0.8s linear infinite;
+}
+
+@keyframes node-glow {
+    0%, 100% {
+        box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.35), 0 0 18px 2px rgba(34, 211, 238, 0.25);
+    }
+    50% {
+        box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.55), 0 0 26px 6px rgba(34, 211, 238, 0.4);
+    }
+}
+
+.animate-node-glow {
+    animation: node-glow 1.8s ease-in-out infinite;
+}
+
+/* Monaco container styling overrides */
+.monaco-editor {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+

@@ -75,8 +75,6 @@ async def retrieve_memory_context(req: RetrieveMemoryInput) -> Dict[str, Any]:
     return {"status": "success", "retrieved_context": context}
 
 
-@router.get("/api/v1/learning/dashboard")
-@router.get("/learning/dashboard")
 async def get_memory_dashboard() -> Dict[str, Any]:
     """
     Retrieves Memory Dashboard & Continuous Quality Tracking metrics.
