@@ -77,28 +77,12 @@ DOCKER_ENABLED=true
 EXECUTION_BACKEND=docker
 ```
 
-### Option B: REST API Request Payload
-When triggering validation via `POST /api/projects/{project_id}/autonomous-validate`:
-```json
-{
-  "files": {
-    "backend/main.py": "from fastapi import FastAPI\napp = FastAPI()\n",
-    "tests/test_main.py": "def test_api(): assert True\n",
-    "requirements.txt": "fastapi\npytest\n"
-  },
-  "execution_backend": "docker",
-  "docker_enabled": true,
-  "memory_limit": "512m",
-  "cpu_limit": 1.0,
-  "network_mode": "none"
-}
-```
-
-### Option C: AIForge Frontend Sandbox View
-1. Open the **Validation Sandbox** view in the sidebar.
-2. Toggle the backend selector from `💻 Local Sandbox` to `🐳 Docker Sandbox`.
-3. Optionally adjust RAM (`256m`, `512m`, `1g`), CPU (`0.5`, `1.0`, `2.0`), and Network (`none`, `bridge`).
-4. Click **Run Docker Sandbox**.
+### Retired: request-payload and Validation Sandbox options
+The old `POST /api/projects/{project_id}/autonomous-validate` endpoints (and the `/api/execution/validate` aliases)
+accepted files, image, limits and network mode from the request body. They now return **410 Gone**.
+The sidebar's **Validation Sandbox** entry opens the **Execution Guardian**, which verifies the project's own files
+on disk (with ownership checks) on an isolated copy using server-controlled execution profiles:
+`POST /api/projects/{project_id}/verifications`.
 
 ---
 

@@ -136,7 +136,7 @@ export default function Sidebar({
     };
 
     const handleNavClick = (viewKey) => {
-        setView(viewKey);
+        setView(VIEW_ALIASES[viewKey] || viewKey);
         if (onCloseMobile) onCloseMobile();
     };
 
@@ -182,6 +182,10 @@ export default function Sidebar({
         { key: "analytics", label: "Analytics", icon: <FaChartLine size={14} /> },
         { key: "settings", label: "Settings", icon: <FaCog size={14} /> },
     ];
+
+    // Retired views whose sidebar entries now open their replacement
+    // ("Validation Sandbox" was superseded by the Execution Guardian).
+    const VIEW_ALIASES = { "execution-validation": "execution-guardian" };
 
     // Preserved specialized engineering tools suite
     const engineeringSuiteItems = [

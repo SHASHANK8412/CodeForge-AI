@@ -9,7 +9,7 @@ Tests:
 - Autonomous self-healing retry behavior & code repair application
 - Configurable maximum retry limit enforcement
 - Structured execution result & final validation report properties
-- REST API validation endpoints and SSE streaming
+- Retired REST validation endpoints answer 410 and execute nothing
 """
 
 import sys
@@ -238,48 +238,58 @@ class TestAutonomousExecutionEngine:
             assert hasattr(s, "duration_ms")
 
 
-class TestAutonomousValidationAPI:
-    """Verifies FastAPI REST endpoints and SSE streaming."""
+RETIRED_ENDPOINTS = [
+    ("post", "/api/projects/api_test_project/autonomous-validate", "/api/projects/api_test_project/verifications"),
+    ("post", "/api/projects/api_test_project/autonomous-validate/stream", "/api/projects/api_test_project/verifications"),
+    ("get", "/api/projects/cached_proj/autonomous-report", "/api/projects/cached_proj/verifications"),
+    ("post", "/api/execution/validate", "/api/projects/{project_id}/verifications"),
+    ("post", "/api/execution/validate/stream", "/api/projects/{project_id}/verifications"),
+    ("get", "/api/execution/report/cached_proj", "/api/projects/cached_proj/verifications"),
+]
 
-    def test_autonomous_validate_endpoint(self):
+
+class TestRetiredAutonomousValidationAPI:
+    """The old request-body validation endpoints are retired in favour of the Execution Guardian
+    (/api/projects/{id}/verifications). They must answer 410, name the replacement, and run nothing."""
+
+    @pytest.mark.parametrize("method,url,replacement", RETIRED_ENDPOINTS)
+    def test_retired_endpoint_returns_410_naming_replacement(self, method, url, replacement):
+        res = getattr(client, method)(url, **({"json": {}} if method == "post" else {}))
+        assert res.status_code == 410
+        data = res.json()
+        assert data["replacement"] == replacement
+        assert replacement in data["detail"]
+
+    @pytest.mark.parametrize("url", [u for m, u, _ in RETIRED_ENDPOINTS if m == "post"])
+    def test_retired_endpoint_executes_nothing_from_request(self, url, tmp_path, monkeypatch):
+        calls = []
+        monkeypatch.setattr(
+            AutonomousExecutionEngine, "execute_and_validate",
+            lambda self, *a, **k: calls.append((a, k)),
+        )
+        sentinel = tmp_path / "executed.txt"
         payload = {
             "files": {
-                "backend/main.py": "def get_val(): return 42\n",
-                "tests/test_val.py": "from backend.main import get_val\ndef test_val(): assert get_val() == 42\n"
+                "backend/main.py": f"open({str(sentinel)!r}, 'w').write('ran')\n",
+                "tests/test_x.py": "import backend.main\ndef test_x(): assert True\n",
             },
-            "timeout_seconds": 15,
-            "max_repair_attempts": 2,
-            "install_dependencies": False
+            "install_dependencies": False,
+            "execution_backend": "docker",
+            "docker_image": "attacker/image:latest",
+            "memory_limit": "64g",
+            "cpu_limit": 64.0,
+            "network_mode": "host",
         }
-        res = client.post("/api/projects/api_test_project/autonomous-validate", json=payload)
-        assert res.status_code == 200
-        data = res.json()
-        assert data["status"] == "success"
-        assert "report" in data
-        assert data["report"]["overall_status"] == "VERIFIED"
-        assert data["report"]["is_production_ready"] is True
+        res = client.post(url, json=payload)
+        assert res.status_code == 410
+        assert calls == []
+        assert not sentinel.exists()
 
-    def test_autonomous_report_get_endpoint(self):
-        # First ensure report is created
-        payload = {
+    def test_retired_report_endpoint_does_not_serve_stored_reports(self):
+        client.post("/api/projects/cached_proj/autonomous-validate", json={
             "files": {"backend/main.py": "def val(): return 1\n", "tests/test_v.py": "def test_v(): assert True\n"},
-            "install_dependencies": False
-        }
-        client.post("/api/projects/cached_proj/autonomous-validate", json=payload)
-
+            "install_dependencies": False,
+        })
         res = client.get("/api/projects/cached_proj/autonomous-report")
-        assert res.status_code == 200
-        data = res.json()
-        assert data["project_name"] == "cached_proj"
-        assert data["is_production_ready"] is True
-
-    def test_api_execution_validate_alias(self):
-        payload = {
-            "files": {"backend/main.py": "def status(): return 'OK'\n", "tests/test_s.py": "def test_s(): assert True\n"},
-            "install_dependencies": False
-        }
-        res = client.post("/api/execution/validate", json=payload)
-        assert res.status_code == 200
-        data = res.json()
-        assert data["status"] == "success"
-        assert "report" in data
+        assert res.status_code == 410
+        assert "project_name" not in res.json()

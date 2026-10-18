@@ -73,7 +73,6 @@ const DnaGraphPage = lazy(() => import("./pages/DnaGraphPage"));
 const BugBountyPage = lazy(() => import("./pages/BugBountyPage"));
 const DebateArenaPage = lazy(() => import("./pages/DebateArenaPage"));
 const SoftwareAssistantPage = lazy(() => import("./pages/SoftwareAssistantPage"));
-const ExecutionValidationView = lazy(() => import("./components/ExecutionValidationView"));
 const CIPipelineDashboard = lazy(() => import("./components/CIPipelineDashboard"));
 
 function PageLoader() {
@@ -291,11 +290,6 @@ function AppContent() {
                     {view === "build" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
                             <GenerationDashboard generationId={activeGenerationId} setView={setView} setActiveProjectName={setActiveProjectName} />
-                        </ProtectedRoute>
-                    )}
-                    {view === "execution-validation" && (
-                        <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <ExecutionValidationView />
                         </ProtectedRoute>
                     )}
                     {view === "ci-pipeline" && (
