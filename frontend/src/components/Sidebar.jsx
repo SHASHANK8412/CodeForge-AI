@@ -202,6 +202,7 @@ export default function Sidebar({
         { key: "time-machine", label: "Time Machine", icon: <FaHistory size={12} /> },
         { key: "swarm", label: "Swarm Intelligence", icon: <FaProjectDiagram size={12} /> },
         { key: "reality-simulator", label: "Reality Simulator", icon: <FaBolt size={12} /> },
+        { key: "execution-guardian", label: "Execution Guardian", icon: <FaShieldAlt size={12} /> },
         { key: "autopilot", label: "Autopilot Engine", icon: <FaRocket size={12} /> },
         { key: "xray", label: "Project X-Ray", icon: <FaBrain size={12} /> },
         { key: "dna", label: "DNA Graph", icon: <FaProjectDiagram size={12} /> },

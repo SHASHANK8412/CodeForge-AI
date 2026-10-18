@@ -51,6 +51,14 @@ class AgentFactory:
         elif agent_type_lower == "frontend":
             return FrontendAgent()
 
+        elif agent_type_lower == "backend":
+            from backend.agents.backend_agent import BackendAgent
+            return BackendAgent()
+
+        elif agent_type_lower == "database":
+            from backend.agents.database_agent import DatabaseAgent
+            return DatabaseAgent()
+
         elif agent_type_upper == "UNKNOWN":
             # UNKNOWN defaults to ExplanationAgent as a safe general fallback (NEVER CodingAgent!)
             return ExplanationAgent()

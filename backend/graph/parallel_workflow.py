@@ -953,6 +953,13 @@ async def debug_node(state: ProjectState) -> dict:
     fixes = list(state.get("fixes", []) or [])
     existing_errors = list(state.get("errors", []) or [])
     existing_causes = list(state.get("root_causes", []) or [])
+    verification = state.get("verification") or {}
+    guardian_failures = [f for f in verification.get("failures", []) if f.get("repairable")] if verification.get("status") == "FAILED" else []
+    if guardian_failures:
+        # the Guardian's evidence (e.g. a backend that does not start while the tests pass) reaches the diagnosis
+        evidence = "\n".join(f"[{f['category']}] {f['summary']}\n{f.get('log_excerpt', '')}" for f in guardian_failures)
+        exec_res = {**exec_res, "exit_code": exec_res.get("exit_code") or 1, "status": "FAIL",
+                    "stderr": ((exec_res.get("stderr") or "") + "\n" + evidence).strip()}
 
     # Structured Diagnosis via DiagnosticAgent & DebugAgent
     # The diagnosis may call the model (tens of seconds): off the event loop, so live progress
@@ -975,7 +982,32 @@ async def debug_node(state: ProjectState) -> dict:
     )
 
     # May call the coding model (LLM rewrite fallback): keep it off the event loop.
-    debug_res = await asyncio.to_thread(global_debug_agent.diagnose_and_repair, dict(state))
+    debug_res = await asyncio.to_thread(global_debug_agent.diagnose_and_repair, {**dict(state), "execution_results": exec_res})
+    routed_agent = None
+    if guardian_failures:
+        from backend.execution_guardian import repair as guardian_repair
+        from backend.execution_guardian.models import Failure
+        group = guardian_repair.pick_group([Failure(id=f["id"], check=f["check"], category=f["category"], severity=f["severity"],
+                                                    summary=f["summary"], log_excerpt=f.get("log_excerpt", ""), files=f["files"],
+                                                    failing_tests=f["failing_tests"], responsible_agent=f["responsible_agent"],
+                                                    signature=f["signature"]) for f in guardian_failures], set())
+        routed_agent = group[0].responsible_agent if group else None
+        proj = state.get("project_path", "")
+        if group and not (debug_res.changes or {}) and proj and Path(proj).is_dir():
+            # the deterministic strategies found nothing: the responsible agent repairs, within its own scope
+            from backend.execution_guardian.service import global_execution_guardian
+            strategy, changes, note = await asyncio.to_thread(
+                guardian_repair.propose, group, routed_agent, Path(proj), verification.get("stack") or {},
+                str(state.get("project_id") or state.get("project_name") or "default_project"),
+                global_execution_guardian.generate, str(state.get("prompt", ""))[:1500])
+            accepted, rejected = guardian_repair.validate(changes, routed_agent, verification.get("stack") or {}, Path(proj),
+                                                          sorted({x for f in group for x in f.files}))
+            if accepted:
+                debug_res = debug_res.model_copy(update={
+                    "changes": accepted, "error_type": group[0].category,
+                    "root_cause": f"{group[0].category}: {group[0].summary}",
+                    "explanation": f"routed by the Execution Guardian to the {routed_agent} agent ({strategy})"
+                                   + (f"; rejected out-of-scope paths: {rejected}" if rejected else "")})
 
     try:
         global_project_memory_service.store_memory(MemoryRecord(
@@ -1009,6 +1041,7 @@ async def debug_node(state: ProjectState) -> dict:
         "errors": existing_errors + [debug_res.root_cause],
         "root_causes": existing_causes + [debug_res.root_cause],
         "repair_status": f"DIAGNOSED_CYCLE_{cycle}",
+        "routed_agent": routed_agent or "debug",
         "current_step": "debug",
         "current_agent": "debug",
         "stream_events": [f"⚠️ Debug Agent (Cycle {cycle}/{max_retries}): [{debug_res.error_type}] -> {debug_res.root_cause}"]
@@ -1148,7 +1181,13 @@ def repair_escalation(state: ProjectState) -> Optional[str]:
     conditional-edge function cannot write state (LangGraph discards it), so the node that
     persists the escalation recomputes it.
     """
-    if _tests_verified(state) or state.get("status", "") in ("UNSUPPORTED", "SECURITY_ERROR"):
+    if state.get("status", "") in ("UNSUPPORTED", "SECURITY_ERROR"):
+        return None
+    if (state.get("verification") or {}).get("status") == "FAILED":
+        g = guardian_escalation(state)
+        if g:
+            return g
+    elif _tests_verified(state):
         return None
     if not state.get("test_results"):
         return None
@@ -1159,6 +1198,99 @@ def repair_escalation(state: ProjectState) -> Optional[str]:
     if attempt >= max_attempts:
         return "STOPPED_MAX_ATTEMPTS"
     return None
+
+
+GUARDIAN_OK = ("VERIFIED", "VERIFIED_WITH_WARNINGS")
+
+
+def _verification_summary(v) -> Dict[str, Any]:
+    """The serialisable part of a Guardian verification the graph keeps in its state."""
+    return {"id": v.id, "status": v.status, "statement": (v.report or {}).get("statement"),
+            "checks": [{"name": c.name, "label": c.label, "status": c.status, "required": c.required,
+                        "error_summary": c.error_summary, "reason": c.reason, "duration_seconds": c.duration_seconds}
+                       for c in v.checks],
+            "failures": [{"id": f.id, "check": f.check, "category": f.category, "severity": f.severity,
+                          "summary": f.summary, "files": f.files, "failing_tests": f.failing_tests,
+                          "responsible_agent": f.responsible_agent, "next_action": f.next_action,
+                          "signature": f.signature, "repairable": f.repairable, "classified_by": f.classified_by,
+                          "log_excerpt": (f.log_excerpt or "")[-1500:]} for f in v.failures],
+            "warnings": (v.report or {}).get("warnings", []), "stack": v.stack}
+
+
+async def execution_guardian_node(state: ProjectState) -> dict:
+    """
+    The Execution Guardian verifies the assembled project after the tests: every check that applies to its stack
+    (syntax, static gate, dependency install, tests, backend startup, frontend build) runs in isolation on a copy.
+    Only VERIFIED / VERIFIED_WITH_WARNINGS lets the workflow continue to final approval as verified; failures go to
+    the debug -> patch loop with their classification and the responsible agent.
+    """
+    from backend.execution_guardian.service import global_execution_guardian
+    _logger.info("✔ Execution Guardian verifying the assembled project...")
+    _fire_lifecycle("agent_started", "execution_guardian")
+    project_path = state.get("project_path", "")
+    project_id = str(state.get("project_id") or state.get("project_name") or "default_project")
+    attempt = state.get("retry_count", state.get("repair_attempt", state.get("iteration", 0))) or 0
+    history = list(state.get("verification_history", []) or [])
+    with Timer() as timer:
+        if project_path and Path(project_path).is_dir():
+            v = await asyncio.to_thread(global_execution_guardian.verify, project_id, Path(project_path), "workflow", attempt)
+            summary = _verification_summary(v)
+        else:
+            summary = {"id": None, "status": "BLOCKED", "statement": "no project folder on disk: nothing could be verified",
+                       "checks": [], "failures": [], "warnings": [], "stack": {}}
+    agent_timers["execution_guardian"] = timer.elapsed
+    if state.get("verification"):
+        prev = state["verification"]
+        history.append({"id": prev.get("id"), "status": prev.get("status"),
+                        "signatures": sorted({f["signature"] for f in prev.get("failures", [])})})
+    counts = {}
+    for c in summary["checks"]:
+        counts[c["status"]] = counts.get(c["status"], 0) + 1
+    _record_metrics(state, verification_status=summary["status"])
+    _fire_lifecycle("agent_completed", "execution_guardian", duration=timer.elapsed)
+    return {
+        "verification": summary,
+        "verification_history": history,
+        "current_step": "execution_guardian",
+        "current_agent": "execution_guardian",
+        "stream_events": [f"🛡 Execution Guardian: {summary['status']} ({', '.join(f'{v} {k.lower()}' for k, v in sorted(counts.items()))})"
+                          + (f" - {summary['failures'][0]['category']}: {summary['failures'][0]['summary'][:120]}" if summary["failures"] else "")],
+    }
+
+
+def guardian_escalation(state: ProjectState) -> Optional[str]:
+    """Why a failed verification must stop the repair loop, or None (the loop may try again)."""
+    v = state.get("verification") or {}
+    if v.get("status") != "FAILED":
+        return None
+    attempt = state.get("retry_count", state.get("repair_attempt", state.get("iteration", 0)))
+    max_attempts = state.get("max_retries", state.get("max_repair_attempts", state.get("max_iterations", MAX_REPAIR_ATTEMPTS)))
+    if attempt >= max_attempts:
+        return "STOPPED_MAX_ATTEMPTS"
+    current = {f["signature"] for f in v.get("failures", [])}
+    previous = (state.get("verification_history") or [{}])[-1].get("signatures") if state.get("verification_history") else None
+    if previous is not None and current and current == set(previous):
+        return "STOPPED_REPEATED_FAILURE"
+    if not any(f.get("repairable") and f.get("responsible_agent") for f in v.get("failures", [])):
+        return "STOPPED_NOT_REPAIRABLE"
+    return None
+
+
+def route_after_guardian(state: ProjectState) -> str:
+    v = state.get("verification") or {}
+    status = v.get("status")
+    if state.get("status", "") in ("UNSUPPORTED", "SECURITY_ERROR"):
+        return "final_approval"
+    if status in GUARDIAN_OK:
+        global_export_gate.mark_verified(state)
+        return "final_approval"
+    if status != "FAILED":
+        return "final_approval"                        # BLOCKED: nothing to repair, and not verified
+    escalation = guardian_escalation(state) or repair_escalation(state)
+    if escalation:
+        _logger.warning("Repair loop stopped (%s). Escalating to human intervention.", escalation)
+        return "final_approval"
+    return "debug"
 
 
 def route_after_testing(state: ProjectState) -> str:
@@ -1261,6 +1393,13 @@ async def final_approval_node(state: ProjectState) -> dict:
     final_req["quality_gate"] = {"passed": gate.get("passed"), "error_count": gate.get("error_count"), "warning_count": gate.get("warning_count")}
     if not is_escalation and sec.get("gate_status") == "FAILED":
         final_req["deployment_readiness"] = "SECURITY REVIEW REQUIRED"
+    verification = state.get("verification") or {}
+    if verification:
+        final_req["verification"] = {k: verification.get(k) for k in ("id", "status", "statement", "checks", "warnings")}
+        final_req["verification"]["failures"] = [{k: f.get(k) for k in ("category", "summary", "responsible_agent", "next_action")}
+                                                 for f in verification.get("failures", [])]
+        if verification.get("status") not in GUARDIAN_OK and not is_escalation:
+            final_req["deployment_readiness"] = f"NOT VERIFIED ({verification.get('status')}): {verification.get('statement')}"
     final_req["template_check"] = state.get("template_check") or {}
     if final_req["template_check"].get("missing_required"):
         final_req["deployment_readiness"] = "INCOMPLETE: missing " + ", ".join(final_req["template_check"]["missing_required"])
@@ -1626,6 +1765,7 @@ builder.add_node("security_scan", security_scan_node)
 builder.add_node("performance", performance_node)
 builder.add_node("execution_validation", execution_validation_node)
 builder.add_node("testing", testing_node)
+builder.add_node("execution_guardian", execution_guardian_node)
 builder.add_node("debug", debug_node)
 builder.add_node("patch", patch_node)
 builder.add_node("final_approval", final_approval_node)
@@ -1671,10 +1811,11 @@ builder.add_edge("security_scan", "performance")
 builder.add_edge("performance", "execution_validation")
 builder.add_edge("execution_validation", "testing")
 
-# Self-Correction Loop Routing (Testing -> Debug -> Patch -> Retest)
+# Self-Correction Loop Routing (Testing -> Execution Guardian -> Debug -> Patch -> Retest)
+builder.add_edge("testing", "execution_guardian")
 builder.add_conditional_edges(
-    "testing",
-    route_after_testing,
+    "execution_guardian",
+    route_after_guardian,
     {
         "final_approval": "final_approval",
         "debug": "debug",

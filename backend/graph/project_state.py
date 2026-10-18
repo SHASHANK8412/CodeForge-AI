@@ -183,6 +183,9 @@ class ProjectState(TypedDict, total=False):
     max_retries: int
     fix_history: List[Dict[str, Any]]
     failure_history: List[Dict[str, Any]]
+    verification: Dict[str, Any]           # Execution Guardian: the latest verification (status, checks, failures)
+    verification_history: List[Dict[str, Any]]   # earlier verifications of this run (status, failure signatures)
+    routed_agent: str                      # the agent the Guardian routed the current repair to
     current_debug_cycle: int
     human_intervention_required: bool
     human_escalation_details: Dict[str, Any]

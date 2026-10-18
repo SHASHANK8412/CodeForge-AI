@@ -36,6 +36,7 @@ const IntelligencePlatformPage = lazy(() => import("./pages/IntelligencePlatform
 const KnowledgeGraphPage = lazy(() => import("./pages/KnowledgeGraphPage"));
 const SwarmPage = lazy(() => import("./pages/SwarmPage"));
 const RealitySimulatorPage = lazy(() => import("./pages/RealitySimulatorPage"));
+const ExecutionGuardianPage = lazy(() => import("./pages/ExecutionGuardianPage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const CreateProject = lazy(() => import("./pages/CreateProject"));
 const GenerationDashboard = lazy(() => import("./pages/GenerationDashboard"));
@@ -378,6 +379,11 @@ function AppContent() {
                     {view === "reality-simulator" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
                             <RealitySimulatorPage activeProjectId={activeGenerationId} />
+                        </ProtectedRoute>
+                    )}
+                    {view === "execution-guardian" && (
+                        <ProtectedRoute onRedirectLogin={() => setView("login")}>
+                            <ExecutionGuardianPage activeProjectId={activeGenerationId} />
                         </ProtectedRoute>
                     )}
                     {view === "performance-engineer" && (

@@ -32,7 +32,8 @@ def test_entire_pipeline():
              "security_scan", "performance", "execution_validation", "testing"]
     for a, b in zip(chain, chain[1:]):
         assert edges[a] == {b}
-    assert edges["testing"] >= {"debug", "final_approval"}
+    assert edges["testing"] == {"execution_guardian"}            # the Execution Guardian verifies before any routing
+    assert edges["execution_guardian"] >= {"debug", "final_approval"}
     assert edges["debug"] == {"patch"} and edges["patch"] == {"execution_validation"}, "bounded repair loop"
     assert "packaging" in edges["final_approval"]
     assert edges["health_check"] == {"__end__"}

@@ -398,6 +398,9 @@ def register_routers() -> None:
     from backend.reality.routes import reality_router
     app.include_router(reality_router)
 
+    from backend.execution_guardian.routes import execution_guardian_router
+    app.include_router(execution_guardian_router)
+
     from backend.architecture_simulator.routes import day25_architect_router
     app.include_router(day25_architect_router)
 
