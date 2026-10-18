@@ -9,7 +9,7 @@ Automated unit, integration, failure demo, and security tests for:
 - DiagnosticAgent
 - RepairAgent
 - 8-Level ValidationPipeline
-- REST API Execution Endpoints
+- Retired REST execution endpoints answer 410 and execute nothing
 - Intentionally Broken Self-Healing Failure Demos
 """
 
@@ -147,37 +147,56 @@ class TestValidationPipeline:
         assert report.quality_scores["overall_score"] > 85.0
 
 
-class TestExecutionAPIEndpoints:
-    """Verifies REST API execution and repair endpoints."""
+RETIRED_ENDPOINTS = [
+    ("post", "/api/projects/demo_proj_1/execute"),
+    ("get", "/api/projects/demo_proj_1/execution"),
+    ("post", "/api/projects/demo_proj_1/repair"),
+    ("get", "/api/projects/demo_proj_1/validation"),
+]
+REPLACEMENT = "/api/projects/demo_proj_1/verifications"
 
-    def test_execute_endpoint(self):
-        res = client.post(
-            "/api/projects/demo_proj_1/execute",
-            json={"files": {"backend/main.py": "from fastapi import FastAPI\napp = FastAPI()\n"}}
-        )
-        assert res.status_code == 200
-        data = res.json()
-        assert data["status"] == "success"
-        assert "validation" in data
 
-    def test_get_execution_endpoint(self):
-        res = client.get("/api/projects/demo_proj_1/execution")
-        assert res.status_code == 200
-        data = res.json()
-        assert "execution" in data
+class TestRetiredExecutionAPIEndpoints:
+    """The request-body execute/repair endpoints and their execution/validation reads are retired in favour
+    of the Execution Guardian (/api/projects/{id}/verifications). They must answer 410, name the replacement,
+    and run nothing."""
 
-    def test_repair_endpoint(self):
-        res = client.post(
-            "/api/projects/demo_proj_1/repair",
-            json={
-                "files": {"backend/main.py": "from fastapi import FastAPI\napp = FastAPI()\n"},
-                "diagnostic": {"root_cause": "Fix syntax", "affected_files": ["backend/main.py"]}
-            }
-        )
-        assert res.status_code == 200
+    @pytest.mark.parametrize("method,url", RETIRED_ENDPOINTS)
+    def test_retired_endpoint_returns_410_naming_replacement(self, method, url):
+        res = getattr(client, method)(url, **({"json": {}} if method == "post" else {}))
+        assert res.status_code == 410
         data = res.json()
-        assert data["status"] == "success"
-        assert "re_validation" in data
+        assert data["replacement"] == REPLACEMENT
+        assert REPLACEMENT in data["detail"]
+
+    @pytest.mark.parametrize("url", [u for m, u in RETIRED_ENDPOINTS if m == "post"])
+    def test_retired_endpoint_executes_nothing_from_request(self, url, tmp_path, monkeypatch):
+        calls = []
+        monkeypatch.setattr(ExecutionAgent, "execute_project", lambda self, *a, **k: calls.append("execute"))
+        monkeypatch.setattr(RepairAgent, "repair_code", lambda self, *a, **k: calls.append("repair"))
+        monkeypatch.setattr(ValidationPipeline, "run_pipeline", lambda self, *a, **k: calls.append("validate"))
+        sentinel = tmp_path / "executed.txt"
+        payload = {
+            "files": {
+                "backend/main.py": f"open({str(sentinel)!r}, 'w').write('ran')\n",
+                "tests/test_x.py": "import backend.main\ndef test_x(): assert True\n",
+            },
+            "diagnostic": {"root_cause": "Fix syntax", "affected_files": ["backend/main.py"]},
+            "timeout": 3600,
+        }
+        res = client.post(url, json=payload)
+        assert res.status_code == 410
+        assert calls == []
+        assert not sentinel.exists()
+
+    @pytest.mark.parametrize("url", [u for m, u in RETIRED_ENDPOINTS if m == "get"])
+    def test_retired_read_endpoint_serves_no_report(self, url):
+        client.post("/api/projects/demo_proj_1/execute", json={
+            "files": {"backend/main.py": "from fastapi import FastAPI\napp = FastAPI()\n"},
+        })
+        res = client.get(url)
+        assert res.status_code == 410
+        assert set(res.json()) == {"detail", "replacement"}
 
 
 class TestSelfHealingFailureDemo:

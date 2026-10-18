@@ -1,171 +1,70 @@
 """
-AIForge Autonomous Engineering Platform — Execution & Self-Healing REST API Routes
-===================================================================================
-Endpoints:
-- POST /api/projects/{project_id}/execute
-- GET /api/projects/{project_id}/execution
-- POST /api/projects/{project_id}/repair
-- GET /api/projects/{project_id}/validation
-
-Retired (410 Gone, replaced by the Execution Guardian at /api/projects/{project_id}/verifications):
+AIForge Autonomous Engineering Platform — Retired Execution & Self-Healing REST API Routes
+==========================================================================================
+Every endpoint here is retired and answers 410 Gone, naming the Execution Guardian
+(/api/projects/{project_id}/verifications) as the replacement:
+- POST /api/projects/{project_id}/execute, GET /api/projects/{project_id}/execution
+- POST /api/projects/{project_id}/repair, GET /api/projects/{project_id}/validation
 - POST /api/projects/{project_id}/autonomous-validate[/stream], GET /api/projects/{project_id}/autonomous-report
 - POST /api/execution/validate[/stream], GET /api/execution/report/{project_id}
 """
 
-import logging
-from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, HTTPException, BackgroundTasks, status
+from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
-
-from backend.agents.execution_agent import global_execution_agent
-from backend.agents.diagnostic_agent import global_diagnostic_agent
-from backend.agents.repair_agent import global_repair_agent
-from backend.validation.validation_pipeline import global_validation_pipeline
-from backend.services.project_builder import global_structured_project_builder
-
-_logger = logging.getLogger("aiforge.routes.execution")
 
 router = APIRouter(prefix="/api/projects", tags=["execution"])
 
-# In-memory execution store
-execution_store: Dict[str, Dict[str, Any]] = {}
-
-
-class ExecuteProjectRequest(BaseModel):
-    files: Optional[Dict[str, str]] = None
-    timeout: int = 30
-
-
-class RepairProjectRequest(BaseModel):
-    files: Dict[str, str]
-    diagnostic: Optional[Dict[str, Any]] = None
-
-
-@router.post("/{project_id}/execute")
-async def execute_project_endpoint(project_id: str, req: ExecuteProjectRequest):
-    files_map = req.files or {"backend/main.py": "from fastapi import FastAPI\napp = FastAPI()\n"}
-    _logger.info(f"API: Executing project '{project_id}' ({len(files_map)} files)...")
-
-    exec_report = global_execution_agent.execute_project(
-        files_manifest=files_map,
-        timeout=req.timeout
-    )
-    exec_dict = exec_report.model_dump()
-
-    val_report = global_validation_pipeline.run_pipeline(
-        files_manifest=files_map,
-        execution_data=exec_dict
-    )
-    val_dict = val_report.model_dump()
-
-    store_entry = execution_store.get(project_id, {"history": []})
-    history = store_entry.get("history", [])
-    history.append({
-        "attempt": len(history) + 1,
-        "status": exec_report.status,
-        "exit_code": exec_report.exit_code,
-        "error_type": exec_report.error_type,
-        "duration_ms": exec_report.duration_ms,
-        "validation_status": val_report.overall_status
-    })
-
-    record = {
-        "project_id": project_id,
-        "execution": exec_dict,
-        "validation": val_dict,
-        "execution_report": exec_dict,
-        "validation_report": val_dict,
-        "history": history
-    }
-    execution_store[project_id] = record
-
-    return {
-        "status": "success",
-        "project_id": project_id,
-        "execution": exec_dict,
-        "validation": val_dict,
-        "history": history
-    }
-
-
-@router.get("/{project_id}/execution")
-async def get_project_execution_endpoint(project_id: str):
-    if project_id not in execution_store:
-        # Default status for active or demo projects
-        return {
-            "project_id": project_id,
-            "status": "READY",
-            "execution": {"status": "success", "exit_code": 0, "duration_ms": 120.0},
-            "history": []
-        }
-    return execution_store[project_id]
-
-
-@router.post("/{project_id}/repair")
-async def repair_project_endpoint(project_id: str, req: RepairProjectRequest):
-    _logger.info(f"API: Repairing project '{project_id}'...")
-
-    diag_data = req.diagnostic or {
-        "root_cause": "Fix syntax and import errors",
-        "affected_files": list(req.files.keys())[:1],
-        "recommended_fix": "Apply minimal targeted fix"
-    }
-
-    files_map = dict(req.files)
-    repair_result = global_repair_agent.repair_code(
-        diagnostic_data=diag_data,
-        files_map=files_map
-    )
-
-    # Re-execute after repair to verify fix
-    re_exec = global_execution_agent.execute_project(files_manifest=files_map)
-    re_val = global_validation_pipeline.run_pipeline(files_manifest=files_map, execution_data=re_exec.model_dump())
-
-    return {
-        "status": "success",
-        "project_id": project_id,
-        "repair_result": repair_result,
-        "re_execution": re_exec.model_dump(),
-        "re_validation": re_val.model_dump(),
-        "repaired_files": files_map
-    }
-
-
-@router.get("/{project_id}/validation")
-async def get_project_validation_endpoint(project_id: str):
-    if project_id in execution_store:
-        return execution_store[project_id].get("validation_report", {})
-
-    # Generate real validation pipeline report
-    dummy_files = {"backend/main.py": "from fastapi import FastAPI\napp = FastAPI()\n", "README.md": "# App"}
-    report = global_validation_pipeline.run_pipeline(dummy_files)
-    return report.model_dump()
-
-
-# --- Retired: autonomous validation ------------------------------------------------------------
 # These endpoints ran files taken from the request body (or a built-in dummy file) with no
-# authentication or ownership check, let the caller choose the container image, limits and network,
-# and kept reports in an unbounded in-memory dict. The Execution Guardian replaces them: it resolves
-# the project on disk with ownership checks and runs it on an isolated copy with controlled profiles.
+# authentication or ownership check, and kept results in an unbounded in-memory dict. The execute and
+# repair endpoints ran the detected build/test command in the server's own working directory, with a
+# caller-chosen timeout; the GET endpoints returned made-up defaults or a report on the dummy file.
+# The Execution Guardian replaces them: it resolves the project on disk with ownership checks and runs
+# it on an isolated copy with controlled profiles.
 # The routes stay registered so old clients get a clear 410 instead of a confusing 404/405.
 
 VERIFICATIONS_API = "/api/projects/{project_id}/verifications"
 
 
-def _retired(project_id: str = "{project_id}") -> JSONResponse:
+def _retired(project_id: str = "{project_id}", feature: str = "Autonomous validation") -> JSONResponse:
     replacement = VERIFICATIONS_API.format(project_id=project_id)
     return JSONResponse(
         status_code=status.HTTP_410_GONE,
         content={
             "detail": (
-                "Autonomous validation has been retired. Use the Execution Guardian API: "
+                f"{feature} has been retired. Use the Execution Guardian API: "
                 f"POST {replacement} to start a verification, GET {replacement}/{{verification_id}}/report for results."
             ),
             "replacement": replacement,
         },
     )
 
+
+# --- Retired: request-body execution and self-healing -------------------------------------------
+
+_EXECUTION = "Request-body execution and repair"
+
+
+@router.post("/{project_id}/execute", status_code=410, include_in_schema=False)
+async def execute_project_endpoint(project_id: str):
+    return _retired(project_id, _EXECUTION)
+
+
+@router.get("/{project_id}/execution", status_code=410, include_in_schema=False)
+async def get_project_execution_endpoint(project_id: str):
+    return _retired(project_id, _EXECUTION)
+
+
+@router.post("/{project_id}/repair", status_code=410, include_in_schema=False)
+async def repair_project_endpoint(project_id: str):
+    return _retired(project_id, _EXECUTION)
+
+
+@router.get("/{project_id}/validation", status_code=410, include_in_schema=False)
+async def get_project_validation_endpoint(project_id: str):
+    return _retired(project_id, _EXECUTION)
+
+
+# --- Retired: autonomous validation ------------------------------------------------------------
 
 @router.post("/{project_id}/autonomous-validate", status_code=410, include_in_schema=False)
 async def run_autonomous_validation_endpoint(project_id: str):
