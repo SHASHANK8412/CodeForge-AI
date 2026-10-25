@@ -90,7 +90,8 @@ class ContextScopedPromptBuilder:
         )
 
     def build_backend_prompt(self, arch_json: Dict[str, Any], plan: Optional[Dict[str, Any]] = None,
-                             template: Optional[str] = None) -> str:
+                             template: Optional[str] = None, contract: Optional[str] = None) -> str:
+        """`contract`: the shared integration contract's backend slice (compatibility/contract.render), when one exists."""
         arch_json = arch_json if isinstance(arch_json, dict) else {}
         routes, models = arch_json.get("routes", []), arch_json.get("models", [])
         return (
@@ -98,11 +99,12 @@ class ContextScopedPromptBuilder:
             f"{_brief(plan)}\n{_stack(template)}\n\n"
             f"Build the backend.\nAPI endpoints to implement:\n{_bullets(routes, 'derive them from the requirements')}\n"
             f"Data models:\n{_bullets(models, 'derive them from the requirements')}\n\n"
-            f"File layout (other agents rely on it):\n{_template(template)['backend_layout']}\n\n{OUTPUT_FORMAT}"
+            + (f"{contract}\n\n" if contract else "")
+            + f"File layout (other agents rely on it):\n{_template(template)['backend_layout']}\n\n{OUTPUT_FORMAT}"
         )
 
     def build_frontend_prompt(self, arch_json: Dict[str, Any], plan: Optional[Dict[str, Any]] = None,
-                              template: Optional[str] = None) -> str:
+                              template: Optional[str] = None, contract: Optional[str] = None) -> str:
         arch_json = arch_json if isinstance(arch_json, dict) else {}
         components, routes = arch_json.get("components", []), arch_json.get("routes", [])
         return (
@@ -110,17 +112,19 @@ class ContextScopedPromptBuilder:
             f"{_brief(plan)}\n{_stack(template)}\n\n"
             f"Build the frontend.\nComponents:\n{_bullets(components, 'choose the components the pages need')}\n"
             f"Backend API endpoints available:\n{_bullets(routes, 'none listed - keep data local')}\n\n"
-            f"File layout:\n{_template(template)['frontend_layout']}\n\n{OUTPUT_FORMAT}"
+            + (f"{contract}\n\n" if contract else "")
+            + f"File layout:\n{_template(template)['frontend_layout']}\n\n{OUTPUT_FORMAT}"
         )
 
     def build_database_prompt(self, arch_json: Dict[str, Any], plan: Optional[Dict[str, Any]] = None,
-                              template: Optional[str] = None) -> str:
+                              template: Optional[str] = None, contract: Optional[str] = None) -> str:
         arch_json = arch_json if isinstance(arch_json, dict) else {}
         models = arch_json.get("models", [])
         return (
             f"{_context('database', f'Database models {models}')}"
             f"{_brief(plan)}\n{_stack(template)}\n\n"
             f"Write the data schema for these entities:\n{_bullets(models, 'derive them from the requirements')}\n\n"
+            + (f"{contract}\n\n" if contract else "")
             + ("Write exactly one file, database/schema.md: each collection with its fields, types, "
                "indexes and references. The backend owns the Mongoose models, so do not write code.\n\n"
                if "Mongo" in _template(template)["stack"]["database"] else

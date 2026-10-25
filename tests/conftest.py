@@ -52,3 +52,11 @@ def _isolated_execution_guardian(tmp_path_factory, monkeypatch):
     backend/data/execution_guardian."""
     from backend.execution_guardian.service import VerificationStore, global_execution_guardian
     monkeypatch.setattr(global_execution_guardian, "store", VerificationStore(tmp_path_factory.mktemp("execution_guardian")))
+
+
+@pytest.fixture(autouse=True)
+def _isolated_integration_engine(tmp_path_factory, monkeypatch):
+    """Contracts and compatibility runs recorded by any test (e.g. the workflow's architect and compatibility nodes) go to
+    a temp store, never backend/data/compatibility."""
+    from backend.compatibility.service import CompatibilityStore, global_integration_engine
+    monkeypatch.setattr(global_integration_engine, "store", CompatibilityStore(tmp_path_factory.mktemp("compatibility")))

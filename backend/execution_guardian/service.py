@@ -356,7 +356,8 @@ class ExecutionGuardian:
             "warnings": warnings, "what_was_tested": tested, "what_was_not_tested": not_tested,
             "how_to_run": run, "error": v.error,
             "limitations": ["checks run the project's own tests and startup; behaviour the tests do not cover is not verified",
-                            "frontend-to-backend calls are not exercised without an API contract (see Swarm missions)"],
+                            "frontend-to-backend calls are exercised by the Integration & Compatibility Engine's contract "
+                            "tests, not by this verification"],
         }
         self._save(project_id, vid, report=rep_)
 

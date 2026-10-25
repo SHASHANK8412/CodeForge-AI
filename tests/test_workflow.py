@@ -28,7 +28,7 @@ def test_entire_pipeline():
     assert {"dispatch_parallel", "architect", "human_approval"} >= edges["human_approval"] >= {"dispatch_parallel", "architect"}
     assert edges["dispatch_parallel"] == {"frontend", "backend", "database"}, "the three code agents fan out"
     assert edges["frontend"] == edges["backend"] == edges["database"] == {"assembly"}, "and join at assembly"
-    chain = ["assembly", "reviewer", "documentation", "build_validation", "dependency_manager",
+    chain = ["assembly", "compatibility", "reviewer", "documentation", "build_validation", "dependency_manager",
              "security_scan", "performance", "execution_validation", "testing"]
     for a, b in zip(chain, chain[1:]):
         assert edges[a] == {b}

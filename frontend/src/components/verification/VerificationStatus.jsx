@@ -10,6 +10,10 @@ const TONES = {
   PENDING: 'bg-slate-700/50 text-slate-300 border-slate-600',
   CANCELLED: 'bg-slate-700/50 text-slate-300 border-slate-600',
   RUNNING: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+  COMPATIBLE: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  COMPATIBLE_WITH_WARNINGS: 'bg-lime-500/15 text-lime-300 border-lime-500/30',
+  INCOMPATIBLE: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+  NOT_CHECKED: 'bg-slate-700/50 text-slate-300 border-slate-600',
 };
 
 /** A status badge. Labels come from the API; nothing is assumed to have passed. */

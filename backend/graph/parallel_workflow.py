@@ -207,13 +207,15 @@ async def architect_node(state: ProjectState) -> dict:
         if cached_arch:
             memory_manager.save_agent_output(session_id, "architect", cached_arch)
             _fire_lifecycle("agent_completed", "architect", duration=0.0)
+            contract = _establish_contract(state, cached_arch)
             return {
                 "architecture": cached_arch,
+                "contract": contract,
                 "current_step": "architect",
                 "current_agent": "architect",
                 "approval_required": True,
                 "approval_status": "pending",
-                "stream_events": ["✔ Architecture generated (Cached)"]
+                "stream_events": ["✔ Architecture generated (Cached)", _contract_event(contract)]
             }
 
     arch_prompt = global_prompt_builder.build_architect_prompt(plan_json if isinstance(plan_json, dict) else {}, state.get("template"))
@@ -247,16 +249,66 @@ async def architect_node(state: ProjectState) -> dict:
     except Exception as e:
         _logger.warning(f"Architect memory persistence warning: {e}")
 
+    # Contract-first: the shared integration contract the frontend, backend and database agents all build against
+    contract = _establish_contract(state, arch_json)
     return {
         "architecture": arch_json,
         "architecture_check": {"complete": arch_complete, "missing_sections": arch_missing},
+        "contract": contract,
         "current_step": "architect",
         "current_agent": "architect",
         "approval_required": True,
         "approval_status": "pending",
         "approval_stage": "architecture",
-        "stream_events": ["✔ Architecture generated. Awaiting human approval."]
+        "stream_events": ["✔ Architecture generated. Awaiting human approval.", _contract_event(contract)]
     }
+
+
+def _contract_project(state: ProjectState) -> str:
+    """The id contracts and compatibility runs are kept under: the generation id, which the API addresses projects by."""
+    return str(state.get("generation_id") or state.get("project_id") or state.get("project_name") or "default_project")
+
+
+def _establish_contract(state: ProjectState, arch_json: Dict[str, Any]) -> Dict[str, Any]:
+    """AICE: the shared contract derived from the architecture (a new version only when its content changed; a revision
+    after review feedback is recorded with that reason). Returns the summary kept in the graph state."""
+    from backend.compatibility.service import ContractError, global_integration_engine
+    pid = _contract_project(state)
+    feedback = str(state.get("user_feedback") or "")
+    reason = (f"architecture revised after review feedback: {feedback[:200]}" if feedback else "derived from the architecture")
+    try:
+        c, change, warnings = global_integration_engine.derive(pid, arch_json if isinstance(arch_json, dict) else {},
+                                                               state.get("plan"), author="architect", reason=reason)
+    except ContractError as e:
+        return {"status": "none", "project_id": pid, "errors": e.errors}
+    except Exception as e:  # noqa: BLE001 - the contract is reported missing, never invented
+        _logger.warning("shared contract not established: %s", e)
+        return {"status": "error", "project_id": pid, "errors": [f"{type(e).__name__}: {e}"]}
+    return {"status": "established", "project_id": pid, "version": c.version, "revision": c.revision,
+            "operations": [f"{e.method} {e.path}" for e in c.api.endpoints], "entities": [x.name for x in c.entities],
+            "unspecified": c.unspecified, "breaking_change": bool(change and change.breaking), "warnings": warnings}
+
+
+def _contract_event(contract: Dict[str, Any]) -> str:
+    if contract.get("status") == "established":
+        return (f"📜 Shared contract v{contract['version']}: {len(contract['operations'])} operation(s), "
+                f"{len(contract['entities'])} entit(y/ies)")
+    return "📜 No shared contract: " + "; ".join(contract.get("errors") or ["the architecture states no routes or models"])
+
+
+def _contract_prompt(state: ProjectState, agent: str) -> Optional[str]:
+    """The agent's slice of the shared contract as a prompt section, or None when no contract was established."""
+    summary = state.get("contract") or {}
+    if summary.get("status") != "established":
+        return None
+    try:
+        from backend.compatibility import contract as ct
+        from backend.compatibility.service import global_integration_engine
+        c = global_integration_engine.version(summary["project_id"], summary["version"])
+        return ct.render(ct.slice_for(c, agent), agent) if c else None
+    except Exception as e:  # noqa: BLE001 - the agent then builds from the architecture alone
+        _logger.warning("contract slice for %s unavailable: %s", agent, e)
+        return None
 
 
 async def human_approval_node(state: ProjectState) -> dict:
@@ -300,6 +352,7 @@ async def human_approval_node(state: ProjectState) -> dict:
         "models": arch_json.get("models") or [],
         "database_design": arch_json.get("database_design") or arch_json.get("models") or [],
         "agents_ready": ["Frontend Agent", "Backend Agent", "Database Agent"],
+        "contract": state.get("contract") or {},
         "risks": risks,
         "architecture_check": state.get("architecture_check") or {},
         "expected_files": arch_json.get("files") or (arch_json.get("folder_structure") or {}).get("files") or [],
@@ -361,7 +414,8 @@ async def frontend_node(state: ProjectState) -> dict:
             "stream_events": ["✔ Frontend generated (Cached)"]
         }
 
-    fe_prompt = global_prompt_builder.build_frontend_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"), state.get("template"))
+    fe_prompt = global_prompt_builder.build_frontend_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"), state.get("template"),
+                                                         contract=_contract_prompt(state, "frontend"))
     with Timer() as timer:
         frontend_code = await frontend_agent.run_async(fe_prompt)
 
@@ -393,7 +447,8 @@ async def backend_node(state: ProjectState) -> dict:
             "stream_events": ["✔ Backend generated (Cached)"]
         }
 
-    be_prompt = global_prompt_builder.build_backend_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"), state.get("template"))
+    be_prompt = global_prompt_builder.build_backend_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"), state.get("template"),
+                                                        contract=_contract_prompt(state, "backend"))
     with Timer() as timer:
         backend_code = await backend_agent.run_async(be_prompt)
 
@@ -425,7 +480,8 @@ async def database_node(state: ProjectState) -> dict:
             "stream_events": ["✔ Database generated (Cached)"]
         }
 
-    db_prompt = global_prompt_builder.build_database_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"), state.get("template"))
+    db_prompt = global_prompt_builder.build_database_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"), state.get("template"),
+                                                         contract=_contract_prompt(state, "database"))
     with Timer() as timer:
         database_code = await database_agent.run_async(db_prompt)
 
@@ -503,6 +559,74 @@ async def assembly_node(state: ProjectState) -> dict:
         ]
     }
 
+
+
+def _compatibility_summary(r) -> Dict[str, Any]:
+    """The serialisable part of a compatibility run the graph keeps in its state."""
+    rep = r.report or {}
+    open_ = [f for f in r.findings if f.status in ("open", "unresolved", "needs_contract_decision", "blocked")]
+    return {"id": r.id, "status": r.status, "statement": rep.get("statement"), "contract_version": r.contract_version,
+            "findings": [{k: getattr(f, k) for k in ("rule", "severity", "target", "responsible_agent", "status", "expected", "actual", "basis")}
+                         for f in open_[:30]],
+            "open_findings": len(open_), "tests": (r.test_execution or {}).get("counts") or {},
+            "test_status": (r.test_execution or {}).get("status"),
+            "repairs": [{"attempt": x.attempt, "agent": x.agent, "strategy": x.strategy, "outcome": x.outcome,
+                         "files_changed": x.files_changed} for x in r.repairs],
+            "written": (r.delivery or {}).get("written") or [], "warnings": (rep.get("warnings") or [])[:10],
+            "why": (rep.get("why") or [])[:10]}
+
+
+async def compatibility_node(state: ProjectState) -> dict:
+    """
+    AICE after assembly: the assembled project against the shared contract - static analysis of the frontend, backend
+    and database, contract tests generated from the contract and run in isolation, and bounded targeted repairs routed
+    to the responsible agent. Repairs touch only files this generation's agents wrote and are written back through the
+    patch engine; contract decisions are never made here. The review, the tests, the Execution Guardian and final
+    approval then see the result.
+    """
+    from backend.compatibility.service import global_integration_engine
+    _logger.info("✔ Integration & Compatibility Engine checking the assembled project against the shared contract...")
+    _fire_lifecycle("agent_started", "compatibility")
+    project_path = state.get("project_path", "")
+    files = dict(state.get("files") or {})
+    history = list(state.get("compatibility_history", []) or [])
+    allow_model = os.environ.get("AIFORGE_LLM_REPAIR", "1").strip().lower() not in ("0", "false", "no")
+    run_tests = os.environ.get("AIFORGE_AICE_WORKFLOW_TESTS", "on").strip().lower() not in ("off", "0", "false", "no")
+    with Timer() as timer:
+        if project_path and Path(project_path).is_dir():
+            try:
+                r = await asyncio.to_thread(global_integration_engine.workflow_check, _contract_project(state), Path(project_path),
+                                            sorted(files), allow_model, run_tests)
+                summary = _compatibility_summary(r)
+            except Exception as e:  # noqa: BLE001 - reported as not established, never as compatible
+                _logger.exception("compatibility check failed")
+                summary = {"id": None, "status": "BLOCKED", "statement": f"the compatibility check failed: {type(e).__name__}: {e}",
+                           "findings": [], "open_findings": 0, "tests": {}, "repairs": [], "written": [], "warnings": [], "why": []}
+        else:
+            summary = {"id": None, "status": "BLOCKED", "statement": "no project folder on disk: nothing could be checked",
+                       "findings": [], "open_findings": 0, "tests": {}, "repairs": [], "written": [], "warnings": [], "why": []}
+    agent_timers["compatibility"] = timer.elapsed
+    for rel in summary["written"]:
+        p = Path(project_path) / rel
+        if p.is_file():
+            files[rel] = p.read_text(encoding="utf-8", errors="replace")
+    if state.get("compatibility"):
+        prev = state["compatibility"]
+        history.append({"id": prev.get("id"), "status": prev.get("status"), "open_findings": prev.get("open_findings")})
+    _fire_lifecycle("agent_completed", "compatibility", duration=timer.elapsed)
+    tests = summary.get("tests") or {}
+    out = {
+        "compatibility": summary,
+        "compatibility_history": history,
+        "current_step": "compatibility",
+        "current_agent": "compatibility",
+        "stream_events": [f"🔗 Integration & Compatibility: {summary['status']} - {summary['open_findings']} open finding(s)"
+                          + (f", contract tests {tests.get('passed', 0)} passed / {tests.get('failed', 0) + tests.get('error', 0)} failed" if tests else "")
+                          + (f", {len(summary['written'])} file(s) repaired" if summary["written"] else "")],
+    }
+    if summary["written"]:
+        out["files"] = files
+    return out
 
 
 async def reviewer_node(state: ProjectState) -> dict:
@@ -1400,6 +1524,13 @@ async def final_approval_node(state: ProjectState) -> dict:
                                                  for f in verification.get("failures", [])]
         if verification.get("status") not in GUARDIAN_OK and not is_escalation:
             final_req["deployment_readiness"] = f"NOT VERIFIED ({verification.get('status')}): {verification.get('statement')}"
+    compatibility = state.get("compatibility") or {}
+    if compatibility:
+        final_req["compatibility"] = {k: compatibility.get(k) for k in ("id", "status", "statement", "contract_version", "findings",
+                                                                        "tests", "repairs", "warnings", "why")}
+        if compatibility.get("status") == "INCOMPATIBLE" and not is_escalation:
+            final_req["deployment_readiness"] = f"INCOMPATIBLE: {compatibility.get('statement')}"
+    final_req["contract"] = state.get("contract") or {}
     final_req["template_check"] = state.get("template_check") or {}
     if final_req["template_check"].get("missing_required"):
         final_req["deployment_readiness"] = "INCOMPLETE: missing " + ", ".join(final_req["template_check"]["missing_required"])
@@ -1757,6 +1888,7 @@ builder.add_node("frontend", frontend_node)
 builder.add_node("backend", backend_node)
 builder.add_node("database", database_node)
 builder.add_node("assembly", assembly_node)
+builder.add_node("compatibility", compatibility_node)
 builder.add_node("reviewer", reviewer_node)
 builder.add_node("documentation", documentation_node)
 builder.add_node("build_validation", build_validation_node)
@@ -1802,7 +1934,8 @@ builder.add_edge("backend", "assembly")
 builder.add_edge("database", "assembly")
 
 # Sequential Stage Progression
-builder.add_edge("assembly", "reviewer")
+builder.add_edge("assembly", "compatibility")         # AICE: the components against the shared contract
+builder.add_edge("compatibility", "reviewer")
 builder.add_edge("reviewer", "documentation")
 builder.add_edge("documentation", "build_validation")
 builder.add_edge("build_validation", "dependency_manager")

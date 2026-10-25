@@ -103,8 +103,8 @@ def select(stack: Dict[str, Any]) -> List[Check]:
         if "test" in stack["frontend_scripts"]:
             out.append(Check(name="frontend_tests", label="Frontend tests", profile="npm run test in a no-network container"))
     out.append(Check(name="api_contract", label="API contract / integration", required=False, status="SKIPPED",
-                     reason="no API contract is known for this project: frontend-to-backend calls were not tested "
-                            "(Swarm Intelligence missions run contract tests)"))
+                     reason="frontend-to-backend calls are not tested here: the Integration & Compatibility Engine runs "
+                            "the contract tests against the project's shared contract (and Swarm missions their own)"))
     return out
 
 

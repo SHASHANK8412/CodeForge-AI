@@ -401,6 +401,9 @@ def register_routers() -> None:
     from backend.execution_guardian.routes import execution_guardian_router
     app.include_router(execution_guardian_router)
 
+    from backend.compatibility.routes import integration_router
+    app.include_router(integration_router)
+
     from backend.architecture_simulator.routes import day25_architect_router
     app.include_router(day25_architect_router)
 

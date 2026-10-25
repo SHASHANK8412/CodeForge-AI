@@ -186,6 +186,9 @@ class ProjectState(TypedDict, total=False):
     verification: Dict[str, Any]           # Execution Guardian: the latest verification (status, checks, failures)
     verification_history: List[Dict[str, Any]]   # earlier verifications of this run (status, failure signatures)
     routed_agent: str                      # the agent the Guardian routed the current repair to
+    contract: Dict[str, Any]               # AICE: the shared contract version the code agents build against (summary)
+    compatibility: Dict[str, Any]          # AICE: the latest compatibility run (status, findings, tests, repairs)
+    compatibility_history: List[Dict[str, Any]]  # earlier compatibility runs of this generation (status, open findings)
     current_debug_cycle: int
     human_intervention_required: bool
     human_escalation_details: Dict[str, Any]
