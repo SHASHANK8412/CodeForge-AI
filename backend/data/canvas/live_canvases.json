@@ -1,0 +1,400 @@
+[
+  {
+    "id": "canvas-roadmap-ml",
+    "title": "Machine Learning 30-Day Mastery Roadmap",
+    "canvas_type": "ROADMAP",
+    "content": [
+      {
+        "phase": "01",
+        "title": "Python & Data Science Foundations",
+        "duration": "Day 1 - 6",
+        "status": "COMPLETED",
+        "description": "Master NumPy array operations, Pandas dataframe transformations, Matplotlib/Seaborn visualization, and clean vectorization pipelines.",
+        "milestones": [
+          "NumPy Matrix Math",
+          "Pandas Data Wrangling",
+          "Exploratory Data Analysis"
+        ]
+      },
+      {
+        "phase": "02",
+        "title": "Mathematics & Classical Machine Learning",
+        "duration": "Day 7 - 14",
+        "status": "IN_PROGRESS",
+        "description": "Linear Algebra (Eigenvalues, SVD), Multivariable Calculus (Gradients), Supervised Learning (Linear/Logistic Regression, Decision Trees, Random Forests, XGBoost).",
+        "milestones": [
+          "Loss Function Optimization",
+          "Gradient Descent Implementation",
+          "Scikit-Learn Classifier Benchmark"
+        ]
+      },
+      {
+        "phase": "03",
+        "title": "Deep Learning & Neural Architectures",
+        "duration": "Day 15 - 22",
+        "status": "UPCOMING",
+        "description": "PyTorch tensors, autograd, Multi-Layer Perceptrons, CNNs for computer vision, Transformers & Self-Attention mechanisms.",
+        "milestones": [
+          "PyTorch Neural Network from Scratch",
+          "Vision Classifier",
+          "Attention Head Math"
+        ]
+      },
+      {
+        "phase": "04",
+        "title": "Production Deployment & Capstone",
+        "duration": "Day 23 - 30",
+        "status": "UPCOMING",
+        "description": "Export ONNX models, build FastAPI inference microservice, containerize with Docker, and deploy to Kubernetes with live latency telemetry.",
+        "milestones": [
+          "FastAPI Inference API",
+          "Dockerized Container",
+          "Real-Time Drift Monitoring"
+        ]
+      }
+    ],
+    "files": null,
+    "project_id": "aiforge-fooddelivery-ai",
+    "tags": [
+      "AI",
+      "Machine Learning",
+      "Roadmap"
+    ],
+    "versions": [
+      {
+        "version_id": "v_19f44072",
+        "version_number": 1,
+        "title": "Machine Learning 30-Day Mastery Roadmap",
+        "content": [
+          {
+            "phase": "01",
+            "title": "Python & Data Science Foundations",
+            "duration": "Day 1 - 6",
+            "status": "COMPLETED",
+            "description": "Master NumPy array operations, Pandas dataframe transformations, Matplotlib/Seaborn visualization, and clean vectorization pipelines.",
+            "milestones": [
+              "NumPy Matrix Math",
+              "Pandas Data Wrangling",
+              "Exploratory Data Analysis"
+            ]
+          },
+          {
+            "phase": "02",
+            "title": "Mathematics & Classical Machine Learning",
+            "duration": "Day 7 - 14",
+            "status": "IN_PROGRESS",
+            "description": "Linear Algebra (Eigenvalues, SVD), Multivariable Calculus (Gradients), Supervised Learning (Linear/Logistic Regression, Decision Trees, Random Forests, XGBoost).",
+            "milestones": [
+              "Loss Function Optimization",
+              "Gradient Descent Implementation",
+              "Scikit-Learn Classifier Benchmark"
+            ]
+          },
+          {
+            "phase": "03",
+            "title": "Deep Learning & Neural Architectures",
+            "duration": "Day 15 - 22",
+            "status": "UPCOMING",
+            "description": "PyTorch tensors, autograd, Multi-Layer Perceptrons, CNNs for computer vision, Transformers & Self-Attention mechanisms.",
+            "milestones": [
+              "PyTorch Neural Network from Scratch",
+              "Vision Classifier",
+              "Attention Head Math"
+            ]
+          },
+          {
+            "phase": "04",
+            "title": "Production Deployment & Capstone",
+            "duration": "Day 23 - 30",
+            "status": "UPCOMING",
+            "description": "Export ONNX models, build FastAPI inference microservice, containerize with Docker, and deploy to Kubernetes with live latency telemetry.",
+            "milestones": [
+              "FastAPI Inference API",
+              "Dockerized Container",
+              "Real-Time Drift Monitoring"
+            ]
+          }
+        ],
+        "canvas_type": "ROADMAP",
+        "author": "AI",
+        "change_summary": "Initial Creation",
+        "created_at": "2026-08-30 15:51:39"
+      }
+    ],
+    "created_at": "2026-08-30 15:51:39",
+    "updated_at": "2026-08-30 15:51:39"
+  },
+  {
+    "id": "canvas-table-frontend",
+    "title": "Modern Frontend Frameworks Comparison Matrix",
+    "canvas_type": "TABLE",
+    "content": {
+      "columns": [
+        "Framework",
+        "Architecture",
+        "Reactivity Model",
+        "Performance Score",
+        "Ecosystem & Tooling",
+        "Recommended Use Case"
+      ],
+      "rows": [
+        [
+          "React 19",
+          "Virtual DOM + Fiber",
+          "Hooks / Server Components",
+          "94 / 100",
+          "Vast (Next.js, Vite, Tailwind)",
+          "Complex Enterprise SPAs & Dashboards"
+        ],
+        [
+          "Vue 3.5",
+          "Virtual DOM + Compiler",
+          "Proxy-based Reactivity",
+          "96 / 100",
+          "Strong (Nuxt, Pinia, Vite)",
+          "Rapid Prototyping & Clean Templates"
+        ],
+        [
+          "Svelte 5",
+          "No Virtual DOM (Compiled)",
+          "Runes Reactive Signals",
+          "99 / 100",
+          "Growing (SvelteKit, Vite)",
+          "High-Performance Edge Apps & Visualizations"
+        ],
+        [
+          "Angular 18",
+          "Zone.js / Signals",
+          "RxJS + Signals Reactive",
+          "91 / 100",
+          "Batteries-Included (CLI, Router, HTTP)",
+          "Large Monolithic Enterprise Systems"
+        ]
+      ]
+    },
+    "files": null,
+    "project_id": "aiforge-fooddelivery-ai",
+    "tags": [
+      "Frontend",
+      "React",
+      "Vue",
+      "Angular",
+      "Svelte"
+    ],
+    "versions": [
+      {
+        "version_id": "v_2917bbfe",
+        "version_number": 1,
+        "title": "Modern Frontend Frameworks Comparison Matrix",
+        "content": {
+          "columns": [
+            "Framework",
+            "Architecture",
+            "Reactivity Model",
+            "Performance Score",
+            "Ecosystem & Tooling",
+            "Recommended Use Case"
+          ],
+          "rows": [
+            [
+              "React 19",
+              "Virtual DOM + Fiber",
+              "Hooks / Server Components",
+              "94 / 100",
+              "Vast (Next.js, Vite, Tailwind)",
+              "Complex Enterprise SPAs & Dashboards"
+            ],
+            [
+              "Vue 3.5",
+              "Virtual DOM + Compiler",
+              "Proxy-based Reactivity",
+              "96 / 100",
+              "Strong (Nuxt, Pinia, Vite)",
+              "Rapid Prototyping & Clean Templates"
+            ],
+            [
+              "Svelte 5",
+              "No Virtual DOM (Compiled)",
+              "Runes Reactive Signals",
+              "99 / 100",
+              "Growing (SvelteKit, Vite)",
+              "High-Performance Edge Apps & Visualizations"
+            ],
+            [
+              "Angular 18",
+              "Zone.js / Signals",
+              "RxJS + Signals Reactive",
+              "91 / 100",
+              "Batteries-Included (CLI, Router, HTTP)",
+              "Large Monolithic Enterprise Systems"
+            ]
+          ]
+        },
+        "canvas_type": "TABLE",
+        "author": "AI",
+        "change_summary": "Initial Creation",
+        "created_at": "2026-08-30 15:51:39"
+      }
+    ],
+    "created_at": "2026-08-30 15:51:39",
+    "updated_at": "2026-08-30 15:51:39"
+  },
+  {
+    "id": "canvas-diagram-arch",
+    "title": "AIForge Microservices & Event Architecture",
+    "canvas_type": "DIAGRAM",
+    "content": [
+      {
+        "id": "node-client",
+        "label": "Web Client (React / Monaco IDE)",
+        "category": "Frontend",
+        "x": 50,
+        "y": 100
+      },
+      {
+        "id": "node-gateway",
+        "label": "API Gateway & Router (FastAPI)",
+        "category": "Gateway",
+        "x": 250,
+        "y": 100
+      },
+      {
+        "id": "node-agents",
+        "label": "Autonomous Multi-Agent Pool",
+        "category": "Compute",
+        "x": 480,
+        "y": 50
+      },
+      {
+        "id": "node-memory",
+        "label": "AI Memory & Smart Recall Graph",
+        "category": "Memory",
+        "x": 480,
+        "y": 160
+      },
+      {
+        "id": "node-db",
+        "label": "PostgreSQL Primary + Redis Cache",
+        "category": "Storage",
+        "x": 720,
+        "y": 100
+      }
+    ],
+    "files": null,
+    "project_id": "aiforge-fooddelivery-ai",
+    "tags": [
+      "Architecture",
+      "FastAPI",
+      "Redis",
+      "PostgreSQL"
+    ],
+    "versions": [
+      {
+        "version_id": "v_02ebf116",
+        "version_number": 1,
+        "title": "AIForge Microservices & Event Architecture",
+        "content": [
+          {
+            "id": "node-client",
+            "label": "Web Client (React / Monaco IDE)",
+            "category": "Frontend",
+            "x": 50,
+            "y": 100
+          },
+          {
+            "id": "node-gateway",
+            "label": "API Gateway & Router (FastAPI)",
+            "category": "Gateway",
+            "x": 250,
+            "y": 100
+          },
+          {
+            "id": "node-agents",
+            "label": "Autonomous Multi-Agent Pool",
+            "category": "Compute",
+            "x": 480,
+            "y": 50
+          },
+          {
+            "id": "node-memory",
+            "label": "AI Memory & Smart Recall Graph",
+            "category": "Memory",
+            "x": 480,
+            "y": 160
+          },
+          {
+            "id": "node-db",
+            "label": "PostgreSQL Primary + Redis Cache",
+            "category": "Storage",
+            "x": 720,
+            "y": 100
+          }
+        ],
+        "canvas_type": "DIAGRAM",
+        "author": "AI",
+        "change_summary": "Initial Creation",
+        "created_at": "2026-08-30 15:51:39"
+      }
+    ],
+    "created_at": "2026-08-30 15:51:39",
+    "updated_at": "2026-08-30 15:51:39"
+  },
+  {
+    "id": "canvas-code-backend",
+    "title": "Async Task Queue & Webhook Dispatcher",
+    "canvas_type": "CODE",
+    "content": "# Main Service Entrypoint\nfrom fastapi import FastAPI, BackgroundTasks\nimport redis.asyncio as redis\n\napp = FastAPI(title='AIForge Task Engine')\n\n@app.post('/tasks/dispatch')\nasync def dispatch_task(task_name: str, bg: BackgroundTasks):\n    return {'status': 'QUEUED', 'task': task_name}\n",
+    "files": {
+      "main.py": "from fastapi import FastAPI, BackgroundTasks, HTTPException\nimport redis.asyncio as redis\nimport asyncio\n\napp = FastAPI(title='AIForge Task Engine', version='1.0.0')\n\n@app.post('/tasks/dispatch')\nasync def dispatch_task(task_name: str, background_tasks: BackgroundTasks):\n    \"\"\"Queues task for async background processing\"\"\"\n    return {'status': 'QUEUED', 'task': task_name, 'timestamp': '2026-08-30'}\n",
+      "worker.py": "import asyncio\n\nasync def run_worker():\n    print('[Worker] Listening for Redis stream events...')\n    while True:\n        await asyncio.sleep(1)\n",
+      "config.py": "from pydantic_settings import BaseSettings\n\nclass Settings(BaseSettings):\n    REDIS_URL: str = 'redis://localhost:6379/0'\n    MAX_WORKERS: int = 8\n\nsettings = Settings()\n"
+    },
+    "project_id": "aiforge-fooddelivery-ai",
+    "tags": [
+      "FastAPI",
+      "Redis",
+      "Backend"
+    ],
+    "versions": [
+      {
+        "version_id": "v_16b1fb22",
+        "version_number": 1,
+        "title": "Async Task Queue & Webhook Dispatcher",
+        "content": "# Main Service Entrypoint\nfrom fastapi import FastAPI, BackgroundTasks\nimport redis.asyncio as redis\n\napp = FastAPI(title='AIForge Task Engine')\n\n@app.post('/tasks/dispatch')\nasync def dispatch_task(task_name: str, bg: BackgroundTasks):\n    return {'status': 'QUEUED', 'task': task_name}\n",
+        "canvas_type": "CODE",
+        "author": "AI",
+        "change_summary": "Initial Creation",
+        "created_at": "2026-08-30 15:51:39"
+      }
+    ],
+    "created_at": "2026-08-30 15:51:39",
+    "updated_at": "2026-08-30 15:51:39"
+  },
+  {
+    "id": "canvas-doc-prd",
+    "title": "FoodDelivery AI \u2014 Product Requirement Document (PRD)",
+    "canvas_type": "DOCUMENT",
+    "content": "# \ud83c\udf54 FoodDelivery AI \u2014 Product Requirement Document (PRD)\n\n## 1. Executive Summary\nFoodDelivery AI is an autonomous, on-demand meal dispatch platform featuring real-time courier matching, dynamic ETA prediction, and ACID-compliant order state transitions.\n\n## 2. Core Functional Requirements\n- **Customer Portal**: Menu exploration, allergen filtering, cart management, and Stripe checkout.\n- **Restaurant Kitchen Display**: Live incoming order queue with state transitions (`PREPARING` -> `READY_FOR_PICKUP`).\n- **Courier Telemetry**: GPS live tracking and automated shortest-path routing algorithms.\n- **Security & Compliance**: RS256 JWT auth with Customer, Restaurant, and Courier RBAC roles.\n\n## 3. Architecture & Data Model\n- **Backend**: FastAPI with async SQLAlchemy 2.0.\n- **Database**: PostgreSQL with UUID primary keys and WAL replication.\n- **Event Bus**: Redis Pub/Sub for driver broadcast.\n",
+    "files": null,
+    "project_id": "aiforge-fooddelivery-ai",
+    "tags": [
+      "PRD",
+      "Specs",
+      "Product"
+    ],
+    "versions": [
+      {
+        "version_id": "v_1dcfd2cb",
+        "version_number": 1,
+        "title": "FoodDelivery AI \u2014 Product Requirement Document (PRD)",
+        "content": "# \ud83c\udf54 FoodDelivery AI \u2014 Product Requirement Document (PRD)\n\n## 1. Executive Summary\nFoodDelivery AI is an autonomous, on-demand meal dispatch platform featuring real-time courier matching, dynamic ETA prediction, and ACID-compliant order state transitions.\n\n## 2. Core Functional Requirements\n- **Customer Portal**: Menu exploration, allergen filtering, cart management, and Stripe checkout.\n- **Restaurant Kitchen Display**: Live incoming order queue with state transitions (`PREPARING` -> `READY_FOR_PICKUP`).\n- **Courier Telemetry**: GPS live tracking and automated shortest-path routing algorithms.\n- **Security & Compliance**: RS256 JWT auth with Customer, Restaurant, and Courier RBAC roles.\n\n## 3. Architecture & Data Model\n- **Backend**: FastAPI with async SQLAlchemy 2.0.\n- **Database**: PostgreSQL with UUID primary keys and WAL replication.\n- **Event Bus**: Redis Pub/Sub for driver broadcast.\n",
+        "canvas_type": "DOCUMENT",
+        "author": "AI",
+        "change_summary": "Initial Creation",
+        "created_at": "2026-08-30 15:51:39"
+      }
+    ],
+    "created_at": "2026-08-30 15:51:39",
+    "updated_at": "2026-08-30 15:51:39"
+  }
+]

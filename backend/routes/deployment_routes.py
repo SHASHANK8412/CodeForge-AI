@@ -114,7 +114,7 @@ async def rollback_deployment(req: RollbackInput) -> Dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/health")
+# (No bare /health here: that is the API's own liveness endpoint in backend/main.py.)
 @router.get("/api/v1/health/check")
 async def perform_health_check(fail_simulation: bool = False) -> Dict[str, Any]:
     """Performs post-deployment health check on API, DB, Auth, Frontend, CPU/RAM, response time, and error rate."""

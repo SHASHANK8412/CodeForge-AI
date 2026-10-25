@@ -25,6 +25,42 @@ class ConsensusRequest(BaseModel):
     models: Optional[List[str]] = None
 
 
+@router.get("/api/models/installed")
+def get_installed_models():
+    """
+    The Ollama models actually installed on this machine, and which one the generation
+    pipeline will use for planning and for writing code.
+    """
+    from backend.models.model_router import discover_installed_models, global_model_router
+
+    try:
+        from ollama import Client
+        listing = Client(timeout=5.0).list()
+        entries = listing.get("models", []) if isinstance(listing, dict) else getattr(listing, "models", [])
+        names = []
+        for m in entries:
+            name = m.get("model") or m.get("name") if isinstance(m, dict) else getattr(m, "model", None)
+            if name and not any(k in name.lower() for k in ("embed", "minilm", "bge", "bert")):
+                names.append(name)
+        online = True
+    except Exception as e:
+        logger.info("Ollama is not reachable: %s", e)
+        names, online = [], False
+
+    if not online or not names:
+        return {"ollama_online": online, "models": names, "planning_model": None, "coding_model": None}
+
+    discover_installed_models(force_refresh=True)
+    planning = global_model_router.select("PROJECT_GENERATION", agent_name="project_planner")
+    coding = global_model_router.select("PROJECT_GENERATION", agent_name="project_backend")
+    return {
+        "ollama_online": True,
+        "models": names,
+        "planning_model": planning.selected_model,
+        "coding_model": coding.selected_model,
+    }
+
+
 @router.get("/models")
 @router.get("/api/models")
 def get_all_models():

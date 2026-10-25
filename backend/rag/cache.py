@@ -5,7 +5,7 @@ Implements query rewrite cache, retrieval result cache, rerank cache, and negati
 import time
 import hashlib
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 
 from backend.rag.models import RetrievalCandidate, GroundingContext
 from backend.rag.config import global_rag_config

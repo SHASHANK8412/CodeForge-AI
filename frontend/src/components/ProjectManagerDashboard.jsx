@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState, useEffect } from 'react';
 import { FaTasks, FaFolderOpen, FaProjectDiagram, FaRunning, FaCheckCircle, FaUserTie, FaLayerGroup, FaPlus } from 'react-icons/fa';
 
@@ -10,7 +11,7 @@ export default function ProjectManagerDashboard() {
   const fetchPlan = async (userPrompt) => {
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/project/create', {
+      const res = await fetch(`${BACKEND_URL}/api/project/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: userPrompt })

@@ -1,0 +1,80 @@
+[
+  {
+    "id": "edge_app_fastapi",
+    "source_id": "node_aiforge_app",
+    "target_id": "node_fastapi",
+    "relation_type": "EXPOSES",
+    "description": "FoodDelivery AI exposes public async endpoints via FastAPI Gateway.",
+    "confidence": 0.95,
+    "evidence_document": "RFC-104-Order-Pipeline.md",
+    "evidence_chunk_ref": "RFC-104-Order-Pipeline.md:L12-L24",
+    "valid_from": "2026-01-01",
+    "valid_until": null,
+    "created_at": "2026-08-30 16:05:48"
+  },
+  {
+    "id": "edge_fastapi_jwt",
+    "source_id": "node_fastapi",
+    "target_id": "node_jwt_auth",
+    "relation_type": "DEPENDS_ON",
+    "description": "FastAPI Gateway verifies every inbound request against RS256 JWT Auth Provider.",
+    "confidence": 0.95,
+    "evidence_document": "RFC-104-Order-Pipeline.md",
+    "evidence_chunk_ref": "RFC-104-Order-Pipeline.md:L25-L38",
+    "valid_from": "2026-01-01",
+    "valid_until": null,
+    "created_at": "2026-08-30 16:05:48"
+  },
+  {
+    "id": "edge_fastapi_kafka",
+    "source_id": "node_fastapi",
+    "target_id": "node_kafka_event_bus",
+    "relation_type": "CONNECTS_TO",
+    "description": "FastAPI dispatches order events to Kafka topic 'orders.created'.",
+    "confidence": 0.95,
+    "evidence_document": "RFC-104-Order-Pipeline.md",
+    "evidence_chunk_ref": "RFC-104-Order-Pipeline.md:L40-L55",
+    "valid_from": "2026-01-01",
+    "valid_until": null,
+    "created_at": "2026-08-30 16:05:48"
+  },
+  {
+    "id": "edge_kafka_redis",
+    "source_id": "node_kafka_event_bus",
+    "target_id": "node_redis_streams",
+    "relation_type": "CALLS",
+    "description": "Background dispatch worker consumes Kafka orders and streams to Redis Streams.",
+    "confidence": 0.95,
+    "evidence_document": "RFC-104-Order-Pipeline.md",
+    "evidence_chunk_ref": "RFC-104-Order-Pipeline.md:L60-L75",
+    "valid_from": "2026-01-01",
+    "valid_until": null,
+    "created_at": "2026-08-30 16:05:48"
+  },
+  {
+    "id": "edge_fastapi_postgres",
+    "source_id": "node_fastapi",
+    "target_id": "node_postgres_db",
+    "relation_type": "STORES",
+    "description": "FastAPI persists immutable order ledgers to PostgreSQL with ACID isolation.",
+    "confidence": 0.95,
+    "evidence_document": "RFC-104-Order-Pipeline.md",
+    "evidence_chunk_ref": "RFC-104-Order-Pipeline.md:L80-L95",
+    "valid_from": "2026-01-01",
+    "valid_until": null,
+    "created_at": "2026-08-30 16:05:48"
+  },
+  {
+    "id": "edge_react_fastapi",
+    "source_id": "node_react_frontend",
+    "target_id": "node_fastapi",
+    "relation_type": "USES",
+    "description": "React Frontend communicates with FastAPI via REST and WebSockets.",
+    "confidence": 0.95,
+    "evidence_document": "RFC-104-Order-Pipeline.md",
+    "evidence_chunk_ref": "RFC-104-Order-Pipeline.md:L100-L115",
+    "valid_from": "2026-01-01",
+    "valid_until": null,
+    "created_at": "2026-08-30 16:05:48"
+  }
+]

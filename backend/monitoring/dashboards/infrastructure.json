@@ -1,0 +1,22 @@
+{
+  "annotations": {"list": []},
+  "title": "Infrastructure",
+  "uid": "aiforge-infra",
+  "tags": ["aiforge", "infrastructure"],
+  "panels": [
+    {
+      "id": 1,
+      "title": "CPU Usage Ratio",
+      "type": "gauge",
+      "datasource": "Prometheus",
+      "targets": [{"expr": "process_cpu_usage_ratio"}]
+    },
+    {
+      "id": 2,
+      "title": "Memory Footprint (Bytes)",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "targets": [{"expr": "process_memory_bytes"}]
+    }
+  ]
+}

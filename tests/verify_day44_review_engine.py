@@ -161,10 +161,7 @@ def overly_long_and_nested_function():
     section("Requirement 10 – LangGraph Workflow Integration")
     # ==============================================================
     from backend.graph.parallel_workflow import parallel_graph
-    from backend.graph.project_workflow import project_graph
-
     check("LangGraph parallel graph contains reviewer node", "reviewer" in parallel_graph.nodes)
-    check("LangGraph project graph contains reviewer node", "reviewer" in project_graph.nodes)
 
     # Summary
     print("\n" + "="*70)

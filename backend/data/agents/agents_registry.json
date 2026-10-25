@@ -1,0 +1,135 @@
+[
+  {
+    "id": "agent-coding",
+    "name": "Coding Agent",
+    "template_type": "coding",
+    "description": "Autonomous full-stack engineer that analyzes requirements, creates architectural blueprints, generates production code, runs empirical tests, and auto-repairs bugs.",
+    "goal_placeholder": "e.g. Build an async task queue worker with Redis and FastAPI",
+    "system_instructions": "You are the Lead Autonomous Software Engineer. Analyze the user goal, plan architecture, generate robust code, run SAST & unit verification, and produce production-ready code.",
+    "tools": [
+      "Code Editor",
+      "AST Indexer",
+      "Test Runner",
+      "Memory Recall",
+      "Terminal Exec"
+    ],
+    "requires_human_approval": true,
+    "memory_access": true,
+    "project_access": true,
+    "max_steps": 6,
+    "timeout_seconds": 300,
+    "icon": "\ud83d\udcbb",
+    "badge_color": "violet",
+    "created_at": "2026-08-30 15:45:43"
+  },
+  {
+    "id": "agent-study",
+    "name": "Study & Exam Agent",
+    "template_type": "study",
+    "description": "Academic syllabus tutor that breaks down complex subjects, compiles structured study notes, generates interactive quizzes, and tracks retention weak spots.",
+    "goal_placeholder": "e.g. Build me a 5-day study plan for my DBMS exam with quizzes",
+    "system_instructions": "You are an expert Academic Tutor. Deconstruct the syllabus, create conceptual breakdowns, author spaced-repetition quizzes, and highlight high-yield exam topics.",
+    "tools": [
+      "Syllabus Analyzer",
+      "Quiz Generator",
+      "Memory Recall",
+      "Progress Tracker"
+    ],
+    "requires_human_approval": false,
+    "memory_access": true,
+    "project_access": false,
+    "max_steps": 5,
+    "timeout_seconds": 300,
+    "icon": "\ud83d\udcda",
+    "badge_color": "cyan",
+    "created_at": "2026-08-30 15:45:43"
+  },
+  {
+    "id": "agent-research",
+    "name": "Deep Research Agent",
+    "template_type": "research",
+    "description": "Technical research specialist that performs web & library exploration, gathers empirical specs, benchmarks trade-offs, and synthesizes architectural RFCs.",
+    "goal_placeholder": "e.g. Compare Apache Kafka vs RabbitMQ vs Redpanda for event streaming",
+    "system_instructions": "You are a Principal Research Engineer. Conduct deep technical comparisons, analyze throughput & latency trade-offs, review production benchmarks, and formulate an architectural RFC.",
+    "tools": [
+      "Web Search",
+      "Benchmark Engine",
+      "Memory Recall",
+      "RFC Generator"
+    ],
+    "requires_human_approval": false,
+    "memory_access": true,
+    "project_access": true,
+    "max_steps": 5,
+    "timeout_seconds": 300,
+    "icon": "\ud83d\udd2c",
+    "badge_color": "indigo",
+    "created_at": "2026-08-30 15:45:43"
+  },
+  {
+    "id": "agent-resume",
+    "name": "Resume & Career Agent",
+    "template_type": "resume",
+    "description": "Career strategist that analyzes resume bullets, matches against target job descriptions, detects ATS gaps, and reformulates high-impact STAR accomplishments.",
+    "goal_placeholder": "e.g. Optimize my resume for Senior Full-Stack Engineer at Stripe",
+    "system_instructions": "You are an Elite Tech Career Coach. Analyze target job competencies, find keyword gaps, upgrade bullet points with quantifiable metrics (STAR format), and generate mock technical questions.",
+    "tools": [
+      "ATS Scanner",
+      "Keyword Matcher",
+      "Memory Recall",
+      "STAR Formulator"
+    ],
+    "requires_human_approval": false,
+    "memory_access": true,
+    "project_access": false,
+    "max_steps": 5,
+    "timeout_seconds": 300,
+    "icon": "\ud83d\udcc4",
+    "badge_color": "amber",
+    "created_at": "2026-08-30 15:45:43"
+  },
+  {
+    "id": "agent-data-analyst",
+    "name": "Data Analyst Agent",
+    "template_type": "data_analyst",
+    "description": "Data scientist agent that inspects datasets, runs statistical analysis, builds chart specifications, and extracts executive actionable insights.",
+    "goal_placeholder": "e.g. Analyze user churn cohort retention data and identify bottlenecks",
+    "system_instructions": "You are a Senior Data Analyst. Formulate analytical hypotheses, run summary statistics and cohort regressions, generate visualization specs, and extract key strategic insights.",
+    "tools": [
+      "Statistical Engine",
+      "Chart Generator",
+      "SQL Runner",
+      "Memory Recall"
+    ],
+    "requires_human_approval": true,
+    "memory_access": true,
+    "project_access": true,
+    "max_steps": 5,
+    "timeout_seconds": 300,
+    "icon": "\ud83d\udcc8",
+    "badge_color": "emerald",
+    "created_at": "2026-08-30 15:45:43"
+  },
+  {
+    "id": "agent-creative",
+    "name": "Creative & Product Agent",
+    "template_type": "creative",
+    "description": "Product ideator that brainstorms unique feature concepts, formulates user personas, refines copy taglines, and drafts comprehensive PRDs.",
+    "goal_placeholder": "e.g. Brainstorm a gamified developer onboarding workflow for our SaaS",
+    "system_instructions": "You are a Creative Product Director. Brainstorm high-impact creative angles, refine value propositions, establish user delight loops, and deliver compelling product specs.",
+    "tools": [
+      "Creative Engine",
+      "Persona Builder",
+      "Memory Recall",
+      "PRD Generator"
+    ],
+    "requires_human_approval": false,
+    "memory_access": true,
+    "project_access": true,
+    "max_steps": 5,
+    "timeout_seconds": 300,
+    "icon": "\ud83c\udfa8",
+    "badge_color": "pink",
+    "created_at": "2026-08-30 15:45:43"
+  }
+]

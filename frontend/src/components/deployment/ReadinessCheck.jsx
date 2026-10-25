@@ -16,7 +16,7 @@ export default function ReadinessCheck({ readiness = {}, onStartDeployment }) {
   const checkLabels = {
     build_configuration: 'Build Configuration',
     environment_configuration: 'Environment Configuration',
-    tests_passed: 'Tests Passed (48/48)',
+    tests_passed: 'Tests Passed',
     security_review: 'Security Audit Passed',
     database_configuration: 'Database Schema & Migrations',
     docker_configuration: 'Docker Container Manifest'

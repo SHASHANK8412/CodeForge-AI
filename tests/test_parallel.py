@@ -1,88 +1,50 @@
+"""
+Frontend, Backend and Database code generation run concurrently in the real pipeline graph.
+
+(Previously this test patched attributes the workflow no longer has, such as
+validation_orchestrator. The whole run is covered by tests/test_pipeline_integration.py; this
+checks the parallel stage specifically, with the same model-free setup.)
+"""
+import asyncio
+import time
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock
-from pathlib import Path
-from backend.graph import parallel_workflow
+
+from tests.test_pipeline_integration import BACKEND, DATABASE, FRONTEND, _resume, pipeline  # noqa: F401
+from backend.graph import parallel_workflow as wf
+
+DELAY = 0.6
 
 
-class MockAgent:
-    def __init__(self, name: str, key: str | None = None):
-        self.name = name
-        self.key = key
+@pytest.fixture
+def timed_agents(pipeline, monkeypatch):  # noqa: F811 - the imported fixture
+    spans = {}
 
-    async def run_async(self, *args, **kwargs) -> str | dict[str, str]:
-        if self.key:
-            return {self.key: f"{self.name} output"}
-        return f"{self.name} output"
+    def slow(name, text):
+        async def run_async(*_a, **_k):
+            start = time.perf_counter()
+            await asyncio.sleep(DELAY)
+            spans[name] = (start, time.perf_counter())
+            return text
+        return run_async
+
+    monkeypatch.setattr(wf.frontend_agent, "run_async", slow("frontend", FRONTEND))
+    monkeypatch.setattr(wf.backend_agent, "run_async", slow("backend", BACKEND))
+    monkeypatch.setattr(wf.database_agent, "run_async", slow("database", DATABASE))
+    return pipeline, spans
 
 
-@pytest.mark.anyio
-async def test_parallel_workflow_execution():
-    # Setup mocks for parallel workflow nodes
-    parallel_workflow.planner = MockAgent("Planner")
-    parallel_workflow.architect = MockAgent("Architect")
-    parallel_workflow.frontend_agent = MockAgent("Frontend")
-    parallel_workflow.backend_agent = MockAgent("Backend", "backend")
-    parallel_workflow.database_agent = MockAgent("Database", "database")
-    parallel_workflow.testing_agent = MockAgent("Testing")
-    parallel_workflow.documentation_agent = MockAgent("Documentation", "documentation")
-    parallel_workflow.reviewer_agent = MockAgent("Reviewer")
+def test_parallel_workflow_execution(timed_agents):
+    pipeline, spans = timed_agents
+    config = {"configurable": {"thread_id": "gen_parallel_1"}}
+    asyncio.run(pipeline.graph.ainvoke({"prompt": "Build a notes board", "user_prompt": "Build a notes board",
+                                        "project_id": "notes_parallel", "files": {}, "fixes": []}, config=config))
+    _resume(pipeline.graph, config, {"approval_status": "approved", "current_step": "dispatch_parallel"})
 
-    # Save original globals to restore them
-    orig_generator = parallel_workflow.project_generator
-    orig_healer = parallel_workflow.self_heal_orchestrator
-
-    # Mock new generators, healing, validation, and reflection services
-    parallel_workflow.project_generator = MagicMock()
-    parallel_workflow.project_generator.generate_project_structure.return_value = (Path("/tmp"), None)
-    parallel_workflow.project_generator.zip_service = MagicMock()
-
-    parallel_workflow.self_heal_orchestrator = AsyncMock()
-    parallel_workflow.self_heal_orchestrator.execute_self_heal_pipeline.return_value = ([], {}, {}, "Mock Report")
-
-    from backend.validation.models import ValidationReport, QualityScore
-    parallel_workflow.validation_orchestrator.execute_validation_pipeline = AsyncMock(return_value=(
-        ValidationReport(
-            timestamp="2026-07-19T13:00:00Z",
-            project_name="Build an AI Resume Analyzer",
-            results=[],
-            quality=QualityScore(overall_score=95.0, grade="A", ready_for_export=True),
-            summary={}
-        ),
-        True
-    ))
-
-    from backend.graph.reflection_node import reflection_agent
-    reflection_agent.reflect_on_project = AsyncMock(return_value={
-        "strengths": ["Clean structure"],
-        "weaknesses": ["None"],
-        "recommendations": [],
-        "lessons": [],
-        "reflection_score": 95
-    })
-
-    # Save original validation/reflection states to restore them if needed
-    orig_val = parallel_workflow.validation_orchestrator.execute_validation_pipeline
-    orig_ref = reflection_agent.reflect_on_project
-
-    try:
-        result = await parallel_workflow.parallel_graph.ainvoke(
-            {
-                "prompt": "Build an AI Resume Analyzer",
-                "user_prompt": "Build an AI Resume Analyzer",
-            }
-        )
-    finally:
-        parallel_workflow.project_generator = orig_generator
-        parallel_workflow.self_heal_orchestrator = orig_healer
-        parallel_workflow.validation_orchestrator.execute_validation_pipeline = orig_val
-        reflection_agent.reflect_on_project = orig_ref
-
-    assert result["plan"] == "Planner output"
-    assert result["architecture"] == "Architect output"
-    assert result["frontend"] == "Frontend output"
-    assert result["backend"] == "Backend output"
-    assert result["database"] == "Database output"
-    assert result["tests"] == "Testing output"
-    assert result["documentation"].startswith("Documentation output")
-    assert result["review"] == "Reviewer output"
-    assert result["current_step"] == "export"
+    assert set(spans) == {"frontend", "backend", "database"}
+    first_start = min(s for s, _ in spans.values())
+    last_end = max(e for _, e in spans.values())
+    assert last_end - first_start < 2 * DELAY, f"agents ran one after another: {spans}"
+    # All three outputs reached assembly.
+    files = pipeline.graph.get_state(config).values["files"]
+    assert {"backend/main.py", "frontend/src/App.jsx", "database/schema.sql"} <= set(files)
