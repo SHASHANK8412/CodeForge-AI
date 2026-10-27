@@ -5,9 +5,14 @@ Validates all IDE workspace REST endpoints, file operations, security sandboxing
 AI Code Actions, Diff Generation, Problems panel, Changes tracking, and Test execution.
 """
 
+import shutil
+
 import pytest
 from fastapi.testclient import TestClient
 from backend.main import app
+from backend.auth.service import DEFAULT_USER_ID
+from backend.generation.store import global_generation_store
+from backend.generators.project_generator import GENERATED_PROJECTS_DIR
 from backend.quality.version_manager import global_version_manager
 from backend.memory.codebase_indexer import global_codebase_indexer
 
@@ -36,6 +41,20 @@ def sample_workspace_project():
     # Index files
     global_codebase_indexer.index_project_files(project_id, files)
     return project_id, files
+
+
+@pytest.fixture
+def owned_project_folder(sample_workspace_project, monkeypatch):
+    """Saving needs a completed generation the user owns, with its folder in generated_projects/."""
+    project_id, _ = sample_workspace_project
+    proj_dir = GENERATED_PROJECTS_DIR / project_id
+    proj_dir.mkdir(parents=True, exist_ok=True)
+    record = {"generation_id": project_id, "user_id": DEFAULT_USER_ID, "status": "completed", "project_path": str(proj_dir)}
+    original_get = global_generation_store.get
+    monkeypatch.setattr(global_generation_store, "get",
+                        lambda gid, default=None: record if gid == project_id else original_get(gid, default))
+    yield proj_dir
+    shutil.rmtree(proj_dir, ignore_errors=True)
 
 
 # ---------------------------------------------------------------------------
@@ -91,7 +110,7 @@ def test_workspace_security_rejects_directory_traversal(client, sample_workspace
 # 3. File Saving, Incremental Indexing & Version Snapshots
 # ---------------------------------------------------------------------------
 
-def test_workspace_save_file_updates_index_and_snapshot(client, sample_workspace_project):
+def test_workspace_save_file_updates_index_and_snapshot(client, sample_workspace_project, owned_project_folder):
     project_id, _ = sample_workspace_project
     new_content = "from fastapi import FastAPI\n\napp = FastAPI(title='Updated API')\n\n@app.get('/api/health')\ndef health():\n    return {'status': 'ok'}\n"
     

@@ -4,17 +4,25 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from backend.main import app
+from backend.auth.service import DEFAULT_USER_ID
+from backend.generation.store import global_generation_store
 from backend.generators.project_generator import GENERATED_PROJECTS_DIR
 from backend.quality.version_manager import global_version_manager
 
 client = TestClient(app)
 
 @pytest.fixture
-def setup_dummy_project():
+def setup_dummy_project(monkeypatch):
     """Creates a temporary generated project structure for testing workspace APIs."""
     project_id = "test_workspace_gen_proj"
     proj_dir = GENERATED_PROJECTS_DIR / project_id
     proj_dir.mkdir(parents=True, exist_ok=True)
+
+    # Saving needs a completed generation owned by the (default) user.
+    record = {"generation_id": project_id, "user_id": DEFAULT_USER_ID, "status": "completed", "project_path": str(proj_dir)}
+    original_get = global_generation_store.get
+    monkeypatch.setattr(global_generation_store, "get",
+                        lambda gid, default=None: record if gid == project_id else original_get(gid, default))
     
     # Write some mock code files
     (proj_dir / "backend").mkdir(exist_ok=True)

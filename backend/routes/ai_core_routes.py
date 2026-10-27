@@ -17,12 +17,14 @@ Endpoints:
 """
 
 from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, HTTPException, Query, Body, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
 from pydantic import BaseModel, Field
 
 from backend.ai_core.agent_runtime import global_agent_runtime, AgentMode, AgentRunRecord
 from backend.ai_core.model_provider import global_model_provider
-from backend.ai_core.tool_registry import global_tool_registry
+from backend.ai_core.tool_registry import WORKSPACE_TOOLS, global_tool_registry
+from backend.auth.dependencies import get_current_user
+from backend.evolution.routes import _project_dir
 from backend.ai_core.agent_memory import global_memory_manager
 from backend.ai_core.rag_engine import global_rag_engine
 
@@ -40,6 +42,8 @@ class ExecuteToolPayload(BaseModel):
     tool_name: str
     arguments: Dict[str, Any] = Field(default_factory=dict)
     user_confirmed: bool = False
+    # The generation whose folder file_reader / file_search are confined to.
+    project_id: Optional[str] = None
 
 
 class StoreMemoryPayload(BaseModel):
@@ -127,12 +131,20 @@ def list_tools():
 
 
 @router.post("/tools/execute")
-def execute_tool(payload: ExecuteToolPayload):
+def execute_tool(payload: ExecuteToolPayload, user: dict = Depends(get_current_user)):
+    workspace = None
+    if payload.tool_name in WORKSPACE_TOOLS:
+        if not payload.project_id:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"'{payload.tool_name}' needs a project_id.")
+        workspace = _project_dir(payload.project_id, user)
     res = global_tool_registry.execute_tool(
         name=payload.tool_name,
         arguments=payload.arguments,
-        user_confirmed=payload.user_confirmed
+        user_confirmed=payload.user_confirmed,
+        workspace=workspace
     )
+    if res.get("status") == "DENIED":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, res.get("error"))
     return res
 
 

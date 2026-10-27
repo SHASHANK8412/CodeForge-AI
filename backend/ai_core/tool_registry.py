@@ -20,7 +20,16 @@ from typing import Dict, Any, List, Optional, Callable
 from enum import Enum
 from pydantic import BaseModel, Field
 
+from backend.security.paths import resolve_inside
+
 _logger = logging.getLogger("aiforge.ai_core.tools")
+
+# Tools that touch files run only inside one project's folder, never the AIForge repository.
+WORKSPACE_TOOLS = {"file_reader", "file_search"}
+
+
+class ToolPathDenied(PermissionError):
+    """A filesystem tool was asked for a path outside its workspace, or for a secret file."""
 
 
 class ToolRiskLevel(str, Enum):
@@ -163,10 +172,15 @@ class ToolRegistry:
     def get_tool(self, name: str) -> Optional[ToolDefinition]:
         return self._tools.get(name)
 
-    def execute_tool(self, name: str, arguments: Dict[str, Any], user_confirmed: bool = False) -> Dict[str, Any]:
+    def execute_tool(self, name: str, arguments: Dict[str, Any], user_confirmed: bool = False,
+                     workspace: Optional[Path] = None) -> Dict[str, Any]:
+        """Run a tool. Filesystem tools need `workspace`, the project folder they are confined to."""
         tool = self._tools.get(name)
         if not tool:
             return {"success": False, "error": f"Tool '{name}' not found in registry"}
+        if name in WORKSPACE_TOOLS and workspace is None:
+            return {"success": False, "tool": name, "status": "DENIED",
+                    "error": f"Tool '{name}' needs a project workspace."}
 
         if tool.requires_approval and not user_confirmed:
             return {
@@ -182,7 +196,7 @@ class ToolRegistry:
 
         try:
             start_time = time.time()
-            result = handler(arguments)
+            result = handler(arguments, workspace) if name in WORKSPACE_TOOLS else handler(arguments)
             duration = round(time.time() - start_time, 4)
             return {
                 "success": True,
@@ -191,6 +205,8 @@ class ToolRegistry:
                 "duration_seconds": duration,
                 "result": result
             }
+        except ToolPathDenied as e:
+            return {"success": False, "tool": name, "status": "DENIED", "error": str(e)}
         except Exception as e:
             _logger.error(f"Error executing tool '{name}': {e}")
             return {"success": False, "tool": name, "error": str(e)}
@@ -221,30 +237,35 @@ class ToolRegistry:
         res = run_python_snippet(args.get("code", ""))
         return {"language": lang, "executed": True, "stdout": res["output"], "stderr": res["error"], "exit_code": res["exit_code"]}
 
-    def _handle_file_reader(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_file_reader(self, args: Dict[str, Any], workspace: Path) -> Dict[str, Any]:
         path = str(args.get("path", ""))
-        target = _inside_repo(path)
-        if target is None or not target.is_file():
-            return {"path": path, "error": "File not found inside the project root (paths outside it are blocked)."}
+        target = resolve_inside(workspace, path)
+        if target is None:
+            raise ToolPathDenied(f"Access denied: '{path}' is outside the project workspace or is a secret file.")
+        if not target.is_file():
+            return {"path": path, "error": "File not found in the project workspace."}
         if target.stat().st_size > _MAX_READ_BYTES:
             return {"path": path, "error": f"File is larger than {_MAX_READ_BYTES // 1024} KB."}
         return {"path": path, "content": target.read_text(encoding="utf-8", errors="replace")}
 
-    def _handle_file_search(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_file_search(self, args: Dict[str, Any], workspace: Path) -> Dict[str, Any]:
         pattern = str(args.get("pattern", ""))
         if not pattern:
             return {"pattern": pattern, "matches": [], "error": "Empty pattern."}
+        root = workspace.resolve()
         matches = []
-        for f in _REPO_ROOT.rglob("*"):
+        for f in root.rglob("*"):
             if len(matches) >= 50:
                 break
+            rel = f.relative_to(root).as_posix()
             if (not f.is_file() or f.suffix not in _SEARCHABLE_SUFFIXES
-                    or any(part in _SKIP_DIRS for part in f.relative_to(_REPO_ROOT).parts)
+                    or any(part in _SKIP_DIRS for part in f.relative_to(root).parts)
+                    or resolve_inside(root, rel) is None
                     or f.stat().st_size > _MAX_READ_BYTES):
                 continue
             for lineno, line in enumerate(f.read_text(encoding="utf-8", errors="ignore").splitlines(), 1):
                 if pattern in line:
-                    matches.append({"file": f.relative_to(_REPO_ROOT).as_posix(), "line": lineno, "preview": line.strip()[:200]})
+                    matches.append({"file": rel, "line": lineno, "preview": line.strip()[:200]})
                     if len(matches) >= 50:
                         break
         return {"pattern": pattern, "matches": matches, "truncated": len(matches) >= 50}
@@ -284,19 +305,9 @@ class ToolRegistry:
         }
 
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
 _MAX_READ_BYTES = 256 * 1024
 _SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__", "generated_projects", "dist", "build", ".claude"}
 _SEARCHABLE_SUFFIXES = {".py", ".js", ".jsx", ".ts", ".tsx", ".md", ".json", ".yml", ".yaml", ".toml", ".txt", ".css", ".html"}
-
-
-def _inside_repo(path: str) -> Optional[Path]:
-    """Resolve a relative path inside the repository, or None if it escapes it."""
-    try:
-        target = (_REPO_ROOT / path).resolve()
-    except (OSError, ValueError):
-        return None
-    return target if _REPO_ROOT in target.parents else None
 
 
 _BIN_OPS = {

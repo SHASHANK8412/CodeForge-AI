@@ -59,10 +59,18 @@ def test_calculator_is_safe():
     assert "error" in calc("__import__('os')")
 
 
-def test_file_reader_reads_real_files_and_blocks_escapes():
-    read = lambda p: global_tool_registry.execute_tool("file_reader", {"path": p}, user_confirmed=True)["result"]
-    assert "AIForge" in read("README.md")["content"]
-    assert "error" in read("../../Windows/win.ini")
+def test_file_reader_reads_real_files_and_blocks_escapes(tmp_path):
+    workspace = tmp_path / "project"
+    workspace.mkdir()
+    (workspace / "README.md").write_text("# AIForge generated project\n", encoding="utf-8")
+    (workspace / ".env").write_text("SECRET_KEY=x\n", encoding="utf-8")
+    (tmp_path / "outside.md").write_text("outside\n", encoding="utf-8")
+    run = lambda p: global_tool_registry.execute_tool("file_reader", {"path": p}, user_confirmed=True, workspace=workspace)
+    assert "AIForge" in run("README.md")["result"]["content"]
+    for escape in ("../../Windows/win.ini", "../outside.md", str(tmp_path / "outside.md"), ".env"):
+        res = run(escape)
+        assert res["success"] is False and res["status"] == "DENIED", escape
+        assert "result" not in res
 
 
 def test_web_search_does_not_invent_results():

@@ -34,8 +34,12 @@ export default function KnowledgeBase() {
 
   const handleDeleteDocument = async (filename) => {
     try {
-      await fetch(`${BACKEND_URL}/api/documents/${filename}`, {
+      // Deleting requires a signed-in user when the backend enforces auth.
+      const token = localStorage.getItem('aiforge_jwt');
+      await fetch(`${BACKEND_URL}/api/documents/${encodeURIComponent(filename)}`, {
         method: 'DELETE',
+        credentials: 'include',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       fetchDocuments();
     } catch (err) {

@@ -20,10 +20,13 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, Query, Body
+from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from pydantic import BaseModel, Field
 
+from backend.auth.dependencies import get_current_user
+from backend.evolution.routes import _project_dir
 from backend.generators.project_generator import GENERATED_PROJECTS_DIR
+from backend.security.paths import is_safe_id, resolve_inside
 from backend.memory.codebase_indexer import global_codebase_indexer, is_secret_or_excluded_file, compute_file_hash
 from backend.memory.dependency_graph import global_dependency_graph
 from backend.memory.impact_analyzer import global_impact_analyzer
@@ -85,6 +88,9 @@ def _validate_safe_path(rel_path: str) -> str:
 
 def _get_project_files_map(project_id: str) -> Dict[str, str]:
     """Resolves project files from version manager or disk."""
+    if not is_safe_id(project_id):
+        # ".." would make GENERATED_PROJECTS_DIR / project_id the repository root.
+        raise HTTPException(status_code=404, detail="Project not found.")
     latest_ver = global_version_manager.get_latest_version(project_id)
     if latest_ver and latest_ver.files_snapshot:
         return dict(latest_ver.files_snapshot)
@@ -190,9 +196,14 @@ def get_workspace_file_content(project_id: str, path: str = Query(...)) -> Dict[
 # ---------------------------------------------------------------------------
 
 @router.put("/{project_id}/file")
-def save_workspace_file(project_id: str, req: SaveFileRequest) -> Dict[str, Any]:
+def save_workspace_file(project_id: str, req: SaveFileRequest, user: dict = Depends(get_current_user)) -> Dict[str, Any]:
     """Saves user modifications, updates incremental index, validates syntax, and records snapshot delta."""
+    # Only a finished generation the user owns, and only a file inside its folder.
+    proj_dir = _project_dir(project_id, user, writable=True)
     clean_p = _validate_safe_path(req.path)
+    target_file = resolve_inside(proj_dir, req.path)  # the raw path, so "/etc/passwd" is refused, not rebased
+    if target_file is None:
+        raise HTTPException(status_code=400, detail=f"Access denied: Path traversal or invalid file path '{req.path}'")
     files_map = _get_project_files_map(project_id)
     files_map[clean_p] = req.content
 
@@ -211,15 +222,12 @@ def save_workspace_file(project_id: str, req: SaveFileRequest) -> Dict[str, Any]
         except Exception as je:
             validation_errors.append(f"Syntax error: {je}")
 
-    # 1. Update on disk if directory exists
-    proj_dir = GENERATED_PROJECTS_DIR / project_id
-    if proj_dir.exists() and proj_dir.is_dir():
-        target_file = proj_dir / clean_p
-        try:
-            target_file.parent.mkdir(parents=True, exist_ok=True)
-            target_file.write_text(req.content, encoding="utf-8")
-        except Exception as e:
-            _logger.warning(f"Could not write to disk: {e}")
+    # 1. Update on disk
+    try:
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+        target_file.write_text(req.content, encoding="utf-8")
+    except Exception as e:
+        _logger.warning(f"Could not write to disk: {e}")
 
     # 2. Incremental Indexing
     global_codebase_indexer.index_project_files(project_id, {clean_p: req.content})
@@ -362,6 +370,8 @@ def generate_diff(project_id: str, req: DiffRequest) -> Dict[str, Any]:
 @router.post("/{project_id}/test")
 def run_project_tests_endpoint(project_id: str) -> Dict[str, Any]:
     """Executes test suite and returns parsed results."""
+    if not is_safe_id(project_id):
+        raise HTTPException(status_code=404, detail="Project not found.")
     proj_dir = GENERATED_PROJECTS_DIR / project_id
     if proj_dir.exists():
         tester_res = global_project_tester.run_tests(str(proj_dir))
