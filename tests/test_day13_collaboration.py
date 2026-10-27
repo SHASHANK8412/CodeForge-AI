@@ -41,9 +41,11 @@ def test_graph_coding_path_runs_reviewer_then_explanation(monkeypatch):
     assert doubles.calls == ["project"], "the chat pipeline hands project review to the workflow"
     assert result.execution_strategy == "WORKFLOW"
 
-    # In the project workflow the reviewer runs on the assembled code, before documentation.
+    # In the project workflow the reviewer runs on the assembled code (after the compatibility check, which may repair
+    # it against the shared contract), before documentation.
     from backend.graph.parallel_workflow import parallel_graph
-    assert _successors(parallel_graph, "assembly") == {"reviewer"}
+    assert _successors(parallel_graph, "assembly") == {"compatibility"}
+    assert _successors(parallel_graph, "compatibility") == {"reviewer"}
     assert _successors(parallel_graph, "reviewer") == {"documentation"}
 
 
