@@ -305,3 +305,157 @@ def test_failing_tests_escalate_after_bounded_repairs(pipeline, monkeypatch):
     assert values["approval_request"]["stage"] == "debug_escalation"
     assert values["repair_status"] in ("STOPPED_MAX_ATTEMPTS", "STOPPED_REPEATED_FAILURE")
     assert 1 <= len(values.get("fix_history") or []) <= 2
+
+
+# --- Model outage: a failed or timed-out model call fails its step; nothing stands in for it ----------------------
+
+# What the removed llm.py fallback used to return in place of model output.
+CANNED = ("AIForge App", "assert 1 + 1 == 2", "zero critical flaws", "CREATE TABLE IF NOT EXISTS users",
+          "Task completed successfully", "AIForge Software Application")
+
+
+def _model_down(monkeypatch, timeout=False):
+    """The model transport fails: every call raises (Ollama not running) or never answers (timeout)."""
+    import backend.services.llm as llm
+    calls = []
+
+    async def down(model, messages, stream=False, options=None):
+        calls.append(model)
+        if timeout:
+            await asyncio.sleep(5)
+        raise ConnectionError("connection refused: Ollama is not running")
+
+    def down_sync(model, messages, stream=False, options=None):
+        calls.append(model)
+        raise ConnectionError("connection refused: Ollama is not running")
+
+    monkeypatch.setattr(llm, "_chat_completion_async", down)
+    monkeypatch.setattr(llm, "_chat_completion", down_sync)
+    monkeypatch.setattr(llm, "LLM_TIMEOUT_SECONDS", 0.05)
+    llm.llm_cache.clear()
+    return calls
+
+
+def _real(monkeypatch, *agents):
+    """Undo the fixture's scripted reply: these agents call the (failing) model for real."""
+    for agent in agents:
+        monkeypatch.setattr(agent, "run_async", type(agent).run_async.__get__(agent))
+
+
+def _recorded_metrics(monkeypatch):
+    seen = []
+    monkeypatch.setattr(wf, "_record_metrics", lambda state, increment=None, **values: seen.append(values))
+    return seen
+
+
+def _no_canned_output(root):
+    for path in root.rglob("*"):
+        if path.is_file() and path.suffix not in (".db", ".pkl", ".zip"):
+            text = path.read_text(encoding="utf-8", errors="replace")
+            assert not [c for c in CANNED if c in text], f"canned model text written to {path}"
+
+
+def _assert_failed_run(values, agents):
+    assert values["status"] == "FAILED" and values["execution_status"] == "FAILED"
+    assert values["current_step"] == "generation_failed"
+    assert {f["agent"] for f in values["agent_failures"]} == set(agents)
+    assert all("ConnectionError" in f["error"] or "did not finish" in f["error"] for f in values["agent_failures"])
+    assert values["approval_required"] is False and values.get("approval_stage") != "final"
+    assert "quality_report" not in (values.get("approval_request") or {})
+    assert values.get("human_intervention_required") is not True
+    events = " ".join(values["stream_events"])
+    assert "Generation failed: the language model produced no output" in events
+    assert not [c for c in CANNED if c in json.dumps(values, default=str)], "no canned text anywhere in the state"
+
+
+def test_planner_outage_stops_the_run_before_any_approval(pipeline, monkeypatch):
+    calls = _model_down(monkeypatch)
+    _real(monkeypatch, wf.planner)
+    metrics = _recorded_metrics(monkeypatch)
+    graph = pipeline.graph
+    config = {"configurable": {"thread_id": "gen_outage_planner"}}
+    asyncio.run(graph.ainvoke({"prompt": "Build a notes board", "user_prompt": "Build a notes board",
+                               "project_id": "notes_outage", "generation_id": "gen_outage_planner",
+                               "files": {}, "fixes": [], "retry_count": 0}, config=config))
+
+    snapshot = graph.get_state(config)
+    assert snapshot.next == (), "the run ends; it does not pause for an architecture approval"
+    values = snapshot.values
+    assert calls, "the model was called (and failed)"
+    _assert_failed_run(values, ["planner"])
+    assert "plan" not in values and "architecture" not in values
+    assert "architect" not in pipeline.prompts, "nothing after the planner ran"
+    assert not (pipeline.root / "generated_projects").exists()
+    assert not [m for m in metrics if "release_recommendation" in m]
+    _no_canned_output(pipeline.root)
+
+
+def test_code_agents_timing_out_write_no_project_and_reach_no_release(pipeline, monkeypatch):
+    """Every code agent times out (the audit's run where all agents timed out still reached approval as "ready")."""
+    _model_down(monkeypatch, timeout=True)
+    _real(monkeypatch, wf.frontend_agent, wf.backend_agent, wf.database_agent)
+    metrics = _recorded_metrics(monkeypatch)
+    graph = pipeline.graph
+    config = {"configurable": {"thread_id": "gen_outage_code"}}
+    asyncio.run(graph.ainvoke({"prompt": "Build a notes board", "user_prompt": "Build a notes board",
+                               "project_id": "notes_outage_2", "generation_id": "gen_outage_code",
+                               "files": {}, "fixes": [], "retry_count": 0}, config=config))
+    assert graph.get_state(config).next == ("human_approval",)
+    _resume(graph, config, {"approval_status": "approved", "approval_required": False,
+                            "status": "RUNNING", "current_step": "dispatch_parallel"})
+
+    snapshot = graph.get_state(config)
+    assert snapshot.next == (), "no final approval: there is nothing to review"
+    values = snapshot.values
+    _assert_failed_run(values, ["frontend", "backend", "database"])
+    assert all("did not finish" in f["error"] for f in values["agent_failures"])
+    assert not {"frontend", "backend", "database", "review", "test_results", "project_path"} & set(values)
+    assert not (pipeline.root / "generated_projects").exists(), "nothing assembled or written"
+    assert "testing" not in pipeline.prompts
+    assert not [m for m in metrics if "release_recommendation" in m]
+    _no_canned_output(pipeline.root)
+
+
+def test_reviewer_outage_does_not_mark_the_project_reviewed(pipeline, monkeypatch):
+    _model_down(monkeypatch)
+    _real(monkeypatch, wf.reviewer_agent)
+    metrics = _recorded_metrics(monkeypatch)
+    graph = pipeline.graph
+    config = {"configurable": {"thread_id": "gen_outage_review"}}
+    asyncio.run(graph.ainvoke({"prompt": "Build a notes board", "user_prompt": "Build a notes board",
+                               "project_id": "notes_outage_3", "generation_id": "gen_outage_review",
+                               "files": {}, "fixes": [], "retry_count": 0}, config=config))
+    _resume(graph, config, {"approval_status": "approved", "approval_required": False,
+                            "status": "RUNNING", "current_step": "dispatch_parallel"})
+
+    snapshot = graph.get_state(config)
+    assert snapshot.next == ()
+    values = snapshot.values
+    _assert_failed_run(values, ["reviewer"])
+    assert "review" not in values, "no review score or text"
+    assert "test_results" not in values and "testing" not in pipeline.prompts
+    # The code agents' (scripted) output was assembled before the review; nothing canned was added to it.
+    assert (pipeline.root / "generated_projects" / "Notes_Board" / "backend" / "main.py").is_file()
+    assert not [m for m in metrics if "release_recommendation" in m]
+    _no_canned_output(pipeline.root)
+
+
+def test_generation_manager_records_an_outage_as_failed(pipeline, monkeypatch, tmp_path):
+    from backend.generation import manager as mgr_mod
+    from backend.generation.store import GenerationStore
+
+    _model_down(monkeypatch)
+    _real(monkeypatch, wf.planner)
+    store = GenerationStore(store_path=tmp_path / "generations.json")
+    monkeypatch.setattr(mgr_mod, "_store", store)
+    monkeypatch.setattr(mgr_mod, "parallel_graph", pipeline.graph)
+    monkeypatch.setattr(mgr_mod.global_version_manager, "get_latest_version", lambda *_a, **_k: None)
+    gen_id = store.create("notes_outage_4", "tester", "Build a notes board", gen_id="gen_outage_manager")
+
+    asyncio.run(mgr_mod.GenerationManager()._run_pipeline(gen_id, store.get(gen_id)))
+
+    rec = store.get(gen_id)
+    assert rec["status"] == "failed", rec["status"]
+    assert "language model produced no output for planner" in rec["error"]
+    kinds = [e["type"] for e in rec["events"]]
+    assert "generation_failed" in kinds and "generation_completed" not in kinds

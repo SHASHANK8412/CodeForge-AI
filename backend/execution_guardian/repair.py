@@ -143,6 +143,7 @@ def propose(failures: List[Failure], agent: str, workspace: Path, stack: Dict[st
     if agent not in ("frontend", "backend", "database", "debug"):
         return "", {}, f"no repair strategy for {agent}"
     from backend.evolution.autopilot.executor import HiddenLineChanged, model_changes
+    from backend.services.llm import LLMUnavailableError
     allowed = [f for f in failure_files if f in files and in_scope(agent, f, stack, failure_files)[0]]
     if not allowed:
         allowed = sorted(f for f in files if in_scope(agent, f, stack, failure_files)[0])[:5]
@@ -161,6 +162,8 @@ def propose(failures: List[Failure], agent: str, workspace: Path, stack: Dict[st
         return f"model:{agent}", {}, f"rejected: the model altered a hidden secret line ({e})"
     except PermissionError as e:
         return f"model:{agent}", {}, str(e)
+    except LLMUnavailableError as e:  # an unavailable model is a recorded, unproductive attempt
+        return f"model:{agent}", {}, f"the {agent} agent's model was unavailable: {e}"[:300]
     return f"model:{agent}", {k: v for k, v in changes.items() if v != files.get(k)}, ""
 
 

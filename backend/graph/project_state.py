@@ -110,6 +110,8 @@ class ProjectState(TypedDict, total=False):
     current_step: Annotated[str, _merge_current_step]
     error: Annotated[str, _merge_errors]
     stream_events: Annotated[List[str], _merge_stream_events]
+    # Agents whose model call failed ({"agent", "error"}); the parallel code agents may fail in the same step
+    agent_failures: Annotated[List[Dict[str, Any]], _merge_stream_events]
     cached_nodes: List[str]
     validation_status: Dict[str, Any]
 

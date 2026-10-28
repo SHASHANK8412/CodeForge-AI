@@ -20,19 +20,26 @@ def _edges():
     return out
 
 
+FAILED = "generation_failed"
+# Steps after which a failed model call (an agent with no output) ends the run at generation_failed. The code agents
+# join at assembly first, which assembles nothing when one of them failed.
+MODEL_STEPS = {"planner", "architect", "assembly", "reviewer", "documentation", "testing"}
+
+
 def test_entire_pipeline():
     edges = _edges()
     assert edges["__start__"] == {"planner"}
-    assert edges["planner"] == {"architect"}
-    assert edges["architect"] == {"human_approval"}
+    assert edges["planner"] == {"architect", FAILED}
+    assert edges["architect"] == {"human_approval", FAILED}
     assert {"dispatch_parallel", "architect", "human_approval"} >= edges["human_approval"] >= {"dispatch_parallel", "architect"}
     assert edges["dispatch_parallel"] == {"frontend", "backend", "database"}, "the three code agents fan out"
     assert edges["frontend"] == edges["backend"] == edges["database"] == {"assembly"}, "and join at assembly"
     chain = ["assembly", "compatibility", "reviewer", "documentation", "build_validation", "dependency_manager",
-             "security_scan", "performance", "execution_validation", "testing"]
+             "security_scan", "performance", "execution_validation", "testing", "execution_guardian"]
     for a, b in zip(chain, chain[1:]):
-        assert edges[a] == {b}
-    assert edges["testing"] == {"execution_guardian"}            # the Execution Guardian verifies before any routing
+        assert edges[a] == {b} | ({FAILED} if a in MODEL_STEPS else set())
+    assert edges[FAILED] == {"__end__"}, "a failed model call ends the run: no approval, packaging or deploy"
+    assert {s for s, targets in edges.items() if FAILED in targets} == MODEL_STEPS
     assert edges["execution_guardian"] >= {"debug", "final_approval"}
     assert edges["debug"] == {"patch"} and edges["patch"] == {"execution_validation"}, "bounded repair loop"
     assert "packaging" in edges["final_approval"]

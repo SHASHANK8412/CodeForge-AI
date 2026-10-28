@@ -39,6 +39,7 @@ from backend.utils.timer import Timer
 from backend.graph.profiler import workflow_profiler
 
 from backend.services.cache_service import global_cache_service
+from backend.services.llm import LLMUnavailableError
 from backend.services.validator import global_stage_validator
 from backend.services.project_builder import global_structured_project_builder
 from backend.services.prompt_builder import global_prompt_builder
@@ -101,6 +102,26 @@ def _fire_lifecycle(
         _logger.warning("_fire_lifecycle error [%s/%s]: %s", event_type, agent_name, exc)
 
 
+def _agent_failed(agent: str, exc: LLMUnavailableError) -> dict:
+    """
+    The agent's model call failed, timed out or returned nothing: the step fails visibly. Nothing is cached,
+    saved or assembled in its place, and the run stops at generation_failed (see _unless_failed).
+    """
+    error = str(exc)[:300]
+    _logger.error("%s agent failed: %s", agent, error)
+    _fire_lifecycle("agent_failed", agent, error=error)
+    return {"agent_failures": [{"agent": agent, "error": error}], "current_step": agent,
+            "stream_events": [f"✖ {agent.title()} agent failed: {error}"]}
+
+
+def _unless_failed(next_node: str) -> Callable[[ProjectState], str]:
+    """Router: on to next_node, or to generation_failed once any agent's model call has failed."""
+    def route(state: ProjectState) -> str:
+        return "generation_failed" if state.get("agent_failures") else next_node
+    route.__name__ = f"route_to_{next_node}_unless_failed"
+    return route
+
+
 # Instantiate all Platform Agents
 planner = PlannerAgent()
 architect = ArchitectAgent()
@@ -150,8 +171,11 @@ async def planner_node(state: ProjectState) -> dict:
             "stream_events": ["✔ Planner completed (Cached)"]
         }
 
-    with Timer() as timer:
-        raw_plan = await planner.run_async(prompt)
+    try:
+        with Timer() as timer:
+            raw_plan = await planner.run_async(prompt)
+    except LLMUnavailableError as e:
+        return {**_agent_failed("planner", e), "prompt": prompt, "user_prompt": prompt}
 
     session_id = gen_id
     plan_json = planner.parse_plan_json(raw_plan, allow_fallback=True)
@@ -223,8 +247,11 @@ async def architect_node(state: ProjectState) -> dict:
         _logger.info(f"✔ Architect incorporating human rejection feedback: {user_feedback[:80]}")
         arch_prompt += f"\n\n[CRITICAL HUMAN REVISION FEEDBACK]:\nThe user reviewed the previous architecture and requested the following changes:\n\"{user_feedback}\"\nYou MUST strictly update the architecture, tech stack, database, and components according to this feedback."
 
-    with Timer() as timer:
-        raw_arch = await architect.run_async(arch_prompt)
+    try:
+        with Timer() as timer:
+            raw_arch = await architect.run_async(arch_prompt)
+    except LLMUnavailableError as e:
+        return _agent_failed("architect", e)
 
     is_valid, msg, arch_json = global_stage_validator.validate_architecture(raw_arch)
     from backend.graph.architecture_check import validate_architecture_sections
@@ -416,8 +443,11 @@ async def frontend_node(state: ProjectState) -> dict:
 
     fe_prompt = global_prompt_builder.build_frontend_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"), state.get("template"),
                                                          contract=_contract_prompt(state, "frontend"))
-    with Timer() as timer:
-        frontend_code = await frontend_agent.run_async(fe_prompt)
+    try:
+        with Timer() as timer:
+            frontend_code = await frontend_agent.run_async(fe_prompt)
+    except LLMUnavailableError as e:
+        return _agent_failed("frontend", e)
 
     global_cache_service.set("frontend", arch_json, frontend_code)
     memory_manager.save_agent_output(session_id, "frontend", frontend_code)
@@ -449,8 +479,11 @@ async def backend_node(state: ProjectState) -> dict:
 
     be_prompt = global_prompt_builder.build_backend_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"), state.get("template"),
                                                         contract=_contract_prompt(state, "backend"))
-    with Timer() as timer:
-        backend_code = await backend_agent.run_async(be_prompt)
+    try:
+        with Timer() as timer:
+            backend_code = await backend_agent.run_async(be_prompt)
+    except LLMUnavailableError as e:
+        return _agent_failed("backend", e)
 
     global_cache_service.set("backend", arch_json, backend_code)
     memory_manager.save_agent_output(session_id, "backend", backend_code)
@@ -482,8 +515,11 @@ async def database_node(state: ProjectState) -> dict:
 
     db_prompt = global_prompt_builder.build_database_prompt(arch_json if isinstance(arch_json, dict) else {}, state.get("plan"), state.get("template"),
                                                          contract=_contract_prompt(state, "database"))
-    with Timer() as timer:
-        database_code = await database_agent.run_async(db_prompt)
+    try:
+        with Timer() as timer:
+            database_code = await database_agent.run_async(db_prompt)
+    except LLMUnavailableError as e:
+        return _agent_failed("database", e)
 
     global_cache_service.set("database", arch_json, database_code)
     memory_manager.save_agent_output(session_id, "database", database_code)
@@ -504,6 +540,11 @@ MAX_FILE_REGENERATION_ATTEMPTS = int(os.getenv("MAX_FILE_REGENERATION_ATTEMPTS",
 
 
 async def assembly_node(state: ProjectState) -> dict:
+    failed = sorted({f["agent"] for f in state.get("agent_failures") or []})
+    if failed:
+        # A code agent produced nothing: the others' output alone is not the project, and nothing stands in for the
+        # missing part. Nothing is written; the run goes on to generation_failed.
+        return {"current_step": "assembly", "stream_events": [f"✖ Assembly skipped: no output from {', '.join(failed)}"]}
     _logger.info("✔ Project Assembly & File Integrity Verification started")
     _fire_lifecycle("agent_started", "assembly")
     plan_json = state.get("plan", {})
@@ -640,8 +681,11 @@ async def reviewer_node(state: ProjectState) -> dict:
         duplicate_report=duplicate_report,
     )
 
-    with Timer() as timer:
-        review_output = await reviewer_agent.run_async(rev_prompt)
+    try:
+        with Timer() as timer:
+            review_output = await reviewer_agent.run_async(rev_prompt)
+    except LLMUnavailableError as e:
+        return _agent_failed("reviewer", e)              # no review: the project is not marked reviewed
 
     agent_timers["reviewer"] = timer.elapsed
     workflow_profiler.record_agent_time("reviewer", timer.elapsed)
@@ -694,8 +738,11 @@ async def testing_node(state: ProjectState) -> dict:
         template=state.get("template"),
     )
 
-    with Timer() as timer:
-        raw_tests = await testing_agent.run_async(testing_prompt)
+    try:
+        with Timer() as timer:
+            raw_tests = await testing_agent.run_async(testing_prompt)
+    except LLMUnavailableError as e:
+        return _agent_failed("testing", e)               # no tests written, none run, nothing passed
 
     agent_timers["testing"] = timer.elapsed
     workflow_profiler.record_agent_time("testing", timer.elapsed)
@@ -854,8 +901,11 @@ async def documentation_node(state: ProjectState) -> dict:
     plan_json = state.get("plan", {})
     proj_name = plan_json.get("project_name", "AIForge Application") if isinstance(plan_json, dict) else "AIForge Application"
 
-    with Timer() as timer:
-        docs_code = await documentation_agent.run_async(f"Generate production README.md for {proj_name}")
+    try:
+        with Timer() as timer:
+            docs_code = await documentation_agent.run_async(f"Generate production README.md for {proj_name}")
+    except LLMUnavailableError as e:
+        return _agent_failed("documentation", e)
 
     agent_timers["documentation"] = timer.elapsed
     workflow_profiler.record_agent_time("documentation", timer.elapsed)
@@ -1579,6 +1629,29 @@ def route_after_final_approval(state: ProjectState) -> str:
     return "final_approval"
 
 
+async def generation_failed_node(state: ProjectState) -> dict:
+    """
+    Terminal: an agent's model call failed, timed out or returned nothing. The run ends here as FAILED - it is not
+    reviewed, approved, packaged or released, and no stand-in output was produced for the missing step.
+    """
+    failures = state.get("agent_failures") or []
+    agents = ", ".join(dict.fromkeys(f["agent"] for f in failures)) or "an agent"
+    message = f"Generation failed: the language model produced no output for {agents}"
+    if failures:
+        message += f" ({failures[0]['error']})"
+    _logger.error(message)
+    return {
+        "status": "FAILED",
+        "execution_status": "FAILED",
+        "approval_required": False,
+        "error": message,
+        "errors": list(state.get("errors") or []) + [message],
+        "current_step": "generation_failed",
+        "current_agent": failures[-1]["agent"] if failures else "generation_failed",
+        "stream_events": [f"⛔ {message}"],
+    }
+
+
 
 
 async def packaging_node(state: ProjectState) -> dict:
@@ -1907,11 +1980,18 @@ builder.add_node("github_sync", github_sync_node)
 builder.add_node("ci_check", ci_check_node)
 builder.add_node("live_deploy", live_deploy_node)
 builder.add_node("health_check", health_check_node)
+builder.add_node("generation_failed", generation_failed_node)
+
+
+def _add_step(source: str, target: str) -> None:
+    """source -> target, or source -> generation_failed when an agent's model call has failed."""
+    builder.add_conditional_edges(source, _unless_failed(target), {target: target, "generation_failed": "generation_failed"})
+
 
 # Entry Point & Architecture Review Checkpoint
 builder.set_entry_point("planner")
-builder.add_edge("planner", "architect")
-builder.add_edge("architect", "human_approval")
+_add_step("planner", "architect")
+_add_step("architect", "human_approval")
 
 builder.add_conditional_edges(
     "human_approval",
@@ -1934,10 +2014,10 @@ builder.add_edge("backend", "assembly")
 builder.add_edge("database", "assembly")
 
 # Sequential Stage Progression
-builder.add_edge("assembly", "compatibility")         # AICE: the components against the shared contract
+_add_step("assembly", "compatibility")                # AICE: the components against the shared contract
 builder.add_edge("compatibility", "reviewer")
-builder.add_edge("reviewer", "documentation")
-builder.add_edge("documentation", "build_validation")
+_add_step("reviewer", "documentation")
+_add_step("documentation", "build_validation")
 builder.add_edge("build_validation", "dependency_manager")
 builder.add_edge("dependency_manager", "security_scan")
 builder.add_edge("security_scan", "performance")
@@ -1945,7 +2025,7 @@ builder.add_edge("performance", "execution_validation")
 builder.add_edge("execution_validation", "testing")
 
 # Self-Correction Loop Routing (Testing -> Execution Guardian -> Debug -> Patch -> Retest)
-builder.add_edge("testing", "execution_guardian")
+_add_step("testing", "execution_guardian")
 builder.add_conditional_edges(
     "execution_guardian",
     route_after_guardian,
@@ -1976,6 +2056,7 @@ builder.add_edge("github_sync", "ci_check")
 builder.add_edge("ci_check", "live_deploy")
 builder.add_edge("live_deploy", "health_check")
 builder.add_edge("health_check", END)
+builder.add_edge("generation_failed", END)
 
 # HITL checkpoints pause *after* the approval nodes: they build the approval request (the
 # architecture summary, test results, release report) that the reviewer sees. Pausing before
