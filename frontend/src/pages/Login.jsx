@@ -4,8 +4,8 @@ import { FaLayerGroup, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaArrowRight, FaSp
 
 export default function Login({ setView }) {
   const { login } = useAuth();
-  const [email, setEmail] = useState('user@example.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

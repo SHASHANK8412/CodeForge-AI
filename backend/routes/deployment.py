@@ -37,7 +37,10 @@ def _read_project_files(project_dir: Path) -> Dict[str, str]:
     if not project_dir.exists():
         return files
     for file_path in project_dir.rglob("*"):
-        if file_path.is_file() and not any(part.startswith('.') for part in file_path.parts) and "node_modules" not in file_path.parts and "__pycache__" not in file_path.parts and ".venv" not in file_path.parts:
+        # Judge the path inside the project: a dot-folder above it (e.g. an install under ~/.local) used to
+        # skip every file, which silently switched off the secret scan below.
+        parts = file_path.relative_to(project_dir).parts
+        if file_path.is_file() and not any(part.startswith('.') for part in parts) and "node_modules" not in parts and "__pycache__" not in parts and ".venv" not in parts:
             try:
                 rel_path = file_path.relative_to(project_dir).as_posix()
                 content = file_path.read_text(encoding="utf-8", errors="ignore")

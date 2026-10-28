@@ -4,7 +4,9 @@ import asyncio
 from pathlib import Path
 from time import perf_counter
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+
+from backend.auth.dependencies import get_current_user
 from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel
 
@@ -348,16 +350,15 @@ def get_project_file_content(project_name: str, path: str):
     Reads the content of a specific file in a generated project.
     """
     from backend.generators.project_generator import GENERATED_PROJECTS_DIR
+    from backend.security.paths import is_plain_filename, resolve_inside
+    if not is_plain_filename(project_name) or ".." in project_name:
+        raise HTTPException(status_code=404, detail="Project not found.")
     project_dir = GENERATED_PROJECTS_DIR / project_name
-    file_path = project_dir / path
-    
-    # Secure against directory traversal: the file must be inside this project, not just inside
-    # the generated-projects folder (which would expose other projects' files).
-    resolved_file_path = file_path.resolve()
-    resolved_base_dir = GENERATED_PROJECTS_DIR.resolve()
-    resolved_proj_dir = project_dir.resolve()
-    if not resolved_proj_dir.is_relative_to(resolved_base_dir) or resolved_proj_dir == resolved_base_dir \
-            or not resolved_file_path.is_relative_to(resolved_proj_dir):
+
+    # The file must be inside this project (not just inside generated_projects, which would expose
+    # other projects' files), and never a secret such as the project's .env.
+    file_path = resolve_inside(project_dir, path)
+    if file_path is None:
         raise HTTPException(status_code=400, detail="Invalid file path.")
 
     if not file_path.exists() or not file_path.is_file():
@@ -631,22 +632,14 @@ class ValidateRequest(BaseModel):
 
 
 @router.post("/api/project/validate")
-def validate_project_route(request: ValidateRequest):
+def validate_project_route(request: ValidateRequest, user: dict = Depends(get_current_user)):
     project_id = request.project_id
     files = request.files
 
     if not files:
-        # Load from disk
-        from backend.generators.project_generator import GENERATED_PROJECTS_DIR
-        target_dir = GENERATED_PROJECTS_DIR / project_id
-        if not target_dir.exists():
-            # Search candidate matching ID
-            for p in GENERATED_PROJECTS_DIR.glob("*"):
-                if p.is_dir() and (project_id.lower() in p.name.lower() or p.name.lower() in project_id.lower()):
-                    target_dir = p
-                    break
-        if not target_dir.exists():
-            raise HTTPException(status_code=404, detail=f"Project '{project_id}' not found on disk.")
+        # Load from disk: only a project the user owns, never a path built from the id.
+        from backend.auth.ownership import owned_project_folder
+        target_dir = owned_project_folder(project_id, user)
         
         # Read files
         files = {}

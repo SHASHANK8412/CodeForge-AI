@@ -1,6 +1,9 @@
 import zipfile
 import logging
 from pathlib import Path
+from typing import Iterator, Tuple
+
+from backend.exporter.zipper import export_exclusion_reason
 
 _logger = logging.getLogger("aiforge.performance")
 
@@ -14,6 +17,23 @@ EXCLUDED_NAMES = {
     "venv",
     ".ipynb_checkpoints"
 }
+
+
+def archive_members(source_directory: Path) -> Iterator[Tuple[Path, str]]:
+    """
+    (file, archive name) for every file that may leave the machine: no caches, no secrets (.env, keys,
+    databases - the export policy), and no symlinks or anything resolving outside the project, which
+    would copy host files into the download.
+    """
+    root = source_directory.resolve()
+    for file_path in source_directory.rglob("*"):
+        parts = file_path.relative_to(source_directory).parts
+        if any(part in EXCLUDED_NAMES for part in parts) or file_path.is_symlink() or not file_path.is_file():
+            continue
+        arcname = "/".join(parts)
+        if export_exclusion_reason(arcname) or root not in file_path.resolve().parents:
+            continue
+        yield file_path, arcname
 
 
 class ZipService:
@@ -37,15 +57,8 @@ class ZipService:
 
         try:
             with zipfile.ZipFile(output_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                for file_path in source_directory.rglob("*"):
-                    # Check if any parent folder or the file itself is in EXCLUDED_NAMES
-                    parts = file_path.relative_to(source_directory).parts
-                    if any(part in EXCLUDED_NAMES for part in parts):
-                        continue
-                    
-                    if file_path.is_file():
-                        arcname = str(file_path.relative_to(source_directory))
-                        zipf.write(file_path, arcname)
+                for file_path, arcname in archive_members(source_directory):
+                    zipf.write(file_path, arcname)
 
             _logger.info(f"Project successfully zipped at: {output_zip_path}")
             self.validate_zip_integrity(output_zip_path, source_directory)
@@ -64,18 +77,13 @@ class ZipService:
 
         with zipfile.ZipFile(zip_path, 'r') as zipf:
             zip_names = set(zipf.namelist())
-            for src_file in source_directory.rglob("*"):
-                if src_file.is_file():
-                    parts = src_file.relative_to(source_directory).parts
-                    if any(part in EXCLUDED_NAMES for part in parts):
-                        continue
-                    arcname = str(src_file.relative_to(source_directory)).replace("\\", "/")
-                    if arcname not in zip_names:
-                        raise ValueError(f"ZIP Integrity Error: Missing file '{arcname}' in archive")
-                    
-                    zip_content = zipf.read(arcname)
-                    if len(zip_content) == 0 and src_file.name not in {"__init__.py", ".gitkeep"}:
-                        _logger.warning(f"ZIP Warning: File '{arcname}' in archive is empty")
+            for src_file, arcname in archive_members(source_directory):
+                if arcname not in zip_names:
+                    raise ValueError(f"ZIP Integrity Error: Missing file '{arcname}' in archive")
+
+                zip_content = zipf.read(arcname)
+                if len(zip_content) == 0 and src_file.name not in {"__init__.py", ".gitkeep"}:
+                    _logger.warning(f"ZIP Warning: File '{arcname}' in archive is empty")
 
         _logger.info(f"ZIP archive integrity verified for '{zip_path.name}'")
         return True

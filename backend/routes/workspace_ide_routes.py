@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field
 from backend.auth.dependencies import get_current_user
 from backend.evolution.routes import _project_dir
 from backend.generators.project_generator import GENERATED_PROJECTS_DIR
-from backend.security.paths import is_safe_id, resolve_inside
+from backend.security.paths import atomic_write_text, is_safe_id, resolve_inside
 from backend.memory.codebase_indexer import global_codebase_indexer, is_secret_or_excluded_file, compute_file_hash
 from backend.memory.dependency_graph import global_dependency_graph
 from backend.memory.impact_analyzer import global_impact_analyzer
@@ -224,8 +224,7 @@ def save_workspace_file(project_id: str, req: SaveFileRequest, user: dict = Depe
 
     # 1. Update on disk
     try:
-        target_file.parent.mkdir(parents=True, exist_ok=True)
-        target_file.write_text(req.content, encoding="utf-8")
+        atomic_write_text(target_file, req.content)
     except Exception as e:
         _logger.warning(f"Could not write to disk: {e}")
 

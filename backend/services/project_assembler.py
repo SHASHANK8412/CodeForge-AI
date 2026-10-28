@@ -2,6 +2,7 @@ import logging
 import hashlib
 from pathlib import Path
 from typing import Dict, Any, List, Tuple
+from backend.security.paths import atomic_write_text
 from backend.validation.code_extractor import extract_files_from_agent_output
 
 logger = logging.getLogger("aiforge.services.project_assembler")
@@ -196,8 +197,7 @@ class ProjectAssembler:
             if not self._is_safe_subpath(target_dir, dest_path):
                 raise ValueError(f"Security Warning: Path traversal detected for path '{rel_path}'")
 
-            dest_path.parent.mkdir(parents=True, exist_ok=True)
-            dest_path.write_text(content or "", encoding="utf-8")
+            atomic_write_text(dest_path, content or "")
 
         logger.info(f"[ASSEMBLER] Safely wrote {len(files_map)} files to disk at '{target_dir}'")
         return target_dir

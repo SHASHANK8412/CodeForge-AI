@@ -55,13 +55,12 @@ export async function fetchCurrentUser() {
     return res.data;
   } catch (err) {
     console.warn('Fetch current user failed:', err);
-    // Return default local user if offline or starting fresh
-    return {
-      id: 'usr_shashank_default',
-      name: 'Shashank',
-      email: 'user@example.com',
-      created_at: 'August 9, 2026'
-    };
+    // Not signed in (401) or backend unreachable: no user, so protected pages ask for a sign-in.
+    if (err?.response?.status === 401) {
+      localStorage.removeItem('aiforge_jwt');
+      delete axios.defaults.headers.common['Authorization'];
+    }
+    return null;
   }
 }
 

@@ -107,12 +107,17 @@ from backend.routes.autonomous_workflow_routes import router as autonomous_workf
 from backend.routes.ai_os_routes import router as ai_os_router
 from backend.routes.sprint_routes import router as sprint_routes
 from backend.benchmark_lab.routes import router as benchmark_lab_router
+from backend.auth.gate import AuthGateMiddleware, enforce_project_access
+from fastapi import Depends
 
+# Every route requires an authenticated user (AuthGateMiddleware, below) and, when its path names a
+# project or generation, access to that project (enforce_project_access).
 app = FastAPI(
     title="AIForge API",
     description="Multi-Agent AI Software Engineer Backend",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    dependencies=[Depends(enforce_project_access)],
 )
 app.include_router(auth_router)
 app.include_router(observability_router)
@@ -230,6 +235,8 @@ from fastapi.middleware.gzip import GZipMiddleware
 # Comma-separated CORS_ORIGINS (e.g. a Vercel frontend URL) replaces the default, which allows
 # only this machine (localhost / 127.0.0.1 on any port, so Vite's fallback ports work too).
 _cors_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
+# Added before CORS so CORS wraps it: preflights and 401 responses still carry the CORS headers.
+app.add_middleware(AuthGateMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,

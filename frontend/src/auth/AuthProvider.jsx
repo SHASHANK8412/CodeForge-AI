@@ -22,6 +22,11 @@ export function AuthProvider({ children }) {
     };
 
     initAuth();
+
+    // Any API call answered 401 (expired or missing token) signs the user out of the UI.
+    const onUnauthorized = () => setUser(null);
+    window.addEventListener('aiforge:unauthorized', onUnauthorized);
+    return () => window.removeEventListener('aiforge:unauthorized', onUnauthorized);
   }, []);
 
   const login = async (email, password) => {

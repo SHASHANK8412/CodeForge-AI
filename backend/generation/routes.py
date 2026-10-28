@@ -27,6 +27,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from backend.auth.dependencies import get_current_user
+from backend.auth.ownership import may_access
 from backend.generation.store import global_generation_store as _store
 from backend.generation.event_bus import global_event_bus as _bus
 from backend.generation.manager import global_generation_manager as _manager
@@ -73,7 +74,7 @@ def _require_owned(gen_id: str, user_id: str) -> Dict[str, Any]:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Generation not found."
         )
-    elif rec.get("user_id") != user_id and rec.get("user_id") not in ("default", "demo_user"):
+    elif not may_access({"id": user_id}, rec):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to access this generation."

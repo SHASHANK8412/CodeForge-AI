@@ -64,9 +64,13 @@ def _safe_project_dir(candidate: str) -> Optional[Path]:
 
 def _read_project_dir(project_dir: Path) -> Dict[str, str]:
     files: Dict[str, str] = {}
+    root = project_dir.resolve()
     for file_path in project_dir.rglob("*"):
         rel = file_path.relative_to(project_dir)
         if not file_path.is_file() or any(part in _SKIP_DIRS for part in rel.parts)                 or export_exclusion_reason(rel.as_posix()):
+            continue
+        # A symlink (e.g. one the generated app created while running) could pull host files into an export.
+        if file_path.is_symlink() or root not in file_path.resolve().parents:
             continue
         try:
             files[rel.as_posix()] = file_path.read_text(encoding="utf-8")

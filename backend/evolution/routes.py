@@ -30,13 +30,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from backend.auth.dependencies import get_current_user
+from backend.auth.ownership import may_access
 from backend.evolution.autopilot.findings import filter_findings
 from backend.evolution.autopilot.plans import PlanError
 from backend.evolution.autopilot.service import Busy, global_autopilot_service
 
 autopilot_evolution_router = APIRouter(tags=["AIForge Autopilot"])
 _PROJECT_ID = re.compile(r"^[A-Za-z0-9_.\-]{1,120}$")
-_SHARED_OWNERS = ("default", "demo_user")
 _READABLE = ("completed", "waiting_for_approval", "failed", "cancelled")
 # A generation paused for approval resumes and writes its files again, so only finished ones are changed.
 _WRITABLE = ("completed", "failed", "cancelled")
@@ -55,8 +55,7 @@ def _project_dir(project_id: str, user: dict, writable: bool = False) -> Path:
     rec = global_generation_store.get(project_id)
     if not rec:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Project not found.")
-    owner = rec.get("user_id")
-    if owner != _user_id(user) and owner not in _SHARED_OWNERS:
+    if not may_access(user, rec):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "You do not have access to this project.")
     if writable and rec.get("status") not in _WRITABLE:
         raise HTTPException(status.HTTP_409_CONFLICT,
@@ -87,11 +86,10 @@ def _busy(e: Busy):
 def list_projects(user: dict = Depends(get_current_user)) -> Dict[str, Any]:
     from backend.generation.store import global_generation_store
     from backend.routes.export import _safe_project_dir
-    uid = _user_id(user)
     projects = []
     for rec in global_generation_store.list_all():
         gid = rec.get("id") or rec.get("generation_id")
-        if not gid or (rec.get("user_id") != uid and rec.get("user_id") not in _SHARED_OWNERS):
+        if not gid or not may_access(user, rec):
             continue
         path = _safe_project_dir(rec.get("project_path") or "")
         if path is None or rec.get("status") not in _READABLE:

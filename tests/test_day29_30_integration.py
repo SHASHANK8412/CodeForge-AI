@@ -22,7 +22,8 @@ def test_standardized_error_handling_api():
     assert "request_id" in data_404["error"]
 
     # 2. Trigger an HTTPException (400 Bad Request)
-    res_400 = client.post("/api/github/commit", json={"project_id": "non-existent-project", "message": "test"})
+    # (A commit on an unknown project is now 404 "Project not found"; a traversal-shaped document name is a 400.)
+    res_400 = client.delete("/api/documents/..%5Cnot-a-document.txt")
     assert res_400.status_code == 400
     data_400 = res_400.json()
     assert data_400["success"] is False

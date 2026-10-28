@@ -14,10 +14,13 @@ import os
 import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, HTTPException, status
+import re
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
-from backend.generators.project_generator import GENERATED_PROJECTS_DIR
+from backend.auth.dependencies import get_current_user
+from backend.auth.ownership import owned_project_folder
 from backend.github.service import global_github_service
 from backend.github.repositories import global_repository_analyzer
 from backend.github.branches import global_branch_manager
@@ -41,6 +44,15 @@ from backend.github.publisher import (
 logger = logging.getLogger("aiforge.routes.github")
 
 router = APIRouter(tags=["GitHub Integration"])
+
+# Pushes go to GitHub repositories only: never to a file path, another host, or a URL with credentials.
+_GITHUB_REMOTE = re.compile(r"^https://github\.com/[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}?(\.git)?$")
+
+
+def _checked_remote(url: str) -> str:
+    if not _GITHUB_REMOTE.match(url or "") or "/../" in url or url.endswith("/.."):
+        raise HTTPException(status_code=400, detail="remote_url must be https://github.com/<owner>/<repo>.")
+    return url
 
 
 # -----------------------------------------------------------------------------
@@ -203,7 +215,7 @@ def github_create_repository_endpoint(req: CreateRepositoryRequest):
 
 @router.post("/api/github/publish")
 @router.post("/github/publish")
-def github_publish_project_endpoint(req: PublishProjectRequest):
+def github_publish_project_endpoint(req: PublishProjectRequest, user: dict = Depends(get_current_user)):
     """
     Orchestrates end-to-end publishing of an AIForge project to GitHub:
     - Pre-publish secret scanning
@@ -212,17 +224,22 @@ def github_publish_project_endpoint(req: PublishProjectRequest):
     - GitHub remote creation and push
     - Return structured final report
     """
+    if req.files:
+        # Client-supplied files never reach GitHub with a secret in them, whoever owns what.
+        findings = global_github_publisher.scan_for_secrets(req.files)
+        if findings:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={
+                "error": "SECURITY_VIOLATION", "message": "Publish blocked: secrets detected in files.", "findings": findings})
+    if req.files and req.token:
+        # The caller's own files with the caller's own token: no server folder and no server credentials.
+        working_dir = None
+    else:
+        # Files read from disk, or a push with the server's GITHUB_TOKEN: only for a project the user owns,
+        # whose folder (inside generated_projects) is the git working dir.
+        working_dir = owned_project_folder(req.project_id, user)
     files = _resolve_project_files(req.project_id, req.files)
     if not files:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"No files found for project '{req.project_id}'.")
-
-    # If project already exists in generated_projects on disk, use it as working dir - but only
-    # if it really is inside generated_projects ("..", absolute paths etc. would point the git
-    # init/commit/push at some other directory, such as this repository).
-    working_dir = None
-    candidate = (GENERATED_PROJECTS_DIR / req.project_id).resolve()
-    if candidate.is_dir() and GENERATED_PROJECTS_DIR.resolve() in candidate.parents:
-        working_dir = candidate
 
     try:
         res = global_github_publisher.publish_project(
@@ -293,12 +310,12 @@ def github_get_repository_endpoint(project_id: str):
 
 @router.post("/api/github/sync")
 @router.post("/github/sync")
-def github_sync_project_endpoint(req: SyncProjectRequest):
+def github_sync_project_endpoint(req: SyncProjectRequest, user: dict = Depends(get_current_user)):
     """
     Synchronizes subsequent changes and patches to the remote repository.
     """
+    working_dir = owned_project_folder(req.project_id, user)
     files = _resolve_project_files(req.project_id, req.files)
-    working_dir = GENERATED_PROJECTS_DIR / req.project_id if (GENERATED_PROJECTS_DIR / req.project_id).exists() else None
 
     try:
         res = global_github_publisher.sync_project_updates(
@@ -324,10 +341,9 @@ def github_sync_project_endpoint(req: SyncProjectRequest):
 # -----------------------------------------------------------------------------
 
 @router.post("/api/github/git-init")
-def git_init_endpoint(req: GitInitRequest):
+def git_init_endpoint(req: GitInitRequest, user: dict = Depends(get_current_user)):
     """Initializes local git repository with safe subprocess execution."""
-    project_dir = GENERATED_PROJECTS_DIR / req.project_id
-    project_dir.mkdir(parents=True, exist_ok=True)
+    project_dir = owned_project_folder(req.project_id, user)
 
     init_res = global_git_service.init(project_dir, initial_branch="main")
     gitignore_path = project_dir / ".gitignore"
@@ -342,9 +358,9 @@ def git_init_endpoint(req: GitInitRequest):
 
 
 @router.get("/api/github/git-status")
-def git_status_endpoint(project_id: str = "aiforge-demo"):
+def git_status_endpoint(project_id: str = "aiforge-demo", user: dict = Depends(get_current_user)):
     """Returns local git status output safely."""
-    project_dir = GENERATED_PROJECTS_DIR / project_id
+    project_dir = owned_project_folder(project_id, user)
     if not (project_dir / ".git").exists():
         return {"success": False, "stdout": "Git not initialized. Click 'Git Init' to configure."}
 
@@ -353,9 +369,9 @@ def git_status_endpoint(project_id: str = "aiforge-demo"):
 
 
 @router.post("/api/github/commit")
-def git_commit_endpoint(req: GitCommitRequest):
+def git_commit_endpoint(req: GitCommitRequest, user: dict = Depends(get_current_user)):
     """Stages files and creates a Git commit safely."""
-    project_dir = GENERATED_PROJECTS_DIR / req.project_id
+    project_dir = owned_project_folder(req.project_id, user)
     if not (project_dir / ".git").exists():
         raise HTTPException(status_code=400, detail="Git repository not initialized.")
 
@@ -370,14 +386,14 @@ def git_commit_endpoint(req: GitCommitRequest):
 
 
 @router.post("/api/github/push")
-def git_push_endpoint(req: GitPushRequest):
+def git_push_endpoint(req: GitPushRequest, user: dict = Depends(get_current_user)):
     """Pushes git commits to remote."""
-    project_dir = GENERATED_PROJECTS_DIR / req.project_id
+    project_dir = owned_project_folder(req.project_id, user)
     if not (project_dir / ".git").exists():
         raise HTTPException(status_code=400, detail="Git repository not initialized.")
 
     if req.remote_url:
-        global_git_service.remote_add(project_dir, "origin", req.remote_url)
+        global_git_service.remote_add(project_dir, "origin", _checked_remote(req.remote_url))
 
     token = os.getenv("GITHUB_TOKEN")
     if not token:
@@ -393,9 +409,9 @@ def git_push_endpoint(req: GitPushRequest):
 
 
 @router.post("/api/github/branch")
-def git_branch_endpoint(req: GitBranchRequest):
+def git_branch_endpoint(req: GitBranchRequest, user: dict = Depends(get_current_user)):
     """Creates and checkouts a new feature branch."""
-    project_dir = GENERATED_PROJECTS_DIR / req.project_id
+    project_dir = owned_project_folder(req.project_id, user)
     if not (project_dir / ".git").exists():
         raise HTTPException(status_code=400, detail="Git repository not initialized.")
 

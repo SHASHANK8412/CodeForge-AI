@@ -5,7 +5,9 @@ Every target is resolved (symlinks included) and must stay inside its base folde
 (.env*, keys, certificates, databases) are refused even when they are inside it.
 """
 
+import os
 import re
+import tempfile
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Optional
 
@@ -43,3 +45,22 @@ def resolve_inside(base: Path, rel_path: str) -> Optional[Path]:
     except (OSError, ValueError):
         return None
     return target if root in target.parents else None
+
+
+def atomic_write_text(target: Path, content: str) -> None:
+    """
+    Write `content` to `target` through a temp file in the same folder and an atomic replace: readers never
+    see a half-written file, and a symlink planted at `target` after it was checked is replaced, not followed.
+    """
+    target.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(prefix=f".{target.name}.", suffix=".tmp", dir=str(target.parent))
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as handle:
+            handle.write(content)
+        os.replace(tmp, target)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise

@@ -16,6 +16,17 @@ def _isolated_generation_store(tmp_path_factory, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _local_dev_auth(monkeypatch):
+    """
+    The API requires authentication by default. Most suites drive the app in-process without a token, so
+    they run in the explicit single-user development mode (token-less requests from this machine act as
+    the default user). Security tests switch it off (tests/security/test_access_control.py).
+    """
+    monkeypatch.setenv("AIFORGE_AUTH_MODE", "local-dev")
+    monkeypatch.delenv("AIFORGE_ENV", raising=False)
+
+
+@pytest.fixture(autouse=True)
 def _local_test_sandbox(monkeypatch):
     """Generated-project tests run locally unless a test opts into the Docker sandbox."""
     monkeypatch.setenv("AIFORGE_TEST_SANDBOX", "local")

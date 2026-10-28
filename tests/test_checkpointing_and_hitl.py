@@ -35,6 +35,7 @@ from backend.generation.manager import GenerationManager, _store
 from backend.database.models import WorkflowSessionModel, WorkflowCheckpointModel
 from backend.database.connection import init_db
 from backend.main import app
+from backend.auth.service import DEFAULT_USER_ID
 
 
 # ---------------------------------------------------------------------------
@@ -330,7 +331,8 @@ def test_fastapi_hitl_rest_endpoints():
     client = TestClient(app)
     proj_id = "test-proj-rest-002"
 
-    _store.create(project_id=proj_id, user_id="tester", prompt="Build a Blog", gen_id=proj_id)
+    # Owned by the user the in-process client acts as (local-dev mode), so the ownership guard lets it through.
+    _store.create(project_id=proj_id, user_id=DEFAULT_USER_ID, prompt="Build a Blog", gen_id=proj_id)
     _store.update_status(proj_id, "waiting_for_approval")
 
     config = {"configurable": {"thread_id": proj_id}}

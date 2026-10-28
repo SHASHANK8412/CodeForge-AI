@@ -13,13 +13,19 @@ USERS_FILE.parent.mkdir(parents=True, exist_ok=True)
 USERS_DB: Dict[str, dict] = {}
 API_KEYS_DB: Dict[str, list] = {}
 
+# A stored hash that can never verify (verify_password needs "salt$hash").
+DISABLED_PASSWORD = "!disabled"
+_RETIRED_DEFAULT_PASSWORD = "password123"
+
 # Default admin / initial user
 DEFAULT_USER_ID = "usr_shashank_default"
 DEFAULT_USER = {
     "id": DEFAULT_USER_ID,
     "name": "Shashank",
     "email": "user@example.com",
-    "password_hash": hash_password("password123"),
+    # No password: nobody can sign in as the default user. It acts only for token-less requests from this
+    # machine in AIFORGE_AUTH_MODE=local-dev (backend/auth/dependencies.py).
+    "password_hash": DISABLED_PASSWORD,
     "created_at": "2026-08-09T12:00:00Z"
 }
 
@@ -38,6 +44,10 @@ def _load_users():
 
     if DEFAULT_USER_ID not in USERS_DB:
         USERS_DB[DEFAULT_USER_ID] = DEFAULT_USER
+        _save_users()
+    elif verify_password(_RETIRED_DEFAULT_PASSWORD, USERS_DB[DEFAULT_USER_ID].get("password_hash", "")):
+        # Earlier versions shipped the default user with a published password; switch it off.
+        USERS_DB[DEFAULT_USER_ID]["password_hash"] = DISABLED_PASSWORD
         _save_users()
 
 
@@ -98,7 +108,6 @@ def create_user_api_key(user_id: str, key_name: str) -> dict:
         "name": key_name,
         "key_hash": key_hash,
         "key_preview": f"aif_{raw_key[4:8]}••••••••••••••••",
-        "raw_key": raw_key,
         "created_at": datetime.now().strftime("%b %d, %Y")
     }
 
@@ -106,7 +115,8 @@ def create_user_api_key(user_id: str, key_name: str) -> dict:
         API_KEYS_DB[user_id] = []
     API_KEYS_DB[user_id].append(key_record)
 
-    return key_record
+    # The raw key is shown once, at creation; only its hash is kept (listings never return it).
+    return dict(key_record, raw_key=raw_key)
 
 
 def get_user_api_keys(user_id: str) -> List[dict]:

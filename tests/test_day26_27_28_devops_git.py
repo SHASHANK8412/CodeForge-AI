@@ -6,6 +6,8 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from backend.main import app
+from backend.auth.service import DEFAULT_USER_ID
+from backend.generation.store import global_generation_store
 from backend.generators.project_generator import GENERATED_PROJECTS_DIR
 from backend.deployment.deployment_analyzer import global_deployment_analyzer
 from backend.deployment.validator import global_deployment_validator
@@ -15,11 +17,17 @@ client = TestClient(app)
 
 
 @pytest.fixture
-def setup_test_project():
+def setup_test_project(monkeypatch):
     """Sets up a mock generated project directory for DevOps and Git verification."""
     project_id = "test_devops_project"
     project_dir = GENERATED_PROJECTS_DIR / project_id
     project_dir.mkdir(parents=True, exist_ok=True)
+
+    # Git routes work only on a project the (default) user owns, found through its generation record.
+    record = {"generation_id": project_id, "user_id": DEFAULT_USER_ID, "status": "completed", "project_path": str(project_dir)}
+    original_get = global_generation_store.get
+    monkeypatch.setattr(global_generation_store, "get",
+                        lambda gid, default=None: record if gid == project_id else original_get(gid, default))
 
     # Create dummy app files
     (project_dir / "backend").mkdir(exist_ok=True)
