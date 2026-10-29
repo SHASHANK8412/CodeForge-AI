@@ -137,6 +137,12 @@ def test_model_fallback_chain_still_answers(monkeypatch):
         return {"message": {"content": f"real answer from {model}"}}
 
     monkeypatch.setattr(llm, "_chat_completion_async", completion)
+    # The router asks the live Ollama server which models are installed (and never selects one it does not list), so the
+    # result used to depend on this machine's models. Here the server lists ghost-model, but calling it says "not found"
+    # (e.g. removed since discovery): llm.py's chain must fall through to the default model.
+    import backend.models.model_router as router
+    monkeypatch.setattr(router, "discover_installed_models",
+                        lambda force_refresh=False: ["ghost-model:latest", llm.DEFAULT_OLLAMA_MODEL])
     llm.llm_cache.clear()
 
     reply = asyncio.run(llm.generate_text_async("system", "Build a notes board", model="ghost-model:latest", task="backend"))
