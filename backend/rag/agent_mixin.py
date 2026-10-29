@@ -41,7 +41,8 @@ class RetrievalAwareAgentMixin:
         user_query: str,
         active_repo_files: Optional[List[str]] = None,
         has_documents: bool = False,
-        conversation_context: str = ""
+        conversation_context: str = "",
+        project_id: str = "default_project"
     ) -> Tuple[RetrievalDecision, GroundingContext, str]:
         """
         Executes query analysis, hybrid retrieval, reranking, and context selection.
@@ -70,7 +71,8 @@ class RetrievalAwareAgentMixin:
         candidates = global_hybrid_retriever.retrieve(
             query=user_query,
             decision=decision,
-            top_k=global_rag_config.CANDIDATE_K
+            top_k=global_rag_config.CANDIDATE_K,
+            project_id=project_id
         )
 
         # 3. Candidate Reranking

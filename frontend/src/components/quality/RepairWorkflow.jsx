@@ -53,16 +53,9 @@ export default function RepairWorkflow({ step = 3, isComplete = false, repairRes
             <div className="font-bold text-sm text-white mb-2 flex items-center gap-2">
               <FaCheckCircle className="text-emerald-400" /> Bounded Self-Repair Completed Successfully
             </div>
-            <div className="grid grid-cols-2 gap-4 font-mono text-xs mt-3">
-              <div>
-                <span className="text-slate-400 block">Previous Status:</span>
-                <span className="text-rose-400 font-bold">46 / 48 tests passed</span>
-              </div>
-              <div>
-                <span className="text-slate-400 block">Current Verified Status:</span>
-                <span className="text-emerald-400 font-bold">48 / 48 tests passed (100%)</span>
-              </div>
-            </div>
+            {repairResult?.summary && (
+              <div className="font-mono text-xs mt-3 text-emerald-100">{repairResult.summary}</div>
+            )}
           </div>
 
           <div className="flex justify-end">

@@ -1,0 +1,18 @@
+[
+  {
+    "chunk_id": "chk_arch_1",
+    "document_id": "doc_arch_spec",
+    "filename": "RFC-104-Order-Pipeline.md",
+    "text": "The Order Processing Pipeline consumes order events from Kafka topic 'orders.created' and dispatches matching courier dispatch jobs to Redis Streams.",
+    "citation_ref": "RFC-104-Order-Pipeline.md:L12-L24",
+    "relevance_score": 0.96
+  },
+  {
+    "chunk_id": "chk_arch_2",
+    "document_id": "doc_arch_spec",
+    "filename": "RFC-104-Order-Pipeline.md",
+    "text": "Database transaction isolation uses Serializable level for ledger write models and Read Committed for telemetry analytics.",
+    "citation_ref": "RFC-104-Order-Pipeline.md:L45-L58",
+    "relevance_score": 0.91
+  }
+]

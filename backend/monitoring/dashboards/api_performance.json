@@ -1,0 +1,15 @@
+{
+  "annotations": {"list": []},
+  "title": "API Performance",
+  "uid": "aiforge-api-perf",
+  "tags": ["aiforge", "api"],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Requests per Second by Endpoint",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "targets": [{"expr": "rate(http_requests_total[1m])"}]
+    }
+  ]
+}

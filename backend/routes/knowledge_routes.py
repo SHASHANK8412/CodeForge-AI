@@ -52,7 +52,6 @@ async def extract_project_knowledge(req: ExtractKnowledgeInput) -> Dict[str, Any
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/knowledge/search")
 @router.get("/api/v1/knowledge/search")
 async def search_knowledge(q: str = Query(..., description="Query terms (e.g. JWT authentication, React dashboard)")) -> Dict[str, Any]:
     """Performs semantic search across historical implementations and decisions."""

@@ -1,3 +1,5 @@
+import os
+
 from pydantic import BaseModel, Field
 from typing import List
 
@@ -12,6 +14,12 @@ class SRESettings(BaseModel):
     confidence_threshold: float = Field(default=0.70, description="Minimum SRE model confidence score required to auto-heal")
     prediction_window: float = Field(default=60.0, description="Forecast window in seconds for predictive analytics")
     alert_channels: List[str] = Field(default_factory=lambda: ["slack", "email"], description="Active alert notifying channels")
+    # Off by default: the RCA prompt competes with the generation pipeline for the same
+    # local Ollama instance, and high CPU from local inference is expected, not an incident.
+    llm_root_cause_enabled: bool = Field(
+        default_factory=lambda: os.getenv("AIFORGE_SRE_LLM_RCA", "false").lower() == "true",
+        description="Use the LLM for incident root-cause analysis (AIFORGE_SRE_LLM_RCA=true)",
+    )
     
     # Scaling settings
     scaling_cpu_threshold: float = Field(default=80.0, description="CPU usage threshold to trigger scaling")

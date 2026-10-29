@@ -23,7 +23,7 @@ GUIDELINES:
 5. Never output hardcoded fake sorting templates or incomplete placeholder stubs."""
 
 
-from backend.services.llm import generate_code
+from backend.services.llm import LLMUnavailableError, generate_code
 
 
 class CodingAgent:
@@ -225,6 +225,8 @@ class CodingAgent:
         start_time = time.perf_counter()
         try:
             raw_response = generate_code(prompt=prompt, model=self.model_name, task="coding")
+        except LLMUnavailableError:
+            raise  # a model outage is reported, never answered with a stock snippet
         except Exception as exc:
             _logger.warning("LLM generation failed in CodingAgent, using structured fallback: %s", exc)
             raw_response = self._generate_raw_algorithm_response(prompt)

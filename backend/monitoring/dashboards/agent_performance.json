@@ -1,0 +1,15 @@
+{
+  "annotations": {"list": []},
+  "title": "Agent Performance",
+  "uid": "aiforge-agent-perf",
+  "tags": ["aiforge", "agents"],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Agent Execution Latency by Type (s)",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "targets": [{"expr": "rate(agent_execution_duration_seconds_sum[5m]) / rate(agent_execution_duration_seconds_count[5m])"}]
+    }
+  ]
+}

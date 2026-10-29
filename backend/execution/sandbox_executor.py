@@ -1,9 +1,10 @@
 """
 AIForge Secure Sandbox Executor
 ===============================
-Provides isolated container / subprocess execution for untrusted generated code.
-Enforces resource limits, execution timeouts, output truncations, environment isolation,
-and strict command allowlisting (shell=False only).
+Runs untrusted generated code in a throwaway Docker container: no network, non-root, no
+capabilities, read-only filesystem, memory/CPU/process limits, timeout, output truncation.
+Without Docker the code is not run, unless AIFORGE_TEST_SANDBOX=local explicitly allows a host
+subprocess (credentials stripped from its environment) - meant for AIForge's own test suite.
 """
 
 import sys
@@ -41,7 +42,8 @@ class SandboxExecutor:
         command_override: Optional[List[str]] = None,
         execution_type: ExecutionType = ExecutionType.RUN,
         cwd: Optional[str] = None,
-        limits: Optional[ExecutionLimits] = None
+        limits: Optional[ExecutionLimits] = None,
+        extra_pythonpath: Optional[List[str]] = None
     ) -> ExecutionResult:
         if not artifacts and not command_override:
             return ExecutionResult(
@@ -58,7 +60,7 @@ class SandboxExecutor:
         if cwd and os.path.exists(cwd):
             work_dir = cwd
             main_file_path = os.path.join(work_dir, artifacts[0].filename) if artifacts else os.path.join(work_dir, "main.py")
-            return self._run_subprocess(work_dir, main_file_path, language, command_override, execution_type, active_limits, start_time)
+            return self._run_subprocess(work_dir, main_file_path, language, command_override, execution_type, active_limits, start_time, extra_pythonpath)
 
         with tempfile.TemporaryDirectory(prefix="aiforge_sandbox_") as tmpdir:
             main_file_path = None
@@ -73,7 +75,7 @@ class SandboxExecutor:
             if not main_file_path and artifacts:
                 main_file_path = os.path.join(tmpdir, artifacts[0].filename)
 
-            return self._run_subprocess(tmpdir, main_file_path or os.path.join(tmpdir, "main.py"), language, command_override, execution_type, active_limits, start_time)
+            return self._run_subprocess(tmpdir, main_file_path or os.path.join(tmpdir, "main.py"), language, command_override, execution_type, active_limits, start_time, extra_pythonpath)
 
     def _run_subprocess(
         self,
@@ -83,11 +85,24 @@ class SandboxExecutor:
         command_override: Optional[List[str]],
         execution_type: ExecutionType,
         active_limits: ExecutionLimits,
-        start_time: float
+        start_time: float,
+        extra_pythonpath: Optional[List[str]] = None
     ) -> ExecutionResult:
+        # Model-written code runs in a container (no network, no capabilities, non-root, resource
+        # limits). Without Docker it is not run, unless AIFORGE_TEST_SANDBOX=local allows the host.
+        # compileall only byte-compiles and never executes the code, so it may run here.
+        from backend.execution.docker_test_sandbox import not_run_result, sandbox_mode, should_use_docker
+        compile_only = bool(command_override) and "compileall" in command_override
+        if sandbox_mode() != "local" and not compile_only:
+            if command_override or not should_use_docker():
+                res = not_run_result(language)
+                res.execution_type = execution_type.value if hasattr(execution_type, "value") else str(execution_type)
+                return res
+            return self._run_in_docker(work_dir, main_file_path, language, execution_type, active_limits, start_time)
+
         cmd = self._resolve_trusted_command(language, work_dir, main_file_path, command_override)
         isolated_env = self._build_isolated_environment()
-        isolated_env["PYTHONPATH"] = os.path.abspath(work_dir)
+        isolated_env["PYTHONPATH"] = os.pathsep.join([os.path.abspath(work_dir)] + list(extra_pythonpath or []))
 
         try:
             proc = subprocess.run(
@@ -154,6 +169,66 @@ class SandboxExecutor:
             )
 
 
+    def _run_in_docker(
+        self,
+        work_dir: str,
+        main_file_path: str,
+        language: str,
+        execution_type: ExecutionType,
+        limits: ExecutionLimits,
+        start_time: float,
+    ) -> ExecutionResult:
+        """One throwaway container per run; the code folder is mounted read-only."""
+        import uuid
+        from backend.execution.docker_test_sandbox import IMAGE, NODE_IMAGE, docker_env, docker_exe
+        etype = execution_type.value if hasattr(execution_type, "value") else str(execution_type)
+        lang = language.lower()
+        rel = os.path.relpath(main_file_path, work_dir).replace("\\", "/")
+        if lang == "python":
+            image, cmd = IMAGE, ["python", rel]
+        elif lang in ("javascript", "node", "js"):
+            image, cmd = NODE_IMAGE, ["node", rel]
+        else:
+            return ExecutionResult(status=ExecutionStatus.UNSUPPORTED, exit_code=-1, language=language,
+                                   execution_type=etype, stderr=f"The sandbox runs Python and JavaScript, not {language}.")
+        name = f"aiforge_exec_{uuid.uuid4().hex[:12]}"
+        docker = docker_exe() or "docker"
+        argv = [
+            docker, "run", "--rm", "--name", name, "--network", "none", "--user", "1000:1000",
+            "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--pids-limit", "64",
+            "--memory", f"{limits.memory_mb}m", "--cpus", str(limits.cpu_count),
+            "--read-only", "--tmpfs", "/tmp:rw,size=64m", "-e", "HOME=/tmp", "-e", "PYTHONDONTWRITEBYTECODE=1",
+            "-v", f"{os.path.abspath(work_dir)}:/work:ro", "-w", "/work", image,
+            # The program's own limit is enforced inside the container (exit 124); the outer
+            # timeout only adds a margin for container start-up.
+            "timeout", "-k", "1s", f"{max(1, int(limits.timeout_seconds + 0.999))}s", *cmd,
+        ]
+        timed_out = False
+        try:
+            proc = subprocess.run(argv, capture_output=True, text=True, timeout=limits.timeout_seconds + 20, env=docker_env())
+            timed_out = proc.returncode == 124
+        except subprocess.TimeoutExpired:
+            subprocess.run([docker, "rm", "-f", name], capture_output=True, env=docker_env())
+            timed_out = True
+        if timed_out:
+            return ExecutionResult(status=ExecutionStatus.TIMEOUT, exit_code=-1, timed_out=True, language=language,
+                                   execution_type=etype, stderr=f"Execution timed out after {limits.timeout_seconds} seconds.",
+                                   duration_ms=round((time.perf_counter() - start_time) * 1000.0, 2))
+        out, err = proc.stdout or "", proc.stderr or ""
+        truncated = len(out) > limits.max_output_bytes or len(err) > limits.max_output_bytes
+        status = ExecutionStatus.PASS if proc.returncode == 0 else ExecutionStatus.FAIL
+        if proc.returncode == 125:   # docker itself failed (image, daemon), not the program
+            status = ExecutionStatus.INFRASTRUCTURE_ERROR
+        elif proc.returncode == 137:  # killed: out of memory
+            status = ExecutionStatus.RESOURCE_LIMIT
+        elif proc.returncode != 0 and "SyntaxError" in err:
+            status = ExecutionStatus.COMPILE_ERROR
+        return ExecutionResult(
+            status=status, exit_code=proc.returncode, stdout=out[:limits.max_output_bytes],
+            stderr=err[:limits.max_output_bytes], output_truncated=truncated, timed_out=False,
+            duration_ms=round((time.perf_counter() - start_time) * 1000.0, 2), language=language, execution_type=etype,
+        )
+
     def _resolve_trusted_command(
         self,
         language: str,
@@ -192,7 +267,6 @@ class SandboxExecutor:
             if not any(sens in k.upper() for sens in sensitive_keys):
                 safe_env[k] = v
 
-        safe_env["NETWORK_DISABLED"] = "true"
         return safe_env
 
 

@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState, useEffect } from 'react';
 import { FaBug, FaWrench, FaCheckCircle, FaExclamationTriangle, FaRedo, FaServer, FaHistory, FaPercentage, FaSync, FaShieldAlt } from 'react-icons/fa';
 
@@ -31,13 +32,13 @@ export default function DebugDashboard({ projectId = 'debug_proj' }) {
   const fetchSelfHealingData = async () => {
     setLoading(true);
     try {
-      const resMet = await fetch('http://127.0.0.1:8000/api/v1/self-healing/metrics');
+      const resMet = await fetch(`${BACKEND_URL}/api/v1/self-healing/metrics`);
       if (resMet.ok) {
         const dataMet = await resMet.json();
         if (dataMet.metrics) setMetrics(dataMet.metrics);
       }
 
-      const resTime = await fetch(`http://127.0.0.1:8000/api/v1/self-healing/timeline/${projectId}`);
+      const resTime = await fetch(`${BACKEND_URL}/api/v1/self-healing/timeline/${projectId}`);
       if (resTime.ok) {
         const dataTime = await resTime.json();
         if (dataTime.timeline_data?.timeline) setTimeline(dataTime.timeline_data.timeline);
@@ -56,7 +57,7 @@ export default function DebugDashboard({ projectId = 'debug_proj' }) {
   const handleTriggerPipeline = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/self-healing/pipeline', {
+      const res = await fetch(`${BACKEND_URL}/api/v1/self-healing/pipeline`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

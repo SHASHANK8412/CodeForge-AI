@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState, useEffect } from 'react';
 import { FaFolderOpen, FaSearch, FaHistory, FaTrash, FaPlay, FaCopy, FaCheck, FaLayerGroup } from 'react-icons/fa';
 
@@ -10,7 +11,7 @@ export default function ProjectsDashboard({ onResumeProject }) {
 
   const fetchProjects = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/memory/projects');
+      const res = await fetch(`${BACKEND_URL}/api/memory/projects`);
       if (res.ok) {
         const data = await res.json();
         setProjects(data || []);
@@ -49,7 +50,7 @@ export default function ProjectsDashboard({ onResumeProject }) {
       return;
     }
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/memory/search?query=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(`${BACKEND_URL}/api/memory/search?query=${encodeURIComponent(searchQuery)}`);
       if (res.ok) {
         const data = await res.json();
         setProjects(data.projects || []);
@@ -61,7 +62,7 @@ export default function ProjectsDashboard({ onResumeProject }) {
 
   const handleDelete = async (projectId) => {
     try {
-      await fetch(`http://127.0.0.1:8000/api/memory/project/${projectId}`, {
+      await fetch(`${BACKEND_URL}/api/memory/project/${projectId}`, {
         method: 'DELETE',
       });
       if (selectedProject?.project_id === projectId) setSelectedProject(null);
@@ -75,7 +76,7 @@ export default function ProjectsDashboard({ onResumeProject }) {
     if (!selectedProject || !resumePrompt.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/memory/resume', {
+      const res = await fetch(`${BACKEND_URL}/api/memory/resume`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

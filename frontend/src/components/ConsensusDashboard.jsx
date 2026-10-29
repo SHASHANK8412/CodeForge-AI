@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState, useEffect } from 'react';
 import { FaBrain, FaStar, FaTrophy, FaServer, FaCheckCircle, FaExclamationTriangle, FaChartLine, FaRobot, FaSync } from 'react-icons/fa';
 
@@ -34,7 +35,7 @@ export default function ConsensusDashboard() {
   const fetchConsensusData = async () => {
     setLoading(true);
     try {
-      const resBench = await fetch('http://127.0.0.1:8000/api/v1/consensus/benchmark');
+      const resBench = await fetch(`${BACKEND_URL}/api/v1/consensus/benchmark`);
       if (resBench.ok) {
         const dataBench = await resBench.json();
         if (dataBench.benchmark_summary) setBenchmark(dataBench.benchmark_summary);
@@ -53,7 +54,7 @@ export default function ConsensusDashboard() {
   const handleRunConsensus = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/consensus/execute', {
+      const res = await fetch(`${BACKEND_URL}/api/v1/consensus/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

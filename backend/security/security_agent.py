@@ -41,15 +41,23 @@ class SecurityAgent:
 
             # 1. Hardcoded Credentials Fix
             if hardcoded_secret_pattern.search(content_fixed):
-                content_fixed = hardcoded_secret_pattern.sub('os.getenv("SECRET_KEY", "prod_secure_random_key_9872")', content_fixed)
+                # Python only: read the secret from the environment, with no built-in fallback value
+                # (a default would just be another hardcoded secret). Other files are reported.
+                auto_fixable = path.endswith(".py")
+                if auto_fixable:
+                    content_fixed = hardcoded_secret_pattern.sub('os.environ["SECRET_KEY"]', content_fixed)
+                    if not re.search(r"^import os\b", content_fixed, re.M):
+                        from backend.agents.repair_strategies import _insert_import
+                        content_fixed = _insert_import(content_fixed, "import os")
                 findings.append({
                     "path": path,
                     "type": "Hardcoded Credentials",
                     "severity": "HIGH",
-                    "status": "AUTO_FIXED",
-                    "remedy": "Replaced hardcoded secret string with os.getenv() environment variable lookup."
+                    "status": "AUTO_FIXED" if auto_fixable else "UNFIXED",
+                    "remedy": "Replaced hardcoded secret string with an os.environ lookup." if auto_fixable
+                              else "Move this secret into an environment variable."
                 })
-                fixed_count += 1
+                fixed_count += 1 if auto_fixable else 0
 
             # 2. SQL Injection Parameterization Fix
             if sql_injection_pattern.search(content_fixed):
@@ -87,10 +95,10 @@ class SecurityAgent:
 
             remedied_files[path] = content_fixed
 
-        security_score = 100.0 - (len([f for f in findings if f["status"] == "UNFIXED"]) * 10)
+        security_score = max(0.0, 100.0 - (len([f for f in findings if f["status"] == "UNFIXED"]) * 10))
 
         report = {
-            "security_score": max(security_score, 96.0),
+            "security_score": security_score,
             "vulnerabilities_found": len(findings),
             "vulnerabilities_auto_fixed": fixed_count,
             "findings": findings,

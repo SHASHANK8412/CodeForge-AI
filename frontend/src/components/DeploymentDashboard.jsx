@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState, useEffect } from 'react';
 import { FaRocket, FaDocker, FaCheckCircle, FaExclamationCircle, FaServer, FaTerminal, FaCode, FaDownload, FaCogs } from 'react-icons/fa';
 
@@ -10,13 +11,13 @@ export default function DeploymentDashboard({ projectId = 'devops_proj' }) {
   const fetchDeploymentData = async () => {
     setLoading(true);
     try {
-      const resRep = await fetch(`http://127.0.0.1:8000/api/deployment/report/${projectId}`);
+      const resRep = await fetch(`${BACKEND_URL}/api/deployment/report/${projectId}`);
       if (resRep.ok) {
         const dataRep = await resRep.json();
         setReport(dataRep);
       }
 
-      const resFiles = await fetch(`http://127.0.0.1:8000/api/deployment/files/${projectId}`);
+      const resFiles = await fetch(`${BACKEND_URL}/api/deployment/files/${projectId}`);
       if (resFiles.ok) {
         const dataFiles = await resFiles.json();
         setFiles(dataFiles.files || {});
@@ -54,7 +55,7 @@ export default function DeploymentDashboard({ projectId = 'devops_proj' }) {
 
   const handleGenerateDevOps = async () => {
     try {
-      await fetch(`http://127.0.0.1:8000/api/deployment/generate/${projectId}`, {
+      await fetch(`${BACKEND_URL}/api/deployment/generate/${projectId}`, {
         method: 'POST'
       });
       fetchDeploymentData();

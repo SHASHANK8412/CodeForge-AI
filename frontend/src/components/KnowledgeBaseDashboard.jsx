@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState, useEffect } from 'react';
 import { FaSearch, FaBook, FaLayerGroup, FaDatabase, FaClock, FaCheckCircle, FaSpinner } from 'react-icons/fa';
 
@@ -15,8 +16,8 @@ export default function KnowledgeBaseDashboard() {
 
   useEffect(() => {
     // Fetch RAG stats if available
-    fetch('http://127.0.0.1:8000/api/rag/stats')
-      ? fetch('http://127.0.0.1:8000/api/rag/stats')
+    fetch(`${BACKEND_URL}/api/rag/stats`)
+      ? fetch(`${BACKEND_URL}/api/rag/stats`)
           .then((res) => res.json())
           .then((data) => {
             if (data && data.total_chunks) {
@@ -39,7 +40,7 @@ export default function KnowledgeBaseDashboard() {
 
     setIsSearching(true);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/rag/search?query=${encodeURIComponent(query)}&top_k=4`);
+      const res = await fetch(`${BACKEND_URL}/api/rag/search?query=${encodeURIComponent(query)}&top_k=4`);
       if (res.ok) {
         const data = await res.json();
         setResults(data.results || []);

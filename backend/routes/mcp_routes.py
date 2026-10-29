@@ -29,8 +29,6 @@ async def list_mcp_servers() -> Dict[str, Any]:
     return {"status": "success", "servers": global_server_registry.get_all_servers()}
 
 
-@router.get("/api/v1/mcp/tools")
-@router.get("/mcp/tools")
 async def discover_mcp_tools(server_name: Optional[str] = Query(None)) -> Dict[str, Any]:
     """Dynamically discovers tool capabilities across active MCP servers."""
     capabilities = global_mcp_manager.discover_tools(server_name)

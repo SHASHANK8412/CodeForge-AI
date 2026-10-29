@@ -47,7 +47,32 @@ class ProjectState(TypedDict, total=False):
     # Prompt & Core Request inputs
     prompt: str
     user_prompt: str
+    # Day 12 Context & Memory Extensions
+    project_id: str
+    generation_id: str
+    # LangGraph drops any key that is not declared here - from node results and from the initial
+    # input alike - so every key a node writes or reads must be listed (tests/test_state_schema.py).
+    session_id: str
     user_request: str
+    template: str
+    file_backups: Dict[str, Optional[str]]
+    template_check: Dict[str, Any]
+    errors: List[str]
+    testing_report: str
+    security_report: str
+    performance_report: str
+    architecture_report: str
+    api_documentation: str
+    zip_path: str
+    deployment_status: str
+    deployment_url: Optional[str]
+    deployment_backend_url: Optional[str]
+    health_status: str
+    technology_stack: Dict[str, Any]
+    agent_outputs: Dict[str, Any]
+    memory: List[Dict[str, Any]]
+    review_results: Dict[str, Any]
+    decisions: List[Dict[str, Any]]
 
     # Autonomous Engineering Project Metadata & Specs (Incremental Additions)
     project_name: str
@@ -85,6 +110,8 @@ class ProjectState(TypedDict, total=False):
     current_step: Annotated[str, _merge_current_step]
     error: Annotated[str, _merge_errors]
     stream_events: Annotated[List[str], _merge_stream_events]
+    # Agents whose model call failed ({"agent", "error"}); the parallel code agents may fail in the same step
+    agent_failures: Annotated[List[Dict[str, Any]], _merge_stream_events]
     cached_nodes: List[str]
     validation_status: Dict[str, Any]
 
@@ -97,9 +124,76 @@ class ProjectState(TypedDict, total=False):
     validation_report: Dict[str, Any]
     reflection_report: Dict[str, Any]
 
+    # Day 14 Repair Loop State
+    repair_attempt: int
+    max_repair_attempts: int
+    findings: List[Dict[str, Any]]
+    test_failures: List[Dict[str, Any]]
+    root_causes: List[str]
+    repairs: List[Dict[str, Any]]
+    snapshots: List[Dict[str, Any]]
+    repair_status: str
+
     # DevOps & Deployment fields
     deployment_files: Dict[str, str]
     deployment_report: Dict[str, Any]
     deployment_platform: str
     deployment_guide: str
+
+    # Execution & Self-Healing Engine state fields
+    execution_history: List[Dict[str, Any]]
+    error_category: str
+    diagnostic_result: Dict[str, Any]
+    repair_result: Dict[str, Any]
+
+    # Security & Dependency Intelligence Engine state fields
+    security_data: Dict[str, Any]
+    security_score: float
+    security_gate: str
+    security_repair_attempts: int
+
+    # Architecture completeness (backend/graph/architecture_check.py)
+    architecture_check: Dict[str, Any]
+    # Code-quality gate result (backend/validation/quality_gate.py)
+    quality_gate: Optional[Dict[str, Any]]
+
+    # Human-in-the-Loop (HITL) & Checkpoint Workflow state fields
+    approval_status: str  # "pending", "approved", "rejected", "none"
+    approval_required: bool
+    approval_stage: str  # "architecture", "final", "debug_escalation", None
+    approval_request: Dict[str, Any]
+    user_feedback: str
+    approval_history: List[Dict[str, Any]]
+    completed_agents: List[str]
+    agent_status: Dict[str, str]
+    workflow_progress: int
+    timestamps: Dict[str, str]
+    current_agent: str
+    generated_files: Dict[str, str]
+    execution_status: str
+
+    # Autonomous Debug -> Fix -> Retest Loop state fields
+    test_status: str  # "passed", "failed", "running", "retesting"
+    failed_tests: List[str]
+    error_messages: List[str]
+    stack_traces: List[str]
+    debug_analysis: str
+    proposed_fix: Dict[str, Any]
+    applied_fix: Dict[str, Any]
+    files_modified: List[str]
+    retry_count: int
+    max_retries: int
+    fix_history: List[Dict[str, Any]]
+    failure_history: List[Dict[str, Any]]
+    verification: Dict[str, Any]           # Execution Guardian: the latest verification (status, checks, failures)
+    verification_history: List[Dict[str, Any]]   # earlier verifications of this run (status, failure signatures)
+    routed_agent: str                      # the agent the Guardian routed the current repair to
+    contract: Dict[str, Any]               # AICE: the shared contract version the code agents build against (summary)
+    compatibility: Dict[str, Any]          # AICE: the latest compatibility run (status, findings, tests, repairs)
+    compatibility_history: List[Dict[str, Any]]  # earlier compatibility runs of this generation (status, open findings)
+    current_debug_cycle: int
+    human_intervention_required: bool
+    human_escalation_details: Dict[str, Any]
+
+
 
