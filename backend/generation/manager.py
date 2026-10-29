@@ -262,8 +262,20 @@ class GenerationManager:
                 )
                 return
 
-            # Pipeline reached completion
             elapsed = perf_counter() - started_at
+            failures = final_state.get("agent_failures") or []
+            if failures:
+                # The graph stopped at generation_failed: an agent's model call produced nothing. Not completed,
+                # and there is no project to index or snapshot.
+                safe_msg = str(final_state.get("error") or "an agent's model call failed")[:300]
+                _logger.error("[GENERATION] %s failed: %s", gen_id, safe_msg)
+                metadata = {"duration": round(elapsed, 2), "agent_failures": failures}
+                _store.update_status(gen_id, "failed", error=safe_msg)
+                _store.add_event(gen_id, "generation_failed", message=safe_msg, metadata=metadata)
+                await _bus.emit(gen_id, "generation_failed", message=safe_msg, metadata=metadata)
+                return
+
+            # Pipeline reached completion
             _logger.info("[GENERATION] %s completed in %.1fs", gen_id, elapsed)
 
             final_files = final_state.get("files", {})

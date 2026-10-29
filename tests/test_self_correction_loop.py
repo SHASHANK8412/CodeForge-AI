@@ -32,6 +32,17 @@ def tmp_projects_dir(tmp_path):
         shutil.rmtree(p, ignore_errors=True)
 
 
+def _testing_agent_writes(monkeypatch, path, code):
+    """The testing agent's reply, shaped like model output. (With no model these tests used to get the removed
+    llm.py stand-in, a `tests/test_main.py` asserting 1 + 1 == 2, written into the project; a failed model call now
+    fails the testing step instead.)"""
+    from backend.graph import parallel_workflow
+
+    async def reply(*_a, **_k):
+        return f"### {path}\n```python\n{code}```\n"
+    monkeypatch.setattr(parallel_workflow.testing_agent, "run_async", reply)
+
+
 def test_pass_routing():
     state: ProjectState = {
         "execution_results": {"exit_code": 0},
@@ -198,7 +209,7 @@ def test_actual_rollback_restoration(tmp_projects_dir):
 
 
 @pytest.mark.anyio
-async def test_full_broken_todo_app_self_healing_integration(tmp_projects_dir):
+async def test_full_broken_todo_app_self_healing_integration(tmp_projects_dir, monkeypatch):
     # 1. Create a broken project on disk
     broken_proj = tmp_projects_dir / "BrokenTodoApp"
     (broken_proj / "backend").mkdir(parents=True)
@@ -211,6 +222,7 @@ async def test_full_broken_todo_app_self_healing_integration(tmp_projects_dir):
 
     (broken_proj / "backend" / "main.py").write_text(backend_code, encoding="utf-8")
     (broken_proj / "tests" / "test_status.py").write_text(test_code, encoding="utf-8")
+    _testing_agent_writes(monkeypatch, "tests/test_status.py", test_code)
 
     state: ProjectState = {
         "project_name": "BrokenTodoApp",
@@ -266,10 +278,11 @@ async def test_full_broken_todo_app_self_healing_integration(tmp_projects_dir):
 
 
 @pytest.mark.anyio
-async def test_fail_after_three_iterations(tmp_projects_dir):
+async def test_fail_after_three_iterations(tmp_projects_dir, monkeypatch):
     unfixable_proj = tmp_projects_dir / "UnfixableApp"
     unfixable_proj.mkdir()
     (unfixable_proj / "main.py").write_text("def broken(): syntax error", encoding="utf-8")
+    _testing_agent_writes(monkeypatch, "tests/test_main.py", "from main import broken\n\n\ndef test_broken():\n    broken()\n")
 
     state: ProjectState = {
         "project_name": "UnfixableApp",

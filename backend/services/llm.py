@@ -55,6 +55,25 @@ _logger.setLevel(logging.INFO)
 _unavailable_models: set[str] = set()
 
 
+class LLMUnavailableError(RuntimeError):
+    """
+    A model call failed, timed out or returned nothing, after the retries and the model fallback
+    chain. There is no output: callers fail their step visibly instead of using stand-in text
+    (this used to return a canned plan, backend, page, schema, test and approving review).
+    """
+
+    def __init__(self, task: str, model: str, reason: str):
+        super().__init__(f"model '{model}' produced no output for task '{task}': {reason}")
+        self.task = task
+        self.model = model
+        self.reason = reason
+
+
+def _unavailable(task: str, model: str, exc: Exception) -> LLMUnavailableError:
+    _logger.error("LLM call failed for task '%s' (model '%s'): %s", task, model, exc)
+    return LLMUnavailableError(task, model, f"{type(exc).__name__}: {exc}")
+
+
 def _memory_usage() -> str:
     try:
         import psutil
@@ -328,8 +347,9 @@ def generate_text(
         content = response["message"]["content"]
         record_llm_call(task, selected_model, *token_counts(response), perf_counter() - llm_started_at)
     except Exception as exc:
-        _logger.warning("Synchronous LLM call timed out or failed for task '%s': %s. Returning structured fallback.", task, exc)
-        content = _get_structured_task_fallback(task, compact_prompt)
+        raise _unavailable(task, selected_model, exc) from exc
+    if not (content or "").strip():
+        raise LLMUnavailableError(task, selected_model, "the model returned an empty response")
 
     llm_elapsed_ms = (perf_counter() - llm_started_at) * 1000
     total_elapsed = perf_counter() - started_at
@@ -412,8 +432,7 @@ async def generate_text_async(
             if last_chunk is not None:
                 record_llm_call(task, selected_model, *token_counts(last_chunk), perf_counter() - llm_started_at)
         except Exception as exc:
-            _logger.error("Error in generate_text_async stream: %s", exc)
-            raise
+            raise _unavailable(task, selected_model, exc) from exc
 
         content = "".join(chunks)
     else:
@@ -428,8 +447,9 @@ async def generate_text_async(
             content = response["message"]["content"]
             record_llm_call(task, selected_model, *token_counts(response), perf_counter() - llm_started_at)
         except Exception as exc:
-            _logger.warning("LLM call timed out or failed for task '%s': %s. Returning structured fallback.", task, exc)
-            content = _get_structured_task_fallback(task, compact_prompt)
+            raise _unavailable(task, selected_model, exc) from exc
+    if not (content or "").strip():
+        raise LLMUnavailableError(task, selected_model, "the model returned an empty response")
 
     llm_elapsed_ms = (perf_counter() - llm_started_at) * 1000
     total_elapsed = perf_counter() - started_at
@@ -571,43 +591,6 @@ Return only the code unless the user explicitly asks for an explanation.
         len(full_text),
         (perf_counter() - started_at) * 1000,
     )
-
-
-def _get_structured_task_fallback(task: str, prompt: str) -> str:
-    import json
-    task_lower = task.lower()
-    if "planner" in task_lower:
-        return json.dumps({
-            "project_name": "AIForge Software Application",
-            "domain": "Full Stack Web Application",
-            "executive_summary": "Production-grade web application platform.",
-            "functional_requirements": ["FR-1: User authentication", "FR-2: Interactive Dashboard"],
-            "non_functional_requirements": ["High availability", "Sub-second response time"],
-            "user_stories": ["As a user I want to sign in to access the dashboard"],
-            "assumptions": ["PostgreSQL Database"],
-            "constraints": ["Dockerized container deployment"],
-            "tech_stack": {"frontend": "React", "backend": "FastAPI", "database": "PostgreSQL", "auth": "JWT", "infra": "Docker"}
-        }, indent=2)
-    elif "architect" in task_lower:
-        return json.dumps({
-            "components": ["Navbar", "Sidebar", "DashboardCard", "LoginForm"],
-            "routes": ["GET /health", "POST /api/auth/login", "GET /api/data"],
-            "models": ["User", "Session", "Item"],
-            "dependencies": ["react", "fastapi", "sqlalchemy", "pydantic"],
-            "folder_structure": {"frontend": ["src/App.jsx"], "backend": ["main.py"]}
-        }, indent=2)
-    elif "frontend" in task_lower:
-        return "import React from 'react';\n\nexport default function App() {\n  return <div className='min-h-screen bg-slate-900 text-white p-8'><h1>AIForge App</h1></div>;\n}"
-    elif "backend" in task_lower:
-        return "from fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get('/health')\ndef health():\n    return {'status': 'ok'}\n"
-    elif "database" in task_lower:
-        return "CREATE TABLE IF NOT EXISTS users (\n  id SERIAL PRIMARY KEY,\n  email VARCHAR(255) UNIQUE NOT NULL\n);"
-    elif "testing" in task_lower:
-        return "def test_health():\n    assert 1 + 1 == 2\n"
-    elif "reviewer" in task_lower:
-        return "Code review completed successfully with zero critical flaws."
-    else:
-        return "Task completed successfully."
 
 
 class LLMService:

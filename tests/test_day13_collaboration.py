@@ -44,9 +44,10 @@ def test_graph_coding_path_runs_reviewer_then_explanation(monkeypatch):
     # In the project workflow the reviewer runs on the assembled code (after the compatibility check, which may repair
     # it against the shared contract), before documentation.
     from backend.graph.parallel_workflow import parallel_graph
-    assert _successors(parallel_graph, "assembly") == {"compatibility"}
+    # (generation_failed: a code agent or the reviewer produced no output, so the run stops instead of going on.)
+    assert _successors(parallel_graph, "assembly") == {"compatibility", "generation_failed"}
     assert _successors(parallel_graph, "compatibility") == {"reviewer"}
-    assert _successors(parallel_graph, "reviewer") == {"documentation"}
+    assert _successors(parallel_graph, "reviewer") == {"documentation", "generation_failed"}
 
 
 def test_graph_explanation_path_skips_reviewer(monkeypatch):
