@@ -8,7 +8,7 @@ export default function ReviewerFindings({ findings = [] }) {
         <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
           <FaUserCheck className="text-cyan-400" /> Reviewer Agent Assessment & Findings
         </h3>
-        <span className="font-mono text-xs font-bold text-emerald-400">Assessment: Excellent</span>
+        <span className="font-mono text-xs text-slate-400">{findings?.length ? `${findings.length} finding(s)` : 'No review recorded'}</span>
       </div>
 
       <div className="space-y-2">

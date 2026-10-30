@@ -74,18 +74,18 @@ class TestKubernetesSuite:
         assert probes["livenessProbe"].path == "/health"
         assert probes["readinessProbe"].port == 8000
 
-    def test_rolling_deployment_and_automatic_rollback_on_failure(self):
+    def test_rolling_deployment_is_not_reported_live(self):
+        # Applying manifests to a cluster is not implemented: a deployment never reports LIVE or a passing smoke test.
         rdm = RollingDeploymentManager()
-
-        # Success case
         ok, msg = rdm.execute_rolling_deployment("proj_alpha", "aiforge-proj_alpha", "v1.5", simulate_failure=False)
-        assert ok is True
-        assert "LIVE" in msg
-
-        # Simulated failure case triggers rollback
+        assert ok is False and "Not deployed" in msg and "LIVE" not in msg
         fail_ok, fail_msg = rdm.execute_rolling_deployment("proj_alpha", "aiforge-proj_alpha", "v1.5-broken", simulate_failure=True)
-        assert fail_ok is False
-        assert "Automatic rollback triggered" in fail_msg
+        assert fail_ok is False and "nothing was deployed" in fail_msg
+
+        result = KubernetesService().deploy(project_id="proj_alpha")
+        assert result["success"] is False and result["status"] in ("NOT_DEPLOYED", "BLOCKED_BY_READINESS_GATE")
+        rb = KubernetesService().rollback("proj_alpha")
+        assert rb.success is False and rb.status == "NOT_EXECUTED"
 
     def test_hpa_scaling_and_user_approval_policy(self):
         sm = KubernetesScalingManager()
@@ -100,16 +100,19 @@ class TestKubernetesSuite:
         assert app_ok is False
         assert "User approval required" in app_msg
 
-        # Approved scaling succeeds
+        # Approval does not make an unimplemented cluster operation succeed
         app_ok_2, app_msg_2 = sm.apply_scale(rec, user_approved=True)
-        assert app_ok_2 is True
+        assert app_ok_2 is False and "Not scaled" in app_msg_2
+
+        # Without an explicit approval the default is a refusal
+        assert sm.apply_scale(rec)[0] is False
 
     def test_command_allowlist_enforcement_blocks_arbitrary_kubectl(self):
         service = KubernetesService()
 
-        # Authorized operation succeeds
+        # An allowed operation passes the allowlist, but is reported as not executed (not implemented)
         res = service.execute_command_allowlist_operation("get_pods", {})
-        assert res["status"] == "EXECUTED"
+        assert res["status"] == "NOT_IMPLEMENTED"
 
         # Arbitrary kubectl exec/apply/delete raises PermissionError
         with pytest.raises(PermissionError, match="not in the authorized Kubernetes allowlist"):
@@ -130,7 +133,12 @@ class TestKubernetesSuite:
     def test_kubernetes_api_endpoints(self, client):
         status_res = client.get("/api/kubernetes/status?project_id=aiforge-demo")
         assert status_res.status_code == 200
-        assert status_res.json()["connected"] is True
+        body = status_res.json()
+        # no cluster is configured in tests: nothing about one is invented
+        assert body["connected"] is False and body["mode"] == "not_connected"
+        assert body["cluster_name"] is None and body["nodes_count"] is None and body["cpu_usage_pct"] is None
+        assert not body["backend_pods"] and not body["frontend_pods"]
+        assert client.get("/api/kubernetes/events?project_id=aiforge-demo").json() == []
 
         manifests_res = client.post("/api/kubernetes/manifests?project_id=aiforge-demo")
         assert manifests_res.status_code == 200

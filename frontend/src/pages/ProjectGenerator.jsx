@@ -309,7 +309,7 @@ function ProjectGenerator() {
                             <div className="flex items-center gap-6">
                                 <div className="text-center">
                                     <span className="text-[10px] text-gray-500 block uppercase font-semibold">Validation Score</span>
-                                    <span className="text-2xl font-black text-indigo-400">{project?.validation_status?.score ?? 96}/100</span>
+                                    <span className="text-2xl font-black text-indigo-400">{project?.validation_status?.score ?? '—'}/100</span>
                                 </div>
                                 <div className="text-center">
                                     <span className="text-[10px] text-gray-500 block uppercase font-semibold">Total Assembled Files</span>

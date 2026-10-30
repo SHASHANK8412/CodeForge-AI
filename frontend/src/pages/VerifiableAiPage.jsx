@@ -48,14 +48,14 @@ export default function VerifiableAiPage({ setView, activeProjectId = "aiforge-f
   };
 
   const handleVerify = async (recordId) => {
-    toast("Checking SHA-256 Canonical Hash & Ed25519 Signature on Ledger...", { icon: "⛓️" });
+    toast("Checking the SHA-256 hash, HMAC signature and chain link...", { icon: "⛓️" });
     try {
       const res = await verifyRecord(recordId);
       setVerificationResult(res);
       if (res.valid) {
-        toast.success("Cryptographic Integrity & Signature Verified on Immutable Ledger!", { icon: "✓" });
+        toast.success("Signature and chain link verified (local hash chain)", { icon: "✓" });
       } else {
-        toast.error("Tampering Detected! Cryptographic signature mismatch.");
+        toast.error(`Not verified: ${res?.trust_status || "check failed"}`);
       }
     } catch (err) {
       toast.error("Verification check failed");
@@ -66,7 +66,7 @@ export default function VerifiableAiPage({ setView, activeProjectId = "aiforge-f
     e.preventDefault();
     if (!newTitle.trim()) return;
     setIsAnchoring(true);
-    toast("Computing SHA-256 Hash & Anchoring into Verifiable Ledger Block...", { icon: "🔗" });
+    toast("Hashing, signing and appending to the local chain...", { icon: "🔗" });
     try {
       const rec = await anchorRecord({
         title: newTitle.trim(),
@@ -78,7 +78,7 @@ export default function VerifiableAiPage({ setView, activeProjectId = "aiforge-f
       setSelectedRecord(rec);
       setNewTitle("");
       setNewEntityId("");
-      toast.success("Record Anchored & Signed Successfully!", { icon: "✓" });
+      toast.success("Record signed and appended to the local chain", { icon: "✓" });
     } catch (err) {
       toast.error("Anchoring failed");
     } finally {
@@ -96,13 +96,13 @@ export default function VerifiableAiPage({ setView, activeProjectId = "aiforge-f
           </div>
           <div>
             <h1 className="text-base font-bold text-white flex items-center gap-2">
-              Blockchain Trust & Verifiable AI Layer
+              Verifiable Records (local hash chain)
               <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold">
                 Cryptographic Integrity Engine
               </span>
             </h1>
             <p className="text-xs text-gray-400">
-              Deterministic SHA-256 Canonical Hashing, Digital Signatures, Merkle Batching & Immutable Ledger Anchoring
+              SHA-256 canonical hashing, HMAC-SHA256 signatures and a tamper-evident local hash chain (no external blockchain)
             </p>
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function VerifiableAiPage({ setView, activeProjectId = "aiforge-f
         {/* Global Ledger State */}
         <div className="flex items-center gap-2 font-mono text-xs">
           <span className="px-3 py-1.5 bg-[#151821] border border-gray-800 rounded-xl text-emerald-400 font-bold flex items-center gap-1.5">
-            <FaCube size={11} /> Block #{ledgerStatus?.latest_block_number || 19482115}
+            <FaCube size={11} /> Records: {ledgerStatus?.latest_block_number ?? 0}
           </span>
           <span className="px-3 py-1.5 bg-[#151821] border border-gray-800 rounded-xl text-amber-300 font-bold">
             {records.length} Anchored Records
@@ -184,7 +184,7 @@ export default function VerifiableAiPage({ setView, activeProjectId = "aiforge-f
           {/* Record Feed */}
           <div className="space-y-3">
             <span className="text-[10px] font-mono text-gray-400 uppercase font-bold block">
-              Immutable Provenance Log ({records.length})
+              Provenance Log ({records.length})
             </span>
             <div className="space-y-3">
               {records.map((rec) => (
@@ -202,7 +202,7 @@ export default function VerifiableAiPage({ setView, activeProjectId = "aiforge-f
                       {rec.record_type}
                     </span>
                     <span className="text-emerald-400 font-bold flex items-center gap-1">
-                      <FaCheckCircle size={10} /> {rec.verification_status} (Block #{rec.block_number})
+                      <FaCheckCircle size={10} /> {rec.verification_status} (#{rec.block_number})
                     </span>
                   </div>
 
@@ -249,12 +249,12 @@ export default function VerifiableAiPage({ setView, activeProjectId = "aiforge-f
                   </div>
 
                   <div>
-                    <span className="text-[10px] text-gray-500 block">ED25519 DIGITAL SIGNATURE:</span>
+                    <span className="text-[10px] text-gray-500 block">HMAC-SHA256 SIGNATURE:</span>
                     <span className="text-cyan-300 text-[11px] break-all block mt-0.5">{selectedRecord.signature}</span>
                   </div>
 
                   <div>
-                    <span className="text-[10px] text-gray-500 block">IMMUTABLE LEDGER TRANSACTION:</span>
+                    <span className="text-[10px] text-gray-500 block">LOCAL CHAIN POSITION:</span>
                     <span className="text-purple-300 text-[11px] break-all block mt-0.5">{selectedRecord.ledger_reference}</span>
                   </div>
 
@@ -278,7 +278,7 @@ export default function VerifiableAiPage({ setView, activeProjectId = "aiforge-f
                   </div>
                   <p className="text-[11px] text-gray-300 leading-relaxed font-sans">
                     {verificationResult.valid
-                      ? "The digital signature strictly matches the canonical SHA-256 payload and block anchor on the immutable verifiable ledger. Zero tampering detected."
+                      ? "The HMAC signature matches the stored SHA-256 hash, and the record links to the one before it. This is a local, tamper-evident chain - not an external blockchain."
                       : "Warning: Payload content hash does not correspond with the ledger anchor signature."}
                   </p>
                 </div>

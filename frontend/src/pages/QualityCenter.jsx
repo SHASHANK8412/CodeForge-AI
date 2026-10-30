@@ -20,10 +20,10 @@ export default function QualityCenter({ generationId = 'aiforge-demo', setView }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Repair State
+  // A real Execution Guardian verification (checks + bounded repairs on an isolated copy)
   const [repairActive, setRepairActive] = useState(false);
-  const [repairStep, setRepairStep] = useState(1);
-  const [repairComplete, setRepairComplete] = useState(false);
+  const [verificationId, setVerificationId] = useState(null);
+  const [repairError, setRepairError] = useState('');
 
   const loadReport = async () => {
     setLoading(true);
@@ -33,7 +33,7 @@ export default function QualityCenter({ generationId = 'aiforge-demo', setView }
       setData(report);
     } catch (err) {
       console.error('Failed to load quality report:', err);
-      setError('The quality service could not be reached.');
+      setError(err?.error || 'The quality service could not be reached.');
     } finally {
       setLoading(false);
     }
@@ -53,21 +53,14 @@ export default function QualityCenter({ generationId = 'aiforge-demo', setView }
 
   const handleStartRepair = async () => {
     setRepairActive(true);
-    setRepairStep(1);
-    setRepairComplete(false);
-
-    // Simulate step progression through repair workflow stages
-    setTimeout(() => setRepairStep(2), 1200);
-    setTimeout(() => setRepairStep(3), 2400);
-
-    const repairRes = await triggerAutomaticRepair(generationId);
-
-    setTimeout(() => setRepairStep(4), 3600);
-    setTimeout(() => setRepairStep(5), 4800);
-    setTimeout(() => {
-      setRepairComplete(true);
-      loadReport();
-    }, 6000);
+    setRepairError('');
+    setVerificationId(null);
+    try {
+      const r = await triggerAutomaticRepair(generationId);
+      setVerificationId(r.verification_id);
+    } catch (err) {
+      setRepairError(err?.error || 'The verification could not be started.');
+    }
   };
 
   if (loading) {
@@ -106,13 +99,14 @@ export default function QualityCenter({ generationId = 'aiforge-demo', setView }
     );
   }
 
-  const projectName = data?.project_name || 'FoodDelivery AI';
-  const overallScore = data?.overall_score || 96.0;
+  const projectName = data?.project_name || generationId;
+  const overallScore = data?.overall_score ?? null;
   const categories = data?.categories || {};
   const gates = data?.quality_gates || [];
-  const passedGates = data?.passed_gates_count || 15;
-  const totalGates = data?.total_gates_count || 15;
-  const tests = data?.tests || {};
+  const passedGates = data?.passed_gates_count ?? 0;
+  const evaluatedGates = data?.evaluated_gates_count ?? 0;
+  const totalGates = data?.total_gates_count ?? gates.length;
+  const tests = data?.tests || null;
   const testBreakdown = data?.test_breakdown || {};
   const security = data?.security || {};
   const performance = data?.performance || {};
@@ -133,16 +127,18 @@ export default function QualityCenter({ generationId = 'aiforge-demo', setView }
         {/* Active Self-Repair Workflow Banner */}
         {repairActive && (
           <RepairWorkflow
-            step={repairStep}
-            isComplete={repairComplete}
+            projectId={generationId}
+            verificationId={verificationId}
+            error={repairError}
             onClose={() => setRepairActive(false)}
+            onFinished={loadReport}
           />
         )}
 
         {/* Overall Score & Category Scores */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4">
-            <OverallScore score={overallScore} />
+            <OverallScore score={overallScore} basis={data?.score_basis} />
           </div>
 
           <div className="lg:col-span-8">
@@ -150,8 +146,8 @@ export default function QualityCenter({ generationId = 'aiforge-demo', setView }
           </div>
         </div>
 
-        {/* 15 Quality Gates Breakdown */}
-        <QualityGates gates={gates} passedCount={passedGates} totalCount={totalGates} />
+        {/* Quality gates computed from recorded checks */}
+        <QualityGates gates={gates} passedCount={passedGates} evaluatedCount={evaluatedGates} totalCount={totalGates} />
 
         {/* Testing & Security Dashboards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

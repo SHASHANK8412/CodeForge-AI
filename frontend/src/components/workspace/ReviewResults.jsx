@@ -4,8 +4,8 @@ import { FaTimes, FaShieldAlt, FaExclamationTriangle, FaCheckCircle, FaExternalL
 export default function ReviewResults({ reviewData, onClose, onSelectFinding }) {
   if (!reviewData) return null;
 
-  const scores = reviewData.scores || { code_quality: 98, architecture: 95, security: 97, performance: 92, maintainability: 96 };
-  const overall = reviewData.overall_score || 96;
+  const scores = reviewData.scores || {};
+  const overall = reviewData.overall_score ?? '—';
 
   // Extract file path and line number from finding text
   const parseFindingLocation = (iss) => {

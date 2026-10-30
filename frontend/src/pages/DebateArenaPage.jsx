@@ -154,7 +154,7 @@ export default function DebateArenaPage({ projectId = 'aiforge-demo' }) {
                   <div className="text-right font-mono">
                     <span className="text-[10px] text-slate-400 block uppercase">Weighted Score</span>
                     <span className="text-2xl font-extrabold text-amber-400">
-                      {scores[winnerId]?.total_weighted_score || 94.0} / 100
+                      {scores[winnerId]?.total_weighted_score ?? '—'} / 100
                     </span>
                   </div>
 
@@ -231,7 +231,7 @@ export default function DebateArenaPage({ projectId = 'aiforge-demo' }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans">
             {candidates.map((cand) => {
               const isWinner = cand.candidate_id === winnerId;
-              const candScore = scores[cand.candidate_id]?.total_weighted_score || 90.0;
+              const candScore = scores[cand.candidate_id]?.total_weighted_score ?? null;
 
               return (
                 <div
@@ -278,7 +278,7 @@ export default function DebateArenaPage({ projectId = 'aiforge-demo' }) {
 
                   <div className="flex justify-between items-center font-mono text-xs border-t border-slate-800 pt-3">
                     <span className="text-slate-400 text-[10px]">Complexity: {cand.estimated_complexity}</span>
-                    <span className="font-extrabold text-amber-400 text-sm">{candScore} / 100</span>
+                    <span className="font-extrabold text-amber-400 text-sm">{candScore ?? '—'} / 100</span>
                   </div>
                 </div>
               );

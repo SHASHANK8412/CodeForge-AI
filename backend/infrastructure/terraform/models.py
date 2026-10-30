@@ -66,11 +66,12 @@ class SecurityAuditResult(BaseModel):
 
 
 class DriftResult(BaseModel):
-    has_drift: bool = False
-    resource_name: str = "aws_ecs_task_definition.backend"
-    expected: str = "3 replicas"
-    actual: str = "5 replicas"
-    potential_cause: str = "Manual scaling action applied directly on cloud console."
+    has_drift: Optional[bool] = None             # None: drift was not checked
+    resource_name: str = ""
+    expected: str = ""
+    actual: str = ""
+    potential_cause: str = ""
+    simulated: bool = False                      # a scripted demonstration scenario, not a reading of real state"
 
 
 class CloudProviderConfig(BaseModel):

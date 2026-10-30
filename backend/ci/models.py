@@ -66,7 +66,7 @@ class CIPipelineResult(BaseModel):
     project_id: str = Field(default="default_project", description="Target project identifier")
     project_type: str = Field(default="python", description="Detected language/framework")
     commit_version: str = Field(default="main", description="Git commit SHA or branch version")
-    status: str = Field(default="PASSED", description="Overall CI status: PASSED, FAILED, TIMEOUT, CANCELLED")
+    status: str = Field(default="PENDING", description="Overall CI status: PENDING, PASSED, FAILED, TIMEOUT, CANCELLED")
     build: Dict[str, Any] = Field(default_factory=dict, description="Build stage outcome")
     tests: Dict[str, Any] = Field(default_factory=dict, description="Test stage outcome")
     lint: Dict[str, Any] = Field(default_factory=dict, description="Lint stage outcome")

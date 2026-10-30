@@ -48,14 +48,14 @@ class KubernetesScalingManager:
     def apply_scale(
         self,
         request: K8sScaleRequest,
-        user_approved: bool = True
+        user_approved: bool = False
     ) -> Tuple[bool, str]:
         if not user_approved:
             _logger.warning("[ScalingManager] Scaling operation rejected: User approval required.")
             return False, "Scaling cancelled: User approval required prior to scaling cluster replicas."
 
-        _logger.info(f"[ScalingManager] Scaled '{request.component}' from {request.current_replicas} to {request.desired_replicas} replicas.")
-        return True, f"Successfully scaled '{request.component}' to {request.desired_replicas} replicas."
+        return False, (f"Not scaled: scaling a cluster is not implemented. '{request.component}' was not changed "
+                       f"(requested {request.desired_replicas} replicas).")
 
 
 global_scaling_manager = KubernetesScalingManager()

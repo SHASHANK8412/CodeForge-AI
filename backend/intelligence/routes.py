@@ -7,6 +7,7 @@ Software Assistant, and Production Readiness CTO Gate.
 
 from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, Field
 
 from backend.auth.dependencies import get_current_user
 from backend.intelligence.models import SimulationRequest, ImpactQueryRequest, SoftwareAssistantQuery
@@ -85,7 +86,14 @@ async def get_cto_gate_report(project_id: str, user: dict = Depends(get_current_
     return {"status": "success", "report": report.model_dump()}
 
 
+class CtoOverrideRequest(BaseModel):
+    reason: str = Field("released by a person despite the blocking issues", min_length=3, max_length=500)
+
+
 @cto_router.post("/{project_id}/override")
-async def override_cto_gate(project_id: str, user: dict = Depends(get_current_user)):
-    report = global_cto_gate.override_or_fix(project_id)
+async def override_cto_gate(project_id: str, body: Optional[CtoOverrideRequest] = None, user: dict = Depends(get_current_user)):
+    """A recorded human decision to release despite the blocking issues: scores and findings stay as measured."""
+    req = body or CtoOverrideRequest()
+    user_id = str(user.get("id") or user.get("user_id") or "unknown")
+    report = global_cto_gate.override(project_id, user_id, req.reason)
     return {"status": "success", "report": report.model_dump()}

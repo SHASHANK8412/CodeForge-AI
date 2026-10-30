@@ -17,35 +17,8 @@ class NodeManager:
     """
 
     def __init__(self) -> None:
-        self.nodes: Dict[str, Dict[str, Any]] = {
-            "worker_node_1": {
-                "node_id": "worker_node_1",
-                "host": "10.0.0.12",
-                "capacity": 4,
-                "status": "ONLINE",
-                "active_tasks_count": 1,
-                "cloud_provider": "AWS EKS",
-                "last_heartbeat": time.time()
-            },
-            "worker_node_2": {
-                "node_id": "worker_node_2",
-                "host": "10.0.0.13",
-                "capacity": 4,
-                "status": "ONLINE",
-                "active_tasks_count": 0,
-                "cloud_provider": "AWS EKS",
-                "last_heartbeat": time.time()
-            },
-            "worker_node_3": {
-                "node_id": "worker_node_3",
-                "host": "10.0.0.14",
-                "capacity": 4,
-                "status": "ONLINE",
-                "active_tasks_count": 2,
-                "cloud_provider": "AWS EKS",
-                "last_heartbeat": time.time()
-            }
-        }
+        # Only nodes that registered themselves (register_node / heartbeats). None are invented at startup.
+        self.nodes: Dict[str, Dict[str, Any]] = {}
 
     def register_node(
         self,

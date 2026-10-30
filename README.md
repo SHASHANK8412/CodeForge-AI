@@ -1,5 +1,7 @@
 # AIForge — Autonomous Multi-Agent Software Engineering Platform
 
+[![CI](https://github.com/SHASHANK8412/CodeForge-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/SHASHANK8412/CodeForge-AI/actions/workflows/ci.yml)
+
 AIForge turns a natural-language software requirement into a generated full-stack project. A
 LangGraph workflow of specialized agents plans, designs, writes, reviews, tests, repairs and
 packages the code, using **local LLMs through Ollama** — no cloud model API required.
@@ -17,13 +19,14 @@ stages' structured output:
 
 ```text
 Requirement
-  → Planner → Architect → [Human approval]
-  → Frontend ║ Backend ║ Database      (parallel LangGraph branches)
-  → Assembly → Reviewer
-  → Build validation ║ Dependencies ║ Security scan ║ Performance
-  → Execution validation → Testing
-      ├─ pass → Documentation → [Human approval] → Packaging → Export
-      └─ fail → Debug → Patch → re-test   (self-healing loop, bounded by MAX_REPAIR_ATTEMPTS)
+  → Planner → Architect (+ shared API/data contract) → [Human approval]
+  → Frontend ║ Backend ║ Database      (parallel LangGraph branches, each given its part of the contract)
+  → Assembly → Compatibility check (contract tests, bounded targeted repairs)
+  → Reviewer → Documentation → Quality gate → Dependencies → Security scan → Performance
+  → Execution validation → Testing → Execution Guardian (runs the project in isolation)
+      ├─ verified → [Human approval] → Packaging → Export
+      └─ failed   → Debug → Patch → re-verify   (bounded by MAX_REPAIR_ATTEMPTS; repeats escalate to a human)
+  A failed model call at any agent step ends the run as failed - no placeholder code is produced.
 ```
 
 - **LangGraph orchestration** with a persistent checkpointer, so a run can pause for human
@@ -39,7 +42,11 @@ Requirement
 
 | Area | Status |
 |---|---|
-| Planner / Architect / Frontend / Backend / Database agents (real LLM calls) | Working — see [verification](#verification) |
+| Planner / Architect / Frontend / Backend / Database agents (real LLM calls) | Working — see [verification](#verification). A failed or timed-out model call fails that step |
+| Execution Guardian | Working — verifies a project by running its checks in isolated containers (syntax, quality gate, dependency install, tests, backend startup, frontend build), classifies failures, routes bounded repairs to the responsible agent; repairs are delivered for approval. Without Docker the container checks are BLOCKED, never passed. [docs](docs/EXECUTION_GUARDIAN.md) |
+| Integration & Compatibility Engine | Working — a versioned shared contract (derived from the architecture), deterministic frontend/backend/database compatibility analysis, contract tests generated and executed in isolation, drift detection, bounded targeted repairs. [docs](docs/INTEGRATION_ENGINE.md) |
+| Authentication & authorization | Sign-in required by default; project routes check ownership; path traversal, symlink and archive escapes are rejected. `AIFORGE_AUTH_MODE=local-dev` allows token-less requests from this machine for single-user development (refused in production) |
+| Quality Center / readiness gate | Computed only from recorded checks (Execution Guardian, Integration Engine, project files); anything not evaluated is labelled as such |
 | LangGraph pipeline with parallel branches and human-approval checkpoints | Working |
 | Live agent status (SSE) and agent org chart in the UI | Working |
 | Self-healing (test → debug → patch → retest) | Working — deterministic repairs (missing imports, missing requirements, unambiguous literal mismatches) with an LLM rewrite of the failing file as fallback; `tests/test_self_healing_demo.py` repairs a broken FastAPI project and its tests then pass. Bounded by `MAX_REPAIR_ATTEMPTS`; repeated failures escalate to a human |
@@ -53,6 +60,15 @@ Requirement
 | Docker / docker-compose for AIForge itself | Working — both images build, both containers report healthy, and the backend reaches the host's Ollama (verified 2026-10-06, Docker 29.6.2) |
 | Local deployment with smoke tests and rollback | Working — a failed deploy restores the last file checkpoint (`tests/deployment/`) |
 | Cloud deployment (Vercel / Render / Neon) | Implemented against the real REST APIs (Neon database → Render backend → Vercel frontend). Tested with mocked HTTP only; **not yet run against live accounts**. Without `VERCEL_TOKEN` / `RENDER_API_KEY` / `NEON_API_KEY` a provider reports `NOT_CONFIGURED`; Render also needs the project exported to GitHub first |
+
+### Not implemented (labelled as such in the app)
+
+| Area | What exists | What does not |
+|---|---|---|
+| Kubernetes | Manifest generation and validation (non-root, limits, probes, network policies, HPA, secret detection); read-only status from a real cluster when a kubeconfig is present | Applying, scaling, rolling back - the API reports `NOT_DEPLOYED` / `NOT_EXECUTED` |
+| Terraform | Plan generation, policy engine, security analysis, cost estimate | `terraform apply` / destroy / drift reading - reported as not applied / not checked |
+| Distributed workers | Task queue and load-balancer logic | Real worker nodes (none are pre-registered) |
+| Verifiable records | A local hash-chained log with HMAC-SHA256 signatures | Any external blockchain anchoring |
 
 More detail: [setup](docs/setup.md) · [architecture](docs/ARCHITECTURE.md) · [API](docs/api.md) · [security](docs/security.md) · [troubleshooting](docs/troubleshooting.md)
 
@@ -85,8 +101,10 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173, choose **New Project**, describe the app, and follow the run on the
-build dashboard. The run pauses once for architecture approval.
+Open http://localhost:5173, register an account (the API requires sign-in), choose **New Project**,
+describe the app, and follow the run on the build dashboard. The run pauses once for architecture
+approval. For single-user local development you can instead set `AIFORGE_AUTH_MODE=local-dev`, which
+lets requests from this machine act as the default user (never enable it behind a proxy or in production).
 
 ## Docker
 
@@ -144,22 +162,35 @@ pip install -r requirements-dev.txt
 python -m pytest tests
 ```
 
-Latest full run (each file in its own process): **779 passed, 52 failed, 3 errors**. The failures
-are in 21 older test files (Day 11–14 workflow and memory suites, the project-manager agent,
-plugins, RAG routes, the self-correction loop) that target APIs which have since changed. Ten
-further files are standalone scripts with no pytest tests. Tests never write to
-`backend/data/generations.json`: `tests/conftest.py` gives each test a temporary store.
+Latest full run (2026-10-30, Windows, Docker not running, `python -m pytest tests`): **1,447 passed,
+22 skipped, 4 failed** in about 88 minutes. All four failures also fail on the code before this change:
+
+- `tests/deployment/test_devops_deployment_suite.py::...test_orchestrator_deployment_pipeline` - its smoke test fails
+- `tests/execution_guardian/test_execution_guardian.py::test_the_report_says_what_ran_and_what_did_not`
+- `tests/test_end_to_end_integration.py::test_full_project_generation_and_export_pipeline`
+- `tests/test_day23_24_25_workspace.py::test_fix_proposal_and_apply` - passes alone; fails after the other
+  tests in its file (an earlier test closes the event loop before this one's model call)
+
+Skipped tests need Docker or OS privileges (symlinks) that were not available; they are not counted as passed.
+CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs lint and the deterministic suites that need
+neither a model server nor Docker. Tests never write to `backend/data/generations.json`: `tests/conftest.py`
+gives each test a temporary store.
 
 ## Known limitations
 
 - **Speed depends heavily on hardware.** On a CPU-only machine each agent call takes one to a few
   minutes, so a full run takes a long time; a GPU or a small model (`llama3.2:3b`) helps.
 - **Cloud deployment is untested against live accounts** (see feature status).
-- **Generated projects are tested in AIForge's own Python environment.** Their dependencies are
-  not installed per project, so tests that import packages AIForge doesn't have fail to collect.
+- **Docker is needed for full verification.** Generated projects' dependencies, tests, backend
+  startup and frontend build run in containers; without Docker those checks are reported BLOCKED.
+- **No requirement-fidelity check yet.** AIForge verifies that a project runs and that its components
+  agree on a contract, not that it implements everything the request asked for.
+- **Security gaps that remain:** registration is open and there are no roles, so any signed-in user
+  can reach global (non-project) operations pages; logout does not revoke tokens; login has no rate
+  limit.
 - **Some legacy modules still return sample data** where no real backend exists for them (for
-  example `backend/deployment/cicd_pipeline.py`). Pages backed by real APIs show real data or an
-  empty state.
+  example `backend/deployment/cicd_pipeline.py`). The Quality Center, readiness gate, analytics,
+  Kubernetes, Terraform and verifiable-records pages show recorded data or say what was not measured.
 - **Part of the test suite is stale** — tests written against APIs that have since changed.
   See [Testing](#testing) for current numbers.
 

@@ -47,19 +47,23 @@ class K8sPodStatus(BaseModel):
 
 
 class K8sClusterStatus(BaseModel):
-    connected: bool = True
-    cluster_name: str = "aiforge-prod-cluster"
-    namespace: str = "aiforge-project-123"
-    project_id: str = "aiforge-demo"
-    nodes_count: int = 3
-    k8s_version: str = "v1.30.2"
+    """What is known about the cluster. Nothing is filled in that was not read from a real cluster."""
+    connected: bool = False
+    cluster_name: Optional[str] = None
+    namespace: str = ""
+    project_id: str = ""
+    nodes_count: Optional[int] = None
+    k8s_version: Optional[str] = None
     frontend_pods: List[K8sPodStatus] = Field(default_factory=list)
     backend_pods: List[K8sPodStatus] = Field(default_factory=list)
     redis_pods: List[K8sPodStatus] = Field(default_factory=list)
-    cpu_usage_pct: float = 41.0
-    memory_usage_pct: float = 52.0
-    p95_latency_ms: float = 182.0
-    error_rate_pct: float = 0.08
+    other_pods: List[K8sPodStatus] = Field(default_factory=list)
+    cpu_usage_pct: Optional[float] = None       # not measured
+    memory_usage_pct: Optional[float] = None
+    p95_latency_ms: Optional[float] = None
+    error_rate_pct: Optional[float] = None
+    mode: str = "not_connected"                 # not_connected | read_only (a real cluster; only reads are implemented)
+    note: str = ""
 
 
 class K8sManifestSet(BaseModel):
@@ -93,8 +97,9 @@ class K8sDeploymentEvent(BaseModel):
 
 
 class K8sRollbackResult(BaseModel):
-    success: bool = True
-    project_id: str = "aiforge-demo"
-    previous_version: str = "v1.4"
-    target_version: str = "v1.3"
-    message: str = "Successfully rolled back backend deployment to version v1.3"
+    success: bool = False
+    project_id: str = ""
+    previous_version: Optional[str] = None
+    target_version: Optional[str] = None
+    message: str = ""
+    status: str = "NOT_EXECUTED"

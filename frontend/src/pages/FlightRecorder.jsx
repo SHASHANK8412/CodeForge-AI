@@ -70,23 +70,23 @@ export default function FlightRecorder({ projectId = 'aiforge-demo', setView }) 
         </div>
         <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl font-mono text-center">
           <span className="text-[10px] text-slate-500 block uppercase">Auto Repairs</span>
-          <span className="text-lg font-bold text-indigo-400">{analytics.automatic_repairs || 2}</span>
+          <span className="text-lg font-bold text-indigo-400">{analytics.automatic_repairs ?? 0}</span>
         </div>
         <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl font-mono text-center">
           <span className="text-[10px] text-slate-500 block uppercase">Successful Repairs</span>
-          <span className="text-lg font-bold text-emerald-400">{analytics.successful_repairs || 2}</span>
+          <span className="text-lg font-bold text-emerald-400">{analytics.successful_repairs ?? 0}</span>
         </div>
         <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl font-mono text-center">
           <span className="text-[10px] text-slate-500 block uppercase">Tests Fixed</span>
-          <span className="text-lg font-bold text-emerald-400">+{analytics.tests_fixed || 5}</span>
+          <span className="text-lg font-bold text-emerald-400">+{analytics.tests_fixed ?? 0}</span>
         </div>
         <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl font-mono text-center">
           <span className="text-[10px] text-slate-500 block uppercase">Quality Improvement</span>
-          <span className="text-lg font-bold text-emerald-400">+{analytics.quality_improvement || 11.0}</span>
+          <span className="text-lg font-bold text-emerald-400">+{analytics.quality_improvement ?? 0}</span>
         </div>
         <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl font-mono text-center">
           <span className="text-[10px] text-slate-500 block uppercase">Files Modified</span>
-          <span className="text-lg font-bold text-cyan-400">{analytics.files_changed_automatically || 5}</span>
+          <span className="text-lg font-bold text-cyan-400">{analytics.files_changed_automatically ?? 0}</span>
         </div>
       </div>
 

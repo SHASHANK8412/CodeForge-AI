@@ -14,17 +14,12 @@ router = APIRouter(tags=["Quality Assurance & Performance"])
 @router.get("/quality-report/{project_id}")
 @router.get("/api/quality-report/{project_id}")
 def get_quality_report(project_id: str):
-    """Returns static analysis, security scan, performance optimization, and quality scores."""
+    """Static analysis, security scan and quality scores of the project's recorded files."""
     status = global_workflow_executor.get_project_status(project_id)
     files = status.get("project_files", {})
     if not files:
-        # Sample fallback project files for test
-        files = {
-            "frontend/src/App.jsx": "import React from 'react'; export default function App() { return <div>App</div>; }",
-            "backend/main.py": "from fastapi import FastAPI\napp = FastAPI()\n@app.get('/')\nasync def root(): return {'status': 'ok'}",
-            "database/schema.sql": "CREATE TABLE users (id SERIAL PRIMARY KEY);\nCREATE INDEX idx_user_id ON users(id);",
-            "README.md": "# Project Documentation\n"
-        }
+        # never a report about invented sample files
+        raise HTTPException(status_code=404, detail=f"No files are recorded for project '{project_id}'.")
 
     report = global_quality_report_generator.generate_full_report(files)
     report["project_id"] = project_id
@@ -38,10 +33,8 @@ def optimize_project(project_id: str):
     status = global_workflow_executor.get_project_status(project_id)
     files = status.get("project_files", {})
     if not files:
-        files = {
-            "frontend/src/App.jsx": "import React from 'react'; export default function App() { return <div>App</div>; }",
-            "backend/main.py": "from fastapi import FastAPI\napp = FastAPI()\n@app.get('/')\ndef root(): return {'status': 'ok'}"
-        }
+        # never a report about invented sample files
+        raise HTTPException(status_code=404, detail=f"No files are recorded for project '{project_id}'.")
 
     fixed_files = global_quality_report_generator.apply_autofix(files)
     new_report = global_quality_report_generator.generate_full_report(fixed_files)
@@ -58,118 +51,91 @@ def optimize_project(project_id: str):
 @router.get("/api/projects/{generation_id}/quality")
 def get_project_quality_center_data(generation_id: str):
     """
-    Returns full Quality Center report including 15 quality gates, test results, security audit, performance metrics, and recommendations.
+    The Quality Center report, computed only from recorded evidence (backend/quality/evidence.py): the Execution
+    Guardian's latest verification, the Integration Engine's latest run and the project's files. A gate no recorded
+    check covers is NOT_EVALUATED and has no score; nothing here is a fixed or estimated value.
     """
-    from backend.evaluation.evaluator import global_project_evaluator
-    from backend.generators.project_generator import GENERATED_PROJECTS_DIR
-
+    from backend.quality import evidence
     from backend.routes.project import resolve_generated_project_dir
     target_dir = resolve_generated_project_dir(generation_id)
     if not target_dir:
         raise HTTPException(status_code=404, detail=f"No generated project found for '{generation_id}'.")
 
-    # Run or load evaluation results
-    eval_res = global_project_evaluator.evaluate_and_repair_project(
-        project_path=str(target_dir),
-        requirements="Project quality audit",
-        max_repair_attempts=0
-    )
+    ev = evidence.collect(generation_id, target_dir)
+    gates = evidence.gates(ev)
+    summ = evidence.summary(gates)
+    tests = evidence.tests(ev)
+    by_name = {g["name"][3:]: g for g in gates}
 
-    overall_score = float(eval_res.overall_score)
-    classification = "excellent" if overall_score >= 90 else "good" if overall_score >= 75 else "needs_improvement" if overall_score >= 60 else "poor"
+    def area(*names):
+        rated = [by_name[n] for n in names if by_name[n]["status"] in ("PASSED", "FAILED", "WARNING", "BLOCKED")]
+        return round(100.0 * sum(1 for g in rated if g["status"] == "PASSED") / len(rated), 1) if rated else None
 
-    gates = [
-        {"id": 1, "name": "01 Requirements Validation", "status": "PASSED", "score": 98, "critical": 0, "high": 0, "medium": 0, "low": 0, "findings": ["Project satisfies prompt functional requirements."], "recommendation": "Maintain specification mapping."},
-        {"id": 2, "name": "02 Architecture Validation", "status": "PASSED", "score": 95, "critical": 0, "high": 0, "medium": 0, "low": 1, "findings": ["Modular decoupling between API router and business logic."], "recommendation": "Decouple database connection pools."},
-        {"id": 3, "name": "03 Frontend Quality", "status": "PASSED", "score": 96, "critical": 0, "high": 0, "medium": 0, "low": 0, "findings": ["React component structure adheres to clean layout standards."], "recommendation": "Use React.memo on high-frequency renders."},
-        {"id": 4, "name": "04 Backend Quality", "status": "PASSED", "score": 98, "critical": 0, "high": 0, "medium": 0, "low": 0, "findings": ["FastAPI Pydantic schemas enforce type safety."], "recommendation": "Add async middleware loggers."},
-        {"id": 5, "name": "05 Database Quality", "status": "PASSED", "score": 95, "critical": 0, "high": 0, "medium": 0, "low": 1, "findings": ["Schema migrations and indexes properly configured."], "recommendation": "Ensure composite indexes on user foreign keys."},
-        {"id": 6, "name": "06 API Validation", "status": "PASSED", "score": 97, "critical": 0, "high": 0, "medium": 0, "low": 0, "findings": ["REST route status codes adhere to HTTP specs."], "recommendation": "Return standard error envelopes."},
-        {"id": 7, "name": "07 Code Quality", "status": "PASSED", "score": 98, "critical": 0, "high": 0, "medium": 0, "low": 0, "findings": ["Clean AST compliance without dead code."], "recommendation": "Keep helper modules focused."},
-        {"id": 8, "name": "08 Security Audit", "status": "PASSED", "score": 97, "critical": 0, "high": 0, "medium": 1, "low": 2, "findings": ["JWT authentication validated. Rate limiting recommended on login."], "recommendation": "Add slowapi rate limiter to authentication endpoints."},
-        {"id": 9, "name": "09 Dependency Audit", "status": "PASSED", "score": 94, "critical": 0, "high": 0, "medium": 0, "low": 1, "findings": ["No CVE vulnerabilities found in requirements.txt."], "recommendation": "Pin sub-dependency minor versions."},
-        {"id": 10, "name": "10 Test Coverage", "status": "PASSED", "score": 94, "critical": 0, "high": 0, "medium": 0, "low": 0, "findings": ["94% line coverage across pytest suites."], "recommendation": "Add edge-case tests for order cancellation."},
-        {"id": 11, "name": "11 Automated Tests", "status": "PASSED", "score": 100, "critical": 0, "high": 0, "medium": 0, "low": 0, "findings": ["48/48 automated empirical tests passed."], "recommendation": "Execute regression suite on every commit."},
-        {"id": 12, "name": "12 Performance", "status": "PASSED", "score": 92, "critical": 0, "high": 0, "medium": 0, "low": 1, "findings": ["Sub-50ms API response latency achieved."], "recommendation": "Implement Redis caching for static product catalogs."},
-        {"id": 13, "name": "13 Error Handling", "status": "PASSED", "score": 96, "critical": 0, "high": 0, "medium": 0, "low": 0, "findings": ["Custom HTTP error handlers handle invalid payloads."], "recommendation": "Capture exception traces in telemetry."},
-        {"id": 14, "name": "14 Documentation", "status": "PASSED", "score": 97, "critical": 0, "high": 0, "medium": 0, "low": 0, "findings": ["OpenAPI specs and README generated."], "recommendation": "Include Docker deployment commands in README."},
-        {"id": 15, "name": "15 Project Structure", "status": "PASSED", "score": 98, "critical": 0, "high": 0, "medium": 0, "low": 0, "findings": ["Standard separation of concerns (src, main.py, tests)."], "recommendation": "Maintain directory structure."}
-    ]
-
+    v, r = ev["verification"], ev["integration"]
+    # No score without the core evidence: a README alone must not read as "100% excellent".
+    pass_rate = summ["pass_rate"] if v is not None else None
+    status = ("not_evaluated" if pass_rate is None else "excellent" if pass_rate >= 90 else "good" if pass_rate >= 75
+              else "needs_improvement" if pass_rate >= 60 else "poor")
+    auth_findings = [f for f in (r.findings if r else []) if f.rule == "auth_mismatch" and f.status in evidence.OPEN]
+    sec_check = next((c for c in (v.checks if v else []) if c.name == "security_static"), None)
+    recommendations = [{"priority": "HIGH" if g["status"] in ("FAILED", "BLOCKED") else "MEDIUM", "title": g["name"][3:],
+                        "description": f"{g['findings'][0]} - {g['recommendation']}"}
+                       for g in gates if g["status"] in ("FAILED", "BLOCKED", "WARNING")]
+    if v is None:
+        recommendations.append({"priority": "HIGH", "title": "Verify the project", "description":
+                                "No Execution Guardian verification is recorded: run one so the checks are evidence."})
+    if r is None:
+        recommendations.append({"priority": "MEDIUM", "title": "Check component compatibility", "description":
+                                "No Integration Engine run is recorded: register or derive a contract and run Verify."})
+    contract_counts = (r.test_execution or {}).get("counts", {}) if r else {}
+    contract_ran = bool(r and r.tests and (r.test_execution or {}).get("status") in ("PASSED", "FAILED"))
     return {
         "project_id": generation_id,
         "project_name": target_dir.name,
-        "overall_score": overall_score,
-        "status": classification,
+        "overall_score": pass_rate,              # None when no gate was evaluated
+        "score_basis": "percentage of evaluated quality gates that passed (gates not evaluated are excluded); no score until an Execution Guardian verification exists",
+        "status": status,
         "categories": {
-            "code_quality": float(getattr(eval_res.scores, "code_quality", 98.0)),
-            "architecture": float(getattr(eval_res.scores, "architecture", 95.0)),
-            "security": float(getattr(eval_res.scores, "security", 97.0)),
-            "performance": float(getattr(eval_res.scores, "performance", 92.0)),
-            "testing": float(getattr(eval_res.scores, "tests", 100.0)),
-            "maintainability": float(getattr(eval_res.scores, "code_correctness", 96.0))
+            "code_quality": area("Python Syntax", "Code-Quality Gate"),
+            "api_compatibility": area("API Contract Compatibility"),
+            "database": area("Database Compatibility"),
+            "security": area("Static Security Scan"),
+            "build_and_startup": area("Python Dependency Install", "Backend Startup", "Frontend Dependency Install",
+                                      "Frontend Build"),
+            "testing": area("Python Tests", "Frontend Tests"),
+            "documentation": area("Documentation"),
+            "performance": None,
         },
-
         "quality_gates": gates,
-        "passed_gates_count": 15,
-        "total_gates_count": 15,
-        "tests": {
-            "total": int(getattr(eval_res.test_results, "total_tests", getattr(eval_res.test_results, "total", 48))),
-            "passed": int(getattr(eval_res.test_results, "tests_passed", getattr(eval_res.test_results, "passed", 48))),
-            "failed": int(getattr(eval_res.test_results, "tests_failed", getattr(eval_res.test_results, "failed", 0))),
-            "skipped": int(getattr(eval_res.test_results, "skipped", 0)),
-            "coverage": 94
-        },
-
-        "test_breakdown": {
-            "unit": {"passed": 32, "total": 32},
-            "integration": {"passed": 10, "total": 10},
-            "api": {"passed": 6, "total": 6},
-            "security": {"passed": 5, "total": 5}
-        },
+        "passed_gates_count": summ["passed"],
+        "evaluated_gates_count": summ["evaluated"],
+        "total_gates_count": summ["total"],
+        "tests": tests,
+        "test_breakdown": {k: x for k, x in {
+            "project tests": {"passed": tests["passed"], "total": tests["total"]} if tests else None,
+            "contract tests": {"passed": contract_counts.get("passed", 0), "total": len(r.tests)} if contract_ran else None,
+        }.items() if x},
         "security": {
-            "critical": 0,
-            "high": 0,
-            "medium": 1,
-            "low": 2,
-            "checks": {
-                "authentication": "PASSED",
-                "authorization": "PASSED",
-                "input_validation": "PASSED",
-                "api_security": "PASSED",
-                "secrets_detection": "PASSED",
-                "dependency_vulnerabilities": "WARNING",
-                "injection_protection": "PASSED",
-                "cors_configuration": "PASSED"
-            }
+            "critical": None, "high": None, "medium": None, "low": None,
+            "checks": {k: x for k, x in {
+                "static_scan (Bandit)": ({"PASSED": "PASSED", "FAILED": "WARNING"}.get(sec_check.status, sec_check.status)
+                                         if sec_check else None),
+                "auth_matches_contract": ("FAILED" if auth_findings else "PASSED") if r else None,
+            }.items() if x},
         },
-        "performance": {
-            "api_latency_ms": 42,
-            "average_response_ms": 38,
-            "slowest_endpoint_ms": 87,
-            "memory_mb": 184,
-            "build_time_seconds": 21.4
-        },
-        "reviewer_findings": [
-            {"severity": "INFO", "message": "Architecture follows recommended clean service patterns."},
-            {"severity": "INFO", "message": "Frontend components are appropriately separated by domain view."},
-            {"severity": "INFO", "message": "REST API route structure is consistent and predictable."},
-            {"severity": "MEDIUM", "message": "Improve payload validation on POST /orders endpoint."},
-            {"severity": "LOW", "message": "Add centralized error handling middleware."}
-        ],
+        "performance": {},
+        "reviewer_findings": [],
         "testing_findings": {
-            "status": "PASS" if getattr(eval_res.test_results, "tests_failed", getattr(eval_res.test_results, "failed", 0)) == 0 else "FAIL",
-            "tests_generated": getattr(eval_res.test_results, "total_tests", getattr(eval_res.test_results, "total", 48)),
-            "tests_executed": getattr(eval_res.test_results, "total_tests", getattr(eval_res.test_results, "total", 48)),
-            "tests_passed": getattr(eval_res.test_results, "tests_passed", getattr(eval_res.test_results, "passed", 48)),
-            "tests_failed": getattr(eval_res.test_results, "tests_failed", getattr(eval_res.test_results, "failed", 0)),
-            "failed_tests": eval_res.remaining_errors
+            "status": "NOT_RUN" if tests is None else "FAIL" if tests["failed"] else "PASS",
+            "tests_generated": None,
+            "tests_executed": tests["total"] if tests else None,
+            "tests_passed": tests["passed"] if tests else None,
+            "tests_failed": tests["failed"] if tests else None,
+            "failed_tests": tests["failing_tests"] if tests else [],
         },
-
-        "recommendations": [
-            {"priority": "HIGH", "title": "Rate Limiting", "description": "Add slowapi rate limiting to authentication endpoints to prevent brute-force attempts."},
-            {"priority": "MEDIUM", "title": "Input Validation", "description": "Improve API request payload validation on order creation routes."},
-            {"priority": "LOW", "title": "Dependency Updates", "description": "Update minor versions of secondary dependencies in requirements.txt."}
-        ]
+        "recommendations": recommendations,
+        "evidence": {
+            "verification": {"id": v.id, "status": v.status, "source": v.source, "finished_at": v.finished_at} if v else None,
+            "integration_run": {"id": r.id, "status": r.status, "kind": r.kind, "finished_at": r.finished_at} if r else None,
+        },
     }
-

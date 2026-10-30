@@ -1,15 +1,23 @@
 import React from 'react';
-import { FaCode, FaSitemap, FaShieldAlt, FaTachometerAlt, FaVial, FaCogs } from 'react-icons/fa';
+import { FaCode, FaSitemap, FaShieldAlt, FaTachometerAlt, FaVial, FaCogs, FaDatabase, FaBook } from 'react-icons/fa';
 
+const META = {
+  code_quality: { label: 'Code Quality', icon: <FaCode className="text-cyan-400" />, desc: 'Python syntax and the code-quality gate (ruff, imports, oxlint)' },
+  api_compatibility: { label: 'API Compatibility', icon: <FaSitemap className="text-indigo-400" />, desc: 'Frontend and backend against the shared contract (Integration Engine)' },
+  database: { label: 'Database', icon: <FaDatabase className="text-sky-400" />, desc: 'Schema and models against the contract (Integration Engine)' },
+  security: { label: 'Security', icon: <FaShieldAlt className="text-emerald-400" />, desc: 'Static security scan (Bandit) from the Execution Guardian' },
+  build_and_startup: { label: 'Build & Startup', icon: <FaCogs className="text-blue-400" />, desc: 'Dependency install, backend startup and frontend build' },
+  testing: { label: 'Testing', icon: <FaVial className="text-purple-400" />, desc: "The project's own tests, run in isolation" },
+  documentation: { label: 'Documentation', icon: <FaBook className="text-teal-400" />, desc: 'A README that explains setup and running' },
+  performance: { label: 'Performance', icon: <FaTachometerAlt className="text-amber-400" />, desc: 'Not measured in this report' },
+};
+
+/** Each category is the share of its evaluated checks that passed; a category nothing evaluated says so. */
 export default function CategoryScores({ categories = {} }) {
-  const items = [
-    { key: 'code_quality', label: 'Code Quality', score: categories.code_quality ?? 98, icon: <FaCode className="text-cyan-400" />, desc: 'AST static compliance & syntax cleanliness' },
-    { key: 'architecture', label: 'Architecture', score: categories.architecture ?? 95, icon: <FaSitemap className="text-indigo-400" />, desc: 'Layered component decoupling & OpenAPI routes' },
-    { key: 'security', label: 'Security', score: categories.security ?? 97, icon: <FaShieldAlt className="text-emerald-400" />, desc: 'JWT authentication, SAST & secret protection' },
-    { key: 'performance', label: 'Performance', score: categories.performance ?? 92, icon: <FaTachometerAlt className="text-amber-400" />, desc: 'Sub-50ms endpoint latency & bundle efficiency' },
-    { key: 'testing', label: 'Testing', score: categories.testing ?? 100, icon: <FaVial className="text-purple-400" />, desc: 'Automated pytest assertions & line coverage' },
-    { key: 'maintainability', label: 'Maintainability', score: categories.maintainability ?? 96, icon: <FaCogs className="text-blue-400" />, desc: 'Modular design, clear documentation & typed models' }
-  ];
+  const items = Object.entries(categories).map(([key, score]) => ({
+    key, score, ...(META[key] || { label: key.replace(/_/g, ' '), icon: <FaCogs className="text-slate-400" />, desc: '' }),
+  }));
+  if (!items.length) return <p className="text-xs text-slate-500">No category could be evaluated.</p>;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 font-sans">
@@ -23,7 +31,9 @@ export default function CategoryScores({ categories = {} }) {
               <h4 className="text-sm font-extrabold text-white">{it.label}</h4>
             </div>
             <span className="font-mono font-extrabold text-white text-base bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
-              {it.score} <span className="text-xs text-slate-500 font-normal">/ 100</span>
+              {it.score == null
+                ? <span className="text-xs font-normal text-slate-500">Not evaluated</span>
+                : <>{it.score} <span className="text-xs text-slate-500 font-normal">%</span></>}
             </span>
           </div>
           <p className="text-xs text-slate-400 leading-relaxed">{it.desc}</p>

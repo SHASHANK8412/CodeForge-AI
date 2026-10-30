@@ -80,7 +80,7 @@ class InfrastructureService:
             return global_local_infra_provider.estimate_cost(project_id)
         return global_aws_provider.estimate_cost(project_id)
 
-    def approve(self, plan: TerraformPlan, user_approved: bool = True) -> Dict[str, Any]:
+    def approve(self, plan: TerraformPlan, user_approved: bool = False) -> Dict[str, Any]:
         sec = self.security_scan()
         eval_res = global_policy_engine.evaluate(plan, sec, environment=plan.environment, user_approved=user_approved)
         return eval_res
@@ -89,7 +89,7 @@ class InfrastructureService:
         self,
         project_id: str = "aiforge-demo",
         environment: str = "production",
-        user_approved: bool = True,
+        user_approved: bool = False,
         simulate_destructive: bool = False
     ) -> Dict[str, Any]:
         plan_obj = self.plan(project_id=project_id, environment=environment, simulate_destructive=simulate_destructive)
@@ -104,21 +104,22 @@ class InfrastructureService:
             }
 
         success, msg = global_terraform_executor.apply_plan(plan_obj, policy_allowed=True)
-        return {"success": success, "status": "LIVE" if success else "FAILED", "message": msg, "plan": plan_obj.dict()}
+        return {"success": False, "status": "NOT_APPLIED", "simulated": True, "message": msg, "plan": plan_obj.dict()}
 
     def verify(self, project_id: str = "aiforge-demo") -> Dict[str, Any]:
-        return {"status": "VERIFIED", "network": "HEALTHY", "compute": "HEALTHY", "database": "HEALTHY", "redis": "HEALTHY"}
+        return {"status": "NOT_VERIFIED", "network": "UNKNOWN", "compute": "UNKNOWN", "database": "UNKNOWN", "redis": "UNKNOWN",
+                "note": "Nothing was provisioned, so there is nothing to verify. Terraform is not executed by AIForge: plans are generated from templates and checked by the policy engine and the security analyzer, but nothing is applied to a cloud account."}
 
     def destroy(self, project_id: str = "aiforge-demo", user_approved: bool = False) -> Dict[str, Any]:
         if not user_approved:
             return {"success": False, "status": "BLOCKED", "reason": "Destructive infrastructure destroy requires explicit user approval."}
-        return {"success": True, "status": "DESTROYED", "message": f"Infrastructure for '{project_id}' destroyed."}
+        return {"success": False, "status": "NOT_EXECUTED", "message": f"Not destroyed: nothing was provisioned for '{project_id}', and running terraform destroy is not implemented."}
 
     def rollback(self, project_id: str = "aiforge-demo") -> Dict[str, Any]:
         success, msg = global_terraform_executor.rollback_infrastructure(project_id)
         return {"success": success, "message": msg}
 
-    def detect_drift(self, project_id: str = "aiforge-demo", simulate_drift: bool = True) -> DriftResult:
+    def detect_drift(self, project_id: str = "aiforge-demo", simulate_drift: bool = False) -> DriftResult:
         return global_drift_analyzer.detect_drift(project_id=project_id, simulate_drift=simulate_drift)
 
     def generate_adr_015(self, project_id: str = "aiforge-demo") -> Dict[str, Any]:
@@ -143,13 +144,13 @@ We choose Terraform-managed AWS RDS PostgreSQL and ElastiCache Redis over self-h
             plan = self.plan(project_id=project_id, simulate_destructive=False)
             return {"query": query, "answer": f"Zero destructive changes detected in current Terraform plan (Destroy: {plan.to_destroy_count})."}
         elif "drift" in q_lower:
-            d = self.detect_drift(project_id=project_id, simulate_drift=True)
-            return {"query": query, "answer": f"DRIFT DETECTED: {d.resource_name} ({d.expected} vs {d.actual}). Cause: {d.potential_cause}"}
+            d = self.detect_drift(project_id=project_id)
+            return {"query": query, "answer": d.potential_cause}
         elif "cost" in q_lower or "how much" in q_lower:
             c = self.estimate(project_id=project_id)
             return {"query": query, "answer": f"Estimated monthly infrastructure cost: ${c.monthly_total_usd}/month ({c.label})."}
         else:
-            return {"query": query, "answer": "Infrastructure is provisioned using Terraform on AWS (Private VPC, Managed RDS, ElastiCache Redis)."}
+            return {"query": query, "answer": "Terraform is not executed by AIForge: plans are generated from templates and checked by the policy engine and the security analyzer, but nothing is applied to a cloud account. The generated plan targets AWS (private VPC, managed RDS, ElastiCache Redis)."}
 
 
 global_infrastructure_service = InfrastructureService()

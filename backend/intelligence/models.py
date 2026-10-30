@@ -113,14 +113,15 @@ class SoftwareAssistantResponse(BaseModel):
 # --- Production Readiness Autonomous CTO Gate ---
 class ReadinessDimension(BaseModel):
     name: str  # Security, Architecture, Testing, Performance, Database, Documentation
-    score: float
-    status: str  # PASS, WARN, FAIL
+    score: Optional[float] = None  # share of its evaluated checks that passed; None when not evaluated
+    status: str  # PASS, WARN, FAIL, NOT_EVALUATED
     blocking_issue: Optional[str] = None
 
 
 class CtoGateReport(BaseModel):
     project_id: str
-    overall_score: float
-    decision: str  # APPROVED or BLOCKED
+    overall_score: Optional[float] = None  # mean of the evaluated dimensions; None when none was evaluated
+    decision: str  # APPROVED, BLOCKED, or APPROVED_BY_OVERRIDE (a recorded human decision; scores unchanged)
     blocking_issues: List[str] = Field(default_factory=list)
     dimensions: List[ReadinessDimension]
+    override: Optional[Dict[str, Any]] = None  # who overrode, why, when

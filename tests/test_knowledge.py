@@ -116,12 +116,26 @@ def test_evolution_report(tmp_path):
     from backend.knowledge.memory.evolution_report import EvolutionReportGenerator
     db_file = tmp_path / "knowledge.db"
     
-    rep = EvolutionReportGenerator(db_path=str(db_file))
-    data = rep.generate_report()
-    
-    assert data["total_projects"] == 20
-    assert data["average_review_score"] == 96.2
+    # An empty memory reports nothing it does not have (these used to be the constants 20 and 96.2).
+    data = EvolutionReportGenerator(db_path=str(db_file)).generate_report()
+    assert data["total_projects"] == 0 and data["most_common_bugs"] == []
+    assert data["average_review_score"] is None and data["test_pass_rate"] is None
     assert (tmp_path / "reports" / "self_evolution_report.md").exists()
+
+    # With recorded projects and bugs, the report counts them.
+    import sqlite3
+    with sqlite3.connect(str(db_file)) as con:
+        con.execute("CREATE TABLE projects (frontend TEXT, backend TEXT, database_name TEXT)")
+        con.execute("CREATE TABLE bugs (category TEXT, description TEXT)")
+        con.execute("CREATE TABLE lessons (worked TEXT, failed TEXT)")
+        con.executemany("INSERT INTO projects VALUES (?, ?, ?)", [("React", "FastAPI", "SQLite")] * 2 + [("Vue", "Express", None)])
+        con.executemany("INSERT INTO bugs VALUES (?, ?)", [("auth", "x"), ("auth", "y"), ("sql", "z")])
+        con.execute("INSERT INTO lessons VALUES ('fast', 'skipped migrations')")
+    data = EvolutionReportGenerator(db_path=str(db_file)).generate_report()
+    assert data["total_projects"] == 3 and data["most_common_architecture"] == "React + FastAPI + SQLite"
+    assert data["most_common_bugs"][0] == {"bug": "auth", "count": 2}
+    assert data["recommendations"] == ["Avoid: skipped migrations"]
+    assert "not recorded" in (tmp_path / "reports" / "self_evolution_report.md").read_text(encoding="utf-8")
 
 
 def test_semantic_query(tmp_path):

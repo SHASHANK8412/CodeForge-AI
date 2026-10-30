@@ -22,9 +22,9 @@ export default function KnowledgeBaseDashboard() {
           .then((data) => {
             if (data && data.total_chunks) {
               setStats({
-                documents_indexed: data.unique_documents || 7,
-                total_chunks: data.total_chunks || 28,
-                embeddings_generated: data.total_chunks || 28,
+                documents_indexed: data.unique_documents ?? 0,
+                total_chunks: data.total_chunks,
+                embeddings_generated: data.total_chunks,
                 last_updated: data.last_updated ? new Date(data.last_updated * 1000).toLocaleTimeString() : 'Just now',
                 collection_name: data.collection_name || 'aiforge_knowledge'
               });

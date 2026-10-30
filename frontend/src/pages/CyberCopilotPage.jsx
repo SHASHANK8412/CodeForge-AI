@@ -73,7 +73,7 @@ export default function CyberCopilotPage({ setView, activeProjectId = "aiforge-f
         toast.success(res.message, { icon: "🛡️" });
         setOverview((prev) => ({
           ...prev,
-          security_posture_score: res.new_security_score || 94
+          security_posture_score: res.new_security_score ?? prev.security_posture_score
         }));
         // Update local status
         setSelectedIncident((prev) => ({
@@ -124,10 +124,10 @@ export default function CyberCopilotPage({ setView, activeProjectId = "aiforge-f
         {/* Global Security Metrics */}
         <div className="flex items-center gap-2 font-mono text-xs">
           <span className="px-3 py-1.5 bg-[#151821] border border-gray-800 rounded-xl text-emerald-400 font-bold">
-            Posture: {overview?.security_posture_score || 88}/100
+            Posture: {overview?.security_posture_score ?? '—'}/100
           </span>
           <span className="px-3 py-1.5 bg-[#151821] border border-gray-800 rounded-xl text-rose-400 font-bold">
-            {overview?.critical_threats_count || 1} Critical Alert
+            {overview?.critical_threats_count ?? 0} Critical Alert
           </span>
         </div>
       </div>

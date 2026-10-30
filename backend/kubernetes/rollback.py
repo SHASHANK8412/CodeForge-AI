@@ -22,32 +22,14 @@ class KubernetesRollbackEngine:
         project_id: str = "aiforge-demo",
         target_version: Optional[str] = None
     ) -> K8sRollbackResult:
-        _logger.info(f"[K8sRollback] Initiating rollback for project '{project_id}'")
-
-        # Verify previous version exists
-        prev_version = target_version or "v1.4"
-        curr_version = "v1.5"
-
-        _logger.info(f"[K8sRollback] Rolling back deployment from '{curr_version}' to '{prev_version}'")
-
-        # Record Flight Recorder Audit Event
-        try:
-            from backend.data.flight_recorder import global_flight_recorder
-            global_flight_recorder.record_event(
-                project_id=project_id,
-                system="KubernetesRollback",
-                event_type="k8s_rollback_executed",
-                details={"from_version": curr_version, "to_version": prev_version}
-            )
-        except Exception:
-            pass
-
+        # No cluster call is implemented, so nothing is rolled back and no audit event claims otherwise.
         return K8sRollbackResult(
-            success=True,
+            success=False,
             project_id=project_id,
-            previous_version=curr_version,
-            target_version=prev_version,
-            message=f"Successfully rolled back project '{project_id}' from {curr_version} to {prev_version}."
+            previous_version=None,
+            target_version=target_version,
+            status="NOT_EXECUTED",
+            message="Not rolled back: Kubernetes rollbacks are not implemented (no deployment was ever applied)."
         )
 
 

@@ -25,7 +25,7 @@ export default function EvaluationCenter() {
   }
 
   const dataset = data.dataset || [];
-  const score = data.overall_score || 93.2;
+  const score = data.overall_score ?? '—';
   const metrics = data.metrics || {};
   const regression = data.regression || {};
   const agentEval = data.agent_evaluations || {};

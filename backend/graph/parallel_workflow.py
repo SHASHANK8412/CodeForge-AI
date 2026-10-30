@@ -690,21 +690,27 @@ async def reviewer_node(state: ProjectState) -> dict:
     agent_timers["reviewer"] = timer.elapsed
     workflow_profiler.record_agent_time("reviewer", timer.elapsed)
 
-    # Real, if simple, computed score: start at 100 and deduct for actually-detected
-    # duplicates and for severity tags the reviewer itself raised in its findings.
-    # This is a heuristic, not a precise metric — it replaces a flat hardcoded 95.0.
-    score = 100.0
-    score -= duplicate_report.get("duplicate_count", 0) * 5
-    score -= review_output.count("[Critical]") * 10
-    score -= review_output.count("[Major]") * 5
-    score -= review_output.count("[Minor]") * 2
-    score = max(0.0, min(100.0, score))
+    # The review's own findings, checked against the project's files (a finding about a file that does not exist
+    # is unverified and does not count). The score is a deterministic deduction from the verified findings and the
+    # duplicate scan - not the model's self-reported number. Unparseable output is NOT_REVIEWED, with no score.
+    parsed = reviewer_agent.validate_review(reviewer_agent.parse_review_json(review_output), state.get("files") or {})
+    reviewed = parsed.get("overall_status") != "NOT_REVIEWED"
+    score = None
+    if reviewed:
+        penalty = {"CRITICAL": 15, "HIGH": 10, "MEDIUM": 5, "LOW": 2}
+        score = 100.0 - duplicate_report.get("duplicate_count", 0) * 5
+        score -= sum(penalty.get(str(f.get("severity", "")).upper(), 0) for f in parsed["findings"])
+        score = round(max(0.0, min(100.0, score)), 1)
 
     _fire_lifecycle("agent_completed", "reviewer", duration=timer.elapsed)
     return {
-        "review": {"review_text": review_output, "score": round(score, 1)},
+        "review": {"review_text": review_output, "score": score,
+                   "status": "REVIEWED" if reviewed else "NOT_REVIEWED", "findings": parsed["findings"],
+                   "unverified_findings": parsed.get("unverified_findings", []),
+                   "score_basis": "100 minus deductions for verified findings (critical 15, high 10, medium 5, low 2) and duplicates (5 each)",
+                   **({"error": parsed["error"]} if parsed.get("error") else {})},
         "current_step": "reviewer",
-        "stream_events": ["✔ Code Review completed"]
+        "stream_events": ["✔ Code Review completed" if reviewed else "⚠ Code review output could not be read: not reviewed"]
     }
 
 

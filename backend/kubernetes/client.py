@@ -48,7 +48,8 @@ class KubernetesClientWrapper:
             self.core_api = MockK8sCoreV1Api()
 
     def is_connected(self) -> bool:
-        return True
+        """True only when the real Kubernetes API client loaded (a kubeconfig or in-cluster config was found)."""
+        return not isinstance(self.core_api, MockK8sCoreV1Api)
 
 
 def get_k8s_client(kubeconfig_path: Optional[str] = None) -> KubernetesClientWrapper:

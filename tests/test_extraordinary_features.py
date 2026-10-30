@@ -60,12 +60,19 @@ class TestExtraordinaryFeatures:
         assert len(res.relevant_files) >= 1
 
     def test_cto_gate_evaluation(self):
+        # proj_demo has no recorded verification or integration run: nothing can be approved on evidence
         report = global_cto_gate.evaluate("proj_demo")
         assert report.decision == "BLOCKED"
         assert len(report.dimensions) == 6
+        assert all(d.status == "NOT_EVALUATED" and d.score is None for d in report.dimensions)
+        assert report.overall_score is None and any("was not evaluated" in b for b in report.blocking_issues)
 
-        override = global_cto_gate.override_or_fix("proj_demo")
-        assert override.decision == "APPROVED"
+        # an override is a recorded decision; it never raises a score or clears a blocking issue
+        override = global_cto_gate.override("proj_demo", "alice", "demo release approved by the lead")
+        assert override.decision == "APPROVED_BY_OVERRIDE"
+        assert override.override["by"] == "alice" and override.override["reason"] == "demo release approved by the lead"
+        assert [d.model_dump() for d in override.dimensions] == [d.model_dump() for d in report.dimensions]
+        assert override.blocking_issues == report.blocking_issues and override.overall_score == report.overall_score
 
     def test_api_endpoints(self, app_client):
         # Simulator API

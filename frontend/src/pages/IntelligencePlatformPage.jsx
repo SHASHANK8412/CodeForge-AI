@@ -61,7 +61,7 @@ export default function IntelligencePlatformPage({ setView, activeProjectId = "a
         {/* Global Quality Score */}
         <div className="flex items-center gap-3 font-mono text-xs">
           <span className="px-3 py-1.5 bg-[#151821] border border-gray-800 rounded-xl text-emerald-400 font-bold">
-            Quality: {data?.scorecard?.overall_quality_score || 96.2}%
+            Quality: {data?.scorecard?.overall_quality_score ?? '—'}%
           </span>
           <button
             onClick={handleSaveReport}
@@ -78,19 +78,19 @@ export default function IntelligencePlatformPage({ setView, activeProjectId = "a
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <div className="p-4 rounded-2xl bg-[#0F1117] border border-[#242833] space-y-1 text-center">
             <span className="text-[10px] font-mono text-gray-400 uppercase font-bold">Overall Quality</span>
-            <div className="text-xl font-extrabold text-emerald-400">{data?.scorecard?.overall_quality_score || 96.2}%</div>
+            <div className="text-xl font-extrabold text-emerald-400">{data?.scorecard?.overall_quality_score ?? '—'}%</div>
           </div>
           <div className="p-4 rounded-2xl bg-[#0F1117] border border-[#242833] space-y-1 text-center">
             <span className="text-[10px] font-mono text-gray-400 uppercase font-bold">RAG Groundedness</span>
-            <div className="text-xl font-extrabold text-cyan-400">{data?.scorecard?.groundedness_score || 96.8}%</div>
+            <div className="text-xl font-extrabold text-cyan-400">{data?.scorecard?.groundedness_score ?? '—'}%</div>
           </div>
           <div className="p-4 rounded-2xl bg-[#0F1117] border border-[#242833] space-y-1 text-center">
             <span className="text-[10px] font-mono text-gray-400 uppercase font-bold">Safety Compliance</span>
-            <div className="text-xl font-extrabold text-rose-400">{data?.scorecard?.safety_compliance_score || 99.1}%</div>
+            <div className="text-xl font-extrabold text-rose-400">{data?.scorecard?.safety_compliance_score ?? '—'}%</div>
           </div>
           <div className="p-4 rounded-2xl bg-[#0F1117] border border-[#242833] space-y-1 text-center">
             <span className="text-[10px] font-mono text-gray-400 uppercase font-bold">Verification Rate</span>
-            <div className="text-xl font-extrabold text-amber-400">{data?.scorecard?.verification_rate || 98.0}%</div>
+            <div className="text-xl font-extrabold text-amber-400">{data?.scorecard?.verification_rate ?? '—'}%</div>
           </div>
           <div className="p-4 rounded-2xl bg-[#0F1117] border border-[#242833] space-y-1 text-center">
             <span className="text-[10px] font-mono text-gray-400 uppercase font-bold">Avg Latency</span>

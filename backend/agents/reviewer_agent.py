@@ -25,31 +25,21 @@ class ReviewerAgent(BaseAgent):
 You are an expert Senior Software Security & Quality Engineer performing code review.
 Inspect the generated full-stack code for requirements, architecture, code quality, security, testing, performance, and documentation.
 
-Output MUST be valid JSON in this EXACT structure:
+Output ONLY valid JSON with this schema (the angle-bracket parts describe what to write; never copy them):
 {
-  "overall_score": 91,
+  "overall_score": <integer 0-100 from your own assessment of THIS code>,
   "gates": {
-    "requirements": {"status": "PASS", "score": 95},
-    "architecture": {"status": "PASS", "score": 92},
-    "code_quality": {"status": "PASS", "score": 93},
-    "security": {"status": "WARN", "score": 84},
-    "testing": {"status": "PASS", "score": 90},
-    "performance": {"status": "PASS", "score": 95},
-    "documentation": {"status": "PASS", "score": 88}
+    "<requirements|architecture|code_quality|security|testing|performance|documentation>":
+      {"status": "<PASS|WARN|FAIL>", "score": <integer 0-100>}
   },
   "findings": [
-    {
-      "id": "finding_101",
-      "severity": "HIGH",
-      "category": "SECURITY",
-      "file": "backend/routes/auth.py",
-      "line": 42,
-      "message": "Authentication input is not validated",
-      "suggested_fix": "Validate request schema before processing",
-      "blocking": true
-    }
+    {"id": "<unique id>", "severity": "<CRITICAL|HIGH|MEDIUM|LOW>",
+     "category": "<SECURITY|CODE_QUALITY|ARCHITECTURE|TESTING|PERFORMANCE|DOCUMENTATION|REQUIREMENTS>",
+     "file": "<a path that exists in the code you were given>", "line": <line number in that file>,
+     "message": "<the problem you actually found>", "suggested_fix": "<how to fix it>", "blocking": <true|false>}
   ]
 }
+Report only problems you can point to in the code you were given. An empty findings list is fine.
 """,
             task_name="reviewer",
         )
@@ -135,25 +125,41 @@ Output MUST be valid JSON in this EXACT structure:
                             "blocking": sev in ("CRITICAL", "HIGH")
                         })
                     return {
-                        "overall_score": data.get("score", 85.0),
-                        "overall_status": data.get("status", "PASS"),
-                        "gates": {
-                            "code_quality": {"status": data.get("status", "PASS"), "score": data.get("score", 85.0)}
-                        },
+                        "overall_score": data.get("score"),
+                        "overall_status": data.get("status", "UNKNOWN"),
+                        "gates": {"code_quality": {"status": data.get("status", "UNKNOWN"), "score": data.get("score")}}
+                        if data.get("status") else {},
                         "findings": findings
                     }
         except Exception:
             pass
 
-        return {
-            "overall_score": 85.0,
-            "overall_status": "PASS",
-            "gates": {
-                "requirements": {"status": "PASS", "score": 90.0},
-                "code_quality": {"status": "PASS", "score": 85.0}
-            },
-            "findings": []
-        }
+        # No review could be read: nothing was reviewed, and nothing is reported as passing.
+        return {"overall_score": None, "overall_status": "NOT_REVIEWED", "gates": {}, "findings": [],
+                "error": "the reviewer's output could not be parsed as a review"}
+
+    @staticmethod
+    def validate_review(data: Dict[str, Any], files: Dict[str, str]) -> Dict[str, Any]:
+        """Check a parsed review against the real files: a finding whose file is not in the project is marked
+        unverified (and never blocking), and a review that only repeats the old prompt example is not a review."""
+        known = {p.replace("\\", "/") for p in (files or {})}
+        findings, unverified = [], []
+        for f in data.get("findings") or []:
+            if not isinstance(f, dict):
+                continue
+            path = str(f.get("file") or "").replace("\\", "/").removeprefix("./")
+            if known and path not in known:
+                unverified.append({**f, "blocking": False, "verified": False,
+                                   "note": "the file this finding names is not in the project"})
+            else:
+                findings.append({**f, "verified": bool(known)})
+        out = {**data, "findings": findings, "unverified_findings": unverified}
+        copied = any(f.get("message") == "Authentication input is not validated" and f.get("file") == "backend/routes/auth.py"
+                     for f in data.get("findings") or [] if isinstance(f, dict))
+        if copied and "backend/routes/auth.py" not in known:
+            out.update({"overall_status": "NOT_REVIEWED", "overall_score": None,
+                        "error": "the review repeats a prompt example instead of reviewing this code"})
+        return out
 
     async def run_async(self, user_prompt: str, memory_context: str = "", previous_output: str = "") -> str:
         review_prompt = f"""

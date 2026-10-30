@@ -618,7 +618,7 @@ class K8sScaleApiRequest(BaseModel):
     component: str = "backend"
     current_replicas: int = 3
     desired_replicas: int = 5
-    user_approved: bool = True
+    user_approved: bool = False   # approval must be given explicitly
     reason: str = "Scaling requested via Dashboard"
 
 
@@ -668,7 +668,7 @@ def infra_overview(project_id: str = "aiforge-demo", environment: str = "product
 class InfraApplyRequest(BaseModel):
     project_id: str = "aiforge-demo"
     environment: str = "production"
-    user_approved: bool = True
+    user_approved: bool = False   # approval must be given explicitly
     simulate_destructive: bool = False
 
 
@@ -684,7 +684,7 @@ def infra_apply(req: InfraApplyRequest):
 
 
 @app.post("/api/infrastructure/drift")
-def infra_drift(project_id: str = "aiforge-demo", simulate_drift: bool = True):
+def infra_drift(project_id: str = "aiforge-demo", simulate_drift: bool = False):
     from backend.infrastructure.service import global_infrastructure_service
     res = global_infrastructure_service.detect_drift(project_id=project_id, simulate_drift=simulate_drift)
     return res.model_dump() if hasattr(res, "model_dump") else res.dict()

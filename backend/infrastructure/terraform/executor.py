@@ -22,22 +22,18 @@ class TerraformExecutor:
         plan: TerraformPlan,
         policy_allowed: bool = True
     ) -> Tuple[bool, str]:
-        self._record_flight_event(plan.project_id, "terraform_apply_started", {"plan_created": plan.created_at})
-
         if not policy_allowed:
-            self._record_flight_event(plan.project_id, "terraform_apply_failed", {"reason": "Policy engine blocked execution"})
-            _logger.error("[TerraformExecutor] Apply BLOCKED by policy engine!")
+            self._record_flight_event(plan.project_id, "terraform_apply_blocked", {"reason": "Policy engine blocked execution"})
             return False, "Infrastructure Apply BLOCKED by Policy Engine. Approval or security clearance required."
-
-        _logger.info(f"[TerraformExecutor] Successfully applied Terraform plan for '{plan.project_id}' ({plan.to_create_count} created, {plan.to_modify_count} modified)")
-        self._record_flight_event(plan.project_id, "terraform_apply_completed", {"status": "LIVE"})
-        return True, f"Infrastructure apply completed successfully. Created {plan.to_create_count} resources, modified {plan.to_modify_count} resources."
+        # The audit trail records what happened: an approved plan that was not applied.
+        self._record_flight_event(plan.project_id, "terraform_apply_not_executed",
+                                  {"to_create": plan.to_create_count, "to_modify": plan.to_modify_count,
+                                   "reason": "terraform is not executed by AIForge"})
+        return False, (f"Not applied: the plan ({plan.to_create_count} to create, {plan.to_modify_count} to modify) was "
+                       "approved by the policy engine, but running terraform apply is not implemented. No resource was created.")
 
     def rollback_infrastructure(self, project_id: str) -> Tuple[bool, str]:
-        self._record_flight_event(project_id, "infrastructure_rollback_started", {})
-        _logger.info(f"[TerraformExecutor] Executed infrastructure rollback for '{project_id}'")
-        self._record_flight_event(project_id, "infrastructure_rollback_completed", {})
-        return True, f"Infrastructure rollback completed for project '{project_id}'."
+        return False, f"Not rolled back: infrastructure rollback is not implemented (nothing was ever applied for '{project_id}')."
 
     def _record_flight_event(self, project_id: str, event_type: str, details: Dict[str, Any]):
         try:
