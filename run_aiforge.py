@@ -17,6 +17,7 @@ from backend.graph.project_state import ProjectState
 from backend.graph.parallel_workflow import parallel_graph
 from backend.exporter.gate import global_export_gate
 from backend.exporter.zipper import global_project_zipper
+from backend.execution.verification_report import build_verification_report, write_report
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -92,6 +93,13 @@ async def run_aiforge_pipeline(
     print("[7/8] Self-Correction...")
     print("[8/8] Verification & Export...")
 
+    # Evidence-backed verification report, written next to the generated code
+    # (and into the ZIP) so anyone can check what was actually executed.
+    verification = build_verification_report(final_state)
+    report_files = write_report(verification, str(proj_path))
+    final_state["files"] = {**(final_state.get("files") or {}), **report_files}
+    final_state["verification"] = verification
+
     # Authoritative Verification & Export Gate Evaluation
     val_res = global_export_gate.validate_state(final_state)
     
@@ -136,6 +144,9 @@ async def run_aiforge_pipeline(
     print(f"Iterations   : {final_state.get('iteration', 1)}/{max_iterations}")
     print(f"Tests        : {test_passed}/{test_total} Passed")
     print(f"Execution    : {exec_status} (exit_code={exec_exit})")
+    print(f"Verification : {verification['status']} (sandbox={verification['sandbox']}, "
+          f"repair attempts={len(verification['repair']['attempts'])}, "
+          f"rolled back={verification['repair']['rolled_back']})")
     print(f"Export       : {export_status_str}")
     if export_path_str:
         print(f"Zip Location : {export_path_str}")
@@ -151,6 +162,7 @@ async def run_aiforge_pipeline(
         "execution_results": exec_res,
         "test_results": test_res,
         "validation_result": val_res.model_dump() if hasattr(val_res, "model_dump") else val_res.dict(),
+        "verification": verification,
         "final_state": final_state
     }
 

@@ -102,7 +102,18 @@ assembly ─► execution_validation ─► testing ─┬─► packaging   (bu
    - only existing, non-test `.py` files can be changed (the model can't "fix" a failure by weakening the tests);
    - every patched file must parse;
    - a patch identical to the current file is dropped.
-4. **patch** writes the change to disk with path-traversal checks, and the loop repeats until green or `max_iterations` (default 3).
+4. **patch** writes the change to disk (absolute paths and path traversal are rejected) and records the attempt with its *before* evidence: per-test outcomes from `pytest -rA` and a failure fingerprint.
+5. After the re-run, **testing** judges the attempt (`backend/execution/repair_policy.py`):
+   - `fixed`: build exits 0 and all tests pass;
+   - `improved`: fewer failures and nothing newly broken;
+   - `regressed`: a previously passing test now fails, or the build broke;
+   - `no_effect`: same failures as before.
+
+   `regressed` and `no_effect` patches are **rolled back** on disk and the pre-patch evidence is restored.
+6. A patch whose hash matches a rolled-back one is never applied again, and the next LLM prompt lists earlier attempts and their outcomes.
+7. The loop ends when everything is green, at `max_iterations`, or after `AIFORGE_REPAIR_STALL_LIMIT` (default 2) consecutive non-improving attempts.
+
+The harness reports per-attempt verdicts (`repair.attempt_verdicts`, kept vs. rolled back). That lets you measure how often LLM patches regress, as well as whether the loop helps overall.
 
 `--llm-repair off` disables step 3's LLM path, so the benchmark can show how much the LLM repair adds over the rules alone.
 

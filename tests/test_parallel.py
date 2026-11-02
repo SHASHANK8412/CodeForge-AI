@@ -16,16 +16,16 @@ class MockAgent:
 
 
 @pytest.mark.anyio
-async def test_parallel_workflow_execution():
+async def test_parallel_workflow_execution(monkeypatch):
     # Setup mocks for parallel workflow nodes
-    parallel_workflow.planner = MockAgent("Planner")
-    parallel_workflow.architect = MockAgent("Architect")
-    parallel_workflow.frontend_agent = MockAgent("Frontend")
-    parallel_workflow.backend_agent = MockAgent("Backend", "backend")
-    parallel_workflow.database_agent = MockAgent("Database", "database")
-    parallel_workflow.testing_agent = MockAgent("Testing")
-    parallel_workflow.documentation_agent = MockAgent("Documentation", "documentation")
-    parallel_workflow.reviewer_agent = MockAgent("Reviewer")
+    monkeypatch.setattr(parallel_workflow, "planner", MockAgent("Planner"))
+    monkeypatch.setattr(parallel_workflow, "architect", MockAgent("Architect"))
+    monkeypatch.setattr(parallel_workflow, "frontend_agent", MockAgent("Frontend"))
+    monkeypatch.setattr(parallel_workflow, "backend_agent", MockAgent("Backend", "backend"))
+    monkeypatch.setattr(parallel_workflow, "database_agent", MockAgent("Database", "database"))
+    monkeypatch.setattr(parallel_workflow, "testing_agent", MockAgent("Testing"))
+    monkeypatch.setattr(parallel_workflow, "documentation_agent", MockAgent("Documentation", "documentation"))
+    monkeypatch.setattr(parallel_workflow, "reviewer_agent", MockAgent("Reviewer"))
 
     # Save original globals to restore them
     orig_generator = parallel_workflow.project_generator

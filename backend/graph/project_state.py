@@ -77,6 +77,9 @@ class ProjectState(TypedDict, total=False):
     # Snapshot of `files` before the first repair; benchmarks grade it to measure repair uplift.
     pre_repair_files: Dict[str, str]
     file_backups: Dict[str, str]
+    # One entry per repair attempt: files, patch hash, before/after evidence, verdict.
+    repair_history: List[Dict[str, Any]]
+    verification: Dict[str, Any]
 
     # Review, GitHub & Assembly Metadata
     review: Dict[str, Any]

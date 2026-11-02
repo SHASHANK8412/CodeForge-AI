@@ -1,4 +1,5 @@
 import logging
+import os
 import json
 import re
 from time import perf_counter
@@ -32,6 +33,7 @@ from backend.review.self_heal import SelfHealOrchestrator
 from backend.utils.timer import Timer
 from backend.graph.profiler import workflow_profiler
 from backend.observability.tracing import global_trace, traced_node
+from backend.execution import repair_policy
 
 from backend.services.cache_service import global_cache_service
 from backend.services.validator import global_stage_validator
@@ -442,6 +444,9 @@ async def testing_node(state: ProjectState) -> dict:
             "error": rerun.stderr if rerun.exit_code != 0 else "",
         }
 
+    judge_update, exec_results, judge_events = _judge_pending_attempt(
+        state, exec_results if isinstance(exec_results, dict) else {})
+
     test_res = testing_agent.evaluate_execution_results(
         exec_results=exec_results if isinstance(exec_results, dict) else {},
         project_spec=project_spec if isinstance(project_spec, dict) else {},
@@ -456,11 +461,12 @@ async def testing_node(state: ProjectState) -> dict:
         **rerun_update,
         **files_update,
         **snapshot,
+        **judge_update,
         "tests": raw_tests,
         "test_results": test_res.model_dump(),
         "testing_report": report_md,
         "current_step": "testing",
-        "stream_events": [f"✔ Generated {total_tests} real test function(s) across 4 suites (Verification: {'PASS' if test_res.success else 'FAIL'})"]
+        "stream_events": judge_events + [f"✔ Generated {total_tests} real test function(s) across 4 suites (Verification: {'PASS' if test_res.success else 'FAIL'})"]
     }
 
 
@@ -630,7 +636,7 @@ def _repair_candidates(state: ProjectState, debug_res: Any) -> List[str]:
     return ordered[:3]
 
 
-async def _llm_repair(state: ProjectState, debug_res: Any) -> Dict[str, str]:
+async def _llm_repair(state: ProjectState, debug_res: Any, history_text: str = "") -> Dict[str, str]:
     """Asks the LLM for a patch using the real failure output.
 
     Guard rails: only existing non-test ``.py`` files may change, every patched
@@ -657,6 +663,9 @@ async def _llm_repair(state: ProjectState, debug_res: Any) -> Dict[str, str]:
         f"Diagnosis: {debug_res.diagnosis}\n\nFailing output:\n```\n{failure}\n```\n\n"
         f"Source files:\n{sources}\n\nTests (read-only):\n{tests or '(none)'}"
     )
+    if history_text:
+        prompt += ("\n\nEarlier repair attempts (rolled-back ones made things worse or changed nothing; "
+                   f"do not repeat them):\n{history_text}")
     try:
         raw = await generate_text_async(REPAIR_SYSTEM_PROMPT, prompt, task="debugging")
     except Exception as exc:  # repair is best-effort; the loop's max_iterations still bounds it
@@ -683,10 +692,21 @@ async def debug_node(state: ProjectState) -> dict:
     iteration = state.get("iteration", 0) + 1
     max_iterations = state.get("max_iterations", 3)
 
+    history = state.get("repair_history") or []
+    rejected = {h.get("patch_hash") for h in history if h.get("verdict") not in repair_policy.KEEP_VERDICTS}
+    files_now = state.get("files", {}) or {}
+
     debug_res = global_debug_agent.diagnose_and_repair(dict(state))
-    if not _has_effective_changes(debug_res.changes, state.get("files", {}) or {}):
-        llm_changes = await _llm_repair(state, debug_res)
+    source = "rules"
+    if (not _has_effective_changes(debug_res.changes, files_now)
+            or repair_policy.patch_hash(debug_res.changes) in rejected):
+        debug_res = debug_res.model_copy(update={"changes": {}})
+        llm_changes = await _llm_repair(state, debug_res, repair_policy.history_for_prompt(history))
+        if llm_changes and repair_policy.patch_hash(llm_changes) in rejected:
+            _logger.info("LLM proposed a patch that was already tried and rolled back; skipping it")
+            llm_changes = {}
         if llm_changes:
+            source = "llm"
             debug_res = debug_res.model_copy(update={
                 "changes": llm_changes,
                 "files_to_modify": list(llm_changes),
@@ -715,7 +735,7 @@ async def debug_node(state: ProjectState) -> dict:
     return {
         "iteration": iteration,
         "max_iterations": max_iterations,
-        "fixes": existing_fixes + [debug_res.model_dump()],
+        "fixes": existing_fixes + [{**debug_res.model_dump(), "repair_source": source}],
         "errors": existing_errors + [debug_res.diagnosis],
         "current_step": "debug",
         "stream_events": [f"⚠️ Debugger diagnosed failure (Attempt {iteration}/{max_iterations}): {debug_res.diagnosis}"]
@@ -738,33 +758,105 @@ async def patch_node(state: ProjectState) -> dict:
 
     modified_files = []
     file_backups = dict(state.get("file_backups", {}) or {})
+    attempt_backups: Dict[str, Any] = {}  # rel path -> previous content (None = file was new)
 
     for rel_path, new_content in changes.items():
-        clean_rel = rel_path.replace("\\", "/").lstrip("/")
-        if clean_rel.startswith("/") or clean_rel.startswith("\\"):
-            _logger.warning(f"Path traversal rejected in patch_node: {rel_path}")
+        # Check for absolute paths *before* normalising: stripping the leading "/"
+        # first silently turned "/etc/passwd" into "<project>/etc/passwd".
+        raw = rel_path.replace("\\", "/")
+        if raw.startswith("/") or re.match(r"^[A-Za-z]:", raw):
+            _logger.warning(f"Absolute path rejected in patch_node: {rel_path}")
             continue
+        clean_rel = raw
 
         dest_path = (target_dir / clean_rel).resolve()
-        if not str(dest_path).startswith(str(target_dir)):
+        if not str(dest_path).startswith(str(target_dir) + os.sep):
             _logger.warning(f"Path traversal rejected in patch_node: {rel_path}")
             continue
 
         # Backup previous file content before patching
         if dest_path.exists():
             file_backups[clean_rel] = dest_path.read_text(encoding="utf-8")
+        attempt_backups[clean_rel] = file_backups.get(clean_rel) if dest_path.exists() else None
 
         dest_path.parent.mkdir(parents=True, exist_ok=True)
         dest_path.write_text(new_content, encoding="utf-8")
         files_map[clean_rel] = new_content
         modified_files.append(clean_rel)
 
+    # Record the attempt with the evidence it will be judged against after the re-run.
+    history = list(state.get("repair_history") or [])
+    exec_before = dict(state.get("execution_results") or {})
+    entry: Dict[str, Any] = {
+        "attempt": len(history) + 1,
+        "iteration": state.get("iteration", 0),
+        "source": latest_fix.get("repair_source", "rules"),
+        "diagnosis": latest_fix.get("diagnosis", ""),
+        "files": modified_files,
+        "patch_hash": repair_policy.patch_hash({f: files_map[f] for f in modified_files}),
+    }
+    if modified_files:
+        entry.update({"before": repair_policy.snapshot(exec_before), "before_exec": exec_before,
+                      "backups": attempt_backups})
+    else:
+        entry["verdict"] = "no_patch"  # nothing to try; counts toward the stall limit
+    history.append(entry)
+
     return {
         "files": files_map,
         "file_backups": file_backups,
+        "repair_history": history,
         "current_step": "patch",
         "stream_events": [f"✔ Applied targeted patch to {len(modified_files)} file(s): {modified_files}"]
     }
+
+
+def _rollback_attempt(state: ProjectState, backups: Dict[str, Any]) -> Dict[str, str]:
+    """Restores the files one attempt changed (deleting files it created)."""
+    files_map = dict(state.get("files", {}) or {})
+    root = Path(state.get("project_path", "") or ".").resolve()
+    for rel, old in (backups or {}).items():
+        dest = (root / rel).resolve()
+        if not str(dest).startswith(str(root)):
+            continue
+        if old is None:
+            dest.unlink(missing_ok=True)
+            files_map.pop(rel, None)
+        else:
+            dest.write_text(old, encoding="utf-8")
+            files_map[rel] = old
+    return files_map
+
+
+def _judge_pending_attempt(state: ProjectState, exec_results: Dict[str, Any]) -> tuple:
+    """Judges the latest unjudged repair attempt against the new run.
+
+    Returns ``(state_update, exec_results_to_evaluate, events)``. A patch that
+    regressed or changed nothing is rolled back on disk and the pre-patch
+    evidence is restored, so the next attempt starts from the better state.
+    """
+    history = [dict(h) for h in (state.get("repair_history") or [])]
+    if not history or history[-1].get("verdict") or "before" not in history[-1]:
+        return {}, exec_results, []
+
+    attempt = history[-1]
+    after = repair_policy.snapshot(exec_results)
+    attempt.update(repair_policy.judge_attempt(attempt["before"], after))
+    attempt["after"] = {k: after[k] for k in ("exit_code", "failing", "passing", "fingerprint", "error_line")}
+    before_exec = attempt.pop("before_exec", {})
+    backups = attempt.pop("backups", {})
+    attempt["before"] = {k: v for k, v in attempt["before"].items() if k != "outcomes"}
+
+    update: Dict[str, Any] = {"repair_history": history}
+    events = [f"🔎 Repair attempt {attempt['attempt']} ({attempt['source']}): {attempt['verdict']}"]
+    if attempt["verdict"] not in repair_policy.KEEP_VERDICTS:
+        attempt["rolled_back"] = True
+        update["files"] = _rollback_attempt(state, backups)
+        exec_results = before_exec
+        update["execution_results"] = before_exec
+        update["status"] = "PASS" if before_exec.get("exit_code") == 0 else "FAIL"
+        events.append(f"↩️ Rolled back attempt {attempt['attempt']} ({', '.join(attempt['files'])})")
+    return update, exec_results, events
 
 
 def restore_file_backups(state: ProjectState) -> dict:
@@ -824,6 +916,14 @@ def route_after_testing(state: ProjectState) -> str:
 
     if iteration >= max_iterations:
         state["status"] = "FAILED_MAX_ITERATIONS"
+        return END
+
+    # Stop early when consecutive attempts made no progress: more of the same
+    # costs LLM time without changing the outcome.
+    import os
+    stall_limit = int(os.environ.get("AIFORGE_REPAIR_STALL_LIMIT", "2"))
+    if repair_policy.stalled(state.get("repair_history") or [], stall_limit):
+        state["status"] = "FAILED_NO_PROGRESS"
         return END
 
     return "debug"

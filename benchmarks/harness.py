@@ -158,9 +158,15 @@ async def run_task(task: BenchmarkTask, run_dir: Path, pipeline: PipelineFn, max
     record["pipeline"] = {
         "error": error,
         "status": pipeline_res.get("status") or final_state.get("status"),
+        "errors": [str(e)[:500] for e in (final_state.get("errors") or [])][:3],
         "self_reported_success": bool(pipeline_res.get("success")),
         "iterations_used": int(final_state.get("iteration") or 0),
         "repair_attempts": len(final_state.get("fixes") or []),
+        "verification_status": (pipeline_res.get("verification") or {}).get("status"),
+        "repair_history": [
+            {k: h.get(k) for k in ("attempt", "source", "verdict", "rolled_back", "newly_passing", "newly_failing")}
+            for h in (final_state.get("repair_history") or [])
+        ],
         "review": _review_summary(final_state),
     }
     record["valid"] = error is None and trace["llm_fallbacks"] == 0 and trace["llm_calls"] > 0
@@ -172,6 +178,8 @@ async def run_task(task: BenchmarkTask, run_dir: Path, pipeline: PipelineFn, max
             reasons.append(f"{trace['llm_fallbacks']} LLM call(s) fell back to canned output")
         if trace["llm_calls"] == 0:
             reasons.append("no LLM calls recorded")
+        if record["pipeline"]["errors"] and record["pipeline"]["status"] == "SECURITY_ERROR":
+            reasons.append(f"pipeline crashed: {record['pipeline']['errors'][0][:200]}")
         record["invalid_reason"] = "; ".join(reasons)
 
     final_files = _files_with_tests(final_state)
@@ -233,6 +241,7 @@ def summarize(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         if (g(r, "final", "build_success") and not g(r, "initial", "build_success"))
         or (g(r, "final", "tests_passed") or 0) > (g(r, "initial", "tests_passed") or 0)
     )
+    attempts = [h for r in valid for h in (r["pipeline"].get("repair_history") or [])]
     self_claims = sum(1 for r in graded if r["pipeline"]["self_reported_success"])
     claim_mismatch = sum(1 for r in graded
                          if r["pipeline"]["self_reported_success"] and not g(r, "final", "build_success"))
@@ -270,6 +279,11 @@ def summarize(records: List[Dict[str, Any]]) -> Dict[str, Any]:
             "improved_by_repair": improved_by_repair,
             "repair_improvement_rate": _rate(improved_by_repair, len(repaired)),
             "mean_iterations": _mean([float(r["pipeline"]["iterations_used"]) for r in valid]),
+            "attempts": len(attempts),
+            "attempts_kept": sum(1 for h in attempts if h.get("verdict") in ("fixed", "improved")),
+            "attempts_rolled_back": sum(1 for h in attempts if h.get("rolled_back")),
+            "attempt_verdicts": {v: sum(1 for h in attempts if h.get("verdict") == v)
+                                 for v in sorted({h.get("verdict") for h in attempts if h.get("verdict")})},
         },
         "pipeline_self_reported_success": self_claims,
         "pipeline_claim_mismatches": claim_mismatch,
@@ -316,6 +330,8 @@ def render_report(results: Dict[str, Any]) -> str:
         f"| Tasks with all generated tests green | {s['tasks_all_tests_green']} |",
         f"| Repair loop: tasks improved / tasks repaired | {s['repair']['improved_by_repair']} / "
         f"{s['repair']['tasks_with_repair_attempts']} (builds fixed: {s['repair']['build_fixed_by_repair']}) |",
+        f"| Repair attempts kept / rolled back | {s['repair'].get('attempts_kept', 0)} / "
+        f"{s['repair'].get('attempts_rolled_back', 0)} of {s['repair'].get('attempts', 0)} |",
         f"| Pipeline said PASS but grader disagreed | {s['pipeline_claim_mismatches']} |",
         f"| Median tokens per task{' (estimated)' if s['tokens_estimated'] else ''} | {s['tokens_per_task_median']} |",
         f"| Median wall time per task | {s['wall_time_per_task_median_s']} s |",

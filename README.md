@@ -60,6 +60,8 @@ flowchart TD
 - **8 LLM agents plus an LLM repair step.** Planner, architect, frontend, backend and database generate the project; testing, reviewer and docs check and document it. The debugger uses rules first and falls back to an LLM patch.
 - **Parallel fan-out.** Frontend, backend and database generation run concurrently once the architecture is fixed.
 - **Sandboxed execution loop.** Generated code runs in Docker with no network, a read-only root filesystem, CPU/memory/PID limits, a non-root user, and a hard timeout. Failure output goes back to the debugger, and the loop repeats up to `max_iterations` (default 3).
+- **Self-healing that knows when a fix didn't work.** Each patch is judged on per-test evidence from before and after the re-run (`fixed` / `improved` / `regressed` / `no_effect`). Regressions and no-ops are rolled back on disk, rejected patches are never re-applied, the LLM is told what it already tried, and the loop stops early after two non-improving attempts.
+- **Evidence-backed verification.** Every project ships a `VERIFICATION.md` showing the command run, exit code, per-test outcomes, sandbox, and each repair attempt. The status is `VERIFIED` only if tests actually ran and all passed; "it compiles" is reported as `BUILD_ONLY`.
 - **Observability.** Every LLM call and graph node emits a structured JSON event (agent, model, latency, provider-reported tokens, cache hit, fallback, error). Set `AIFORGE_TRACE_FILE=trace.jsonl` to log them.
 
 ## Design decisions
@@ -115,6 +117,17 @@ pytest tests backend/tests          # full suite
 
 `test_pipeline_end_to_end_repairs_planted_bug` runs the real LangGraph pipeline against a scripted LLM whose backend contains a bug. The generated tests catch it, the LLM repair step fixes it, and the grader confirms 2/3 → 3/3 passing tests.
 
+## Self-healing demo
+
+```text
+generate ──► run tests in sandbox: 2/3 pass (GET /todos/999 returns 200, expected 404)
+attempt 1 (LLM): patch backend/main.py ──► re-run: test_health now FAILS ──► verdict: regressed ──► ROLLED BACK
+attempt 2 (LLM, told "attempt 1 broke test_health"): patch ──► re-run: 3/3 pass ──► verdict: fixed
+VERIFICATION.md: ✅ VERIFIED (docker) · 3 passed · 2 attempts, 1 kept, 1 rolled back
+```
+
+This exact scenario runs as a test against the real LangGraph pipeline with a scripted LLM (`tests/test_self_healing_policy.py::test_regressing_patch_is_rolled_back_then_fixed`). With Ollama, the same flow runs against real model output via `python run_aiforge.py "..."`.
+
 ## Limitations
 
 - **Backend-first.** Build success and tests cover the FastAPI backend; the React output isn't compiled in the sandbox (no network for `npm install`).
@@ -134,6 +147,10 @@ benchmarks/                          tasks, grader, harness, reviewer eval, comp
 sandbox/                             sandbox image definition
 docs/EVALUATION.md                   methodology, metric definitions, caveats
 ```
+
+## Project status
+
+[`docs/AUDIT.md`](docs/AUDIT.md) lists every subsystem as verified, implemented, partial, simulated or missing, with the evidence for each. Some modules in this repo (cloud deployment pipeline, multi-provider gateway, SRE recovery) are still **simulated** and are marked as such there.
 
 ## License
 

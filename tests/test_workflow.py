@@ -20,16 +20,16 @@ class MockAgent:
 
 
 @pytest.mark.anyio
-async def test_entire_pipeline():
+async def test_entire_pipeline(monkeypatch):
     # Setup mocks for all agents
-    project_workflow.planner = MockAgent("Planner")
-    project_workflow.architect = MockAgent("Architect")
-    project_workflow.frontend_agent = MockAgent("Frontend")
-    project_workflow.backend_agent = MockAgent("Backend", "backend")
-    project_workflow.database_agent = MockAgent("Database", "database")
-    project_workflow.reviewer_agent = MockAgent("Reviewer")
-    project_workflow.testing_agent = MockAgent("Testing")
-    project_workflow.documentation_agent = MockAgent("Documentation", "documentation")
+    monkeypatch.setattr(project_workflow, "planner", MockAgent("Planner"))
+    monkeypatch.setattr(project_workflow, "architect", MockAgent("Architect"))
+    monkeypatch.setattr(project_workflow, "frontend_agent", MockAgent("Frontend"))
+    monkeypatch.setattr(project_workflow, "backend_agent", MockAgent("Backend", "backend"))
+    monkeypatch.setattr(project_workflow, "database_agent", MockAgent("Database", "database"))
+    monkeypatch.setattr(project_workflow, "reviewer_agent", MockAgent("Reviewer"))
+    monkeypatch.setattr(project_workflow, "testing_agent", MockAgent("Testing"))
+    monkeypatch.setattr(project_workflow, "documentation_agent", MockAgent("Documentation", "documentation"))
 
     # Run the graph
     result = await project_workflow.project_graph.ainvoke(

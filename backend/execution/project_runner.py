@@ -65,7 +65,9 @@ class ProjectRunner:
         py_files = list(project_path.glob("**/*.py"))
         if any(self._is_real_test_file(p) for p in py_files) and (
                 shutil.which("pytest") or sandbox_backend() == "docker"):
-            return [sys.executable, "-m", "pytest"], "python"
+            # -rA prints one PASSED/FAILED line per test: the repair loop needs
+            # per-test outcomes to tell an improvement from a regression.
+            return [sys.executable, "-m", "pytest", "-rA"], "python"
 
         pkg_json_path = project_path / "package.json"
         if pkg_json_path.exists():
@@ -87,7 +89,7 @@ class ProjectRunner:
             # like "# Pytest Integration Tests" would make pytest exit 5 (no tests).
             has_tests = any(self._is_real_test_file(p) for p in py_files)
             if has_tests and (shutil.which("pytest") or sandbox_backend() == "docker"):
-                return [sys.executable, "-m", "pytest"], "python"
+                return [sys.executable, "-m", "pytest", "-rA"], "python"
             return [sys.executable, "-m", "compileall", "-e", "."], "python"
 
         return [], "unknown"
@@ -191,7 +193,15 @@ class ProjectRunner:
         _logger.info(f"ProjectRunner executing '{' '.join(cmd)}' inside '{proj_path}'...")
 
         if sandbox_backend() == "docker":
-            return self._run_in_docker(proj_path, cmd, lang)
+            res = self._run_in_docker(proj_path, cmd, lang)
+            res.sandbox = "docker"
+        else:
+            res = self._execute_local(proj_path, cmd, lang)
+            res.sandbox = "local"
+        res.command = " ".join(cmd)
+        return res
+
+    def _execute_local(self, proj_path: Path, cmd: List[str], lang: str) -> ExecutionResult:
 
         # Create dummy artifact pointing to existing dir
         artifact = CodeArtifact(filename="main.py", language=lang, content="")
