@@ -3,7 +3,7 @@ import { FaLayerGroup, FaArrowLeft, FaCode, FaShieldAlt, FaRocket, FaCheckCircle
 import { exportQualityReport } from '../../services/quality';
 
 export default function QualityHeader({
-  projectName = 'FoodDelivery AI',
+  projectName = '',
   generationId = 'aiforge-demo',
   onNavigate
 }) {
@@ -25,7 +25,7 @@ export default function QualityHeader({
           <div className="flex items-center gap-2">
             <h2 className="text-base font-extrabold text-white tracking-tight">{projectName}</h2>
             <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
-              <FaCheckCircle className="w-2.5 h-2.5" /> ANALYSIS COMPLETE
+              <FaCheckCircle className="w-2.5 h-2.5" /> FROM RECORDED CHECKS
             </span>
           </div>
           <div className="text-[11px] font-mono text-slate-400">ID: {generationId}</div>

@@ -26,16 +26,16 @@ class ClusterMonitoringService:
 
         metrics = {
             "timestamp": time.time(),
-            "cluster_health": "HEALTHY" if len(online_nodes) == len(nodes) else "DEGRADED",
+            "cluster_health": ("NO_WORKERS" if not nodes else "HEALTHY" if len(online_nodes) == len(nodes) else "DEGRADED"),
             "active_worker_nodes": len(online_nodes),
             "total_worker_nodes": len(nodes),
-            "cpu_utilization_pct": 24.5,
-            "memory_utilization_pct": 38.2,
+            "cpu_utilization_pct": None,           # not measured
+            "memory_utilization_pct": None,
             "queued_tasks_count": len(tasks),
             "running_tasks_count": sum(n.get("active_tasks_count", 0) for n in nodes),
-            "failed_jobs_count": 0,
-            "average_task_duration": "4.2s",
-            "auto_scaling_status": "ENABLED (Min: 3, Max: 20 workers)"
+            "failed_jobs_count": None,             # not tracked
+            "average_task_duration": None,
+            "auto_scaling_status": "NOT_IMPLEMENTED"
         }
 
         _logger.info(f"ClusterMonitoringService: Metrics compiled (Health: {metrics['cluster_health']}, Online: {len(online_nodes)}/{len(nodes)})")

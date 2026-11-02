@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState, useEffect } from "react";
 import { FaPlug, FaCircle, FaCloud, FaDocker, FaGithub, FaDatabase, FaBolt, FaSlack, FaInfinity, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 
@@ -9,7 +10,7 @@ function PluginsDashboard() {
     const fetchPlugins = async () => {
         setLoading(true);
         try {
-            const res = await fetch("http://127.0.0.1:8000/plugins");
+            const res = await fetch(`${BACKEND_URL}/plugins`);
             const data = await res.json();
             setPlugins(data);
         } catch (err) {
@@ -31,7 +32,7 @@ function PluginsDashboard() {
     const handleToggleStatus = async (name, currentStatus) => {
         const action = currentStatus === "Active" ? "disable" : "enable";
         try {
-            const res = await fetch(`http://127.0.0.1:8000/plugins/${action}?name=${encodeURIComponent(name)}`, {
+            const res = await fetch(`${BACKEND_URL}/plugins/${action}?name=${encodeURIComponent(name)}`, {
                 method: "POST"
             });
             if (res.ok) {

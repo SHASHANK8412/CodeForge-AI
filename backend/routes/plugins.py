@@ -26,21 +26,19 @@ class ExecuteToolRequest(BaseModel):
     params: Dict[str, Any] = Field(default_factory=dict)
 
 
-@router.get("/plugins")
 @router.get("/api/plugins")
 def list_plugins():
     """Lists all installed plugins and execution metrics."""
-    return {"plugins": global_plugin_manager.list_all_plugins()}
+    from backend.plugins.registry import global_plugin_registry
+    return {"plugins": global_plugin_registry.list_plugins()}
 
 
-@router.post("/plugins/install")
 @router.post("/api/plugins/install")
 def install_plugin(req: InstallPluginRequest):
     """Installs a new plugin SDK module."""
     return global_plugin_manager.install_plugin(req.name, req.version, req.permissions)
 
 
-@router.post("/plugins/enable")
 @router.post("/api/plugins/enable")
 def enable_plugin(req: TogglePluginRequest):
     """Enables an installed plugin."""
@@ -50,7 +48,6 @@ def enable_plugin(req: TogglePluginRequest):
     return {"status": "success", "message": f"Plugin '{req.plugin_id}' enabled."}
 
 
-@router.post("/plugins/disable")
 @router.post("/api/plugins/disable")
 def disable_plugin(req: TogglePluginRequest):
     """Disables an installed plugin."""
@@ -63,12 +60,14 @@ def disable_plugin(req: TogglePluginRequest):
 @router.post("/plugins/execute")
 @router.post("/api/plugins/execute")
 def execute_plugin(req: ExecuteToolRequest):
-    """Executes a plugin tool safely via ToolExecutionEngine."""
-    return global_plugin_manager.execute_plugin(req.plugin_id, req.params)
+    """Executes a plugin tool via ToolExecutionEngine (high-risk tools need AIFORGE_ENABLE_CODE_TOOLS=1)."""
+    from backend.plugins.executor import global_tool_execution_engine
+    return global_tool_execution_engine.execute_tool(req.plugin_id, req.params)
 
 
 @router.get("/plugins/logs")
 @router.get("/api/plugins/logs")
 def get_plugin_logs(limit: int = Query(50, ge=1, le=200)):
     """Returns recent tool execution telemetry logs."""
-    return {"logs": global_plugin_manager.get_logs(limit)}
+    from backend.plugins.executor import global_tool_execution_engine
+    return {"logs": list(reversed(global_tool_execution_engine.logs[-limit:]))}

@@ -7,12 +7,17 @@ _logger = logging.getLogger("aiforge.sre")
 
 class RecoveryEngine:
     """
-    Executes automated self-healing procedures (restarts, scale-ups, cache clears, configuration refreshes)
-    based on SRE policies, LLM recommendations, and knowledge base performance logs.
+    Chooses recovery strategies (restarts, scale-ups, cache clears, configuration refreshes) from SRE policies,
+    recommendations and the knowledge base. No executor is connected: execute_recovery only simulates the
+    action (and says so), and the SRE monitor does not call it - it reports a recommendation instead.
     """
 
     def __init__(self, knowledge_base: IncidentKnowledgeBase) -> None:
         self.knowledge_base = knowledge_base
+
+    def recommend(self, signature: str, recommendation: Dict[str, Any]) -> str:
+        """The strategy a person (or a future executor) should apply; nothing is run."""
+        return self.knowledge_base.get_best_strategy(signature) or recommendation.get("recommended_action") or "Investigate"
 
     def execute_recovery(
         self,
@@ -43,26 +48,26 @@ class RecoveryEngine:
         strat_lower = strategy.lower()
         if "database" in strat_lower or "db" in strat_lower:
             # Simulate database container reset
-            _logger.info("[RECOVERY] Executing: docker restart aiforge-postgres")
+            _logger.info("[RECOVERY][SIMULATED] Would execute: docker restart aiforge-postgres")
             time.sleep(1.0)
         elif "cache" in strat_lower or "clear" in strat_lower:
             # Simulate Redis flush
-            _logger.info("[RECOVERY] Executing: redis-cli FLUSHALL")
+            _logger.info("[RECOVERY][SIMULATED] Would execute: redis-cli FLUSHALL")
             time.sleep(0.2)
         elif "scale" in strat_lower or "replica" in strat_lower:
             # Simulate Scaling replicas up
-            _logger.info("[RECOVERY] Executing: kubectl scale deployment/backend --replicas=3")
+            _logger.info("[RECOVERY][SIMULATED] Would execute: kubectl scale deployment/backend --replicas=3")
             time.sleep(1.5)
         elif "secret" in strat_lower or "rotate" in strat_lower:
             # Simulate key rotation
-            _logger.info("[RECOVERY] Generating new crypt keys and rewriting env configuration")
+            _logger.info("[RECOVERY][SIMULATED] Would generate new crypt keys and rewriting env configuration")
             time.sleep(0.5)
         else:
             # Default Restart Container
-            _logger.info("[RECOVERY] Executing: docker restart aiforge-backend")
+            _logger.info("[RECOVERY][SIMULATED] Would execute: docker restart aiforge-backend")
             time.sleep(0.8)
 
         duration = time.time() - start_time
-        _logger.info(f"Recovery action '{strategy}' executed in {duration:.2f}s")
+        _logger.info(f"Recovery action '{strategy}' simulated in {duration:.2f}s (nothing was executed)")
         
         return strategy, duration

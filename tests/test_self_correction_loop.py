@@ -12,6 +12,7 @@ from backend.graph.parallel_workflow import (
     debug_node,
     patch_node,
     route_after_testing,
+    repair_escalation,
     restore_file_backups,
     execution_validation_node,
     testing_node
@@ -31,6 +32,17 @@ def tmp_projects_dir(tmp_path):
         shutil.rmtree(p, ignore_errors=True)
 
 
+def _testing_agent_writes(monkeypatch, path, code):
+    """The testing agent's reply, shaped like model output. (With no model these tests used to get the removed
+    llm.py stand-in, a `tests/test_main.py` asserting 1 + 1 == 2, written into the project; a failed model call now
+    fails the testing step instead.)"""
+    from backend.graph import parallel_workflow
+
+    async def reply(*_a, **_k):
+        return f"### {path}\n```python\n{code}```\n"
+    monkeypatch.setattr(parallel_workflow.testing_agent, "run_async", reply)
+
+
 def test_pass_routing():
     state: ProjectState = {
         "execution_results": {"exit_code": 0},
@@ -39,8 +51,11 @@ def test_pass_routing():
         "iteration": 0,
         "max_iterations": 3
     }
+    # Since the human-approval checkpoints, every route ends at the final review (a person approves
+    # the release or the escalation); nothing goes to packaging or ends unreviewed.
     route = route_after_testing(state)
-    assert route == "packaging"
+    assert route == "final_approval"
+    assert repair_escalation(state) is None
 
 
 def test_fail_routing():
@@ -65,8 +80,8 @@ def test_maximum_iteration_enforcement_routes_to_end_not_packaging():
     }
     route = route_after_testing(state)
     assert route != "packaging"
-    assert route == END
-    assert state["status"] == "FAILED_MAX_ITERATIONS"
+    assert route == "final_approval"
+    assert repair_escalation(state) == "STOPPED_MAX_ATTEMPTS"
 
 
 def test_unsupported_project_routing_end_not_packaging():
@@ -79,7 +94,7 @@ def test_unsupported_project_routing_end_not_packaging():
     }
     route = route_after_testing(state)
     assert route != "packaging"
-    assert route == END
+    assert route == "final_approval"
 
 
 def test_security_error_routing_end_not_packaging():
@@ -92,7 +107,7 @@ def test_security_error_routing_end_not_packaging():
     }
     route = route_after_testing(state)
     assert route != "packaging"
-    assert route == END
+    assert route == "final_approval"
 
 
 def test_patch_path_traversal_rejection(tmp_projects_dir):
@@ -194,7 +209,7 @@ def test_actual_rollback_restoration(tmp_projects_dir):
 
 
 @pytest.mark.anyio
-async def test_full_broken_todo_app_self_healing_integration(tmp_projects_dir):
+async def test_full_broken_todo_app_self_healing_integration(tmp_projects_dir, monkeypatch):
     # 1. Create a broken project on disk
     broken_proj = tmp_projects_dir / "BrokenTodoApp"
     (broken_proj / "backend").mkdir(parents=True)
@@ -207,6 +222,7 @@ async def test_full_broken_todo_app_self_healing_integration(tmp_projects_dir):
 
     (broken_proj / "backend" / "main.py").write_text(backend_code, encoding="utf-8")
     (broken_proj / "tests" / "test_status.py").write_text(test_code, encoding="utf-8")
+    _testing_agent_writes(monkeypatch, "tests/test_status.py", test_code)
 
     state: ProjectState = {
         "project_name": "BrokenTodoApp",
@@ -258,14 +274,15 @@ async def test_full_broken_todo_app_self_healing_integration(tmp_projects_dir):
     assert state["execution_results"]["exit_code"] == 0
 
     route2 = route_after_testing(state)
-    assert route2 == "packaging"
+    assert route2 == "final_approval" and repair_escalation(state) is None
 
 
 @pytest.mark.anyio
-async def test_fail_after_three_iterations(tmp_projects_dir):
+async def test_fail_after_three_iterations(tmp_projects_dir, monkeypatch):
     unfixable_proj = tmp_projects_dir / "UnfixableApp"
     unfixable_proj.mkdir()
     (unfixable_proj / "main.py").write_text("def broken(): syntax error", encoding="utf-8")
+    _testing_agent_writes(monkeypatch, "tests/test_main.py", "from main import broken\n\n\ndef test_broken():\n    broken()\n")
 
     state: ProjectState = {
         "project_name": "UnfixableApp",
@@ -291,5 +308,5 @@ async def test_fail_after_three_iterations(tmp_projects_dir):
 
     route = route_after_testing(state)
     assert route != "packaging"
-    assert route == END
-    assert state["status"] == "FAILED_MAX_ITERATIONS"
+    assert route == "final_approval"
+    assert repair_escalation(state) == "STOPPED_MAX_ATTEMPTS"

@@ -30,6 +30,7 @@ API RESPONSE (Typed GenerationResult)
 """
 
 import json
+import os
 import time
 import logging
 from typing import Dict, Any, Optional
@@ -42,6 +43,7 @@ from backend.models.model_router import global_model_router
 from backend.quality.output_validator import global_output_validator
 from backend.quality.regeneration_controller import global_regeneration_controller
 from backend.quality.response_cleaner import global_response_cleaner
+from backend.quality.safe_fallback import get_safe_fallback_response
 from backend.context.context_manager import global_context_manager
 from backend.reasoning.complexity_analyzer import global_complexity_analyzer
 from backend.reasoning.strategy_selector import global_strategy_selector
@@ -90,6 +92,54 @@ class GenerationResult(BaseModel):
     arch_text: str = Field(default="", description="Generated architecture description if applicable")
     files_map: Dict[str, str] = Field(default_factory=dict, description="Generated file artifacts map if applicable")
     quality_metadata: Dict[str, Any] = Field(default_factory=dict, description="Detailed quality scorecard & dimension scores")
+
+
+def project_generation_summary(pipeline_res: Dict[str, Any], prompt: str) -> str:
+    """
+    Chat summary of a generated project, built only from what the pipeline actually reported.
+    A check that did not run is shown as "not run", never as passed.
+    """
+    title = pipeline_res.get("project_name") or prompt
+    files_map = pipeline_res.get("files", {}) or {}
+    lines = [f"# Project generated: **{title}**", "", "### Checks"]
+
+    score = pipeline_res.get("quality_score")
+    lines.append(f"- **Quality score**: {score:.1f} / 100" if isinstance(score, (int, float)) else "- **Quality score**: not computed")
+
+    fidelity = pipeline_res.get("requirement_fidelity") or {}
+    if fidelity.get("status"):
+        domain = fidelity.get("expected_domain")
+        lines.append(f"- **Requirement match**: {fidelity['status']}" + (f" ({domain})" if domain else ""))
+    else:
+        lines.append("- **Requirement match**: not run")
+
+    checks = (pipeline_res.get("quality_gates") or {}).get("gate_checks") or []
+    if checks:
+        failed = [c.get("name", f"check {c.get('id')}") for c in checks if not c.get("passed")]
+        lines.append(f"- **Quality gates**: {len(checks) - len(failed)} / {len(checks)} passed"
+                     + (f" (failed: {', '.join(failed)})" if failed else ""))
+    else:
+        lines.append("- **Quality gates**: not run")
+
+    security = pipeline_res.get("security_report") or {}
+    if security:
+        found = security.get("vulnerabilities_found", 0)
+        fixed = security.get("vulnerabilities_auto_fixed", 0)
+        lines.append(f"- **Security scan**: {security.get('status', 'UNKNOWN')} "
+                     f"({found} finding(s), {fixed} auto-fixed)")
+    else:
+        lines.append("- **Security scan**: not run")
+
+    lines += ["", f"### Files ({len(files_map)})", *[f"- `{p}`" for p in files_map], ""]
+
+    commands = []
+    if any(p in files_map for p in ("backend/main.py", "main.py")):
+        commands += ["# Backend", "cd backend && uvicorn main:app --reload" if "backend/main.py" in files_map else "uvicorn main:app --reload"]
+    if "frontend/package.json" in files_map:
+        commands += ["# Frontend", "cd frontend && npm install && npm run dev"]
+    if commands:
+        lines += ["### Run it locally", "", "```bash", *commands, "```"]
+    return "\n".join(lines) + "\n"
 
 
 class AIForgeGenerationPipeline:
@@ -209,8 +259,8 @@ class AIForgeGenerationPipeline:
                 context_result=context_result
             )
             if task_plan:
-                plan_steps_str = "\n".join([f"- Step {s.id}: {s.description}" for s.description in task_plan.steps])
-                plan_text = json.dumps({"goal": task_plan.goal, "steps": [s.description for s.description in task_plan.steps]}, indent=2)
+                plan_steps_str = "\n".join([f"- Step {s.id}: {s.description}" for s in task_plan.steps])
+                plan_text = json.dumps({"goal": task_plan.goal, "steps": [s.description for s in task_plan.steps]}, indent=2)
             else:
                 _logger.warning("[AIForge Pipeline] TaskPlan generation failed; falling back gracefully to STANDARD strategy")
                 strategy_val = "STANDARD"
@@ -218,7 +268,7 @@ class AIForgeGenerationPipeline:
         # Build effective prompt for specialized agents
         effective_prompt = normalized_prompt
         if task_plan:
-            plan_header = f"Internal Task Plan:\nGoal: {task_plan.goal}\nExecution Steps:\n" + "\n".join([f"{s.id}. {s.description}" for s.description in task_plan.steps])
+            plan_header = f"Internal Task Plan:\nGoal: {task_plan.goal}\nExecution Steps:\n" + "\n".join([f"{s.id}. {s.description}" for s in task_plan.steps])
             if context_result.formatted_context:
                 effective_prompt = f"{context_result.formatted_context}\n\n{plan_header}\n\nCurrent User Request:\n{normalized_prompt}"
             else:
@@ -259,37 +309,8 @@ class AIForgeGenerationPipeline:
             elif intent == "PROJECT_GENERATION":
                 from backend.orchestrator.autonomous_engineer import global_autonomous_engineer
                 pipeline_res = global_autonomous_engineer.run_autonomous_pipeline(current_prompt)
-
-                project_title = pipeline_res.get("project_name", current_prompt)
-                q_sc = pipeline_res.get("quality_score", 100.0)
-                files_map = pipeline_res.get("files", {})
-                req_fid = pipeline_res.get("requirement_fidelity", {}) or {}
-
-                fid_status = req_fid.get("status", "PASS")
-                exp_dom = req_fid.get("expected_domain", "General Application")
-                fid_badge = f"**{fid_status}** ({exp_dom})" if fid_status == "PASS" else f"**❌ FAILED** (Domain Mismatch / Coverage Issues)"
-
-                file_tree_md = "\n".join([f"- `{p}`" for p in files_map.keys()])
-                return (
-                    f"# 🚀 Production Software Generated: **{project_title}**\n\n"
-                    f"### 📊 Quality Scorecard & Audit Status\n"
-                    f"- **Overall Quality Score**: **{q_sc:.1f} / 100** (Target >= 95/100)\n"
-                    f"- **Requirement Match & Intent Fidelity**: {fid_badge}\n"
-                    f"- **15-Check Quality Gates**: **15 / 15 PASSED**\n"
-                    f"- **Security Audit**: **CLEAN (Zero Vulnerabilities)**\n"
-                    f"- **Performance**: **OPTIMIZED (< 45ms Endpoint Latency)**\n\n"
-                    f"---\n\n"
-                    f"### 📂 Generated Production Files ({len(files_map)} Files Assembled)\n"
-                    f"{file_tree_md}\n\n"
-                    f"---\n\n"
-                    f"### 🚀 Quick Start Instructions\n\n"
-                    f"```bash\n"
-                    f"# 1. Start FastAPI Backend Server\n"
-                    f"cd backend && uvicorn main:app --reload\n\n"
-                    f"# 2. Start React SPA Frontend\n"
-                    f"cd frontend && npm install && npm run dev\n"
-                    f"```\n"
-                )
+                files_map = pipeline_res.get("files", {}) or {}
+                return project_generation_summary(pipeline_res, current_prompt)
 
             else:
                 agent_name = "ClarificationAgent"

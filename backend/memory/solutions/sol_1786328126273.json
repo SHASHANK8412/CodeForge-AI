@@ -1,0 +1,5 @@
+{
+  "error": "ModuleNotFoundError: No module named 'fastapi'",
+  "solution": "Added fastapi to requirements.txt",
+  "success": true
+}

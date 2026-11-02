@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState, useEffect } from 'react';
 import { FaPlug, FaTerminal, FaFolder, FaGitAlt, FaDatabase, FaDocker, FaGlobe, FaCode, FaCheckCircle, FaTimesCircle, FaPlay, FaHistory } from 'react-icons/fa';
 
@@ -11,7 +12,7 @@ export default function PluginDashboard() {
 
   const fetchPlugins = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/plugins');
+      const res = await fetch(`${BACKEND_URL}/api/plugins`);
       if (res.ok) {
         const data = await res.json();
         setPlugins(data.plugins || []);
@@ -28,7 +29,7 @@ export default function PluginDashboard() {
 
   const fetchLogs = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/plugins/logs');
+      const res = await fetch(`${BACKEND_URL}/api/plugins/logs`);
       if (res.ok) {
         const data = await res.json();
         setLogs(data.logs || []);
@@ -48,7 +49,7 @@ export default function PluginDashboard() {
   const togglePlugin = async (pluginId, currentEnabled) => {
     const endpoint = currentEnabled ? 'disable' : 'enable';
     try {
-      await fetch(`http://127.0.0.1:8000/api/plugins/${endpoint}`, {
+      await fetch(`${BACKEND_URL}/api/plugins/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plugin_id: pluginId })
@@ -62,7 +63,7 @@ export default function PluginDashboard() {
   const handleExecuteTool = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/plugins/execute', {
+      const res = await fetch(`${BACKEND_URL}/api/plugins/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

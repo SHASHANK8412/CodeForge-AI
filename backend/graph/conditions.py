@@ -19,9 +19,10 @@ def should_refine_code(state: WorkflowState) -> str:
     """Routing condition after ReviewerNode."""
     retries = state.setdefault("retry_count", {}).get("reviewer", 0)
     review = state.get("review", {})
-    score = review.get("score", 100) if isinstance(review, dict) else 100
+    score = review.get("score") if isinstance(review, dict) else None
 
-    if score < 70 and retries < 3:
+    # No score (the review could not be read) is not a reason to rewrite code; only a measured low score is.
+    if score is not None and score < 70 and retries < 3:
         state["retry_count"]["reviewer"] = retries + 1
         logger.info(f"Review score {score} < 70; returning to Frontend/Backend refinement ({retries + 1}/3)")
         return "frontend"

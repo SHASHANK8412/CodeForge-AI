@@ -63,7 +63,9 @@ class TestAutonomousEngineerEngine(unittest.TestCase):
         }
         remedied_files, report = sec.scan_and_remedy(files)
         self.assertGreaterEqual(report["security_score"], 95.0)
-        self.assertIn("os.getenv", remedied_files["app/config.py"])
+        # The secret comes from the environment with no hardcoded fallback value.
+        self.assertIn('os.environ["SECRET_KEY"]', remedied_files["app/config.py"])
+        self.assertNotIn("'secret'", remedied_files["app/config.py"])
         self.assertGreaterEqual(report["vulnerabilities_auto_fixed"], 1)
 
     def test_performance_optimizer(self):

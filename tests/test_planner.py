@@ -44,7 +44,7 @@ Build a Todo application.
 import pytest
 from unittest.mock import AsyncMock
 from backend.graph.project_state import ProjectState
-from backend.graph.project_workflow import planner_node
+from backend.graph.parallel_workflow import planner_node  # (project_workflow, a duplicate pipeline, was removed)
 
 
 def test_planner_malformed_json_raises_error():
@@ -67,8 +67,10 @@ def test_planner_malformed_json_explicit_fallback():
 
 
 @pytest.mark.anyio
-async def test_planner_node_project_state_integration():
-    from backend.graph import project_workflow
+async def test_planner_node_project_state_integration(monkeypatch):
+    from backend.graph import parallel_workflow as project_workflow
+    monkeypatch.setattr(project_workflow.global_cache_service, "get", lambda *a, **k: None)
+    monkeypatch.setattr(project_workflow.global_cache_service, "set", lambda *a, **k: None)
     
     mock_llm_json = """
 ```json
@@ -81,7 +83,7 @@ async def test_planner_node_project_state_integration():
 }
 ```
 """
-    project_workflow.planner.run_async = AsyncMock(return_value=mock_llm_json)
+    monkeypatch.setattr(project_workflow.planner, "run_async", AsyncMock(return_value=mock_llm_json))
 
     initial_state: ProjectState = {
         "prompt": "Build a Todo application with authentication and CRUD operations.",

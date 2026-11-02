@@ -5,10 +5,12 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, List
 
-from fastapi import APIRouter, File, UploadFile, HTTPException, Query
+from fastapi import APIRouter, Depends, File, UploadFile, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from backend.auth.dependencies import get_current_user
 from backend.rag.pipeline import global_rag_pipeline
+from backend.security.paths import is_plain_filename, resolve_inside
 
 logger = logging.getLogger("aiforge.routes.upload")
 
@@ -128,10 +130,13 @@ def list_documents():
 
 @router.delete("/documents/{filename}")
 @router.delete("/api/documents/{filename}")
-def delete_document(filename: str):
+def delete_document(filename: str, user: dict = Depends(get_current_user)):
     """Deletes an uploaded document from disk and purges file vectors from vector store."""
-    target_path = UPLOADS_DIR / filename
-    if not target_path.exists():
+    # A bare file name inside /uploads only: "..\\x" or "C:x" is refused, not reduced to another file.
+    target_path = resolve_inside(UPLOADS_DIR, filename) if is_plain_filename(filename) else None
+    if target_path is None or target_path.parent != UPLOADS_DIR.resolve():
+        raise HTTPException(status_code=400, detail="Invalid document name.")
+    if not target_path.is_file():
         raise HTTPException(status_code=404, detail=f"Document '{filename}' not found.")
 
     try:

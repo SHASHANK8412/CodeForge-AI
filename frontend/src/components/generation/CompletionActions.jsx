@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../../config/backend';
 import React from 'react';
 import { FaCheckCircle, FaDownload, FaCode, FaShieldAlt, FaRocket } from 'react-icons/fa';
 
@@ -10,7 +11,7 @@ export default function CompletionActions({
   onViewQualityReport
 }) {
   const handleDownloadZip = () => {
-    window.location.href = `http://127.0.0.1:8000/export/zip/${generationId}`;
+    window.location.href = `${BACKEND_URL}/api/export/zip/${encodeURIComponent(generationId)}`;
   };
 
   return (

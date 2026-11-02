@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState } from 'react';
 import { FaFileAlt, FaUserCheck, FaTasks, FaListCheck, FaDownload, FaLightbulb } from 'react-icons/fa';
 
@@ -33,7 +34,7 @@ export default function SrsDashboard() {
   const handleGenerateSrs = async () => {
     setGenerating(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/requirements/generate-srs', {
+      const res = await fetch(`${BACKEND_URL}/api/v1/requirements/generate-srs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idea: ideaPrompt })

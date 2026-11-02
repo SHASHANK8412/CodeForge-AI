@@ -1,0 +1,107 @@
+[
+  {
+    "id": "node_aiforge_app",
+    "name": "FoodDelivery AI Engine",
+    "entity_type": "Project",
+    "description": "Production multi-tier food ordering & automated courier dispatch platform.",
+    "aliases": [
+      "FoodDelivery",
+      "Order Engine"
+    ],
+    "project_id": "aiforge-fooddelivery-ai",
+    "user_id": "user_default",
+    "metadata": {},
+    "confidence": 1.0,
+    "created_at": "2026-08-30 16:05:48"
+  },
+  {
+    "id": "node_fastapi",
+    "name": "FastAPI Gateway",
+    "entity_type": "Service",
+    "description": "Asynchronous REST API ingress routing orders, authentication, and payments.",
+    "aliases": [
+      "API Gateway",
+      "Backend Server"
+    ],
+    "project_id": "aiforge-fooddelivery-ai",
+    "user_id": "user_default",
+    "metadata": {},
+    "confidence": 0.98,
+    "created_at": "2026-08-30 16:05:48"
+  },
+  {
+    "id": "node_redis_streams",
+    "name": "Redis Streams",
+    "entity_type": "Technology",
+    "description": "High-throughput real-time message bus broadcasting courier GPS coordinate events.",
+    "aliases": [
+      "Redis",
+      "Geolocation Stream"
+    ],
+    "project_id": "aiforge-fooddelivery-ai",
+    "user_id": "user_default",
+    "metadata": {},
+    "confidence": 0.95,
+    "created_at": "2026-08-30 16:05:48"
+  },
+  {
+    "id": "node_postgres_db",
+    "name": "PostgreSQL Database",
+    "entity_type": "Database",
+    "description": "Primary transactional ACID relational datastore with serializable write ledger.",
+    "aliases": [
+      "Postgres",
+      "SQL Store"
+    ],
+    "project_id": "aiforge-fooddelivery-ai",
+    "user_id": "user_default",
+    "metadata": {},
+    "confidence": 0.99,
+    "created_at": "2026-08-30 16:05:48"
+  },
+  {
+    "id": "node_jwt_auth",
+    "name": "RS256 JWT Auth Provider",
+    "entity_type": "SecurityPolicy",
+    "description": "Decentralized cryptographic asymmetric token signer with customer/courier RBAC.",
+    "aliases": [
+      "JWT Auth",
+      "Auth0 Service"
+    ],
+    "project_id": "aiforge-fooddelivery-ai",
+    "user_id": "user_default",
+    "metadata": {},
+    "confidence": 0.96,
+    "created_at": "2026-08-30 16:05:48"
+  },
+  {
+    "id": "node_kafka_event_bus",
+    "name": "Apache Kafka",
+    "entity_type": "Technology",
+    "description": "Enterprise event broker handling topic 'orders.created' for idempotent order orchestration.",
+    "aliases": [
+      "Kafka",
+      "Redpanda"
+    ],
+    "project_id": "aiforge-fooddelivery-ai",
+    "user_id": "user_default",
+    "metadata": {},
+    "confidence": 0.94,
+    "created_at": "2026-08-30 16:05:48"
+  },
+  {
+    "id": "node_react_frontend",
+    "name": "React Vite Dashboard",
+    "entity_type": "Project",
+    "description": "Interactive real-time order tracking map with WebSocket live updates.",
+    "aliases": [
+      "Frontend UI",
+      "Client App"
+    ],
+    "project_id": "aiforge-fooddelivery-ai",
+    "user_id": "user_default",
+    "metadata": {},
+    "confidence": 0.97,
+    "created_at": "2026-08-30 16:05:48"
+  }
+]

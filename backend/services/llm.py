@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import logging
 import asyncio
 import contextvars
 import time
 from time import perf_counter
 from threading import Lock
-from typing import Iterable
+from typing import Iterable, Optional
+
+from backend.telemetry.usage import record_llm_call, token_counts
 
 from ollama import Client, AsyncClient  # type: ignore[attr-defined]
 
@@ -25,7 +28,7 @@ from backend.config import (
     TASK_NUM_CTX,
 )
 from backend.utils.cache import llm_cache
-from backend.utils.retry import async_retry
+from backend.utils.retry import LLMDeadlineExceeded, async_retry
 from backend.utils.prompt_optimizer import optimize_prompt
 
 _ollama_client = Client(timeout=480.0)
@@ -50,6 +53,25 @@ if not _logger.handlers and not logging.getLogger().handlers:
 _logger.setLevel(logging.INFO)
 
 _unavailable_models: set[str] = set()
+
+
+class LLMUnavailableError(RuntimeError):
+    """
+    A model call failed, timed out or returned nothing, after the retries and the model fallback
+    chain. There is no output: callers fail their step visibly instead of using stand-in text
+    (this used to return a canned plan, backend, page, schema, test and approving review).
+    """
+
+    def __init__(self, task: str, model: str, reason: str):
+        super().__init__(f"model '{model}' produced no output for task '{task}': {reason}")
+        self.task = task
+        self.model = model
+        self.reason = reason
+
+
+def _unavailable(task: str, model: str, exc: Exception) -> LLMUnavailableError:
+    _logger.error("LLM call failed for task '%s' (model '%s'): %s", task, model, exc)
+    return LLMUnavailableError(task, model, f"{type(exc).__name__}: {exc}")
 
 
 def _memory_usage() -> str:
@@ -159,6 +181,17 @@ async def _chat_completion_async(model: str, messages: list[dict[str, str]], str
     )
 
 
+# Ceiling, not an expected duration: CPU-only Ollama can need many minutes for a long response.
+LLM_TIMEOUT_SECONDS = float(os.getenv("AIFORGE_LLM_TIMEOUT_SECONDS", "900"))
+
+
+def _is_missing_model_error(exc: Exception) -> bool:
+    """Only a missing model justifies skipping it for the rest of the process; timeouts and
+    connection errors are transient load problems, not proof the model is unusable."""
+    status_code = getattr(exc, "status_code", None)
+    return status_code == 404 or "not found" in str(exc).lower()
+
+
 def _fallback_models(selected_model: str) -> list[str]:
     candidates = [selected_model, DEFAULT_OLLAMA_MODEL, "qwen2.5"]
     ordered_candidates: list[str] = []
@@ -187,10 +220,7 @@ def _chat_completion_with_fallback(
                 try:
                     return _chat_completion(candidate, messages, stream=stream, options=options)
                 except Exception as exc:  # noqa: BLE001 - Ollama raises ResponseError for missing models.
-                    error_text = str(exc).lower()
-                    status_code = getattr(exc, "status_code", None)
-
-                    if status_code == 404 or "not found" in error_text or "model" in error_text or "timeout" in error_text or "timed out" in error_text or "connect" in error_text:
+                    if _is_missing_model_error(exc):
                         _unavailable_models.add(candidate)
                         last_error = exc
                         continue
@@ -235,8 +265,7 @@ async def _chat_completion_with_fallback_async(
 ):
     last_error: Exception | None = None
 
-    num_predict = (options or {}).get("num_predict", 2048)
-    timeout = 480.0 if num_predict >= 2500 else 180.0
+    timeout = LLM_TIMEOUT_SECONDS
 
     for candidate in _fallback_models(model):
         try:
@@ -244,11 +273,13 @@ async def _chat_completion_with_fallback_async(
                 _chat_completion_async(candidate, messages, stream=stream, options=options),
                 timeout=timeout
             )
+        except asyncio.TimeoutError as exc:
+            raise LLMDeadlineExceeded(
+                f"Model '{candidate}' did not finish within {timeout:.0f}s "
+                "(raise AIFORGE_LLM_TIMEOUT_SECONDS or use a smaller model on CPU-only machines)"
+            ) from exc
         except Exception as exc:  # noqa: BLE001 - Ollama raises ResponseError for missing models.
-            error_text = str(exc).lower()
-            status_code = getattr(exc, "status_code", None)
-
-            if isinstance(exc, (TimeoutError, asyncio.TimeoutError)) or status_code == 404 or "not found" in error_text or "model" in error_text or "connect" in error_text or "timeout" in error_text:
+            if _is_missing_model_error(exc):
                 _unavailable_models.add(candidate)
                 last_error = exc
                 continue
@@ -303,6 +334,7 @@ def generate_text(
             llm_time_ms=0.0,
             cache_status="HIT",
         )
+        record_llm_call(task, selected_model, 0, 0, 0.0, cached=True)
         return cached
 
     llm_started_at = perf_counter()
@@ -313,9 +345,11 @@ def generate_text(
             options=options,
         )
         content = response["message"]["content"]
+        record_llm_call(task, selected_model, *token_counts(response), perf_counter() - llm_started_at)
     except Exception as exc:
-        _logger.warning("Synchronous LLM call timed out or failed for task '%s': %s. Returning structured fallback.", task, exc)
-        content = _get_structured_task_fallback(task, compact_prompt)
+        raise _unavailable(task, selected_model, exc) from exc
+    if not (content or "").strip():
+        raise LLMUnavailableError(task, selected_model, "the model returned an empty response")
 
     llm_elapsed_ms = (perf_counter() - llm_started_at) * 1000
     total_elapsed = perf_counter() - started_at
@@ -370,6 +404,7 @@ async def generate_text_async(
             llm_time_ms=0.0,
             cache_status="HIT",
         )
+        record_llm_call(task, selected_model, 0, 0, 0.0, cached=True)
         queue = stream_queue_var.get()
         if queue is not None:
             await queue.put(("chunk", task, cached))
@@ -387,14 +422,17 @@ async def generate_text_async(
                 stream=True,
                 options=options,
             )
+            last_chunk = None
             async for chunk in stream_response:
+                last_chunk = chunk
                 content = chunk.get("message", {}).get("content")
                 if content:
                     chunks.append(content)
                     await queue.put(("chunk", task, content))
+            if last_chunk is not None:
+                record_llm_call(task, selected_model, *token_counts(last_chunk), perf_counter() - llm_started_at)
         except Exception as exc:
-            _logger.error("Error in generate_text_async stream: %s", exc)
-            raise
+            raise _unavailable(task, selected_model, exc) from exc
 
         content = "".join(chunks)
     else:
@@ -407,9 +445,11 @@ async def generate_text_async(
                 options=options,
             )
             content = response["message"]["content"]
+            record_llm_call(task, selected_model, *token_counts(response), perf_counter() - llm_started_at)
         except Exception as exc:
-            _logger.warning("LLM call timed out or failed for task '%s': %s. Returning structured fallback.", task, exc)
-            content = _get_structured_task_fallback(task, compact_prompt)
+            raise _unavailable(task, selected_model, exc) from exc
+    if not (content or "").strip():
+        raise LLMUnavailableError(task, selected_model, "the model returned an empty response")
 
     llm_elapsed_ms = (perf_counter() - llm_started_at) * 1000
     total_elapsed = perf_counter() - started_at
@@ -553,43 +593,6 @@ Return only the code unless the user explicitly asks for an explanation.
     )
 
 
-def _get_structured_task_fallback(task: str, prompt: str) -> str:
-    import json
-    task_lower = task.lower()
-    if "planner" in task_lower:
-        return json.dumps({
-            "project_name": "AIForge Software Application",
-            "domain": "Full Stack Web Application",
-            "executive_summary": "Production-grade web application platform.",
-            "functional_requirements": ["FR-1: User authentication", "FR-2: Interactive Dashboard"],
-            "non_functional_requirements": ["High availability", "Sub-second response time"],
-            "user_stories": ["As a user I want to sign in to access the dashboard"],
-            "assumptions": ["PostgreSQL Database"],
-            "constraints": ["Dockerized container deployment"],
-            "tech_stack": {"frontend": "React", "backend": "FastAPI", "database": "PostgreSQL", "auth": "JWT", "infra": "Docker"}
-        }, indent=2)
-    elif "architect" in task_lower:
-        return json.dumps({
-            "components": ["Navbar", "Sidebar", "DashboardCard", "LoginForm"],
-            "routes": ["GET /health", "POST /api/auth/login", "GET /api/data"],
-            "models": ["User", "Session", "Item"],
-            "dependencies": ["react", "fastapi", "sqlalchemy", "pydantic"],
-            "folder_structure": {"frontend": ["src/App.jsx"], "backend": ["main.py"]}
-        }, indent=2)
-    elif "frontend" in task_lower:
-        return "import React from 'react';\n\nexport default function App() {\n  return <div className='min-h-screen bg-slate-900 text-white p-8'><h1>AIForge App</h1></div>;\n}"
-    elif "backend" in task_lower:
-        return "from fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get('/health')\ndef health():\n    return {'status': 'ok'}\n"
-    elif "database" in task_lower:
-        return "CREATE TABLE IF NOT EXISTS users (\n  id SERIAL PRIMARY KEY,\n  email VARCHAR(255) UNIQUE NOT NULL\n);"
-    elif "testing" in task_lower:
-        return "def test_health():\n    assert 1 + 1 == 2\n"
-    elif "reviewer" in task_lower:
-        return "Code review completed successfully with zero critical flaws."
-    else:
-        return "Task completed successfully."
-
-
 class LLMService:
     def generate_completion(
         self,
@@ -603,4 +606,4 @@ class LLMService:
 
 
 global_llm_service = LLMService()
-
+

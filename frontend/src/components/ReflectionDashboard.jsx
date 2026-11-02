@@ -81,12 +81,12 @@ function ReflectionDashboard() {
                                 className="stroke-[#6366F1] fill-none transition-all duration-1000 ease-out"
                                 strokeWidth="8"
                                 strokeDasharray={2 * Math.PI * 64}
-                                strokeDashoffset={2 * Math.PI * 64 * (1 - (score || 85) / 100)}
+                                strokeDashoffset={2 * Math.PI * 64 * (1 - (score || 0) / 100)}
                                 strokeLinecap="round"
                             />
                         </svg>
                         <div className="text-center">
-                            <span className="text-4xl font-extrabold text-white">{score || 85}</span>
+                            <span className="text-4xl font-extrabold text-white">{score ?? '—'}</span>
                             <span className="text-gray-400 block text-xs mt-0.5">/ 100</span>
                         </div>
                     </div>
@@ -180,7 +180,7 @@ function ReflectionDashboard() {
                                     </div>
                                     <div className="flex flex-col items-end whitespace-nowrap text-xs text-gray-500">
                                         <span className="px-2 py-0.5 rounded bg-gray-800 text-gray-300 border border-gray-700">
-                                            Seen: {lesson.count || 1}x
+                                            Seen: {lesson.count ?? 0}x
                                         </span>
                                         <span className="mt-1">Last: {lesson.last_seen || "N/A"}</span>
                                     </div>

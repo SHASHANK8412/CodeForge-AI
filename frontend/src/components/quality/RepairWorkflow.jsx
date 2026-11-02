@@ -1,80 +1,69 @@
-import React from 'react';
-import { FaCheckCircle, FaSpinner, FaClock, FaWrench } from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
+import { FaCheckCircle, FaSpinner, FaWrench, FaExclamationTriangle } from 'react-icons/fa';
+import { getVerification } from '../../services/executionGuardian';
 
-export default function RepairWorkflow({ step = 3, isComplete = false, repairResult = null, onClose }) {
-  const steps = [
-    'Analyzing failure traces',
-    'Locating problematic code lines',
-    'Generating DebugAgent code fix',
-    'Applying targeted patches',
-    'Re-running automated pytest suite'
-  ];
+const DONE = ['VERIFIED', 'VERIFIED_WITH_WARNINGS', 'FAILED', 'BLOCKED', 'CANCELLED'];
 
+/**
+ * A real Execution Guardian verification of the project (checks run on an isolated copy, failures repaired within
+ * limits). Everything shown is the verification's own state, polled from the API - no simulated progress.
+ */
+export default function RepairWorkflow({ projectId, verificationId, error, onClose, onFinished }) {
+  const [v, setV] = useState(null);
+  const [loadError, setLoadError] = useState('');
+
+  useEffect(() => {
+    if (!verificationId) return undefined;
+    let alive = true;
+    const load = async () => {
+      try {
+        const r = await getVerification(projectId, verificationId);
+        if (!alive) return;
+        setV(r.verification);
+        if (DONE.includes(r.verification.status)) {
+          clearInterval(timer);
+          onFinished?.(r.verification);
+        }
+      } catch (e) { if (alive) setLoadError(e?.error || 'Could not load the verification.'); }
+    };
+    const timer = setInterval(load, 2500);
+    load();
+    return () => { alive = false; clearInterval(timer); };
+  }, [projectId, verificationId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const finished = v && DONE.includes(v.status);
+  const ok = v && v.status.startsWith('VERIFIED');
   return (
     <div className="bg-slate-950 border border-amber-500/40 rounded-2xl p-6 shadow-2xl font-sans mb-6">
       <div className="flex items-center justify-between mb-4 border-b border-amber-500/20 pb-3">
         <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-          <FaWrench className="text-amber-400 animate-spin" /> AIForge Automatic Repair Engine
+          <FaWrench className={`text-amber-400 ${finished ? '' : 'animate-spin'}`} /> Execution Guardian verification
         </h3>
-        <span className="font-mono text-xs font-bold text-amber-400">
-          {isComplete ? 'REPAIR COMPLETE' : `STEP ${step} OF 5`}
-        </span>
+        <span className="font-mono text-xs font-bold text-amber-400">{v ? v.status.replace(/_/g, ' ') : error ? 'NOT STARTED' : 'STARTING'}</span>
       </div>
 
-      {!isComplete ? (
-        <div className="space-y-3">
-          {steps.map((stName, idx) => {
-            const stepNum = idx + 1;
-            const isDone = stepNum < step;
-            const isCurrent = stepNum === step;
-
-            return (
-              <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs">
-                <div className="flex items-center gap-3">
-                  {isDone ? (
-                    <FaCheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                  ) : isCurrent ? (
-                    <FaSpinner className="w-4 h-4 text-cyan-400 animate-spin shrink-0" />
-                  ) : (
-                    <FaClock className="w-4 h-4 text-slate-600 shrink-0" />
-                  )}
-                  <span className={isCurrent ? 'font-bold text-white' : isDone ? 'text-slate-300' : 'text-slate-500'}>
-                    {stepNum}. {stName}
-                  </span>
-                </div>
-                {isCurrent && <span className="font-mono text-cyan-400 text-[11px] animate-pulse">Processing...</span>}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="p-4 bg-emerald-950/40 border border-emerald-500/30 rounded-xl text-xs text-emerald-200">
-            <div className="font-bold text-sm text-white mb-2 flex items-center gap-2">
-              <FaCheckCircle className="text-emerald-400" /> Bounded Self-Repair Completed Successfully
-            </div>
-            <div className="grid grid-cols-2 gap-4 font-mono text-xs mt-3">
-              <div>
-                <span className="text-slate-400 block">Previous Status:</span>
-                <span className="text-rose-400 font-bold">46 / 48 tests passed</span>
-              </div>
-              <div>
-                <span className="text-slate-400 block">Current Verified Status:</span>
-                <span className="text-emerald-400 font-bold">48 / 48 tests passed (100%)</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition"
-            >
-              View Verified Quality Report
-            </button>
-          </div>
+      {(error || loadError) && <p className="mb-3 text-xs text-rose-300">{error || loadError}</p>}
+      {v && (
+        <div className="space-y-2 text-xs text-slate-300">
+          <p className="flex items-center gap-2">
+            {finished ? (ok ? <FaCheckCircle className="text-emerald-400" /> : <FaExclamationTriangle className="text-amber-400" />)
+              : <FaSpinner className="animate-spin text-cyan-400" />}
+            {finished ? (v.report?.statement || v.status) : v.current_operation}
+          </p>
+          <ul className="space-y-1 font-mono text-[11px]">
+            {(v.checks || []).map((c) => <li key={c.name}>{c.label}: {c.status}{c.error_summary ? ` — ${c.error_summary}` : ''}</li>)}
+          </ul>
+          <p>Repair attempts: {(v.repairs || []).length} of {v.settings?.max_repair_attempts ?? '—'}</p>
+          {v.delivery?.autopilot_plan_id && (
+            <p className="text-emerald-200">Repaired files are Autopilot plan {v.delivery.autopilot_plan_id}, awaiting your approval. The project has not been changed.</p>
+          )}
         </div>
       )}
+      <div className="mt-4 flex justify-end">
+        <button onClick={onClose} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition">
+          {finished ? 'Close' : 'Hide (keeps running)'}
+        </button>
+      </div>
     </div>
   );
 }

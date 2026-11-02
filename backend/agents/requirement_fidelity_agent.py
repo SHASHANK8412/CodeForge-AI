@@ -88,8 +88,11 @@ class RequirementFidelityAgent:
         if not is_f1_prompt and is_f1_generated:
             domain_matched = False
 
-        if expected_domain != "General Software Application" and gen_domain != "General Software Application":
-            if expected_domain != gen_domain and not (expected_domain in gen_domain or gen_domain in expected_domain):
+        # The generator names domains freely ("Formula Platform"); compare in this agent's taxonomy,
+        # otherwise the same project is a "mismatch" just because the two labels differ.
+        gen_category = gen_domain if gen_domain in DOMAIN_TAXONOMY else self.infer_expected_domain(gen_lower)
+        if expected_domain != "General Software Application" and gen_category != "General Software Application":
+            if expected_domain != gen_category:
                 domain_matched = False
 
         # Calculate feature coverage

@@ -89,72 +89,34 @@ class OpsMonitor:
                 recovery_status="Triggered"
             )
 
-            # 5. Root Cause Analysis
-            diagnostics = self.root_cause_analyzer.analyze(
-                incidents=[i.model_dump() for i in detected_incidents],
-                metrics=metrics,
-                health=health
-            )
-
-            # 6. Self-Healing Loop
-            success = False
-            attempts = 0
-            max_attempts = sre_settings.retry_count
-            strategy_tried = "None"
-            exec_time = 0.0
-
-            while not success and attempts < max_attempts:
-                attempts += 1
-                strategy_tried, duration = self.recovery_engine.execute_recovery(
-                    signature=primary_incident.signature,
-                    recommendation=diagnostics,
-                    attempt_number=attempts
+            # 5. Root Cause Analysis (blocking LLM call - must stay off the event loop)
+            if sre_settings.llm_root_cause_enabled:
+                diagnostics = await asyncio.to_thread(
+                    self.root_cause_analyzer.analyze,
+                    incidents=[i.model_dump() for i in detected_incidents],
+                    metrics=metrics,
+                    health=health,
                 )
-                exec_time += duration
+            else:
+                diagnostics = {
+                    "incident": primary_incident.description,
+                    "severity": primary_incident.severity,
+                    "service": primary_incident.service,
+                    "root_cause": f"Threshold rule '{primary_incident.signature}' triggered (LLM RCA disabled)",
+                    "affected_components": [primary_incident.service],
+                    "confidence": 0.5,
+                    "recommended_action": "None",
+                }
 
-                # Validate
-                success, validation_log = await self.validator.validate_recovery()
-                
-                # Register in KB memory
-                self.knowledge_base.add_record(
-                    signature=primary_incident.signature,
-                    root_cause=diagnostics.get("root_cause", "Unknown"),
-                    strategy=strategy_tried,
-                    success=success,
-                    duration_seconds=exec_time,
-                    confidence=diagnostics.get("confidence", 0.5)
-                )
-
-                if success:
-                    # Clear active incident
-                    self.active_incidents = []
-                    # Dispatch success alert
-                    self.alert_manager.dispatch_alert(
-                        incident_signature=primary_incident.signature,
-                        severity=primary_incident.severity,
-                        affected_service=primary_incident.service,
-                        details=f"Self-healing successfully resolved incident. Strategy: {strategy_tried}",
-                        recovery_status="Resolved",
-                        mttr_seconds=exec_time
-                    )
-                    break
-            
-            if not success:
-                _logger.error(f"SRE self-healing failed for signature '{primary_incident.signature}' after {attempts} attempts.")
-                # Dispatch critical failure alert
-                self.alert_manager.dispatch_alert(
-                    incident_signature=primary_incident.signature,
-                    severity="Emergency",
-                    affected_service=primary_incident.service,
-                    details=f"Self-healing failed after {attempts} attempts. Manual intervention requested.",
-                    recovery_status="Failed"
-                )
-
+            # 6. Recovery: no recovery executor is connected (RecoveryEngine only describes what it would
+            # run), so nothing is executed and the incident is not reported as resolved.
+            strategy = self.recovery_engine.recommend(primary_incident.signature, diagnostics)
             recovery_summary = {
-                "success": success,
-                "strategy": strategy_tried,
-                "attempts": attempts,
-                "duration_seconds": exec_time,
+                "executed": False,
+                "success": None,
+                "recommended_strategy": strategy,
+                "note": "no recovery action was executed: AIForge has no recovery executor connected; "
+                        "the incident stays open until the metrics recover",
             }
 
         # Calculate latest analytics

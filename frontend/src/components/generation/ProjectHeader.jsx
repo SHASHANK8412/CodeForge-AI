@@ -46,8 +46,8 @@ export default function ProjectHeader({
   };
 
   const stackText = stack
-    ? `${stack.frontend || 'React'} + ${stack.backend || 'FastAPI'} + ${stack.database || 'PostgreSQL'}`
-    : 'React + FastAPI + PostgreSQL';
+    ? [stack.frontend, stack.backend, stack.database].filter(Boolean).join(' + ')
+    : '';
 
   return (
     <header className="border-b border-slate-800/80 bg-[#090d16]/90 backdrop-blur-md sticky top-0 z-40 font-sans">
@@ -63,8 +63,7 @@ export default function ProjectHeader({
               {getStatusBadge()}
             </div>
             <div className="flex items-center gap-3 text-[11px] font-mono text-slate-400">
-              <span>{stackText}</span>
-              <span>•</span>
+              {stackText && <><span>{stackText}</span><span>•</span></>}
               <span className="text-cyan-400">ID: {generationId}</span>
             </div>
           </div>

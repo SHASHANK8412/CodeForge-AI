@@ -34,7 +34,6 @@ class PluginActionInput(BaseModel):
     plugin_id: str
 
 
-@router.get("/plugins")
 @router.get("/api/v1/plugins")
 async def list_plugins(status: Optional[str] = Query(None, description="Filter by status: ACTIVE, DISABLED")) -> Dict[str, Any]:
     """Retrieves all installed plugins and their statuses."""
@@ -60,7 +59,6 @@ async def get_plugin_details(plugin_id: str) -> Dict[str, Any]:
     return {"status": "success", "plugin": plugin}
 
 
-@router.post("/plugins/install")
 @router.post("/api/v1/plugins/install")
 async def install_plugin(req: InstallPluginInput) -> Dict[str, Any]:
     """Validates manifest, verifies permissions, and installs a new plugin dynamically."""
@@ -72,7 +70,6 @@ async def install_plugin(req: InstallPluginInput) -> Dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/plugins/uninstall")
 @router.post("/api/v1/plugins/uninstall")
 async def uninstall_plugin(req: PluginActionInput) -> Dict[str, Any]:
     """Uninstalls a plugin from the platform."""
@@ -83,7 +80,6 @@ async def uninstall_plugin(req: PluginActionInput) -> Dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/plugins/enable")
 @router.post("/api/v1/plugins/enable")
 async def enable_plugin(req: PluginActionInput) -> Dict[str, Any]:
     """Activates an installed plugin."""
@@ -94,7 +90,6 @@ async def enable_plugin(req: PluginActionInput) -> Dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/plugins/disable")
 @router.post("/api/v1/plugins/disable")
 async def disable_plugin(req: PluginActionInput) -> Dict[str, Any]:
     """Deactivates an active plugin."""

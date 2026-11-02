@@ -190,3 +190,28 @@ async def test_ops_monitor_and_scheduler(tmp_path):
     await asyncio.sleep(0.1)
     scheduler.stop()
     assert scheduler.running is False
+
+
+@pytest.mark.anyio
+async def test_incidents_get_a_recommendation_not_a_claimed_recovery(tmp_path):
+    """No recovery executor, notification channel or orchestrator is connected: the loop must not report
+    that it restarted anything, resolved the incident, sent an alert or scaled the backend."""
+    kb_file = tmp_path / "incident_kb.json"
+    monitor = OpsMonitor(kb_file_path=str(kb_file))
+    monitor.health_checker.run_comprehensive_check = AsyncMock(return_value={"health_score": 100, "checks": {}})
+    hot = {"infrastructure": {"cpu_utilization": 97.0, "memory_utilization": 95.0}, "containers": {}, "application": {}}
+    monitor.metrics_collector.collect_metrics = MagicMock(return_value=hot)
+    monitor.recovery_engine.execute_recovery = MagicMock(side_effect=AssertionError("recovery must not be executed"))
+
+    outcome = await monitor.execute_operations_step()
+    outcome = await monitor.execute_operations_step()
+    assert outcome["active_incidents"] and outcome["active_incidents"][0]["signature"] == "high_cpu"
+    summary = outcome["recovery_summary"]
+    assert summary["executed"] is False and summary["success"] is None and summary["recommended_strategy"]
+    assert monitor.knowledge_base.get_records() == []                       # no invented recovery history
+    alerts = monitor.alert_manager.get_alerts_history()
+    assert alerts and all(a["delivery"].startswith("recorded only") for a in alerts)
+    assert all(a["status"] != "Resolved" for a in alerts)
+    scaling = outcome["scaling_events"]
+    assert scaling and all(d["applied"] is False for d in scaling)
+    assert {d.get("memory_limit_mb") for d in scaling if d["action"] == "vertical"} == {768}   # not growing per step

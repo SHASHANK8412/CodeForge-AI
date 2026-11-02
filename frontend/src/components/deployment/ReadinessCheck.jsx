@@ -2,21 +2,15 @@ import React from 'react';
 import { FaCheckCircle, FaRocket, FaExclamationTriangle, FaShieldAlt } from 'react-icons/fa';
 
 export default function ReadinessCheck({ readiness = {}, onStartDeployment }) {
-  const isReady = readiness.is_ready ?? true;
-  const score = readiness.score ?? 98;
-  const checks = readiness.checks || {
-    build_configuration: true,
-    environment_configuration: true,
-    tests_passed: true,
-    security_review: true,
-    database_configuration: true,
-    docker_configuration: true
-  };
+  const isReady = readiness.is_ready === true;     // never ready by default
+  const score = readiness.score ?? '—';
+  // Only checks the backend reported: a missing check is shown as not passed, never assumed.
+  const checks = readiness.checks || {};
 
   const checkLabels = {
     build_configuration: 'Build Configuration',
     environment_configuration: 'Environment Configuration',
-    tests_passed: 'Tests Passed (48/48)',
+    tests_passed: 'Tests Passed',
     security_review: 'Security Audit Passed',
     database_configuration: 'Database Schema & Migrations',
     docker_configuration: 'Docker Container Manifest'

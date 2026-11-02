@@ -9,6 +9,11 @@ sys.path.append(str(project_root))
 
 from tests.verify_day49_scenarios import main as run_scenarios
 
+def test_day49_scenarios():
+    # This file only had a __main__ runner, so pytest collected nothing and the checks never ran.
+    assert run_scenarios() is True
+
+
 if __name__ == "__main__":
     success = run_scenarios()
     if not success:

@@ -28,34 +28,8 @@ class IncidentKnowledgeBase:
                         self.kb_data = json.loads(content)
                         return
             
-            # Initial seed knowledge data
-            self.kb_data = [
-                {
-                    "signature": "db_connection_failure",
-                    "root_cause": "PostgreSQL offline",
-                    "strategy": "Restart Database",
-                    "success": True,
-                    "duration_seconds": 12.5,
-                    "confidence": 0.95
-                },
-                {
-                    "signature": "high_cpu",
-                    "root_cause": "Thread starvation",
-                    "strategy": "Scale Replicas",
-                    "success": True,
-                    "duration_seconds": 25.0,
-                    "confidence": 0.85
-                },
-                {
-                    "signature": "redis_failure",
-                    "root_cause": "Cache disconnect",
-                    "strategy": "Clear Cache",
-                    "success": True,
-                    "duration_seconds": 3.0,
-                    "confidence": 0.90
-                }
-            ]
-            self._save_kb()
+            # Starts empty: only real recovery outcomes belong here (none are executed today).
+            self.kb_data = []
         except Exception as e:
             _logger.error(f"Failed to load incident knowledge base: {str(e)}")
             self.kb_data = []

@@ -47,10 +47,14 @@ class RepositoryScanner:
         """
         Validates that target_path resides strictly inside root_path (Prevents path traversal).
         """
-        abs_root = os.path.abspath(root_path)
-        abs_target = os.path.abspath(os.path.join(abs_root, target_path))
+        # realpath follows symlinks; the separator check stops "../proj-evil/x" from passing as
+        # inside "proj" (a plain startswith() accepted any sibling sharing the prefix).
+        abs_root = os.path.realpath(root_path)
+        abs_target = os.path.realpath(os.path.join(abs_root, target_path))
+        root_key, target_key = os.path.normcase(abs_root), os.path.normcase(abs_target)
+        inside = target_key.startswith(root_key.rstrip(os.sep) + os.sep)
 
-        if not abs_target.startswith(abs_root):
+        if not inside:
             _logger.error(f"[SecurityError] Path traversal attempt blocked: '{target_path}' outside root '{root_path}'")
             raise PermissionError(f"Security Error: Access to path outside workspace root is blocked: '{target_path}'")
 

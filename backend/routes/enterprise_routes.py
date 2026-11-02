@@ -71,7 +71,6 @@ async def create_workspace(req: CreateWorkspaceInput) -> Dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/projects")
 @router.get("/api/v1/projects/enterprise")
 async def list_enterprise_projects(workspace_id: Optional[str] = Query(None, description="Workspace filter")) -> Dict[str, Any]:
     """Retrieves active projects under workspace isolation."""

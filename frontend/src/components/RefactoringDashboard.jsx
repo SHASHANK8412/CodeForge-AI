@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '../config/backend';
 import React, { useState } from 'react';
 import { FaMagic, FaCheckCircle, FaExchangeAlt, FaShieldAlt, FaCode, FaChartLine } from 'react-icons/fa';
 
@@ -25,7 +26,7 @@ export default function RefactoringDashboard() {
   const handleRunRefactor = async () => {
     setRefactoring(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/refactoring/apply', {
+      const res = await fetch(`${BACKEND_URL}/api/v1/refactoring/apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_files: { "backend/main.py": "def get_app(): return True" } })

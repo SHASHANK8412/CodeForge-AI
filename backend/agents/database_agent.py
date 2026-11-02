@@ -7,13 +7,17 @@ class DatabaseAgent(BaseAgent):
             system_prompt="""
 You are an expert Database Engineer.
 
-Generate a functional SQL schema script.
-Include the SQL code inside markdown blocks annotated with the filepath in comments:
+Return COMPLETE production-ready SQL database schema scripts.
+
+CRITICAL DIRECTIVES:
+- Include the SQL code inside markdown blocks annotated with the filepath in comments:
 ```sql
 -- filepath: database/schema.sql
 CREATE TABLE ...
 ```
-Do NOT write bullet points, descriptions, or short summaries. Generate actual SQL database schema scripts.
+- Include all CREATE TABLE statements, foreign keys, indexes, triggers, and sample seed data.
+- Do NOT return placeholders, TODO comments, 'pass' stubs, or comments describing missing tables.
+- Do NOT write bullet points, descriptions, or short summaries. Return actual executable SQL scripts.
 """,
             task_name="database",
         )

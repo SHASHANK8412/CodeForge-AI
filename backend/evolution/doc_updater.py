@@ -44,20 +44,21 @@ class DocumentationUpdater:
             except Exception as e:
                 _logger.error(f"Failed to update README.md: {e}")
 
-        # 2. Export updated Mermaid architecture graph
-        arch_path = self.workspace_root / "docs" / "ARCHITECTURE.md"
-        self.exporter.export_mermaid_markdown(str(arch_path))
+        # 2. Export the generated dependency graph to its own file. docs/ARCHITECTURE.md is
+        # hand-written and must not be overwritten by generated output.
+        graph_path = self.workspace_root / "docs" / "DEPENDENCY_GRAPH.md"
+        graph_updated = False
+        try:
+            self.exporter.export_mermaid_markdown(str(graph_path))
+            graph_updated = True
+        except Exception as e:  # noqa: BLE001
+            _logger.error(f"Failed to export dependency graph: {e}")
 
         return {
             "proposed_change": prompt,
-            "readme_updated": readme_updated or True,
-            "swagger_updated": True,
-            "architecture_updated": True,
-            "dependency_graph_updated": True,
-            "updated_doc_files": [
-                "README.md",
-                "docs/swagger.json",
-                "docs/ARCHITECTURE.md",
-                "docs/DEPENDENCY_GRAPH.md"
-            ]
+            "readme_updated": readme_updated,
+            "swagger_updated": False,
+            "architecture_updated": False,
+            "dependency_graph_updated": graph_updated,
+            "updated_doc_files": (["README.md"] if readme_updated else []) + (["docs/DEPENDENCY_GRAPH.md"] if graph_updated else [])
         }

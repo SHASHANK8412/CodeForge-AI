@@ -1,5 +1,3 @@
-import io
-import zipfile
 import logging
 from pathlib import Path
 from typing import Dict, Any
@@ -90,9 +88,5 @@ graph TD
 """
 
     def create_zip_bytes(self, files_dict: Dict[str, str]) -> bytes:
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-            for filepath, content in files_dict.items():
-                zip_file.writestr(filepath, content)
-        zip_buffer.seek(0)
-        return zip_buffer.getvalue()
+        from backend.exporter.zipper import global_project_zipper
+        return global_project_zipper.create_zip_bytes(files_dict, root_folder="")

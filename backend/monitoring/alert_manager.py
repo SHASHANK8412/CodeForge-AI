@@ -4,15 +4,17 @@ from typing import Dict, Any, List
 
 _logger = logging.getLogger("aiforge.sre")
 
+
 class AlertManager:
     """
-    Formulates and dispatches operational SRE alerts (Slack, Teams, Discord, Emails, Webhooks)
-    reporting incident signatures, severities, affected hosts, and healing success statuses.
+    Records operational SRE alerts (incident signature, severity, service, recovery status).
+    No notification integration (Slack, Teams, Discord, email, webhooks) is implemented, so alerts are
+    recorded and logged only; each record says so in "delivery" instead of claiming it was sent.
     """
 
     def __init__(self, active_channels: List[str] = None) -> None:
-        self.active_channels = active_channels or ["slack", "email"]
-        self.alerts_sent: List[Dict[str, Any]] = []
+        self.active_channels = active_channels or []      # configured names; none of them is connected
+        self.alerts_sent: List[Dict[str, Any]] = []        # kept for compatibility: records, not deliveries
 
     def dispatch_alert(
         self,
@@ -23,9 +25,6 @@ class AlertManager:
         recovery_status: str = "Active",
         mttr_seconds: float = None
     ) -> Dict[str, Any]:
-        """
-        Builds and mock-transmits SRE alert payload to configured notification channels.
-        """
         alert_payload = {
             "timestamp": time.time(),
             "incident": incident_signature,
@@ -34,22 +33,11 @@ class AlertManager:
             "details": details,
             "status": recovery_status,
             "mttr_seconds": mttr_seconds,
+            "delivery": "recorded only: no notification channel is connected"
+                        + (f" (configured but not implemented: {', '.join(self.active_channels)})" if self.active_channels else ""),
         }
-
         self.alerts_sent.append(alert_payload)
-
-        # Mock dispatch notifications log output
-        for channel in self.active_channels:
-            chan_lower = channel.lower()
-            if chan_lower == "slack":
-                _logger.info(f"[ALERT: SLACK] DISPATCHED -> Incident: {incident_signature} | Severity: {severity} | Service: {affected_service} | Status: {recovery_status}")
-            elif chan_lower == "discord":
-                _logger.info(f"[ALERT: DISCORD] DISPATCHED -> Service: {affected_service} under {severity} load alert.")
-            elif chan_lower == "teams":
-                _logger.info(f"[ALERT: TEAMS] DISPATCHED -> MS Teams Webhook posted for incident '{incident_signature}'")
-            elif chan_lower == "email":
-                _logger.info(f"[ALERT: EMAIL] DISPATCHED -> Sending SMTP email to SRE On-Call roster regarding {affected_service} outage.")
-
+        _logger.info("[ALERT recorded, not sent] %s | %s | %s | %s", incident_signature, severity, affected_service, recovery_status)
         return alert_payload
 
     def get_alerts_history(self) -> List[Dict[str, Any]]:

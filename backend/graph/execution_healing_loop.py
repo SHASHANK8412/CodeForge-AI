@@ -145,9 +145,10 @@ class ExecutionHealingLoop:
         logs.append("✔ Step 6/6: Structured Reviewer Gate")
         review_raw = await self.reviewer.run_async(f"Review {proj_name}", previous_output=f"Backend:\n{be_code}\nFrontend:\n{fe_code}")
         review_json = self.reviewer.parse_review_json(review_raw)
-        logs.append(f"  └ Reviewer Status: {review_json.get('status', 'PASS')} (Score: {review_json.get('score', 85)})")
+        review_status = review_json.get("overall_status") or review_json.get("status") or "NOT_REVIEWED"
+        logs.append(f"  └ Reviewer Status: {review_status} (Score: {review_json.get('overall_score', 'none')})")
 
-        final_status = "SUCCESS" if is_success and review_json.get("status") == "PASS" else "COMPLETED_WITH_WARNINGS"
+        final_status = "SUCCESS" if is_success and review_status == "PASS" else "COMPLETED_WITH_WARNINGS"
 
         return {
             "status": final_status,

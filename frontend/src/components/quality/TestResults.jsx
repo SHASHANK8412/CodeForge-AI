@@ -1,13 +1,23 @@
 import React from 'react';
 import { FaVial, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 
-export default function TestResults({ tests = {}, breakdown = {} }) {
-  const total = tests.total ?? 48;
-  const passed = tests.passed ?? 48;
+export default function TestResults({ tests, breakdown = {} }) {
+  if (!tests || tests.total == null) {
+    return (
+      <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-6 shadow-xl font-sans text-xs text-slate-400">
+        <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 mb-2">
+          <FaVial className="text-purple-400" /> Empirical Testing Dashboard
+        </h3>
+        No test results have been recorded for this project yet.
+      </div>
+    );
+  }
+  const total = tests.total;
+  const passed = tests.passed ?? 0;
   const failed = tests.failed ?? 0;
   const skipped = tests.skipped ?? 0;
-  const coverage = tests.coverage ?? 94;
-  const passRate = total > 0 ? Math.round((passed / total) * 100) : 100;
+  const coverage = tests.coverage;
+  const passRate = total > 0 ? Math.round((passed / total) * 100) : 0;
 
   return (
     <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-6 shadow-xl font-sans">
@@ -50,7 +60,7 @@ export default function TestResults({ tests = {}, breakdown = {} }) {
         </div>
         <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl">
           <div className="text-[11px] text-slate-400 font-medium">Coverage</div>
-          <div className="text-lg font-black text-cyan-400 font-mono">{coverage}%</div>
+          <div className="text-lg font-black text-cyan-400 font-mono">{coverage != null ? `${coverage}%` : '—'}</div>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import logging
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from backend.generators.dependency_generator import DependencyGenerator
 from backend.generators.package_generator import PackageGenerator
@@ -44,16 +44,22 @@ class ProjectGenerator:
         self.project_validator = ProjectValidator()
         self.zip_service = ZipService()
 
-    def generate_project_structure(self, project_name: str, state: dict[str, Any]) -> tuple[Path, ValidationReport]:
+    def generate_project_structure(
+        self, project_name: str, state: dict[str, Any], project_dir: Optional[Path] = None
+    ) -> tuple[Path, ValidationReport]:
         """
         Builds, configures, validates, and archives a complete project directory structure.
+
+        project_dir is the folder the pipeline already assembled the project in; completing that
+        folder (rather than a second one named after the project) keeps one copy of the output.
         """
         _logger.info(f"Initiating intelligent project generation engine for: {project_name}")
         GENERATED_PROJECTS_DIR.mkdir(parents=True, exist_ok=True)
 
-        # Normalize folder name
-        safe_name = "".join([c if c.isalnum() or c in " -_" else "_" for c in project_name]).strip()
-        project_dir = GENERATED_PROJECTS_DIR / safe_name
+        if project_dir is None:
+            safe_name = "".join([c if c.isalnum() or c in " -_" else "_" for c in project_name]).strip()
+            project_dir = GENERATED_PROJECTS_DIR / safe_name
+        project_dir = Path(project_dir)
         project_dir.mkdir(parents=True, exist_ok=True)
 
         # 1. Create subdirectories layout
@@ -76,8 +82,14 @@ class ProjectGenerator:
             write_project_file(project_dir / "frontend/src/App.jsx", state["frontend"])
         if "database/schema.sql" not in extracted_files and state.get("database"):
             write_project_file(project_dir / "database/schema.sql", state["database"])
-        if "tests/test_app.py" not in extracted_files and state.get("tests"):
+        if "tests/test_app.py" not in extracted_files and state.get("tests") and not state.get("files"):
             write_project_file(project_dir / "tests/test_app.py", state["tests"])
+
+        # The assembled file map includes every debug/patch repair; it must win over the raw
+        # agent text re-extracted above, or the final project would lose the fixes.
+        for rel_path, content in (state.get("files") or {}).items():
+            if isinstance(content, str):
+                write_project_file(project_dir / rel_path, content)
 
         # 3. Detect dependencies
         deps = self.dependency_generator.detect_dependencies(state)
@@ -174,7 +186,7 @@ jobs:
         report = self.project_validator.validate_project(project_dir)
 
         # 10. Package to ZIP Archive
-        zip_output_path = GENERATED_PROJECTS_DIR / f"{safe_name}.zip"
+        zip_output_path = project_dir.parent / f"{project_dir.name}.zip"
         self.zip_service.zip_project(project_dir, zip_output_path)
 
         _logger.info("Project exported successfully")

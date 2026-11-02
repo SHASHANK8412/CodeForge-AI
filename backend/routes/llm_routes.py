@@ -36,7 +36,6 @@ class FallbackTestInput(BaseModel):
     custom_chain: Optional[List[str]] = None
 
 
-@router.get("/models")
 @router.get("/api/v1/models")
 async def list_supported_models(capability: Optional[str] = Query(None, description="Filter by capability: code, reasoning")) -> Dict[str, Any]:
     """Retrieves metadata for supported LLMs (Qwen, DeepSeek, Llama, Mistral, Gemma, GPT-4o, Claude)."""
@@ -63,7 +62,6 @@ async def select_or_route_model(req: ModelSelectInput) -> Dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/models/benchmark")
 @router.post("/api/v1/models/benchmark")
 async def run_model_benchmark(req: RunBenchmarkInput) -> Dict[str, Any]:
     """Runs latency, token throughput, cost, and accuracy benchmark on selected LLMs."""
@@ -77,7 +75,6 @@ async def run_model_benchmark(req: RunBenchmarkInput) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/models/status")
 @router.get("/api/v1/models/status")
 async def get_models_status() -> Dict[str, Any]:
     """Retrieves operational status, provider availability, and fallback history."""

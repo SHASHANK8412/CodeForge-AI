@@ -1,6 +1,7 @@
+import { BACKEND_URL } from '../config/backend';
 import { getActiveSessionId } from "../utils/chatStorage";
 
-const API = "http://127.0.0.1:8000";
+const API = `${BACKEND_URL}`;
 
 
 export async function generatePlan(prompt, sessionId = getActiveSessionId()) {

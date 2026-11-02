@@ -4,6 +4,8 @@ AIForge Configuration & Performance Tuning
 Tiered model allocations, prompt context window caps, SSE streaming defaults, and Fast Mode.
 """
 
+import os
+
 OLLAMA_GENERAL_MODEL = "qwen2.5:latest"
 OLLAMA_CODING_MODEL = "qwen2.5-coder:latest"
 OLLAMA_SMALL_MODEL = "qwen2.5:latest"
@@ -89,3 +91,15 @@ ENABLE_SELF_HEAL = True
 ENABLE_SECURITY_SCAN = True
 ENABLE_PERFORMANCE_SCAN = True
 REVIEW_MODEL = "qwen2.5-coder:latest"
+
+# Execution & Sandbox Configuration
+DOCKER_ENABLED = os.getenv("DOCKER_ENABLED", "false").lower() == "true"
+EXECUTION_BACKEND = os.getenv("EXECUTION_BACKEND", "docker" if DOCKER_ENABLED else "local")
+EXECUTION_TIMEOUT = float(os.getenv("EXECUTION_TIMEOUT", "30.0"))
+MEMORY_LIMIT = os.getenv("MEMORY_LIMIT", "512m")
+CPU_LIMIT = float(os.getenv("CPU_LIMIT", "1.0"))
+NETWORK_MODE = os.getenv("NETWORK_MODE", "none")
+
+# Autonomous CI/CD Pipeline Configuration
+MAX_CI_REPAIR_ATTEMPTS = int(os.getenv("MAX_CI_REPAIR_ATTEMPTS", 3))
+CI_DEFAULT_TIMEOUT = float(os.getenv("CI_DEFAULT_TIMEOUT", 30.0))

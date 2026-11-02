@@ -10,18 +10,20 @@ import ReviewerFindings from '../components/quality/ReviewerFindings';
 import TestingFindings from '../components/quality/TestingFindings';
 import RepairWorkflow from '../components/quality/RepairWorkflow';
 import Recommendations from '../components/quality/Recommendations';
+import FeedbackRating from '../components/quality/FeedbackRating';
 import { fetchQualityReport, triggerAutomaticRepair } from '../services/quality';
 import { FaSpinner, FaExclamationTriangle, FaRedo } from 'react-icons/fa';
+
 
 export default function QualityCenter({ generationId = 'aiforge-demo', setView }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Repair State
+  // A real Execution Guardian verification (checks + bounded repairs on an isolated copy)
   const [repairActive, setRepairActive] = useState(false);
-  const [repairStep, setRepairStep] = useState(1);
-  const [repairComplete, setRepairComplete] = useState(false);
+  const [verificationId, setVerificationId] = useState(null);
+  const [repairError, setRepairError] = useState('');
 
   const loadReport = async () => {
     setLoading(true);
@@ -31,7 +33,7 @@ export default function QualityCenter({ generationId = 'aiforge-demo', setView }
       setData(report);
     } catch (err) {
       console.error('Failed to load quality report:', err);
-      setError('The quality service could not be reached.');
+      setError(err?.error || 'The quality service could not be reached.');
     } finally {
       setLoading(false);
     }
@@ -51,27 +53,20 @@ export default function QualityCenter({ generationId = 'aiforge-demo', setView }
 
   const handleStartRepair = async () => {
     setRepairActive(true);
-    setRepairStep(1);
-    setRepairComplete(false);
-
-    // Simulate step progression through repair workflow stages
-    setTimeout(() => setRepairStep(2), 1200);
-    setTimeout(() => setRepairStep(3), 2400);
-
-    const repairRes = await triggerAutomaticRepair(generationId);
-
-    setTimeout(() => setRepairStep(4), 3600);
-    setTimeout(() => setRepairStep(5), 4800);
-    setTimeout(() => {
-      setRepairComplete(true);
-      loadReport();
-    }, 6000);
+    setRepairError('');
+    setVerificationId(null);
+    try {
+      const r = await triggerAutomaticRepair(generationId);
+      setVerificationId(r.verification_id);
+    } catch (err) {
+      setRepairError(err?.error || 'The verification could not be started.');
+    }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#090d16] text-white font-sans flex flex-col items-center justify-center p-6 space-y-4">
-        <FaSpinner className="w-8 h-8 text-cyan-400 animate-spin" />
+      <div className="min-h-screen bg-[#08090D] text-white font-sans flex flex-col items-center justify-center p-6 space-y-4">
+        <FaSpinner className="w-8 h-8 text-[#8D5CF6] animate-spin" />
         <h3 className="text-base font-bold">AIForge Quality Analysis</h3>
         <p className="text-xs text-slate-400">Running quality checks & static AST inspections...</p>
       </div>
@@ -80,21 +75,21 @@ export default function QualityCenter({ generationId = 'aiforge-demo', setView }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#090d16] text-white font-sans flex flex-col items-center justify-center p-6 text-center">
-        <div className="bg-slate-950 border border-rose-500/30 rounded-2xl p-8 max-w-md shadow-2xl">
+      <div className="min-h-screen bg-[#08090D] text-white font-sans flex flex-col items-center justify-center p-6 text-center">
+        <div className="bg-[#0F1117] border border-[#242833] rounded-2xl p-8 max-w-md shadow-2xl">
           <FaExclamationTriangle className="w-10 h-10 text-rose-400 mx-auto mb-4" />
           <h3 className="text-lg font-bold mb-2">Unable to load quality report</h3>
           <p className="text-xs text-slate-300 mb-6">{error}</p>
           <div className="flex items-center justify-center gap-3">
             <button
               onClick={loadReport}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-bold text-white transition flex items-center gap-1.5"
+              className="px-4 py-2 bg-[#8D5CF6] hover:bg-[#7c4ee4] rounded-xl text-xs font-bold text-white transition flex items-center gap-1.5 cursor-pointer"
             >
               <FaRedo /> Retry
             </button>
             <button
               onClick={() => handleNavigate('build')}
-              className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition"
+              className="px-4 py-2 bg-[#0F1117] border border-[#242833] rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition cursor-pointer"
             >
               Back to Build
             </button>
@@ -104,13 +99,14 @@ export default function QualityCenter({ generationId = 'aiforge-demo', setView }
     );
   }
 
-  const projectName = data?.project_name || 'FoodDelivery AI';
-  const overallScore = data?.overall_score || 96.0;
+  const projectName = data?.project_name || generationId;
+  const overallScore = data?.overall_score ?? null;
   const categories = data?.categories || {};
   const gates = data?.quality_gates || [];
-  const passedGates = data?.passed_gates_count || 15;
-  const totalGates = data?.total_gates_count || 15;
-  const tests = data?.tests || {};
+  const passedGates = data?.passed_gates_count ?? 0;
+  const evaluatedGates = data?.evaluated_gates_count ?? 0;
+  const totalGates = data?.total_gates_count ?? gates.length;
+  const tests = data?.tests || null;
   const testBreakdown = data?.test_breakdown || {};
   const security = data?.security || {};
   const performance = data?.performance || {};
@@ -119,7 +115,7 @@ export default function QualityCenter({ generationId = 'aiforge-demo', setView }
   const recommendations = data?.recommendations || [];
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 font-sans selection:bg-cyan-500 selection:text-white">
+    <div className="min-h-screen bg-[#08090D] text-slate-100 font-sans selection:bg-cyan-500 selection:text-white">
       {/* Header Bar */}
       <QualityHeader
         projectName={projectName}
@@ -131,16 +127,18 @@ export default function QualityCenter({ generationId = 'aiforge-demo', setView }
         {/* Active Self-Repair Workflow Banner */}
         {repairActive && (
           <RepairWorkflow
-            step={repairStep}
-            isComplete={repairComplete}
+            projectId={generationId}
+            verificationId={verificationId}
+            error={repairError}
             onClose={() => setRepairActive(false)}
+            onFinished={loadReport}
           />
         )}
 
         {/* Overall Score & Category Scores */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4">
-            <OverallScore score={overallScore} />
+            <OverallScore score={overallScore} basis={data?.score_basis} />
           </div>
 
           <div className="lg:col-span-8">
@@ -148,8 +146,8 @@ export default function QualityCenter({ generationId = 'aiforge-demo', setView }
           </div>
         </div>
 
-        {/* 15 Quality Gates Breakdown */}
-        <QualityGates gates={gates} passedCount={passedGates} totalCount={totalGates} />
+        {/* Quality gates computed from recorded checks */}
+        <QualityGates gates={gates} passedCount={passedGates} evaluatedCount={evaluatedGates} totalCount={totalGates} />
 
         {/* Testing & Security Dashboards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -168,7 +166,12 @@ export default function QualityCenter({ generationId = 'aiforge-demo', setView }
 
         {/* AI Recommendations */}
         <Recommendations recommendations={recommendations} />
+
+        {/* User Quality & Helpfulness Feedback */}
+        <FeedbackRating projectId={generationId} />
       </main>
     </div>
   );
 }
+
+

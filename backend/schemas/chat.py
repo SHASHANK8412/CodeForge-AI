@@ -11,6 +11,8 @@ class ConversationCreateRequest(BaseModel):
 class ChatMessageRequest(BaseModel):
     conversation_id: str | None = Field(default=None, min_length=1, max_length=128)
     message: str = Field(min_length=1, max_length=12000)
+    memory_enabled: bool = Field(default=True, description="Enable AI Smart Memory Recall")
+    project_id: str | None = Field(default=None, description="Optional target project identifier")
 
 
 class ConversationRenameRequest(BaseModel):

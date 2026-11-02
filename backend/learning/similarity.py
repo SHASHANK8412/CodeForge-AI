@@ -55,9 +55,9 @@ class SemanticSimilarityEngine:
                 "project_id": p.get("id"),
                 "prompt": p.get("prompt"),
                 "architecture": p.get("architecture"),
-                "review_score": p.get("review_score", 95.6),
+                "review_score": p.get("review_score"),
                 "similarity_score_pct": sim,
-                "reusable_components": ["ProductCatalog", "CartDrawer", "CheckoutForm", "PaymentGateway"],
+                "reusable_components": p.get("components", []),
                 "reusable_architecture": p.get("architecture"),
                 "previous_bugs_to_avoid": p.get("bugs", [])
             })

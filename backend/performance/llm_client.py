@@ -105,7 +105,7 @@ class CentralizedLLMClient:
             try:
                 fb_resp, _ = global_fallback_policy.execute_with_fallback(
                     primary_func=_invoke_fallback,
-                    fallback_func=lambda: f"AIForge Fallback: Unable to complete request due to model service error: {ex}",
+                    fallback_func=lambda err=ex: f"AIForge Fallback: Unable to complete request due to model service error: {err}",
                     circuit_name="ollama"
                 )
                 return fb_resp
