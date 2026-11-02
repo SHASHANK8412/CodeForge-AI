@@ -130,7 +130,16 @@ class RAGPipeline(RetrievalAwareAgentMixin):
         return self.validate_and_format_response(raw_answer, grounding_ctx)
 
     def get_context_string_for_agent(self, agent_name: str, query: str = "") -> str:
-        """Retrieves and formats RAG context string for a specific agent step."""
+        """Retrieves and formats RAG context string for a specific agent step.
+
+        Set AIFORGE_RAG=off to disable retrieval entirely (used by the benchmark
+        harness for RAG on/off ablations). Disabled means *no* context string at
+        all, not a "no documents" placeholder, so prompts are identical to a
+        build without RAG.
+        """
+        import os
+        if os.environ.get("AIFORGE_RAG", "on").lower() in {"off", "0", "false", "no"}:
+            return ""
         try:
             chunks = self.retrieve_context(query or f"Best practices for {agent_name}", top_k=3)
             if not chunks:

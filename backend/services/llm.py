@@ -27,6 +27,7 @@ from backend.config import (
 from backend.utils.cache import llm_cache
 from backend.utils.retry import async_retry
 from backend.utils.prompt_optimizer import optimize_prompt
+from backend.observability.tracing import record_llm_call, token_counts_from_response
 
 _ollama_client = Client(timeout=480.0)
 _ollama_async_client = AsyncClient(timeout=480.0)
@@ -104,7 +105,15 @@ def _cache_key(model: str, profile_name: str, system_prompt: str, user_prompt: s
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
+def _llm_cache_disabled() -> bool:
+    """Benchmarks set AIFORGE_DISABLE_LLM_CACHE=1 so every run hits the model."""
+    import os
+    return os.environ.get("AIFORGE_DISABLE_LLM_CACHE", "").lower() in {"1", "true", "yes"}
+
+
 def _get_cached_response(key: str) -> str | None:
+    if _llm_cache_disabled():
+        return None
     cached = llm_cache.get(key)
     if cached is not None:
         _logger.info("INFO Cache Hit")
@@ -114,6 +123,8 @@ def _get_cached_response(key: str) -> str | None:
 
 
 def _set_cached_response(key: str, value: str) -> None:
+    if _llm_cache_disabled():
+        return
     llm_cache.set(key, value)
 
 
@@ -303,9 +314,14 @@ def generate_text(
             llm_time_ms=0.0,
             cache_status="HIT",
         )
+        record_llm_call(agent=task, model=selected_model, prompt=compact_prompt, output=cached,
+                        latency_ms=elapsed_ms, prompt_tokens=0, completion_tokens=0, cache_hit=True)
         return cached
 
     llm_started_at = perf_counter()
+    used_fallback = False
+    llm_error: str | None = None
+    prompt_tokens = completion_tokens = None
     try:
         response = _chat_completion_with_fallback(
             messages=_generate_message_payload(system_prompt, compact_prompt),
@@ -313,9 +329,12 @@ def generate_text(
             options=options,
         )
         content = response["message"]["content"]
+        prompt_tokens, completion_tokens = token_counts_from_response(response)
     except Exception as exc:
         _logger.warning("Synchronous LLM call timed out or failed for task '%s': %s. Returning structured fallback.", task, exc)
         content = _get_structured_task_fallback(task, compact_prompt)
+        used_fallback = True
+        llm_error = f"{type(exc).__name__}: {exc}"
 
     llm_elapsed_ms = (perf_counter() - llm_started_at) * 1000
     total_elapsed = perf_counter() - started_at
@@ -326,7 +345,12 @@ def generate_text(
         total_elapsed
     )
 
-    _set_cached_response(key, content)
+    # Never cache placeholder output: one outage would otherwise keep serving it.
+    if not used_fallback:
+        _set_cached_response(key, content)
+    record_llm_call(agent=task, model=selected_model, prompt=compact_prompt, output=content,
+                    latency_ms=llm_elapsed_ms, prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens, fallback=used_fallback, error=llm_error)
     _log_agent_performance(
         task=task,
         model=selected_model,
@@ -370,12 +394,17 @@ async def generate_text_async(
             llm_time_ms=0.0,
             cache_status="HIT",
         )
+        record_llm_call(agent=task, model=selected_model, prompt=compact_prompt, output=cached,
+                        latency_ms=elapsed_ms, prompt_tokens=0, completion_tokens=0, cache_hit=True)
         queue = stream_queue_var.get()
         if queue is not None:
             await queue.put(("chunk", task, cached))
         return cached
 
     llm_started_at = perf_counter()
+    used_fallback = False
+    llm_error: str | None = None
+    prompt_tokens = completion_tokens = None
     queue = stream_queue_var.get()
     if queue is not None:
         _logger.info("Agent Start (stream_async) task=%s model=%s profile=%s", task, selected_model, profile_name)
@@ -392,6 +421,10 @@ async def generate_text_async(
                 if content:
                     chunks.append(content)
                     await queue.put(("chunk", task, content))
+                # The final streamed chunk carries the provider's token counts.
+                p_tok, c_tok = token_counts_from_response(chunk)
+                if c_tok is not None:
+                    prompt_tokens, completion_tokens = p_tok, c_tok
         except Exception as exc:
             _logger.error("Error in generate_text_async stream: %s", exc)
             raise
@@ -407,9 +440,12 @@ async def generate_text_async(
                 options=options,
             )
             content = response["message"]["content"]
+            prompt_tokens, completion_tokens = token_counts_from_response(response)
         except Exception as exc:
             _logger.warning("LLM call timed out or failed for task '%s': %s. Returning structured fallback.", task, exc)
             content = _get_structured_task_fallback(task, compact_prompt)
+            used_fallback = True
+            llm_error = f"{type(exc).__name__}: {exc}"
 
     llm_elapsed_ms = (perf_counter() - llm_started_at) * 1000
     total_elapsed = perf_counter() - started_at
@@ -420,7 +456,12 @@ async def generate_text_async(
         total_elapsed
     )
 
-    _set_cached_response(key, content)
+    # Never cache placeholder output: one outage would otherwise keep serving it.
+    if not used_fallback:
+        _set_cached_response(key, content)
+    record_llm_call(agent=task, model=selected_model, prompt=compact_prompt, output=content,
+                    latency_ms=llm_elapsed_ms, prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens, fallback=used_fallback, error=llm_error)
     _log_agent_performance(
         task=task,
         model=selected_model,
@@ -603,4 +644,4 @@ class LLMService:
 
 
 global_llm_service = LLMService()
-
+

@@ -22,6 +22,7 @@ from backend.execution.models import (
     ExecutionType
 )
 from backend.execution.sandbox_executor import global_sandbox_executor
+from backend.execution.docker_sandbox import run_sandboxed, sandbox_backend
 
 _logger = logging.getLogger("aiforge.execution.project_runner")
 
@@ -32,7 +33,7 @@ class ProjectRunner:
     """
 
     def __init__(self, limits: Optional[ExecutionLimits] = None):
-        self.limits = limits or ExecutionLimits(timeout_seconds=15.0)
+        self.limits = limits or ExecutionLimits(timeout_seconds=float(os.environ.get("AIFORGE_RUN_TIMEOUT", "60")))
 
     def classify_error_type(self, stderr: str, stdout: str) -> str:
         """Classifies stderr/stdout into structured error type categories."""
@@ -59,6 +60,13 @@ class ProjectRunner:
         if not project_path.exists():
             return [], "unknown"
 
+        # Full-stack projects have both; the backend test suite is the stronger
+        # signal, so real Python tests win over a root package.json.
+        py_files = list(project_path.glob("**/*.py"))
+        if any(self._is_real_test_file(p) for p in py_files) and (
+                shutil.which("pytest") or sandbox_backend() == "docker"):
+            return [sys.executable, "-m", "pytest"], "python"
+
         pkg_json_path = project_path / "package.json"
         if pkg_json_path.exists():
             npm_cmd = "npm.cmd" if sys.platform == "win32" and shutil.which("npm.cmd") else "npm"
@@ -74,15 +82,61 @@ class ProjectRunner:
             return [npm_cmd, "run", "build"], "javascript"
 
         # Check for Python project
-        py_files = list(project_path.glob("**/*.py"))
         if py_files:
-            has_tests = any("test" in p.name.lower() for p in py_files)
-            if has_tests and shutil.which("pytest"):
+            # A file only counts as a test if it defines a test; placeholder files
+            # like "# Pytest Integration Tests" would make pytest exit 5 (no tests).
+            has_tests = any(self._is_real_test_file(p) for p in py_files)
+            if has_tests and (shutil.which("pytest") or sandbox_backend() == "docker"):
                 return [sys.executable, "-m", "pytest"], "python"
             return [sys.executable, "-m", "compileall", "-e", "."], "python"
 
         return [], "unknown"
 
+
+    @staticmethod
+    def _is_real_test_file(path: Path) -> bool:
+        name = path.name.lower()
+        if not (name.startswith("test_") or name.endswith("_test.py")):
+            return False
+        try:
+            return "def test" in path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return False
+
+    def _run_in_docker(self, proj_path: Path, cmd: List[str], lang: str) -> ExecutionResult:
+        """Runs the validation command in the isolated Docker sandbox."""
+        if lang != "python":
+            return ExecutionResult(
+                status=ExecutionStatus.UNSUPPORTED, exit_code=-1,
+                stderr=f"Docker sandbox currently supports Python projects only (got {lang}).",
+                language=lang, execution_type=ExecutionType.PROJECT_TEST.value,
+            )
+        # Host interpreter paths mean nothing inside the container.
+        if cmd and cmd[0] == sys.executable:
+            cmd = ["python", *cmd[1:]]
+        if cmd[:3] == ["python", "-m", "pytest"] and "-p" not in cmd:
+            cmd = cmd + ["-q", "-p", "no:cacheprovider"]
+        try:
+            res = run_sandboxed(str(proj_path), cmd, timeout_seconds=self.limits.timeout_seconds,
+                                memory_mb=self.limits.memory_mb)
+        except RuntimeError as exc:
+            return ExecutionResult(
+                status=ExecutionStatus.INFRASTRUCTURE_ERROR, exit_code=-1, stderr=str(exc),
+                language=lang, execution_type=ExecutionType.PROJECT_TEST.value,
+            )
+        if res.timed_out:
+            status = ExecutionStatus.TIMEOUT
+        elif res.exit_code == 0:
+            status = ExecutionStatus.PASS
+        elif "SyntaxError" in res.stderr or "SyntaxError" in res.stdout:
+            status = ExecutionStatus.COMPILE_ERROR
+        else:
+            status = ExecutionStatus.FAIL
+        return ExecutionResult(
+            status=status, exit_code=res.exit_code, stdout=res.stdout, stderr=res.stderr,
+            duration_ms=res.duration_ms, timed_out=res.timed_out, language=lang,
+            execution_type=ExecutionType.PROJECT_TEST.value,
+        )
 
     def run_project(
         self,
@@ -124,7 +178,20 @@ class ProjectRunner:
                 execution_type=ExecutionType.PROJECT_TEST.value
             )
 
+        # "Build" = every Python source compiles. Running pytest alone can pass
+        # while a module nobody imports has a SyntaxError.
+        if lang == "python" and not command_override and "pytest" in cmd:
+            compile_res = self._execute(proj_path, [sys.executable, "-m", "compileall", "-q", "."], lang)
+            if compile_res.exit_code != 0:
+                return compile_res
+
+        return self._execute(proj_path, cmd, lang)
+
+    def _execute(self, proj_path: Path, cmd: List[str], lang: str) -> ExecutionResult:
         _logger.info(f"ProjectRunner executing '{' '.join(cmd)}' inside '{proj_path}'...")
+
+        if sandbox_backend() == "docker":
+            return self._run_in_docker(proj_path, cmd, lang)
 
         # Create dummy artifact pointing to existing dir
         artifact = CodeArtifact(filename="main.py", language=lang, content="")

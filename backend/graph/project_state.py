@@ -74,6 +74,9 @@ class ProjectState(TypedDict, total=False):
     iteration: int
     max_iterations: int
     status: str
+    # Snapshot of `files` before the first repair; benchmarks grade it to measure repair uplift.
+    pre_repair_files: Dict[str, str]
+    file_backups: Dict[str, str]
 
     # Review, GitHub & Assembly Metadata
     review: Dict[str, Any]

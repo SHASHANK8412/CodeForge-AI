@@ -26,12 +26,18 @@ _logger = logging.getLogger("aiforge.benchmarks")
 
 async def run_benchmark_suite(
     output_dir: Optional[str] = None,
-    max_iterations: int = 3
+    max_iterations: int = 3,
+    results_dir: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Executes all 5 benchmarks through the authoritative AIForge pipeline.
+
+    Legacy runner. Prefer ``python -m benchmarks.harness`` (20 tasks, independent
+    grading, sandboxed execution, token tracking). ``results_dir`` defaults to
+    ``benchmarks/legacy_results/`` so test runs cannot overwrite tracked files.
     """
-    bench_dir = Path(__file__).resolve().parent
+    bench_dir = Path(results_dir).resolve() if results_dir else Path(__file__).resolve().parent / "legacy_results"
+    bench_dir.mkdir(parents=True, exist_ok=True)
     out_dir = Path(output_dir).resolve() if output_dir else (bench_dir.parent / "generated_projects").resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 

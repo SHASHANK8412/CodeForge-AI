@@ -31,15 +31,17 @@ from backend.generators.project_generator import ProjectGenerator
 from backend.review.self_heal import SelfHealOrchestrator
 from backend.utils.timer import Timer
 from backend.graph.profiler import workflow_profiler
+from backend.observability.tracing import global_trace, traced_node
 
 from backend.services.cache_service import global_cache_service
 from backend.services.validator import global_stage_validator
-from backend.services.project_builder import global_structured_project_builder
+from backend.services.project_builder import global_structured_project_builder, split_llm_files
 from backend.services.prompt_builder import global_prompt_builder
 from backend.quality.duplicate_detector import global_duplicate_detector
 from backend.memory.memory_manager import memory_manager
 from backend.execution.project_runner import global_project_runner
 from backend.agents.debug_agent import global_debug_agent
+from backend.services.llm import generate_text_async
 
 
 
@@ -75,7 +77,8 @@ async def planner_node(state: ProjectState) -> dict:
     workflow_profiler.clear()
     agent_timers.clear()
 
-    prompt = state.get("user_prompt") or state.get("prompt", "")
+    # The CLI/benchmark entry point sets "user_request"; the API sets "user_prompt".
+    prompt = state.get("user_prompt") or state.get("prompt") or state.get("user_request", "")
     _logger.info(f"✔ [1/14] Planner started: {prompt[:40]}...")
 
     cached_plan = global_cache_service.get("planner", prompt)
@@ -252,7 +255,16 @@ async def assembly_node(state: ProjectState) -> dict:
 
     duplicate_report = global_duplicate_detector.detect_duplicates(assembled.get("manifest", {}))
     files_manifest = assembled.get("manifest", {})
-    written_path = global_structured_project_builder.write_project_to_disk(proj_name, files_manifest)
+    # Honor the output directory chosen by the caller (CLI / benchmark harness);
+    # otherwise every run shares ./generated_projects/<name> and leftovers from a
+    # previous run leak into this one.
+    requested = state.get("project_path")
+    if requested:
+        req = Path(requested)
+        written_path = global_structured_project_builder.write_project_to_disk(
+            req.name, files_manifest, base_dir=str(req.parent))
+    else:
+        written_path = global_structured_project_builder.write_project_to_disk(proj_name, files_manifest)
 
     return {
         "project_path": str(written_path),
@@ -285,18 +297,24 @@ async def reviewer_node(state: ProjectState) -> dict:
     agent_timers["reviewer"] = timer.elapsed
     workflow_profiler.record_agent_time("reviewer", timer.elapsed)
 
-    # Real, if simple, computed score: start at 100 and deduct for actually-detected
-    # duplicates and for severity tags the reviewer itself raised in its findings.
-    # This is a heuristic, not a precise metric — it replaces a flat hardcoded 95.0.
+    # Heuristic score: start at 100 and deduct for detected duplicates and for the
+    # issues the reviewer raised. The reviewer is prompted for JSON with a
+    # "severity" per issue, so count those (legacy "[Critical]" tags still count).
+    parsed = reviewer_agent.parse_review_json(review_output)
+    issues = parsed.get("issues", []) if isinstance(parsed, dict) else []
+    severities = [str(i.get("severity", "")).lower() for i in issues if isinstance(i, dict)]
+    critical = severities.count("critical") or review_output.count("[Critical]")
+    major = severities.count("major") or review_output.count("[Major]")
+    minor = severities.count("minor") or review_output.count("[Minor]")
+
     score = 100.0
     score -= duplicate_report.get("duplicate_count", 0) * 5
-    score -= review_output.count("[Critical]") * 10
-    score -= review_output.count("[Major]") * 5
-    score -= review_output.count("[Minor]") * 2
+    score -= critical * 10 + major * 5 + minor * 2
     score = max(0.0, min(100.0, score))
 
     return {
-        "review": {"review_text": review_output, "score": round(score, 1)},
+        "review": {"review_text": review_output, "score": round(score, 1),
+                   "issues": issues, "severity_counts": {"critical": critical, "major": major, "minor": minor}},
         "current_step": "reviewer",
         "stream_events": ["✔ Code Review completed"]
     }
@@ -322,6 +340,53 @@ def _count_tests_by_section(raw_text: str) -> Dict[str, int]:
     return counts
 
 
+def _materialize_generated_tests(state: ProjectState, raw_tests: str) -> tuple:
+    """Writes the Testing Agent's suite into the project so it can actually run.
+
+    Only done when the project has no real tests yet (never overwrites tests the
+    backend agent wrote or tests from an earlier iteration). Returns
+    ``({"files": updated_manifest} | {}, wrote_any)``.
+    """
+    project_path = state.get("project_path", "")
+    files_map = dict(state.get("files", {}) or {})
+    if not project_path or not raw_tests or not Path(project_path).is_dir():
+        return {}, False
+    if any(_looks_like_test(k, v) for k, v in files_map.items()):
+        return {}, False
+
+    test_files = {
+        rel: content for rel, content in split_llm_files(raw_tests, "tests/test_generated.py", "tests").items()
+        if rel.endswith(".py") and "def test" in content
+    }
+    if not test_files:
+        return {}, False
+
+    root = Path(project_path).resolve()
+    written = []
+    for rel, content in test_files.items():
+        dest = (root / rel).resolve()
+        if not str(dest).startswith(str(root)):
+            _logger.warning(f"Path traversal rejected for generated test: {rel}")
+            continue
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(content, encoding="utf-8")
+        files_map[rel] = content
+        written.append(rel)
+    return ({"files": files_map}, True) if written else ({}, False)
+
+
+def _last_llm_call_was_fallback(agent: str) -> bool:
+    for event in reversed(global_trace.events()):
+        if event.get("kind") == "llm_call" and event.get("agent") == agent:
+            return bool(event.get("fallback"))
+    return False
+
+
+def _looks_like_test(rel_path: str, content: Any) -> bool:
+    name = str(rel_path).replace("\\", "/").rsplit("/", 1)[-1]
+    return name.startswith("test_") and name.endswith(".py") and "def test" in str(content)
+
+
 async def testing_node(state: ProjectState) -> dict:
     _logger.info("✔ [5/14] Testing Agent generating test suites...")
     testing_prompt = global_prompt_builder.build_testing_prompt(
@@ -329,11 +394,18 @@ async def testing_node(state: ProjectState) -> dict:
         frontend_code=str(state.get("frontend", "")),
     )
 
+    # Generate the suite once. Regenerating on every repair iteration would move
+    # the goalposts: the debugger must make the *same* tests pass.
     with Timer() as timer:
-        raw_tests = await testing_agent.run_async(testing_prompt)
+        raw_tests = state.get("tests") or await testing_agent.run_async(testing_prompt)
 
     agent_timers["testing"] = timer.elapsed
     workflow_profiler.record_agent_time("testing", timer.elapsed)
+
+    # Never put canned fallback tests (LLM unavailable) on disk: a trivial
+    # `assert 1 + 1 == 2` would turn a broken project green.
+    files_update, wrote_tests = ({}, False) if _last_llm_call_was_fallback("testing") \
+        else _materialize_generated_tests(state, raw_tests)
 
     section_counts = _count_tests_by_section(raw_tests)
     total_tests = sum(section_counts.values())
@@ -358,13 +430,32 @@ async def testing_node(state: ProjectState) -> dict:
     project_spec = state.get("project_spec", {})
     architecture = state.get("architecture", {})
 
+    # The execution step ran before these tests existed; run again so the
+    # verdict reflects the generated suite rather than just `compileall`.
+    rerun_update: Dict[str, Any] = {}
+    if wrote_tests:
+        rerun = global_project_runner.run_project(state.get("project_path", ""))
+        exec_results = rerun.model_dump()
+        rerun_update = {
+            "execution_results": exec_results,
+            "status": "PASS" if rerun.exit_code == 0 else "FAIL",
+            "error": rerun.stderr if rerun.exit_code != 0 else "",
+        }
+
     test_res = testing_agent.evaluate_execution_results(
         exec_results=exec_results if isinstance(exec_results, dict) else {},
         project_spec=project_spec if isinstance(project_spec, dict) else {},
         architecture=architecture if isinstance(architecture, dict) else {}
     )
 
+    snapshot = {} if state.get("pre_repair_files") else {
+        "pre_repair_files": dict(files_update.get("files") or state.get("files") or {})
+    }
+
     return {
+        **rerun_update,
+        **files_update,
+        **snapshot,
         "tests": raw_tests,
         "test_results": test_res.model_dump(),
         "testing_report": report_md,
@@ -502,12 +593,105 @@ from backend.memory.project_memory_service import global_project_memory_service
 from backend.execution.models import MemoryRecord
 
 
+REPAIR_SYSTEM_PROMPT = """You are a senior Python engineer fixing a FastAPI project that fails its build or tests.
+You get the failing command output and the current source files.
+Return the COMPLETE corrected content of every file you change, each in its own fenced block whose
+first line is `# filepath: <relative path>`. Change only what is needed to fix the failure.
+Do not modify or delete tests; fix the application code so the tests pass. No explanations."""
+
+_TRACE_PATH_RE = re.compile(r'File "(?:/work/|[^"]*?/)?([^"]+?\.py)"')
+
+
+def _has_effective_changes(changes: Dict[str, str], files: Dict[str, str]) -> bool:
+    return any(files.get(path) != content for path, content in (changes or {}).items())
+
+
+def _repair_candidates(state: ProjectState, debug_res: Any) -> List[str]:
+    """Non-test Python files most likely to contain the bug, best guess first."""
+    files = state.get("files", {}) or {}
+    exec_res = state.get("execution_results", {}) or {}
+    output = f"{exec_res.get('stderr', '')}\n{exec_res.get('stdout', '')}"
+    ordered: List[str] = []
+
+    def add(rel: str) -> None:
+        if rel in files and rel.endswith(".py") and not _looks_like_test(rel, files[rel]) and rel not in ordered:
+            ordered.append(rel)
+
+    for path in getattr(debug_res, "files_to_modify", []) or []:
+        add(path)
+    for raw in _TRACE_PATH_RE.findall(output):
+        for rel in files:
+            if raw.endswith(rel):
+                add(rel)
+    add("backend/main.py")
+    for rel in files:
+        if rel.startswith("backend/"):
+            add(rel)
+    return ordered[:3]
+
+
+async def _llm_repair(state: ProjectState, debug_res: Any) -> Dict[str, str]:
+    """Asks the LLM for a patch using the real failure output.
+
+    Guard rails: only existing non-test ``.py`` files may change, every patched
+    file must parse, and identical content is discarded. Disable with
+    ``AIFORGE_LLM_REPAIR=off`` (for ablations against the rule-based debugger).
+    """
+    import ast
+    import os
+
+    if os.environ.get("AIFORGE_LLM_REPAIR", "on").lower() in {"off", "0", "false", "no"}:
+        return {}
+    files = state.get("files", {}) or {}
+    candidates = _repair_candidates(state, debug_res)
+    if not candidates:
+        return {}
+
+    exec_res = state.get("execution_results", {}) or {}
+    failure = f"{exec_res.get('stdout', '')}\n{exec_res.get('stderr', '')}".strip()[-3000:]
+    sources = "\n\n".join(f"```python\n# filepath: {rel}\n{str(files[rel])[:6000]}\n```" for rel in candidates)
+    tests = "\n\n".join(
+        f"```python\n# filepath: {rel}\n{str(c)[:3000]}\n```" for rel, c in files.items() if _looks_like_test(rel, c)
+    )[:6000]
+    prompt = (
+        f"Diagnosis: {debug_res.diagnosis}\n\nFailing output:\n```\n{failure}\n```\n\n"
+        f"Source files:\n{sources}\n\nTests (read-only):\n{tests or '(none)'}"
+    )
+    try:
+        raw = await generate_text_async(REPAIR_SYSTEM_PROMPT, prompt, task="debugging")
+    except Exception as exc:  # repair is best-effort; the loop's max_iterations still bounds it
+        _logger.warning(f"LLM repair failed: {exc}")
+        return {}
+
+    accepted: Dict[str, str] = {}
+    for rel, content in split_llm_files(raw, candidates[0]).items():
+        if rel not in files or not rel.endswith(".py") or _looks_like_test(rel, files[rel]):
+            continue
+        if content.strip() == str(files[rel]).strip():
+            continue
+        try:
+            ast.parse(content)
+        except SyntaxError:
+            _logger.warning(f"LLM repair for {rel} rejected: patch does not parse")
+            continue
+        accepted[rel] = content
+    return accepted
+
+
 async def debug_node(state: ProjectState) -> dict:
     _logger.info("✔ [12/14] DebugAgent analyzing failure evidence...")
     iteration = state.get("iteration", 0) + 1
     max_iterations = state.get("max_iterations", 3)
 
     debug_res = global_debug_agent.diagnose_and_repair(dict(state))
+    if not _has_effective_changes(debug_res.changes, state.get("files", {}) or {}):
+        llm_changes = await _llm_repair(state, debug_res)
+        if llm_changes:
+            debug_res = debug_res.model_copy(update={
+                "changes": llm_changes,
+                "files_to_modify": list(llm_changes),
+                "explanation": debug_res.explanation + " LLM repair proposed full-file patch(es).",
+            })
 
     existing_fixes = state.get("fixes", []) or []
     existing_errors = state.get("errors", []) or []
@@ -691,24 +875,24 @@ async def deployment_node(state: ProjectState) -> dict:
 
 builder = StateGraph(ProjectState)
 
-builder.add_node("planner", planner_node)
-builder.add_node("architect", architect_node)
-builder.add_node("frontend", frontend_node)
-builder.add_node("backend", backend_node)
-builder.add_node("database", database_node)
-builder.add_node("assembly", assembly_node)
-builder.add_node("reviewer", reviewer_node)
-builder.add_node("testing", testing_node)
-builder.add_node("documentation", documentation_node)
-builder.add_node("build_validation", build_validation_node)
-builder.add_node("dependency_manager", dependency_manager_node)
-builder.add_node("security_scan", security_scan_node)
-builder.add_node("performance", performance_node)
-builder.add_node("execution_validation", execution_validation_node)
-builder.add_node("debug", debug_node)
-builder.add_node("patch", patch_node)
-builder.add_node("packaging", packaging_node)
-builder.add_node("deployment", deployment_node)
+builder.add_node("planner", traced_node("planner", planner_node))
+builder.add_node("architect", traced_node("architect", architect_node))
+builder.add_node("frontend", traced_node("frontend", frontend_node))
+builder.add_node("backend", traced_node("backend", backend_node))
+builder.add_node("database", traced_node("database", database_node))
+builder.add_node("assembly", traced_node("assembly", assembly_node))
+builder.add_node("reviewer", traced_node("reviewer", reviewer_node))
+builder.add_node("testing", traced_node("testing", testing_node))
+builder.add_node("documentation", traced_node("documentation", documentation_node))
+builder.add_node("build_validation", traced_node("build_validation", build_validation_node))
+builder.add_node("dependency_manager", traced_node("dependency_manager", dependency_manager_node))
+builder.add_node("security_scan", traced_node("security_scan", security_scan_node))
+builder.add_node("performance", traced_node("performance", performance_node))
+builder.add_node("execution_validation", traced_node("execution_validation", execution_validation_node))
+builder.add_node("debug", traced_node("debug", debug_node))
+builder.add_node("patch", traced_node("patch", patch_node))
+builder.add_node("packaging", traced_node("packaging", packaging_node))
+builder.add_node("deployment", traced_node("deployment", deployment_node))
 
 # Entry Point
 builder.set_entry_point("planner")

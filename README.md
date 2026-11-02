@@ -1,150 +1,140 @@
-# 🚀 AIForge v1.0 – Autonomous Multi-Agent AI Software Engineering Platform
+# AIForge
 
-[![Build Status](https://img.shields.io/badge/Build-Passing-emerald?style=for-the-badge&logo=github)](https://github.com/SHASHANK8412/CodeForge-AI)
-[![Version](https://img.shields.io/badge/Version-v1.0.0--Release-indigo?style=for-the-badge)](https://github.com/SHASHANK8412/CodeForge-AI/releases)
-[![License](https://img.shields.io/badge/License-MIT-amber?style=for-the-badge)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.11+-blue?style=for-the-badge&logo=python)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/React-18.0+-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)](https://docker.com)
+**A multi-agent system that turns a natural-language spec into a FastAPI + React project, runs the generated code in a Docker sandbox, and repairs it until its tests pass. A 20-task benchmark measures how well that works.**
 
-> **AIForge** is an enterprise-grade, self-improving, autonomous multi-agent AI software engineering platform. It transforms natural language software requirements into production-grade, tested, documented, containerized, and deployable applications.
+[![License](https://img.shields.io/badge/License-MIT-amber)](LICENSE)
+![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python)
+![LangGraph](https://img.shields.io/badge/LangGraph-1.x-1C3C3C)
+![Ollama](https://img.shields.io/badge/LLMs-local%20via%20Ollama-black)
 
----
+<!-- DEMO: add a ~2 minute recording (prompt -> generated project -> running app), e.g.
+[![AIForge demo](docs/demo-thumbnail.png)](https://youtu.be/<id>)
+-->
 
-## 🌟 Key Highlights & v1.0 Capabilities
+## Benchmark results
 
-- 🤖 **12 Autonomous Specialized Agents**: Planner, Architect, Frontend, Backend, Database, API, Security, DevOps, Testing, Reviewer, Learning, and Refactor Agents.
-- ⚡ **Parallel Multi-Agent Architecture**: Built with LangGraph, FastAPI, and React/Vite. Executes frontend, backend, database, and documentation generation concurrently.
-- 🧠 **Continuous Learning & Semantic Project Memory**: SQLite long-term project memory database (`memory.db`), semantic vector similarity search, and automated lessons learned extraction.
-- 🤝 **AI Pair Programmer Mode**: Targeted incremental code modifications, file locator, dependency graph builder (`dependency_graph.json`), safe backup system (`.backup/`), and unified diff patch generator.
-- 🛠️ **Autonomous Refactoring & Debt Reduction**: AST code smell detection, Cyclomatic Complexity reduction (18 $\rightarrow$ 7), print statement to structured logger replacement, and security anti-pattern fixes.
-- 📊 **AI Reflection & Quality Scoring**: 6-category weighted score evaluation (Architecture, Code Quality, Security, Performance, Testing, Documentation $\rightarrow$ **95.6% Overall AI Score**).
-- 🏪 **Enterprise Plugin Marketplace**: Support for Planner Packs, UI Packs, Testing Packs, Architecture Packs, and Prompt Packs.
-- 🚀 **One-Click CI/CD & Deployment**: GitHub commit & push, Docker image packaging, and cloud deployment readiness.
+AIForge is measured on a fixed set of **20 tasks** (todo API, JWT auth, RBAC, bank ledger, e-commerce cart, job queue, …). Each generated project is **graded independently** of the pipeline's own claims: inside the sandbox, the grader checks whether the app boots, which required endpoints exist, and how many generated tests pass. [How it is measured →](docs/EVALUATION.md)
 
----
+| Configuration | Build success | …before repair | Route coverage | Generated-test pass rate | Median tokens/task | Median time/task |
+| --- | --- | --- | --- | --- | --- | --- |
+| *not yet run: see below* | | | | | | |
 
-## 🏛️ System Architecture Workflow
+Reproduce or extend these numbers:
 
-```text
-User Natural Language Request
-             │
-             ▼
-      Planner Agent
-             │
-             ▼
-     Architect Agent
-             │
- ┌───────────┼───────────┬───────────┬───────────┐
- ▼           ▼           ▼           ▼           ▼
-Frontend  Backend    Database     DevOps    Documentation
- │           │           │           │           │
- └───────────┴───────────┼───────────┴───────────┘
-                         ▼
-                   Testing Agent
-                         │
-                         ▼
-                   Reviewer Agent
-                         │
-                         ▼
-                  Refactor Agent
-           (AST Code Smell & Complexity Fixes)
-                         │
-                         ▼
-                Learning & Reflection Engine
-          (Long-Term SQLite Memory & Quality Scoring)
-                         │
-                         ▼
-         Docker Containerization & GitHub Export
+```bash
+docker build -t aiforge-sandbox:py311 sandbox/
+AIFORGE_SANDBOX=docker python -m benchmarks.harness run --label baseline
+python -m benchmarks.compare benchmarks/runs/*/results.json
 ```
 
----
+Reviewer agent on 12 planted bugs + 3 clean controls: `python -m benchmarks.reviewer_eval` → recall _n/12_, false alarms _n/3_.
 
-## 🛠️ Technology Stack
+## How it works
 
-| Layer | Technology |
-|---|---|
-| **Core AI Agent Engine** | Python 3.11+, LangGraph, Ollama (Qwen), RAG Embeddings |
-| **Backend API** | FastAPI, Uvicorn, Pydantic, SQLAlchemy |
-| **Frontend UI** | React 18, Vite, TailwindCSS, Lucide Icons |
-| **Database & Caching** | SQLite, PostgreSQL, MongoDB, Redis |
-| **DevOps & Cloud** | Docker, Docker Compose, GitHub Actions CI/CD |
+The pipeline is a [LangGraph](https://langchain-ai.github.io/langgraph/) `StateGraph` (`backend/graph/parallel_workflow.py`). The diagram below is the actual graph; regenerate it with `python -c "from backend.graph.parallel_workflow import parallel_graph as g; print(g.get_graph().draw_mermaid())"`.
 
----
+```mermaid
+flowchart TD
+    U([User spec]) --> P[Planner<br/><i>LLM: requirements JSON</i>]
+    P --> A[Architect<br/><i>LLM: components, routes, models</i>]
+    A --> FE[Frontend agent<br/><i>LLM</i>]
+    A --> BE[Backend agent<br/><i>LLM</i>]
+    A --> DB[Database agent<br/><i>LLM</i>]
+    FE & BE & DB --> AS[Assembly<br/><i>split fenced blocks into files</i>]
+    AS --> RV[Reviewer<br/><i>LLM: JSON issues + severity</i>]
+    RV --> DOC[Docs agent<br/><i>LLM</i>]
+    DOC --> CHK[Static checks<br/><i>build validation, deps, security scan, perf</i>]
+    CHK --> EX[Execute in sandbox<br/><i>compileall + pytest</i>]
+    EX --> T[Testing agent<br/><i>LLM writes suite once, then verify</i>]
+    T -->|green| PK[Packaging + deployment manifests]
+    T -->|red, iteration < max| DBG[Debug<br/><i>rules, then LLM repair</i>]
+    DBG --> PT[Patch files on disk]
+    PT --> EX
+    T -->|red, max iterations| X([Stop: FAILED_MAX_ITERATIONS])
+    PK --> Z([Project + ZIP])
 
-## ⚡ Quick Start
-
-### 1. Prerequisites
-- Python 3.11+
-- Node.js 18+
-- Git & Docker (Optional)
-
-### 2. Clone & Setup
-```bash
-git clone https://github.com/SHASHANK8412/CodeForge-AI.git
-cd CodeForge-AI
+    classDef llm fill:#eef2ff,stroke:#6366f1;
+    class P,A,FE,BE,DB,RV,DOC,T,DBG llm;
 ```
 
-### 3. Backend Setup
-```bash
-cd backend
-python -m venv venv
-# On Windows:
-venv\Scripts\activate
-# On Linux/macOS:
-source venv/bin/activate
+- **8 LLM agents plus an LLM repair step.** Planner, architect, frontend, backend and database generate the project; testing, reviewer and docs check and document it. The debugger uses rules first and falls back to an LLM patch.
+- **Parallel fan-out.** Frontend, backend and database generation run concurrently once the architecture is fixed.
+- **Sandboxed execution loop.** Generated code runs in Docker with no network, a read-only root filesystem, CPU/memory/PID limits, a non-root user, and a hard timeout. Failure output goes back to the debugger, and the loop repeats up to `max_iterations` (default 3).
+- **Observability.** Every LLM call and graph node emits a structured JSON event (agent, model, latency, provider-reported tokens, cache hit, fallback, error). Set `AIFORGE_TRACE_FILE=trace.jsonl` to log them.
 
+## Design decisions
+
+| Decision | Why | Trade-off |
+| --- | --- | --- |
+| **Local models via Ollama** with a per-task model router (`qwen2.5` for planning and docs, `qwen2.5-coder` for code) | free to run the full benchmark repeatedly; no code leaves the machine | weaker than frontier models; slower on a laptop |
+| **Docker sandbox instead of a subprocess** | generated code is untrusted; stripping env vars doesn't stop file deletion, network calls or fork bombs | needs Docker; dependencies must be baked into the image because the network is off |
+| **Grader independent of the pipeline** | a system that grades itself isn't evidence; the harness also counts how often the pipeline's "PASS" disagrees with the grader | extra sandbox runs per task |
+| **Test suite frozen during repair**, and the debugger can't edit tests | otherwise a repair loop can "pass" by regenerating or weakening the tests | a bad generated test can block an otherwise-correct app |
+| **LLM fallbacks invalidate a benchmark task** | the LLM layer returns canned placeholder code on failure, which could otherwise inflate success rates | Ollama outages show up as invalid tasks rather than failures |
+| **Endpoints stated explicitly in benchmark prompts** | makes requirement coverage objectively measurable | measures following an explicit spec, not inferring one |
+
+Each of these can be tested with the benchmark: `--model`, `--rag on|off`, `--llm-repair on|off`, `--max-iterations N`.
+
+## Quick start
+
+Prerequisites: Python 3.11+, Node 18+, [Ollama](https://ollama.com), and Docker (for the sandbox).
+
+```bash
+git clone https://github.com/SHASHANK8412/CodeForge-AI.git && cd CodeForge-AI
+python -m venv venv && source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python -m uvicorn backend.main:app --reload --port 8000
+
+ollama pull qwen2.5 && ollama pull qwen2.5-coder        # default models (backend/config.py)
+docker build -t aiforge-sandbox:py311 sandbox/           # isolated execution
+
+# generate a project from the command line
+AIFORGE_SANDBOX=docker python run_aiforge.py "Build a todo REST API with FastAPI and pytest tests"
+
+# or run the web app
+python -m uvicorn backend.main:app --reload --port 8000   # from the repo root
+cd frontend && npm install && npm run dev                 # http://localhost:5173
 ```
 
-### 4. Frontend Setup
+Useful environment variables:
+
+| Variable | Effect |
+| --- | --- |
+| `AIFORGE_SANDBOX=docker` | run generated code in the Docker sandbox (default: local subprocess) |
+| `AIFORGE_CODING_MODEL`, `AIFORGE_GENERAL_MODEL` | override the routed models |
+| `AIFORGE_RAG=off` | disable retrieval-augmented context in agent prompts |
+| `AIFORGE_LLM_REPAIR=off` | debugger uses rules only |
+| `AIFORGE_DISABLE_LLM_CACHE=1` | always call the model |
+| `AIFORGE_TRACE_FILE=path.jsonl` | write structured agent/LLM traces |
+
+## Tests
+
 ```bash
-cd frontend
-npm install
-npm run dev
+pytest tests/test_eval_harness.py   # harness, grader, sandbox, tracing, and an end-to-end run with a scripted LLM
+pytest tests backend/tests          # full suite
 ```
 
-Open `http://localhost:5173` in your browser.
+`test_pipeline_end_to_end_repairs_planted_bug` runs the real LangGraph pipeline against a scripted LLM whose backend contains a bug. The generated tests catch it, the LLM repair step fixes it, and the grader confirms 2/3 → 3/3 passing tests.
 
----
+## Limitations
 
-## 🧪 Verification & Test Suite Execution
+- **Backend-first.** Build success and tests cover the FastAPI backend; the React output isn't compiled in the sandbox (no network for `npm install`).
+- **Small local models.** Results depend heavily on the model; compare configurations with `benchmarks.compare` before drawing conclusions, and run each configuration more than once (one task = 5 points).
+- **Route coverage checks that endpoints exist, not that they behave correctly.** Behavior is only as well tested as the generated suite.
+- **Python-only sandbox.** JavaScript projects are reported as unsupported in Docker mode rather than run unisolated.
 
-Run the complete 100-Day verification suite:
-```bash
-python tests/verify_day98_99_100_grand_finale.py
+## Repository layout
+
+```
+backend/graph/parallel_workflow.py   LangGraph pipeline (nodes, routing, repair loop)
+backend/agents/                      agent prompts and parsing
+backend/services/llm.py              Ollama client, model routing, retries, caching, tracing hooks
+backend/execution/docker_sandbox.py  isolated execution
+backend/observability/tracing.py     structured traces + per-run summaries
+benchmarks/                          tasks, grader, harness, reviewer eval, comparison
+sandbox/                             sandbox image definition
+docs/EVALUATION.md                   methodology, metric definitions, caveats
 ```
 
-Expected Output:
-```text
-======================================================================
- DAY 98, 99 & 100 GRAND FINALE VERIFICATION SUMMARY: [PASS]
- Passed: 12 | Failed: 0
-======================================================================
-```
+## License
 
----
-
-## 📄 License & Roadmap
-
-- License: [MIT License](LICENSE)
-- Roadmap: See [ROADMAP.md](ROADMAP.md) for v1.1 & v2.0 releases.
-- Deployment Guide: See [DEPLOYMENT.md](DEPLOYMENT.md).
-
-
-## Evolution Changelog
-* **Update Auth API**: Updated 1 files.
-
-
-
-## AIForge Autonomous Evolution Report
-* **Architecture Score**: 93.0/100
-* **Security Score**: 90.0/100
-* **Performance Score**: 88.0/100
-* **Maintainability Score**: 95.0/100
-* **Duplicate Code Files Resolved**: 998
-* **Unused Components Removed**: 7
-* **Estimated Speed Improvement**: 31%
-
+[MIT](LICENSE). See also [ROADMAP.md](ROADMAP.md) and [DEPLOYMENT.md](DEPLOYMENT.md).

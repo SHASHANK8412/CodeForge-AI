@@ -133,14 +133,15 @@ def test_benchmark_runner(tmp_path):
 
         with patch.object(parallel_graph, "ainvoke", side_effect=mock_invoke):
             with patch.object(Path, "cwd", return_value=tmp_path):
-                bench_res = await run_benchmark_suite(output_dir=str(out_dir), max_iterations=1)
+                bench_res = await run_benchmark_suite(output_dir=str(out_dir), max_iterations=1,
+                                                      results_dir=str(tmp_path / "bench_results"))
                 
                 assert "summary" in bench_res
                 assert bench_res["summary"]["total_benchmarks"] == len(BENCHMARK_SUITE)
                 assert bench_res["summary"]["e2e_success_rate"] == 1.0
 
-                results_json = Path("benchmarks/results.json")
-                report_md = Path("benchmarks/REPORT.md")
+                results_json = tmp_path / "bench_results" / "results.json"
+                report_md = tmp_path / "bench_results" / "REPORT.md"
                 
                 assert results_json.exists()
                 assert report_md.exists()

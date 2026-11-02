@@ -54,6 +54,8 @@ async def run_aiforge_pipeline(
 
     initial_state: ProjectState = {
         "user_request": prompt,
+        "user_prompt": prompt,
+        "prompt": prompt,
         "project_name": project_name,
         "project_path": str(proj_path),
         "technology_stack": "FastAPI Python React PostgreSQL",
