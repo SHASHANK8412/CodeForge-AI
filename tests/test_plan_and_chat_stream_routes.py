@@ -49,7 +49,7 @@ def test_chat_stream_emits_the_chat_message_payload(monkeypatch):
     import backend.routes.chat as chat_routes
     seen = {}
 
-    async def fake_chat_message(request):
+    async def fake_chat_message(request, user=None):
         seen["message"] = request.message
         return {"success": True, "response": "hello", "intent": "EXPLANATION"}
 

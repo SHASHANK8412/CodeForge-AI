@@ -139,40 +139,49 @@ def test_workspace_save_file_updates_index_and_snapshot(client, sample_workspace
 # 4. AI Code Actions & Explain / Refactor / Tests
 # ---------------------------------------------------------------------------
 
-def test_workspace_ai_code_actions(client, sample_workspace_project):
+def test_workspace_ai_code_actions(client, sample_workspace_project, monkeypatch):
+    """The route's handling of the model's answer (the model itself is a deterministic stand-in here)."""
+    import backend.routes.workspace_ide_routes as ide
     project_id, _ = sample_workspace_project
-    
-    # 1. Explain action
-    resp_explain = client.post(f"/api/project/{project_id}/ai-action", json={
-        "path": "backend/main.py",
-        "selected_code": "def health():\n    return {'status': 'healthy'}",
-        "action": "explain"
-    })
-    assert resp_explain.status_code == 200
-    data_explain = resp_explain.json()
-    assert data_explain["status"] == "SUCCESS"
-    assert "result" in data_explain
-    assert len(data_explain["result"]) > 0
+    answers = {
+        "EXPLAIN": "This handler returns the service health as JSON for the load balancer.",
+        "TESTS": "```python\ndef test_login_returns_a_token():\n    assert 'token' in login()\n```",
+        "REFACTOR": "Use a real signed token.\n```python\ndef login(user):\n    return {'token': sign(user)}\n```",
+    }
 
-    # 2. Generate tests action
-    resp_tests = client.post(f"/api/project/{project_id}/ai-action", json={
-        "path": "backend/routes/auth.py",
-        "selected_code": "def login():\n    return {'token': 'jwt_secret_token'}",
-        "action": "tests"
-    })
-    assert resp_tests.status_code == 200
-    data_tests = resp_tests.json()
-    assert data_tests["status"] == "SUCCESS"
-    assert "test" in data_tests["result"].lower() or "def test" in data_tests["result"]
+    async def fake_model(system_prompt, prompt, model=None, task="general"):
+        return next(text for action, text in answers.items() if f"Action: {action}" in prompt)
+    monkeypatch.setattr(ide, "generate_text_async", fake_model)
 
-    # 3. Refactor action
-    resp_refactor = client.post(f"/api/project/{project_id}/ai-action", json={
-        "path": "backend/routes/auth.py",
-        "selected_code": "def login():\n    return {'token': 'jwt_secret_token'}",
-        "action": "refactor"
-    })
-    assert resp_refactor.status_code == 200
-    assert resp_refactor.json()["status"] == "SUCCESS"
+    def act(action, path, code):
+        res = client.post(f"/api/project/{project_id}/ai-action", json={"path": path, "selected_code": code, "action": action})
+        assert res.status_code == 200
+        return res.json()
+
+    explain = act("explain", "backend/main.py", "def health():\n    return {'status': 'healthy'}")
+    assert explain["status"] == "SUCCESS" and explain["result"] == answers["EXPLAIN"] and explain["suggested_code"] is None
+
+    tests = act("tests", "backend/routes/auth.py", "def login():\n    return {'token': 'jwt_secret_token'}")
+    assert tests["status"] == "SUCCESS" and "def test_login_returns_a_token" in tests["suggested_code"]
+
+    refactor = act("refactor", "backend/routes/auth.py", "def login():\n    return {'token': 'jwt_secret_token'}")
+    assert refactor["status"] == "SUCCESS"
+    assert refactor["suggested_code"].startswith("def login(user):")
+    assert "-    return {'token': 'jwt_secret_token'}" in refactor["diff"] and "+    return {'token': sign(user)}" in refactor["diff"]
+
+
+def test_a_failed_model_call_is_reported_not_replaced_by_canned_text(client, sample_workspace_project, monkeypatch):
+    import backend.routes.workspace_ide_routes as ide
+    from backend.services.llm import LLMUnavailableError
+    project_id, _ = sample_workspace_project
+
+    async def unavailable(*args, **kwargs):
+        raise LLMUnavailableError("general", "qwen2.5", "connection refused")
+    monkeypatch.setattr(ide, "generate_text_async", unavailable)
+    res = client.post(f"/api/project/{project_id}/ai-action",
+                      json={"path": "backend/main.py", "selected_code": "x = 1", "action": "tests"}).json()
+    assert res["status"] == "FAILED" and "did not answer" in res["error"]
+    assert res["result"] == "" and res["suggested_code"] is None
 
 
 # ---------------------------------------------------------------------------

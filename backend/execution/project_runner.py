@@ -27,13 +27,22 @@ from backend.execution.sandbox_executor import global_sandbox_executor
 _logger = logging.getLogger("aiforge.execution.project_runner")
 
 
+def _local_test_timeout() -> float:
+    try:
+        return max(5.0, float(os.environ.get("AIFORGE_LOCAL_TEST_TIMEOUT", "120")))
+    except ValueError:
+        return 120.0
+
+
 class ProjectRunner:
     """
     Executes real project builds and test suites on disk using SandboxExecutor.
     """
 
     def __init__(self, limits: Optional[ExecutionLimits] = None):
-        self.limits = limits or ExecutionLimits(timeout_seconds=15.0)
+        # A generated project's whole test suite on a busy machine takes far longer than one snippet: 15 s
+        # turned slow-but-genuine failures into timeouts. AIFORGE_LOCAL_TEST_TIMEOUT overrides the default.
+        self.limits = limits or ExecutionLimits(timeout_seconds=_local_test_timeout())
 
     def classify_error_type(self, stderr: str, stdout: str) -> str:
         """Classifies stderr/stdout into structured error type categories."""

@@ -15,6 +15,26 @@ import {
   FaVial, FaSpinner, FaRocket, FaCogs
 } from 'react-icons/fa';
 
+// Models do not always answer in the same shape: a risk can be a sentence or {risk, severity, mitigation},
+// a stack entry a name or an object. Render any of them as readable text instead of crashing React.
+function asText(value) {
+  if (value == null) return '';
+  if (['string', 'number', 'boolean'].includes(typeof value)) return String(value);
+  if (Array.isArray(value)) return value.map(asText).filter(Boolean).join(', ');
+  if (typeof value === 'object') {
+    if (value.risk || value.description) {
+      const main = asText(value.risk || value.description);
+      const severity = value.severity ? ` (${asText(value.severity)})` : '';
+      const mitigation = value.mitigation ? ` - mitigation: ${asText(value.mitigation)}` : '';
+      return `${main}${severity}${mitigation}`;
+    }
+    if (value.name) return [asText(value.name), value.method && asText(value.method), value.path && asText(value.path)]
+      .filter(Boolean).join(' ');
+    return Object.entries(value).map(([k, v]) => `${k}: ${asText(v)}`).join('; ');
+  }
+  return String(value);
+}
+
 export default function ApprovalPanel({
   approvalRequest = {},
   stage = 'architecture',
@@ -125,7 +145,7 @@ export default function ApprovalPanel({
                   <div key={key} className={`p-3.5 rounded-xl bg-slate-900/80 border ${border}`}>
                     <span className="text-[10px] text-slate-400 uppercase font-mono block">{label}</span>
                     {techStack[key]
-                      ? <span className="text-sm font-bold text-white mt-0.5 block">{techStack[key]}</span>
+                      ? <span className="text-sm font-bold text-white mt-0.5 block">{asText(techStack[key])}</span>
                       : <span className="text-xs text-slate-500 mt-0.5 block">not specified</span>}
                   </div>
                 ))}
@@ -144,7 +164,7 @@ export default function ApprovalPanel({
                   {items.length ? (
                     <ul className="space-y-1.5 max-h-48 overflow-auto">
                       {items.map((item, idx) => (
-                        <li key={idx} className={`text-xs text-slate-300 break-words ${mono}`}>{String(item)}</li>
+                        <li key={idx} className={`text-xs text-slate-300 break-words ${mono}`}>{asText(item)}</li>
                       ))}
                     </ul>
                   ) : (
@@ -157,7 +177,7 @@ export default function ApprovalPanel({
           {(archCheck.missing_sections || []).length > 0 && (
             <div className="flex items-start gap-2 text-xs text-amber-300/90 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">
               <FaExclamationTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-              <span>Architecture is missing sections: {archCheck.missing_sections.join(', ')}</span>
+              <span>Architecture is missing sections: {asText(archCheck.missing_sections)}</span>
             </div>
           )}
 
@@ -184,7 +204,7 @@ export default function ApprovalPanel({
                   {readyAgents.map((agent, idx) => (
                     <li key={idx} className="flex items-center gap-2 text-xs text-slate-300">
                       <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                      <span className="font-medium text-white">{agent}</span>
+                      <span className="font-medium text-white">{asText(agent)}</span>
                       <span className="text-[10px] text-slate-500 font-mono ml-auto">Ready</span>
                     </li>
                   ))}
@@ -197,7 +217,7 @@ export default function ApprovalPanel({
                   {risks.map((risk, idx) => (
                     <div key={idx} className="flex items-start gap-2 text-xs text-amber-300/90 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
                       <FaExclamationTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                      <span className="text-[11px] leading-tight">{risk}</span>
+                      <span className="text-[11px] leading-tight">{asText(risk)}</span>
                     </div>
                   ))}
                 </div>
@@ -238,12 +258,15 @@ export default function ApprovalPanel({
           {approvalRequest.quality_report && (
             <div className={`p-3.5 rounded-xl border text-xs ${
               approvalRequest.quality_report.release_recommendation === 'blocked' ? 'bg-rose-950/30 border-rose-500/40'
-                : approvalRequest.quality_report.release_recommendation === 'review_required' ? 'bg-amber-950/20 border-amber-500/40'
+                : ['review_required', 'not_verified'].includes(approvalRequest.quality_report.release_recommendation) ? 'bg-amber-950/20 border-amber-500/40'
                 : 'bg-emerald-950/20 border-emerald-500/30'}`}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-bold text-slate-200">
                   Release report: {approvalRequest.quality_report.release_recommendation.replace('_', ' ')}
                 </span>
+                {approvalRequest.quality_report.recommendation_reason && (
+                  <span className="w-full text-amber-300/90">{approvalRequest.quality_report.recommendation_reason}</span>
+                )}
                 <span className="text-slate-400">
                   {approvalRequest.quality_report.checks_passed} passed · {approvalRequest.quality_report.checks_failed} failed
                   {approvalRequest.quality_report.checks_skipped?.length ? ` · ${approvalRequest.quality_report.checks_skipped.length} skipped` : ''}

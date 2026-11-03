@@ -4,7 +4,6 @@ import { FaPlus, FaTrash, FaMagic, FaSortAmountDown } from "react-icons/fa";
 export default function TableCanvas({ 
   content = { columns: [], rows: [] }, 
   onChange, 
-  onAiTransform, 
   isReadOnly = false 
 }) {
   const columns = content?.columns || ["Item", "Feature", "Status"];
@@ -50,20 +49,6 @@ export default function TableCanvas({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => onAiTransform("Add a detailed Pricing & License column with current market tiers")}
-            className="px-2.5 py-1.5 bg-[#151821] hover:bg-[#1E2330] text-emerald-300 rounded-xl font-semibold transition border border-[#242833] cursor-pointer"
-          >
-            💰 Add Pricing Column
-          </button>
-
-          <button
-            onClick={() => onAiTransform("Sort matrix by Performance & Developer Ecosystem")}
-            className="px-2.5 py-1.5 bg-[#151821] hover:bg-[#1E2330] text-indigo-300 rounded-xl font-semibold transition border border-[#242833] cursor-pointer"
-          >
-            📊 Sort by Metric
-          </button>
-
           <button
             onClick={handleAddColumn}
             className="px-3 py-1.5 bg-[#151821] hover:bg-[#1E2330] text-gray-300 rounded-xl font-semibold transition border border-[#242833] cursor-pointer"

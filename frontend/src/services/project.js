@@ -63,7 +63,7 @@ export async function saveProjectFile(projectId, path, content) {
 }
 
 export async function runSelectedCodeReview(projectId, path, selectedCode, action) {
-  const res = await axios.post(`${API_BASE_URL}/api/project/${projectId}/review-selection`, { path, selected_code: selectedCode, action }, { timeout: 15000 });
+  const res = await axios.post(`${API_BASE_URL}/api/project/${projectId}/review-selection`, { path, selected_code: selectedCode, action }, { timeout: 15 * 60 * 1000 });   // a local model can take minutes
   return res.data;
 }
 

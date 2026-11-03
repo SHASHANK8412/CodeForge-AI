@@ -16,7 +16,7 @@ export function getRecentCommands() {
     if (!raw) {
       const defaults = [
         "Debug this Python code",
-        "Continue my AIForge FoodDelivery project",
+        "Continue my current project",
         "Create a study plan for DBMS",
         "Research event streaming Kafka vs Redpanda"
       ];
@@ -126,11 +126,11 @@ export async function resolveCommandIntent({ query, currentProjectId, currentVie
     };
   }
 
-  if (q.includes("continue") || q.includes("project") || q.includes("fooddelivery") || q.includes("yesterday")) {
+  if (q.includes("continue") || q.includes("project") || q.includes("yesterday")) {
     return {
       query,
       intent: "PROJECT_ACTION",
-      title: `Continue Active Project: ${currentProjectId || "FoodDelivery AI"}`,
+      title: currentProjectId ? `Continue Active Project: ${currentProjectId}` : "Open your projects",
       description: "Resume project workspace with synchronized memory context",
       target_view: "projects",
       action_type: "NAVIGATE"

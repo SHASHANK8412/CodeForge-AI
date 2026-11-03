@@ -39,7 +39,7 @@ async function _apiFetch(path, opts = {}) {
   return res.json();
 }
 
-export async function runBrowserTests(projectId = 'aiforge-demo', baseUrl = 'http://localhost:3000') {
+export async function runBrowserTests(projectId = null, baseUrl = 'http://localhost:3000') {
   return _apiFetch(`/api/projects/${projectId}/browser-tests/run`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -47,14 +47,14 @@ export async function runBrowserTests(projectId = 'aiforge-demo', baseUrl = 'htt
   });
 }
 
-export async function fetchBrowserTestReport(projectId = 'aiforge-demo') {
+export async function fetchBrowserTestReport(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/browser-tests/report`);
 }
 
-export async function runAIForgeSelfTest(projectId = 'aiforge-demo') {
+export async function runAIForgeSelfTest(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/browser-tests/self-test`, { method: 'POST' });
 }
 
-export async function diagnoseBrowserFailure(projectId = 'aiforge-demo', scenarioId = 'scen_task_01') {
+export async function diagnoseBrowserFailure(projectId = null, scenarioId = 'scen_task_01') {
   return _apiFetch(`/api/projects/${projectId}/browser-tests/${scenarioId}/diagnose`, { method: 'POST' });
 }

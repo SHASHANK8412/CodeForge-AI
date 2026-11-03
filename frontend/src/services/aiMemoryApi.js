@@ -83,7 +83,7 @@ export async function createMemory(payload) {
     id: `mem-${Date.now()}`,
     user_id: "default_user",
     scope: payload.scope || "PERSONAL",
-    project_id: payload.scope === "PROJECT" ? (payload.project_id || "aiforge-fooddelivery-ai") : null,
+    project_id: payload.scope === "PROJECT" ? (payload.project_id || null) : null,
     category: payload.category || "Preferences",
     title: payload.title,
     content: payload.content,

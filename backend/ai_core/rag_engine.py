@@ -2,7 +2,7 @@
 AIForge Next-Gen AI Agent Core — RAG Foundation & Hybrid Retrieval
 ==================================================================
 Document Ingestion, Semantic Chunking, Metadata Indexing,
-and Verified Source Citation Generation.
+and source citations for the documents a user uploads (no built-in sample documents).
 """
 
 import time
@@ -22,48 +22,17 @@ class DocumentChunk(BaseModel):
     filename: str
     text: str
     citation_ref: str
-    relevance_score: float = 0.92
+    relevance_score: float = 0.0
 
 
 class DocumentRecord(BaseModel):
     id: str = Field(default_factory=lambda: f"doc_{uuid.uuid4().hex[:8]}")
     filename: str
     content_type: str  # "markdown", "pdf", "code", "json", "txt"
-    user_id: str = "user_default"
-    project_id: str = "aiforge-fooddelivery-ai"
+    user_id: str
+    project_id: Optional[str] = None
     chunks_count: int = 1
     created_at: str = Field(default_factory=lambda: time.strftime("%Y-%m-%d %H:%M:%S"))
-
-
-INITIAL_DOCUMENTS = [
-    {
-        "id": "doc_arch_spec",
-        "filename": "RFC-104-Order-Pipeline.md",
-        "content_type": "markdown",
-        "user_id": "user_default",
-        "project_id": "aiforge-fooddelivery-ai",
-        "chunks_count": 3
-    }
-]
-
-INITIAL_CHUNKS = [
-    {
-        "chunk_id": "chk_arch_1",
-        "document_id": "doc_arch_spec",
-        "filename": "RFC-104-Order-Pipeline.md",
-        "text": "The Order Processing Pipeline consumes order events from Kafka topic 'orders.created' and dispatches matching courier dispatch jobs to Redis Streams.",
-        "citation_ref": "RFC-104-Order-Pipeline.md:L12-L24",
-        "relevance_score": 0.96
-    },
-    {
-        "chunk_id": "chk_arch_2",
-        "document_id": "doc_arch_spec",
-        "filename": "RFC-104-Order-Pipeline.md",
-        "text": "Database transaction isolation uses Serializable level for ledger write models and Read Committed for telemetry analytics.",
-        "citation_ref": "RFC-104-Order-Pipeline.md:L45-L58",
-        "relevance_score": 0.91
-    }
-]
 
 
 class RAGEngine:
@@ -81,28 +50,19 @@ class RAGEngine:
         self._load()
 
     def _load(self):
+        if not (self.docs_file.exists() and self.chunks_file.exists()):
+            return
         try:
-            if self.docs_file.exists() and self.chunks_file.exists():
-                with open(self.docs_file, "r", encoding="utf-8") as f:
-                    docs_data = json.load(f)
-                    for d in docs_data:
-                        rec = DocumentRecord(**d)
-                        self._documents[rec.id] = rec
-                with open(self.chunks_file, "r", encoding="utf-8") as f:
-                    chunks_data = json.load(f)
-                    self._chunks = [DocumentChunk(**c) for c in chunks_data]
-            else:
-                for d in INITIAL_DOCUMENTS:
+            with open(self.docs_file, "r", encoding="utf-8") as f:
+                for d in json.load(f):
+                    if not d.get("user_id") or d.get("user_id") == "user_default":
+                        continue          # sample documents from earlier versions belong to nobody
                     rec = DocumentRecord(**d)
                     self._documents[rec.id] = rec
-                self._chunks = [DocumentChunk(**c) for c in INITIAL_CHUNKS]
-                self._save()
+            with open(self.chunks_file, "r", encoding="utf-8") as f:
+                self._chunks = [DocumentChunk(**c) for c in json.load(f) if c.get("document_id") in self._documents]
         except Exception as e:
             _logger.error(f"Error loading RAG index: {e}")
-            for d in INITIAL_DOCUMENTS:
-                rec = DocumentRecord(**d)
-                self._documents[rec.id] = rec
-            self._chunks = [DocumentChunk(**c) for c in INITIAL_CHUNKS]
 
     def _save(self):
         try:
@@ -113,7 +73,8 @@ class RAGEngine:
         except Exception as e:
             _logger.error(f"Error saving RAG index: {e}")
 
-    def ingest_document(self, filename: str, content: str, content_type: str = "markdown", user_id: str = "user_default", project_id: str = "aiforge-fooddelivery-ai") -> DocumentRecord:
+    def ingest_document(self, filename: str, content: str, user_id: str, content_type: str = "markdown",
+                        project_id: Optional[str] = None) -> DocumentRecord:
         doc = DocumentRecord(
             filename=filename,
             content_type=content_type,
@@ -143,28 +104,30 @@ class RAGEngine:
         self._save()
         return doc
 
-    def search(self, query: str, limit: int = 4, project_id: Optional[str] = None) -> List[DocumentChunk]:
-        q_lower = query.lower()
+    def search(self, query: str, limit: int = 4, project_id: Optional[str] = None,
+               user_id: Optional[str] = None) -> List[DocumentChunk]:
+        """Keyword search over the chunks of one user's documents (of every user when user_id is None)."""
+        words = query.lower().split()
+        if not words:
+            return []
         results = []
         for c in self._chunks:
-            score = 0.0
-            words = q_lower.split()
-            matches = sum(1 for w in words if w in c.text.lower() or w in c.filename.lower())
-            if matches > 0:
-                score = round(0.5 + (matches / len(words)) * 0.5, 2)
-            elif not query:
-                score = 0.85
-
-            if score > 0.3:
+            doc = self._documents.get(c.document_id)
+            if doc is None or (user_id is not None and doc.user_id != user_id):
+                continue
+            if project_id and doc.project_id and doc.project_id != project_id:
+                continue
+            text = c.text.lower()
+            matches = sum(1 for w in words if w in text or w in c.filename.lower())
+            if matches:
                 c_copy = c.model_copy()
-                c_copy.relevance_score = score
+                c_copy.relevance_score = round(matches / len(words), 2)
                 results.append(c_copy)
-
         results.sort(key=lambda x: x.relevance_score, reverse=True)
         return results[:limit]
 
-    def list_documents(self) -> List[DocumentRecord]:
-        return list(self._documents.values())
+    def list_documents(self, user_id: str) -> List[DocumentRecord]:
+        return [d for d in self._documents.values() if d.user_id == user_id]
 
 
 global_rag_engine = RAGEngine()

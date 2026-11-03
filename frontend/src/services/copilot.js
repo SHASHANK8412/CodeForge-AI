@@ -40,7 +40,7 @@ async function _apiFetch(path, opts = {}) {
   return res.json();
 }
 
-export async function askCopilot(projectId = 'aiforge-demo', prompt = '', simFailure = false) {
+export async function askCopilot(projectId = null, prompt = '', simFailure = false) {
   return _apiFetch(`/api/projects/${projectId}/copilot/ask`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -48,21 +48,21 @@ export async function askCopilot(projectId = 'aiforge-demo', prompt = '', simFai
   });
 }
 
-export async function executeCopilotPlan(projectId = 'aiforge-demo', planId, simFailure = false) {
+export async function executeCopilotPlan(projectId = null, planId, simFailure = false) {
   return _apiFetch(`/api/projects/${projectId}/copilot/plan/${planId}/execute?simulate_failure=${simFailure}`, {
     method: 'POST',
   });
 }
 
-export async function searchCopilotCode(projectId = 'aiforge-demo', query = '') {
+export async function searchCopilotCode(projectId = null, query = '') {
   return _apiFetch(`/api/projects/${projectId}/copilot/search?q=${encodeURIComponent(query)}`);
 }
 
-export async function fetchCopilotHistory(projectId = 'aiforge-demo') {
+export async function fetchCopilotHistory(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/copilot/history`);
 }
 
-export async function submitCopilotFeedback(projectId = 'aiforge-demo', sessionId, messageId, rating, comment = null) {
+export async function submitCopilotFeedback(projectId = null, sessionId, messageId, rating, comment = null) {
   return _apiFetch(`/api/projects/${projectId}/copilot/feedback`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

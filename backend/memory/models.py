@@ -195,6 +195,7 @@ class ConversationRecord:
     updated_at: str
     last_opened_at: str
     message_count: int = 0
+    owner_id: str | None = None
 
 
 @dataclass(slots=True)

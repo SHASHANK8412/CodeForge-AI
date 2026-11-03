@@ -266,7 +266,14 @@ def test_prompt_to_zip_through_both_approvals(pipeline):
     assert request["tests_passed"] == 3
     report = request["quality_report"]
     assert report["checks"]["code_quality_gate"] == "passed"
-    assert report["release_recommendation"] in ("ready", "review_required"), report
+    # The tests passed, but the Execution Guardian's container checks cannot run here (they are reported BLOCKED),
+    # so the release is not called ready: it is "not_verified", with the reason.
+    verification = (values.get("verification") or {}).get("status", "")
+    if verification.startswith("VERIFIED"):
+        assert report["release_recommendation"] in ("ready", "review_required"), report
+    else:
+        assert report["release_recommendation"] == "not_verified", report
+        assert "Execution Guardian" in report["recommendation_reason"]
 
     # --- Approve: packaging, deploy steps ----------------------------------------------------
     final = _resume(graph, config, {"approval_status": "approved", "approval_required": False,

@@ -18,7 +18,7 @@ import { queryRagDocuments, uploadRagDocuments } from "../services/ragApi";
 import { getActiveSessionId, setActiveSessionId } from "../utils/chatStorage";
 import { fetchMetrics } from "../services/projectApi";
 import { createMemory } from "../services/aiMemoryApi";
-import { runAgent } from "../services/aiCoreApi";
+import { runAgent, fetchModels } from "../services/aiCoreApi";
 import toast from "react-hot-toast";
 
 function formatStructuredResponse(response) {
@@ -64,11 +64,7 @@ function ChatBox() {
 
     // AI Memory State
     const [isMemoryActive, setIsMemoryActive] = useState(true);
-    const [recalledMemories, setRecalledMemories] = useState([
-        { title: "Preferred Full-Stack Architecture", category: "Tech Stack", scope: "PERSONAL", content: "React + Tailwind on frontend, FastAPI + PostgreSQL on backend" },
-        { title: "Coding & Design Conventions", category: "Preferences", scope: "PERSONAL", content: "Clean functional React, async/await, robust error handling" },
-        { title: "FoodDelivery AI JWT & RBAC", category: "Architecture", scope: "PROJECT", content: "RS256 JWT auth with Customer, Restaurant, and Courier roles" }
-    ]);
+    const [recalledMemories, setRecalledMemories] = useState([]);
     const [showMemoryInspector, setShowMemoryInspector] = useState(false);
     const [pendingSuggestion, setPendingSuggestion] = useState(null);
 
@@ -78,7 +74,8 @@ function ChatBox() {
     const [isAgentRunning, setIsAgentRunning] = useState(false);
 
     // Top Header / Model Controls
-    const [activeModel, setActiveModel] = useState("claude-3-5-sonnet");
+    const [activeModel, setActiveModel] = useState("");   // "" lets the backend model router choose
+    const [installedModels, setInstalledModels] = useState([]);
     const [isDarkMode, setIsDarkMode] = useState(true);
     const [metrics, setMetrics] = useState(null);
 
@@ -116,6 +113,10 @@ function ChatBox() {
             setMessages([]);
         }
     };
+
+    useEffect(() => {
+        fetchModels().then(setInstalledModels).catch(() => setInstalledModels([]));
+    }, []);
 
     const loadMetricsDashboard = async () => {
         try {
@@ -327,6 +328,7 @@ function ChatBox() {
                 },
             ]);
         } finally {
+            setIsAgentRunning(false);
             setRagUploading(false);
             setUploadProgress(0);
             setLoading(false);
@@ -384,9 +386,10 @@ function ChatBox() {
                             onChange={(e) => setActiveModel(e.target.value)}
                             className="bg-[#1E293B] border border-gray-800 text-white rounded px-2 py-1 outline-none text-xs focus:border-[#6366F1] cursor-pointer"
                         >
-                            <option value="Gemini 3.5">Gemini 3.5 Flash</option>
-                            <option value="Qwen 2.5">Qwen 2.5 Coder</option>
-                            <option value="DeepSeek V3">DeepSeek V3</option>
+                            <option value="">Auto (model router)</option>
+                            {installedModels.map((m) => (
+                                <option key={m.id} value={m.id}>{m.name}</option>
+                            ))}
                         </select>
                     </div>
 
@@ -617,19 +620,19 @@ function ChatBox() {
                         <div className="bg-[#1E293B]/70 border border-gray-800/80 p-3.5 rounded-xl shadow-md text-center">
                             <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Active Model</div>
                             <div className="text-xl font-extrabold text-[#6366F1] mt-1">
-                                {activeModel}
+                                {activeModel || "Auto"}
                             </div>
                         </div>
                         <div className="bg-[#1E293B]/70 border border-gray-800/80 p-3.5 rounded-xl shadow-md text-center">
                             <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Avg Reflection</div>
                             <div className="text-xl font-extrabold text-emerald-400 mt-1">
-                                {metrics?.reflection_score ? `${metrics.reflection_score}%` : "94%"}
+                                {metrics?.reflection_score ? `${metrics.reflection_score}%` : "—"}
                             </div>
                         </div>
                         <div className="bg-[#1E293B]/70 border border-gray-800/80 p-3.5 rounded-xl shadow-md text-center">
                             <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Tests Passed</div>
                             <div className="text-xl font-extrabold text-amber-500 mt-1">
-                                {metrics?.average_test_score ? `${metrics.average_test_score}%` : "96%"}
+                                {metrics?.average_test_score ? `${metrics.average_test_score}%` : "—"}
                             </div>
                         </div>
                     </div>
@@ -641,6 +644,7 @@ function ChatBox() {
                             onSelectMode={setActiveAgentMode}
                             activeModel={activeModel}
                             onSelectModel={setActiveModel}
+                            models={installedModels}
                             lastRun={lastAgentRun}
                             isRunning={isAgentRunning}
                         />

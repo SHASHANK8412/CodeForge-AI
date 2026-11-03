@@ -5,17 +5,17 @@ import {
 } from "react-icons/fa";
 
 const AGENT_MODES = [
-  { id: "AGENT", label: "Autonomous Agent", icon: <FaRobot size={11} />, desc: "Plans, executes tools, and verifies deliverables." },
-  { id: "CHAT", label: "Smart Chat", icon: <FaBrain size={11} />, desc: "High-speed conversational assistant." },
-  { id: "RESEARCH", label: "Deep Research", icon: <FaSearch size={11} />, desc: "Investigates RFCs & citations." },
-  { id: "CODE", label: "Coding Agent", icon: <FaCode size={11} />, desc: "Sandbox testing & AST refactoring." },
-  { id: "ANALYZE", label: "Data Analyzer", icon: <FaChartBar size={11} />, desc: "Evaluates metrics & distributions." }
+  { id: "AGENT", label: "Autonomous Agent", icon: <FaRobot size={11} />, desc: "Plans the steps and gives a complete answer." },
+  { id: "CHAT", label: "Smart Chat", icon: <FaBrain size={11} />, desc: "Conversation saved to your chat history." },
+  { id: "RESEARCH", label: "Deep Research", icon: <FaSearch size={11} />, desc: "Explains a topic and compares options; cites your uploaded documents." },
+  { id: "CODE", label: "Coding Agent", icon: <FaCode size={11} />, desc: "Writes code with an explanation." },
+  { id: "ANALYZE", label: "Data Analyzer", icon: <FaChartBar size={11} />, desc: "Analyses the input step by step." }
 ];
 
 export default function AgentExecutionPanel({ 
   activeMode = "AGENT", 
   onSelectMode, 
-  activeModel = "claude-3-5-sonnet", 
+  activeModel = "", 
   onSelectModel,
   models = [],
   lastRun = null,
@@ -54,10 +54,10 @@ export default function AgentExecutionPanel({
             onChange={(e) => onSelectModel && onSelectModel(e.target.value)}
             className="bg-[#08090D] border border-[#242833] text-indigo-300 font-mono text-[10px] font-bold rounded-lg px-2 py-1 outline-none cursor-pointer"
           >
-            <option value="claude-3-5-sonnet">Claude 3.5 Sonnet (Reasoning)</option>
-            <option value="gpt-4o">GPT-4o Omnimodal</option>
-            <option value="gemini-2.0-flash">Gemini 2.0 Flash (Fast)</option>
-            <option value="deepseek-r1">DeepSeek R1 (Math & Code)</option>
+            <option value="">Auto (model router)</option>
+            {models.map((m) => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
           </select>
         </div>
       </div>
@@ -70,17 +70,17 @@ export default function AgentExecutionPanel({
               {isRunning ? (
                 <>
                   <FaSpinner className="animate-spin text-indigo-400" />
-                  <span>Agent Core Executing Pipeline...</span>
+                  <span>Waiting for the local model...</span>
                 </>
               ) : (
                 <>
                   <FaCheckCircle className="text-emerald-400" />
-                  <span>Agent Execution Pipeline • Verified</span>
+                  <span>Agent run • {lastRun.status === "FAILED" ? "failed" : "completed"}</span>
                 </>
               )}
             </span>
             <span className="text-gray-500">
-              {lastRun.duration_seconds}s • {lastRun.total_tokens} tokens
+              {lastRun.duration_seconds}s • {lastRun.model_id}
             </span>
           </div>
 
@@ -103,7 +103,7 @@ export default function AgentExecutionPanel({
           {lastRun.citations && lastRun.citations.length > 0 && (
             <div className="p-2.5 bg-[#08090D] border border-[#1C202B] rounded-xl space-y-1">
               <span className="text-[9px] font-mono text-cyan-400 font-bold uppercase block">
-                Verified Sourced Citations
+                Sources from your documents
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {lastRun.citations.map((c, i) => (

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { BACKEND_URL } from '../config/backend';
 
-export default function MonitoringPage({ projectId = 'aiforge-demo' }) {
+export default function MonitoringPage({ projectId = null }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [dashboard, setDashboard] = useState('AIForge Overview');
   const [loading, setLoading] = useState(false);

@@ -1601,6 +1601,9 @@ async def final_approval_node(state: ProjectState) -> dict:
             _logger.warning("Quality report failed: %s", e)
             report = None
         if report:
+            from backend.validation.quality_gate import apply_verification
+            report = apply_verification(report, (state.get("verification") or {}).get("status"),
+                                        (state.get("test_results") or {}).get("success"))
             final_req["quality_report"] = report
             _record_metrics(state, release_recommendation=report["release_recommendation"],
                             critical_findings=report["critical_findings"])

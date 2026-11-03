@@ -94,18 +94,9 @@ from backend.routes.agent_mode_routes import router as agent_mode_router
 from backend.routes.command_center_routes import router as command_center_router
 from backend.routes.canvas_routes import router as canvas_router
 from backend.routes.task_routes import router as task_router
-from backend.routes.research_routes import router as research_router
-from backend.routes.workflow_routes import router as workflow_router
 from backend.routes.analytics_routes import router as analytics_router
-from backend.routes.mission_control_routes import router as mission_control_router
-from backend.routes.sentinel_routes import router as sentinel_router
 from backend.routes.ai_core_routes import router as ai_core_router
-from backend.routes.knowledge_graph_routes import router as knowledge_graph_router
-from backend.routes.cyber_copilot_routes import router as cyber_copilot_router
 from backend.routes.verifiable_routes import router as verifiable_router
-from backend.routes.autonomous_workflow_routes import router as autonomous_workflow_router
-from backend.routes.ai_os_routes import router as ai_os_router
-from backend.routes.sprint_routes import router as sprint_routes
 from backend.benchmark_lab.routes import router as benchmark_lab_router
 from backend.auth.gate import AuthGateMiddleware, enforce_project_access
 from fastapi import Depends
@@ -133,18 +124,9 @@ app.include_router(agent_mode_router)
 app.include_router(command_center_router)
 app.include_router(canvas_router)
 app.include_router(task_router)
-app.include_router(research_router)
-app.include_router(workflow_router)
 app.include_router(analytics_router)
-app.include_router(mission_control_router)
-app.include_router(sentinel_router)
 app.include_router(ai_core_router)
-app.include_router(knowledge_graph_router)
-app.include_router(cyber_copilot_router)
 app.include_router(verifiable_router)
-app.include_router(autonomous_workflow_router)
-app.include_router(ai_os_router)
-app.include_router(sprint_routes)
 app.include_router(benchmark_lab_router)
 
 from backend.observability.service import global_opentelemetry_service
@@ -499,6 +481,7 @@ def health():
     except httpx.HTTPError:
         ollama = "down"
     from backend.execution.docker_test_sandbox import docker_available
+    from backend.services import groq_provider
     try:
         import sqlite3
         from backend.memory.database import ConversationDatabase
@@ -512,6 +495,8 @@ def health():
         "ai_mode": ai_mode,
         "services": {"api": "up", "database": database, "ollama": ollama,
                      "docker_sandbox": "up" if docker_available() else "down"},
+        # Which agents a hosted Groq model answers (configured, not called: no request is made here)
+        "groq": groq_provider.status(),
     }
 
 

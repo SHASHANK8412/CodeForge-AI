@@ -8,21 +8,15 @@ import {
   createTask, 
   updateTask, 
   deleteTask, 
-  decomposeGoal, 
   fetchNextBestAction 
 } from "../services/taskManagementApi";
 import toast from "react-hot-toast";
 
-export default function TasksPage({ setView, activeProjectId = "aiforge-fooddelivery-ai" }) {
+export default function TasksPage({ activeProjectId = null }) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [nextBestAction, setNextBestAction] = useState(null);
-
-  // Decompose Goal Modal State
-  const [showDecomposeModal, setShowDecomposeModal] = useState(false);
-  const [goalInput, setGoalInput] = useState("");
-  const [isDecomposing, setIsDecomposing] = useState(false);
 
   // New Task Modal State
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
@@ -33,12 +27,11 @@ export default function TasksPage({ setView, activeProjectId = "aiforge-fooddeli
 
   const loadTasksData = async () => {
     try {
-      const data = await fetchTasks({ projectId: activeProjectId, status: statusFilter });
-      setTasks(data || []);
-      const nba = await fetchNextBestAction(activeProjectId);
-      setNextBestAction(nba);
+      const data = await fetchTasks({ projectId: activeProjectId || undefined, status: statusFilter });
+      setTasks(data);
+      setNextBestAction(await fetchNextBestAction(activeProjectId || undefined));
     } catch (err) {
-      console.error("Error loading tasks:", err);
+      toast.error(err?.response?.data?.detail || "Could not load your tasks.");
     } finally {
       setLoading(false);
     }
@@ -48,50 +41,34 @@ export default function TasksPage({ setView, activeProjectId = "aiforge-fooddeli
     loadTasksData();
   }, [activeProjectId, statusFilter]);
 
-  const handleStatusChange = async (taskId, newStatus) => {
-    await updateTask(taskId, { status: newStatus });
-    toast.success(`Task status updated to ${newStatus}`);
-    loadTasksData();
-  };
-
-  const handleDelete = async (taskId) => {
-    await deleteTask(taskId);
-    toast.success("Task deleted");
-    loadTasksData();
-  };
-
-  const handleDecomposeGoal = async () => {
-    if (!goalInput.trim()) return;
-    setIsDecomposing(true);
-    toast("AI decomposing goal into subtasks...", { icon: "🧠" });
+  const runAndReload = async (action, successMessage) => {
     try {
-      await decomposeGoal(goalInput.trim(), activeProjectId);
-      toast.success("Decomposed into 3 structured subtasks!", { icon: "🚀" });
-      setShowDecomposeModal(false);
-      setGoalInput("");
-      loadTasksData();
+      await action();
+      toast.success(successMessage);
     } catch (err) {
-      toast.error("Decomposition failed");
-    } finally {
-      setIsDecomposing(false);
+      toast.error(err?.response?.data?.detail || "The change was not saved.");
     }
+    loadTasksData();
   };
+
+  const handleStatusChange = (taskId, newStatus) =>
+    runAndReload(() => updateTask(taskId, { status: newStatus }), `Task status updated to ${newStatus}`);
+
+  const handleDelete = (taskId) => runAndReload(() => deleteTask(taskId), "Task deleted");
 
   const handleCreateNewTask = async () => {
     if (!newTaskTitle.trim()) return;
-    await createTask({
+    await runAndReload(() => createTask({
       title: newTaskTitle.trim(),
       description: newTaskDesc.trim(),
       priority: newTaskPriority,
       status: "TODO",
-      project_id: activeProjectId,
+      project_id: activeProjectId || undefined,
       assigned_agent: newTaskAgent
-    });
-    toast.success("Task created!", { icon: "✓" });
+    }), "Task created");
     setShowNewTaskModal(false);
     setNewTaskTitle("");
     setNewTaskDesc("");
-    loadTasksData();
   };
 
   const priorityColors = {
@@ -111,23 +88,15 @@ export default function TasksPage({ setView, activeProjectId = "aiforge-fooddeli
           </div>
           <div>
             <h1 className="text-xl font-bold text-white flex items-center gap-2">
-              AI Task & Execution Hub
+              Tasks
             </h1>
             <p className="text-xs text-[#9AA1B2]">
-              AI-decomposed sprint items, autonomous agent assignments, and blocker detection
+              Your task list, with the next thing to work on
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowDecomposeModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition shadow cursor-pointer"
-          >
-            <FaMagic size={11} />
-            <span>AI Break Down Goal</span>
-          </button>
-
           <button
             onClick={() => setShowNewTaskModal(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-[#6366F1] hover:bg-[#5053e1] text-white rounded-xl text-xs font-bold transition shadow cursor-pointer"
@@ -147,7 +116,7 @@ export default function TasksPage({ setView, activeProjectId = "aiforge-fooddeli
             </div>
             <div>
               <span className="text-[10px] font-mono text-indigo-300 font-bold uppercase block">
-                🧠 AI Next Best Action
+                Next up
               </span>
               <h3 className="text-sm font-bold text-white">
                 {nextBestAction.recommendation}
@@ -157,13 +126,6 @@ export default function TasksPage({ setView, activeProjectId = "aiforge-fooddeli
               </p>
             </div>
           </div>
-
-          <button
-            onClick={() => setView("code")}
-            className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition shrink-0 cursor-pointer shadow"
-          >
-            Execute Now →
-          </button>
         </div>
       )}
 
@@ -243,42 +205,6 @@ export default function TasksPage({ setView, activeProjectId = "aiforge-fooddeli
           </div>
         ))}
       </div>
-
-      {/* Decompose Goal Modal */}
-      {showDecomposeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in text-xs">
-          <div className="w-full max-w-lg bg-[#0F1117] border border-[#242833] rounded-3xl p-6 shadow-2xl space-y-4 glow-violet">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <FaMagic className="text-indigo-400" /> AI Goal Decomposition
-            </h3>
-            <p className="text-xs text-gray-400">
-              Type any high-level objective and AIForge will architect and break it down into sequential subtasks.
-            </p>
-            <textarea
-              value={goalInput}
-              onChange={(e) => setGoalInput(e.target.value)}
-              placeholder="e.g. Build an end-to-end OAuth2 & Stripe subscription billing microservice..."
-              rows={3}
-              className="w-full bg-[#08090D] border border-[#242833] focus:border-indigo-500 rounded-xl p-3 text-xs text-white outline-none resize-none"
-            />
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => setShowDecomposeModal(false)}
-                className="px-4 py-2 bg-[#151821] hover:bg-[#1E2330] text-gray-300 rounded-xl font-semibold cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDecomposeGoal}
-                disabled={!goalInput.trim() || isDecomposing}
-                className="px-4 py-2 bg-[#6366F1] hover:bg-[#5053e1] disabled:bg-gray-800 text-white rounded-xl font-bold cursor-pointer transition shadow"
-              >
-                {isDecomposing ? "Decomposing..." : "Decompose Goal"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* New Task Modal */}
       {showNewTaskModal && (

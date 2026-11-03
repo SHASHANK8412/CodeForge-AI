@@ -8,7 +8,7 @@ import {
   fetchObservabilityReadiness
 } from '../services/observability';
 
-export default function ObservabilityPage({ projectId = 'aiforge-demo' }) {
+export default function ObservabilityPage({ projectId = null }) {
   const [metrics, setMetrics] = useState(null);
   const [traces, setTraces] = useState([]);
   const [selectedTrace, setSelectedTrace] = useState(null);

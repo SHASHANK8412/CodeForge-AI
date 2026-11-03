@@ -4,7 +4,7 @@ import { exportQualityReport } from '../../services/quality';
 
 export default function QualityHeader({
   projectName = '',
-  generationId = 'aiforge-demo',
+  generationId = null,
   onNavigate
 }) {
   const [showExportMenu, setShowExportMenu] = useState(false);

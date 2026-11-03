@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FaMagic, FaSpinner, FaExclamationTriangle, FaCheckCircle, FaTimesCircle, FaHourglassHalf, FaFileCode } from 'react-icons/fa';
 import { runSimulation } from '../services/intelligence';
 
-export default function SimulatorPage({ projectId = 'aiforge-demo' }) {
+export default function SimulatorPage({ projectId = null }) {
   const [query, setQuery] = useState('What happens if I switch PostgreSQL to MongoDB?');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);

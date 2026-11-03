@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaShieldAlt, FaSpinner, FaBug, FaWrench, FaCheckCircle } from 'react-icons/fa';
 import { scanSecurityHunter, fetchSecurityReport } from '../services/intelligence';
 
-export default function BugBountyPage({ projectId = 'aiforge-demo' }) {
+export default function BugBountyPage({ projectId = null }) {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);

@@ -18,14 +18,17 @@ class ConversationManager:
     def __init__(self, repository: ConversationRepository | None = None):
         self.repository = repository or ConversationRepository()
 
-    def create_conversation(self, conversation_id: str | None = None, title: str | None = None) -> ConversationRecord:
-        return self.repository.create_conversation(conversation_id=conversation_id, title=title)
+    def create_conversation(self, conversation_id: str | None = None, title: str | None = None,
+                            owner_id: str | None = None) -> ConversationRecord:
+        return self.repository.create_conversation(conversation_id=conversation_id, title=title, owner_id=owner_id)
 
     def get_conversation(self, conversation_id: str) -> ConversationRecord | None:
         return self.repository.get_conversation(conversation_id)
 
-    def list_conversations(self, limit: int = 50, offset: int = 0, search: str | None = None) -> list[ConversationRecord]:
-        return self.repository.list_conversations(limit=limit, offset=offset, search=search)
+    def list_conversations(self, limit: int = 50, offset: int = 0, search: str | None = None,
+                           owner_id: str | None = None, include_ownerless: bool = False) -> list[ConversationRecord]:
+        return self.repository.list_conversations(limit=limit, offset=offset, search=search, owner_id=owner_id,
+                                                  include_ownerless=include_ownerless)
 
     def rename_conversation(self, conversation_id: str, title: str) -> ConversationRecord:
         return self.repository.rename_conversation(conversation_id, title)

@@ -168,15 +168,12 @@ export default function Sidebar({
     const primaryNavItems = [
         { key: "dashboard", label: "Dashboard", icon: <FaHome size={14} /> },
         { key: "chat", label: "AI Chat", icon: <FaCommentAlt size={14} /> },
-        { key: "mission-control", label: "Mission Control", icon: <FaRocket size={14} /> },
         { key: "agents", label: "Agents", icon: <FaRobot size={14} /> },
         { key: "projects", label: "Projects", icon: <FaFolderOpen size={14} /> },
         { key: "canvas", label: "Canvas", icon: <FaPaintBrush size={14} /> },
-        { key: "research", label: "Research", icon: <FaSearch size={14} /> },
         { key: "tasks", label: "Tasks", icon: <FaTasks size={14} /> },
         { key: "memory", label: "Memory", icon: <FaBrain size={14} /> },
         { key: "tools", label: "AI Tools", icon: <FaBrain size={14} /> },
-        { key: "workflows", label: "Workflows", icon: <FaProjectDiagram size={14} /> },
         { key: "saved", label: "Saved", icon: <FaBookmark size={14} /> },
         { key: "history", label: "History", icon: <FaHistory size={14} /> },
         { key: "analytics", label: "Analytics", icon: <FaChartLine size={14} /> },
@@ -189,7 +186,6 @@ export default function Sidebar({
 
     // Preserved specialized engineering tools suite
     const engineeringSuiteItems = [
-        { key: "execution-validation", label: "Validation Sandbox", icon: <FaShieldAlt size={12} /> },
         { key: "ci-pipeline", label: "CI/CD Pipeline", icon: <FaProjectDiagram size={12} /> },
         { key: "github", label: "GitHub Integration", icon: <FaRocket size={12} /> },
         { key: "code", label: "Code Workspace", icon: <FaCode size={12} /> },

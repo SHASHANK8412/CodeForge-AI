@@ -13,17 +13,17 @@ import Footer from '../components/landing/Footer';
 export default function LandingPage({ setView }) {
   const handleStartBuilding = () => {
     if (setView) {
-      setView('mission-control');
+      setView('create');
     } else {
-      window.location.href = '/mission-control';
+      window.location.href = '/';
     }
   };
 
   const handleLaunchMission = (missionText) => {
     if (setView) {
-      setView('ai-os');
+      setView('create');
     } else {
-      window.location.href = '/ai-os';
+      window.location.href = '/';
     }
   };
 

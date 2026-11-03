@@ -51,6 +51,7 @@ class ConversationRepository:
             updated_at=row["updated_at"],
             last_opened_at=row["last_opened_at"],
             message_count=row["message_count"],
+            owner_id=row["owner_id"] if "owner_id" in row.keys() else None,
         )
 
     def _message_from_row(self, row) -> MessageRecord:
@@ -87,6 +88,7 @@ class ConversationRepository:
         conversation_id: str | None = None,
         title: str | None = None,
         created_at: str | None = None,
+        owner_id: str | None = None,
     ) -> ConversationRecord:
         now = created_at or _utc_now()
         conversation_id = conversation_id or uuid4().hex
@@ -102,10 +104,10 @@ class ConversationRepository:
                 connection.execute(
                     """
                     INSERT INTO conversations (
-                        conversation_id, title, created_at, updated_at, last_opened_at, message_count
-                    ) VALUES (?, ?, ?, ?, ?, 0)
+                        conversation_id, title, created_at, updated_at, last_opened_at, message_count, owner_id
+                    ) VALUES (?, ?, ?, ?, ?, 0, ?)
                     """,
-                    (conversation_id, clean_title, now, now, now),
+                    (conversation_id, clean_title, now, now, now, owner_id),
                 )
             elif title and existing["title"] != clean_title:
                 connection.execute(
@@ -138,13 +140,22 @@ class ConversationRepository:
         limit: int = 50,
         offset: int = 0,
         search: str | None = None,
+        owner_id: str | None = None,
+        include_ownerless: bool = False,
     ) -> list[ConversationRecord]:
+        """Conversations of one owner (all of them when owner_id is None, for internal callers)."""
         query = "SELECT * FROM conversations"
+        clauses: list[str] = []
         params: list[Any] = []
 
+        if owner_id is not None:
+            clauses.append("(owner_id = ? OR owner_id IS NULL)" if include_ownerless else "owner_id = ?")
+            params.append(owner_id)
         if search:
-            query += " WHERE title LIKE ?"
+            clauses.append("title LIKE ?")
             params.append(f"%{search}%")
+        if clauses:
+            query += " WHERE " + " AND ".join(clauses)
 
         query += " ORDER BY last_opened_at DESC, updated_at DESC LIMIT ? OFFSET ?"
         params.extend([limit, offset])

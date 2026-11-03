@@ -15,7 +15,7 @@ import { fetchQualityReport, triggerAutomaticRepair } from '../services/quality'
 import { FaSpinner, FaExclamationTriangle, FaRedo } from 'react-icons/fa';
 
 
-export default function QualityCenter({ generationId = 'aiforge-demo', setView }) {
+export default function QualityCenter({ generationId = null, setView }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

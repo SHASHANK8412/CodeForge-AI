@@ -189,3 +189,22 @@ def run_quality_report(project_dir: Any, gate: Optional[Dict[str, Any]] = None) 
         "findings": (critical + review)[:50],
         "release_recommendation": recommendation,
     }
+
+
+def apply_verification(report: Dict[str, Any], verification_status: Optional[str], tests_passed: Optional[bool]) -> Dict[str, Any]:
+    """
+    The static report alone never makes a project "ready": unless its tests passed and the Execution Guardian
+    verified it (VERIFIED or VERIFIED_WITH_WARNINGS), a "ready" or "review_required" recommendation becomes
+    "not_verified", with the reason. "blocked" stays blocked.
+    """
+    if report.get("release_recommendation") == "blocked":
+        return report
+    verified = str(verification_status or "").startswith("VERIFIED")
+    if verified and tests_passed is True:
+        return report
+    reasons = []
+    if tests_passed is not True:
+        reasons.append("the generated tests did not pass" if tests_passed is False else "the generated tests did not run")
+    if not verified:
+        reasons.append(f"the Execution Guardian did not verify the project (status: {verification_status or 'not run'})")
+    return {**report, "release_recommendation": "not_verified", "recommendation_reason": "; ".join(reasons)}

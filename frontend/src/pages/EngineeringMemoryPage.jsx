@@ -9,7 +9,7 @@ import {
   createMemory
 } from '../services/memory';
 
-export default function EngineeringMemoryPage({ projectId = 'aiforge-demo' }) {
+export default function EngineeringMemoryPage({ projectId = null }) {
   const [memories, setMemories] = useState([]);
   const [dashboard, setDashboard] = useState(null);
   const [graph, setGraph] = useState(null);

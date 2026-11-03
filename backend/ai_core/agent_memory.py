@@ -28,44 +28,13 @@ class MemoryType(str):
 
 class MemoryRecord(BaseModel):
     id: str = Field(default_factory=lambda: f"mem_{uuid.uuid4().hex[:8]}")
-    user_id: str = "user_default"
-    project_id: Optional[str] = "aiforge-fooddelivery-ai"
+    user_id: str
+    project_id: Optional[str] = None
     memory_type: str = "LONG_TERM"  # SHORT_TERM, LONG_TERM, TASK, SEMANTIC
     key: str
     content: str
     relevance_score: float = 1.0
     created_at: str = Field(default_factory=lambda: time.strftime("%Y-%m-%d %H:%M:%S"))
-
-
-INITIAL_MEMORIES = [
-    {
-        "id": "mem_pref_ts",
-        "user_id": "user_default",
-        "project_id": "aiforge-fooddelivery-ai",
-        "memory_type": "LONG_TERM",
-        "key": "frontend_tech_stack",
-        "content": "User prefers React with Tailwind CSS and strict TypeScript types over JavaScript.",
-        "relevance_score": 0.96
-    },
-    {
-        "id": "mem_arch_redis",
-        "user_id": "user_default",
-        "project_id": "aiforge-fooddelivery-ai",
-        "memory_type": "SEMANTIC",
-        "key": "geolocation_streaming",
-        "content": "Architecture decision: Courier real-time location stream uses Redis Streams with consumer groups for 50ms broadcast latency.",
-        "relevance_score": 0.94
-    },
-    {
-        "id": "mem_sec_jwt",
-        "user_id": "user_default",
-        "project_id": "aiforge-fooddelivery-ai",
-        "memory_type": "LONG_TERM",
-        "key": "security_policy",
-        "content": "All API endpoints require asymmetric RS256 JWT tokens and rate-limiting bucket middleware.",
-        "relevance_score": 0.98
-    }
-]
 
 
 class AgentMemoryManager:
@@ -81,23 +50,17 @@ class AgentMemoryManager:
         self._load()
 
     def _load(self):
+        if not self.storage_file.exists():
+            return
         try:
-            if self.storage_file.exists():
-                with open(self.storage_file, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    for item in data:
-                        m = MemoryRecord(**item)
-                        self._memories[m.id] = m
-            else:
-                for item in INITIAL_MEMORIES:
+            with open(self.storage_file, "r", encoding="utf-8") as f:
+                for item in json.load(f):
+                    if not item.get("user_id") or item.get("user_id") == "user_default":
+                        continue          # demo records from earlier versions belong to nobody
                     m = MemoryRecord(**item)
                     self._memories[m.id] = m
-                self._save()
         except Exception as e:
             _logger.error(f"Error loading agent memories: {e}")
-            for item in INITIAL_MEMORIES:
-                m = MemoryRecord(**item)
-                self._memories[m.id] = m
 
     def _save(self):
         try:
@@ -106,10 +69,10 @@ class AgentMemoryManager:
         except Exception as e:
             _logger.error(f"Error saving agent memories: {e}")
 
-    def store(self, key: str, content: str, memory_type: str = "LONG_TERM", project_id: Optional[str] = None, user_id: str = "user_default") -> MemoryRecord:
+    def store(self, key: str, content: str, user_id: str, memory_type: str = "LONG_TERM", project_id: Optional[str] = None) -> MemoryRecord:
         record = MemoryRecord(
             user_id=user_id,
-            project_id=project_id or "aiforge-fooddelivery-ai",
+            project_id=project_id,
             memory_type=memory_type,
             key=key.strip(),
             content=content.strip(),
@@ -119,7 +82,7 @@ class AgentMemoryManager:
         self._save()
         return record
 
-    def search(self, query: str, user_id: str = "user_default", project_id: Optional[str] = None, limit: int = 5) -> List[MemoryRecord]:
+    def search(self, query: str, user_id: str, project_id: Optional[str] = None, limit: int = 5) -> List[MemoryRecord]:
         q_lower = query.lower()
         results = []
         for m in self._memories.values():
@@ -147,11 +110,11 @@ class AgentMemoryManager:
         results.sort(key=lambda x: x.relevance_score, reverse=True)
         return results[:limit]
 
-    def list_memories(self, user_id: str = "user_default") -> List[MemoryRecord]:
+    def list_memories(self, user_id: str) -> List[MemoryRecord]:
         return [m for m in self._memories.values() if m.user_id == user_id]
 
-    def delete_memory(self, memory_id: str) -> bool:
-        if memory_id in self._memories:
+    def delete_memory(self, memory_id: str, user_id: str) -> bool:
+        if memory_id in self._memories and self._memories[memory_id].user_id == user_id:
             del self._memories[memory_id]
             self._save()
             return True

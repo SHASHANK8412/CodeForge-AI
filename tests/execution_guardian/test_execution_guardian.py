@@ -368,7 +368,8 @@ def test_the_report_says_what_ran_and_what_did_not(tmp_path):
     assert {f["category"] for f in r["failures_discovered"]} == {"compilation_error", "runtime_exception"}
     assert len(r["failures_resolved"]) == len(r["failures_discovered"]) and not r["remaining_failures"]
     assert "pytest" in r["how_to_run"] and r["counts"]["PASSED"] >= 4
-    assert any("frontend-to-backend calls are not exercised" in x for x in r["limitations"])
+    # frontend-to-backend calls are covered by the Integration & Compatibility Engine, and the report says so
+    assert any("frontend-to-backend calls" in x and "not by this verification" in x for x in r["limitations"])
 
 
 # 20 the workflow ------------------------------------------------------------------------------------------------------------------------------------------

@@ -2,8 +2,8 @@ import React from 'react';
 import { FaLayerGroup, FaArrowLeft, FaCode, FaShieldAlt, FaRocket, FaCheckCircle } from 'react-icons/fa';
 
 export default function DeploymentHeader({
-  projectName = 'FoodDelivery AI',
-  generationId = 'aiforge-demo',
+  projectName = 'Project',
+  generationId = null,
   onNavigate
 }) {
   const pipeline = [

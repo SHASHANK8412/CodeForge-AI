@@ -17,7 +17,7 @@ const SAMPLE_PROMPTS = [
   'Should we split backend into microservices?'
 ];
 
-export default function SoftwareArchitectPage({ projectId = 'aiforge-demo' }) {
+export default function SoftwareArchitectPage({ projectId = null }) {
   const [currentDiagram, setCurrentDiagram] = useState(null);
   const [simulation, setSimulation] = useState(null);
   const [failureReport, setFailureReport] = useState(null);

@@ -42,7 +42,7 @@ const chooseInitialFile = (files) => {
   return files.find((file) => DEFAULT_MAIN_FILE_NAMES.includes(file.name)) || files[0];
 };
 
-export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }) {
+export default function CodeWorkspace({ generationId = null, setView }) {
   const [projectData, setProjectData] = useState(null);
   const [files, setFiles] = useState([]);
   const [openFiles, setOpenFiles] = useState([]);
@@ -348,7 +348,11 @@ export default function CodeWorkspace({ generationId = 'aiforge-demo', setView }
     setTerminalOutput(`[Assistant] Running ${actionType} action on selection...`);
     try {
       const res = await runSelectedCodeReview(generationId, activeFile.path, text, actionType);
-      setTerminalOutput(prev => prev + `\n\n--- Assistant Response ---\n` + res.response);
+      if (res.status === 'FAILED') {
+        setTerminalOutput(prev => prev + `\n❌ Assistant error: ${res.error}`);
+      } else {
+        setTerminalOutput(prev => prev + `\n\n--- Assistant Response ---\n` + res.result);
+      }
     } catch (err) {
       setTerminalOutput(prev => prev + `\n❌ Assistant error: ${err.message}`);
     }

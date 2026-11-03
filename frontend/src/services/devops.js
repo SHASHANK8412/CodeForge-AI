@@ -41,12 +41,12 @@ async function _apiFetch(path, opts = {}) {
   return res.json();
 }
 
-export async function fetchDeploymentPlan(projectId = 'aiforge-demo') {
+export async function fetchDeploymentPlan(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/devops/plan`, { method: 'POST' });
 }
 
 export async function deployProject(
-  projectId = 'aiforge-demo',
+  projectId = null,
   simulateHealthFailure = false,
   simulateSmokeFailure = false,
   bypassReadiness = false
@@ -62,23 +62,23 @@ export async function deployProject(
   });
 }
 
-export async function fetchDeploymentStatus(projectId = 'aiforge-demo') {
+export async function fetchDeploymentStatus(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/devops/status`);
 }
 
-export async function fetchDeploymentHistory(projectId = 'aiforge-demo') {
+export async function fetchDeploymentHistory(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/devops/history`);
 }
 
-export async function compareDeployments(projectId = 'aiforge-demo', v1 = 1, v2 = 2) {
+export async function compareDeployments(projectId = null, v1 = 1, v2 = 2) {
   return _apiFetch(`/api/projects/${projectId}/devops/compare?v1=${v1}&v2=${v2}`);
 }
 
-export async function fetchProductionHealth(projectId = 'aiforge-demo') {
+export async function fetchProductionHealth(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/devops/production-health`);
 }
 
-export async function rollbackDeployment(projectId = 'aiforge-demo', targetVersion = 1) {
+export async function rollbackDeployment(projectId = null, targetVersion = 1) {
   return _apiFetch(`/api/projects/${projectId}/devops/rollback`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

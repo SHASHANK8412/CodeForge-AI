@@ -263,7 +263,7 @@ export default function TopNav({
                 <button
                   onClick={() => {
                     setShowUserMenu(false);
-                    setView("security");
+                    setView("security-guardian");
                   }}
                   className="w-full text-left px-3 py-2 hover:bg-[#151821] text-[#9AA1B2] hover:text-white rounded-lg flex items-center gap-2.5 transition cursor-pointer"
                 >

@@ -7,7 +7,6 @@ export default function CodeCanvas({
   files = {}, 
   onChange, 
   onFilesChange, 
-  onAiTransform,
   isReadOnly = false 
 }) {
   const [activeFile, setActiveFile] = useState("main.py");
@@ -91,20 +90,6 @@ export default function CodeCanvas({
 
         {/* Code Action Buttons */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => onAiTransform(`Refactor and optimize ${activeFile} for performance and clean architecture`)}
-            className="px-2.5 py-1 bg-[#151821] hover:bg-[#1E2330] text-violet-300 rounded-lg text-[11px] font-semibold transition border border-[#242833] cursor-pointer"
-          >
-            Refactor
-          </button>
-
-          <button
-            onClick={() => onAiTransform(`Diagnose and auto-fix potential bugs or edge cases in ${activeFile}`)}
-            className="px-2.5 py-1 bg-[#151821] hover:bg-[#1E2330] text-amber-300 rounded-lg text-[11px] font-semibold transition border border-[#242833] cursor-pointer"
-          >
-            Debug
-          </button>
-
           <button
             onClick={handleRunCode}
             disabled={isRunning}

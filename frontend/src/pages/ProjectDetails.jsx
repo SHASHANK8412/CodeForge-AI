@@ -6,7 +6,7 @@ import RAGKnowledgeDashboard from '../components/rag/RAGKnowledgeDashboard';
 import { fetchProjectDetails } from '../services/projects';
 import { FaArrowLeft, FaCheckCircle, FaCode, FaShieldAlt, FaRocket, FaSpinner } from 'react-icons/fa';
 
-export default function ProjectDetails({ generationId = 'aiforge-fooddelivery-ai', setView }) {
+export default function ProjectDetails({ generationId = null, setView }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 

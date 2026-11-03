@@ -1,14 +1,15 @@
 import React from 'react';
 import { FaCheckCircle, FaExternalLinkAlt, FaRedo, FaCode, FaRocket } from 'react-icons/fa';
 
-export default function DeploymentStatus({ status = 'LIVE', urls = {}, onRedeploy }) {
-  const isLive = status.toUpperCase() === 'LIVE';
+export default function DeploymentStatus({ status = '', urls = {}, onRedeploy }) {
+  const isLive = String(status || '').toUpperCase() === 'LIVE';
+  const frontendUrl = urls?.frontend;
+  const backendUrl = urls?.backend;
 
-  if (!isLive) return null;
+  // Only a deployment that reported LIVE with real URLs is shown as live; nothing is invented.
+  if (!isLive || !(frontendUrl || backendUrl)) return null;
 
-  const frontendUrl = urls.frontend || 'https://fooddelivery-app.vercel.app';
-  const backendUrl = urls.backend || 'https://fooddelivery-api.onrender.com';
-  const docsUrl = urls.api_docs || `${backendUrl}/docs`;
+  const docsUrl = urls.api_docs || (backendUrl ? `${backendUrl}/docs` : null);
 
   return (
     <div className="bg-gradient-to-tr from-slate-950 via-indigo-950/40 to-slate-950 border border-emerald-500/40 rounded-2xl p-6 shadow-2xl font-sans mb-6">
@@ -23,14 +24,14 @@ export default function DeploymentStatus({ status = 'LIVE', urls = {}, onRedeplo
               <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase">● LIVE</span>
             </div>
             <p className="text-xs text-slate-300 mt-1">
-              Your application is live and receiving traffic across global Edge CDN nodes.
+              The deployment reported these live URLs.
             </p>
           </div>
         </div>
 
         {/* Live URL Pill Badges */}
         <div className="flex flex-col sm:flex-row gap-3 text-xs font-mono">
-          <a
+          {frontendUrl && <a
             href={frontendUrl}
             target="_blank"
             rel="noopener noreferrer"
@@ -38,9 +39,9 @@ export default function DeploymentStatus({ status = 'LIVE', urls = {}, onRedeplo
           >
             <span>Frontend: {frontendUrl}</span>
             <FaExternalLinkAlt className="w-2.5 h-2.5" />
-          </a>
+          </a>}
 
-          <a
+          {backendUrl && <a
             href={backendUrl}
             target="_blank"
             rel="noopener noreferrer"
@@ -48,7 +49,7 @@ export default function DeploymentStatus({ status = 'LIVE', urls = {}, onRedeplo
           >
             <span>Backend: {backendUrl}</span>
             <FaExternalLinkAlt className="w-2.5 h-2.5" />
-          </a>
+          </a>}
         </div>
       </div>
 

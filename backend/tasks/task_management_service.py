@@ -38,7 +38,8 @@ class AITask(BaseModel):
     priority: TaskPriority = TaskPriority.MEDIUM
     status: TaskStatus = TaskStatus.TODO
     deadline: Optional[str] = None
-    project_id: str = "aiforge-fooddelivery-ai"
+    project_id: Optional[str] = None
+    owner_id: Optional[str] = None  # the user who created the task
     assigned_agent: Optional[str] = "agent-coding"
     dependencies: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
@@ -46,58 +47,6 @@ class AITask(BaseModel):
     blocker_reason: Optional[str] = None
     created_at: str = Field(default_factory=lambda: time.strftime("%Y-%m-%d %H:%M:%S"))
     updated_at: str = Field(default_factory=lambda: time.strftime("%Y-%m-%d %H:%M:%S"))
-
-
-INITIAL_TASKS = [
-    {
-        "id": "task_food_01",
-        "title": "Implement Redis Streams Courier Geolocation Queue",
-        "description": "Build high-throughput async ingest worker for real-time driver coordinate broadcasts.",
-        "priority": "CRITICAL",
-        "status": "IN_PROGRESS",
-        "deadline": "Tomorrow, 5:00 PM",
-        "project_id": "aiforge-fooddelivery-ai",
-        "assigned_agent": "agent-coding",
-        "dependencies": [],
-        "tags": ["Backend", "Redis", "FastAPI"]
-    },
-    {
-        "id": "task_food_02",
-        "title": "Design Dynamic Surge Pricing Estimation Model",
-        "description": "Analyze dinner peak order volume and compute dynamic delivery fee multiplier.",
-        "priority": "HIGH",
-        "status": "TODO",
-        "deadline": "In 3 Days",
-        "project_id": "aiforge-fooddelivery-ai",
-        "assigned_agent": "agent-data-analyst",
-        "dependencies": ["task_food_01"],
-        "tags": ["Analytics", "Pricing", "Algorithms"]
-    },
-    {
-        "id": "task_food_03",
-        "title": "Comprehensive DBMS Indexing & Normalization Study Plan",
-        "description": "Complete 5-day syllabus revision for B-Trees, transactions, and ACID isolation levels.",
-        "priority": "HIGH",
-        "status": "DONE",
-        "deadline": "Completed",
-        "project_id": "aiforge-fooddelivery-ai",
-        "assigned_agent": "agent-study",
-        "dependencies": [],
-        "tags": ["Study", "DBMS", "Exam"]
-    },
-    {
-        "id": "task_food_04",
-        "title": "Stripe Webhook & RS256 Idempotency Review",
-        "description": "Verify idempotency keys and replay protection for customer checkout transactions.",
-        "priority": "MEDIUM",
-        "status": "REVIEW",
-        "deadline": "Friday, 12:00 PM",
-        "project_id": "aiforge-fooddelivery-ai",
-        "assigned_agent": "agent-coding",
-        "dependencies": [],
-        "tags": ["Security", "Payments", "Audit"]
-    }
-]
 
 
 class TaskManagementService:
@@ -113,23 +62,17 @@ class TaskManagementService:
         self._load()
 
     def _load(self):
+        if not self.storage_file.exists():
+            return
         try:
-            if self.storage_file.exists():
-                with open(self.storage_file, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    for item in data:
-                        t = AITask(**item)
-                        self._tasks[t.id] = t
-            else:
-                for item in INITIAL_TASKS:
+            with open(self.storage_file, "r", encoding="utf-8") as f:
+                for item in json.load(f):
+                    if not item.get("owner_id"):
+                        continue          # sample tasks from earlier versions belong to nobody
                     t = AITask(**item)
                     self._tasks[t.id] = t
-                self._save()
         except Exception as e:
             _logger.error(f"Error loading tasks: {e}")
-            for item in INITIAL_TASKS:
-                t = AITask(**item)
-                self._tasks[t.id] = t
 
     def _save(self):
         try:
@@ -138,8 +81,8 @@ class TaskManagementService:
         except Exception as e:
             _logger.error(f"Error saving tasks: {e}")
 
-    def list_tasks(self, project_id: Optional[str] = None, status: Optional[str] = None) -> List[AITask]:
-        tasks = list(self._tasks.values())
+    def list_tasks(self, owner_id: str, project_id: Optional[str] = None, status: Optional[str] = None) -> List[AITask]:
+        tasks = [t for t in self._tasks.values() if t.owner_id == owner_id]
         if project_id:
             tasks = [t for t in tasks if t.project_id == project_id]
         if status and status != "ALL":
@@ -147,8 +90,9 @@ class TaskManagementService:
         tasks.sort(key=lambda x: (x.priority == TaskPriority.CRITICAL, x.status == TaskStatus.IN_PROGRESS), reverse=True)
         return tasks
 
-    def get_task(self, task_id: str) -> Optional[AITask]:
-        return self._tasks.get(task_id)
+    def get_task(self, task_id: str, owner_id: str) -> Optional[AITask]:
+        task = self._tasks.get(task_id)
+        return task if task is not None and task.owner_id == owner_id else None
 
     def create_task(
         self,
@@ -157,10 +101,11 @@ class TaskManagementService:
         priority: TaskPriority = TaskPriority.MEDIUM,
         status: TaskStatus = TaskStatus.TODO,
         deadline: Optional[str] = None,
-        project_id: str = "aiforge-fooddelivery-ai",
-        assigned_agent: Optional[str] = "agent-coding",
+        project_id: Optional[str] = None,
+        assigned_agent: Optional[str] = None,
         dependencies: Optional[List[str]] = None,
-        tags: Optional[List[str]] = None
+        tags: Optional[List[str]] = None,
+        owner_id: Optional[str] = None,
     ) -> AITask:
         task = AITask(
             title=title.strip(),
@@ -171,7 +116,8 @@ class TaskManagementService:
             project_id=project_id,
             assigned_agent=assigned_agent,
             dependencies=dependencies or [],
-            tags=tags or []
+            tags=tags or [],
+            owner_id=owner_id,
         )
         self._tasks[task.id] = task
         self._save()
@@ -182,6 +128,8 @@ class TaskManagementService:
         if not task:
             return None
         for k, v in kwargs.items():
+            if k in ("id", "owner_id"):
+                continue
             if hasattr(task, k) and v is not None:
                 setattr(task, k, v)
         task.updated_at = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -195,41 +143,20 @@ class TaskManagementService:
             return True
         return False
 
-    def decompose_goal_into_tasks(self, goal: str, project_id: str = "aiforge-fooddelivery-ai") -> List[AITask]:
+    def get_next_best_action(self, owner_id: str, project_id: Optional[str] = None) -> Dict[str, Any]:
         """
-        Deconstructs a high-level goal into concrete subtasks.
+        Answers 'What should I do next?' from the user's own tasks: the first task in progress, otherwise the
+        first critical or high-priority task still to do.
         """
-        subtasks_data = [
-            {"title": f"Phase 1: Architecture Blueprint for {goal[:30]}", "priority": TaskPriority.HIGH, "agent": "agent-coding"},
-            {"title": f"Phase 2: Data Model & Schema Implementation", "priority": TaskPriority.HIGH, "agent": "agent-coding"},
-            {"title": f"Phase 3: Integration Tests & Benchmark", "priority": TaskPriority.MEDIUM, "agent": "agent-coding"}
-        ]
-        created = []
-        for s in subtasks_data:
-            t = self.create_task(
-                title=s["title"],
-                description=f"Generated subtask for goal: '{goal}'",
-                priority=s["priority"],
-                project_id=project_id,
-                assigned_agent=s["agent"],
-                tags=["AI-Decomposed"]
-            )
-            created.append(t)
-        return created
-
-    def get_next_best_action(self, project_id: Optional[str] = None) -> Dict[str, Any]:
-        """
-        Answers: 'What is the most important thing I should do next?'
-        """
-        tasks = self.list_tasks(project_id=project_id)
+        tasks = self.list_tasks(owner_id, project_id=project_id)
         in_progress = [t for t in tasks if t.status == TaskStatus.IN_PROGRESS]
         if in_progress:
             target = in_progress[0]
             return {
                 "recommendation": f"Continue In-Progress Task: '{target.title}'",
                 "task": target.model_dump(),
-                "reason": "This task is currently active with high priority and pending subtasks.",
-                "suggested_action": "Open in Code Workspace or dispatch Coding Agent."
+                "reason": "This task is already in progress.",
+                "suggested_action": "Finish it before starting something new."
             }
 
         todo = [t for t in tasks if t.status == TaskStatus.TODO and t.priority in [TaskPriority.CRITICAL, TaskPriority.HIGH]]
@@ -238,15 +165,15 @@ class TaskManagementService:
             return {
                 "recommendation": f"Start Critical Task: '{target.title}'",
                 "task": target.model_dump(),
-                "reason": "Highest priority pending item without active blockers.",
-                "suggested_action": "Assign to Agent or start in Live Canvas."
+                "reason": "It is the highest-priority task still to do.",
+                "suggested_action": "Move it to in progress when you start."
             }
 
         return {
-            "recommendation": "All high-priority tasks completed! Review saved outputs or plan next sprint.",
+            "recommendation": "No task is in progress and no critical or high-priority task is waiting.",
             "task": None,
-            "reason": "No critical blockers or active tasks detected.",
-            "suggested_action": "Run Deep Research or create a new project roadmap."
+            "reason": "Nothing urgent in your task list.",
+            "suggested_action": "Add tasks or pick a lower-priority one."
         }
 
 

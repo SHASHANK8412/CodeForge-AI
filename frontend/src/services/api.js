@@ -13,18 +13,7 @@ const apiClient = axios.create({
   }
 });
 
-// Request Interceptor: Attach JWT Token if available
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('aiforge_jwt');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
+// The bearer token and the 401 sign-out are handled for every axios client in auth/authFetch.js.
 // Response Interceptor: Consistent Error Formatting & 401 Session Expiration
 apiClient.interceptors.response.use(
   (response) => response,
@@ -35,9 +24,7 @@ apiClient.interceptors.response.use(
     let errorMessage = 'An unexpected error occurred. Please try again.';
 
     if (status === 401) {
-      errorMessage = 'Session expired. Please sign in again.';
-      localStorage.removeItem('aiforge_jwt');
-      window.dispatchEvent(new CustomEvent('aiforge:unauthorized'));
+      errorMessage = 'Session expired. Please sign in again.';   // sign-out: auth/authFetch.js
     } else if (status === 403) {
       errorMessage = 'Access denied. You do not have permission for this project.';
     } else if (status === 404) {

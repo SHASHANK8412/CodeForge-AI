@@ -13,7 +13,7 @@ const QUICK_COMMANDS = [
   { label: '/deploy', prompt: '/deploy Deploy the latest version' },
 ];
 
-export default function CodebaseCopilotPage({ projectId = 'aiforge-demo' }) {
+export default function CodebaseCopilotPage({ projectId = null }) {
   const [messages, setMessages] = useState([]);
   const [inputPrompt, setInputPrompt] = useState('');
   const [loading, setLoading] = useState(false);

@@ -41,11 +41,11 @@ async function _apiFetch(path, opts = {}) {
   return res.json();
 }
 
-export async function fetchCurrentArchitecture(projectId = 'aiforge-demo') {
+export async function fetchCurrentArchitecture(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/architect/current`);
 }
 
-export async function simulateArchitecture(projectId = 'aiforge-demo', prompt = 'Should we add Redis?') {
+export async function simulateArchitecture(projectId = null, prompt = 'Should we add Redis?') {
   return _apiFetch(`/api/projects/${projectId}/architect/simulate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -53,7 +53,7 @@ export async function simulateArchitecture(projectId = 'aiforge-demo', prompt = 
   });
 }
 
-export async function simulateFailure(projectId = 'aiforge-demo', componentName = 'PostgreSQL') {
+export async function simulateFailure(projectId = null, componentName = 'PostgreSQL') {
   return _apiFetch(`/api/projects/${projectId}/architect/failure`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -61,7 +61,7 @@ export async function simulateFailure(projectId = 'aiforge-demo', componentName 
   });
 }
 
-export async function runArchitectDebate(projectId = 'aiforge-demo', topic = 'Should we introduce Redis caching?') {
+export async function runArchitectDebate(projectId = null, topic = 'Should we introduce Redis caching?') {
   return _apiFetch(`/api/projects/${projectId}/architect/debate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -69,12 +69,12 @@ export async function runArchitectDebate(projectId = 'aiforge-demo', topic = 'Sh
   });
 }
 
-export async function approveArchitecturePlan(projectId = 'aiforge-demo', scenarioId) {
+export async function approveArchitecturePlan(projectId = null, scenarioId) {
   return _apiFetch(`/api/projects/${projectId}/architect/approve?scenario_id=${scenarioId}`, {
     method: 'POST',
   });
 }
 
-export async function fetchArchitectureHistory(projectId = 'aiforge-demo') {
+export async function fetchArchitectureHistory(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/architect/history`);
 }

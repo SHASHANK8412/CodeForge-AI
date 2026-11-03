@@ -19,7 +19,7 @@ import {
 
 export default function WorkspaceHeader({
   projectName = 'AIForge Project',
-  generationId = 'aiforge-demo',
+  generationId = null,
   status = 'READY',
   hasUnsavedChanges = false,
   onBackToGeneration,

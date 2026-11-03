@@ -13,7 +13,7 @@ import {
   clearAllMemory 
 } from "../services/aiMemoryApi";
 
-export default function MemoryPage({ setView, activeProjectId = "aiforge-fooddelivery-ai" }) {
+export default function MemoryPage({ setView, activeProjectId = null }) {
   const [memories, setMemories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,7 +35,7 @@ export default function MemoryPage({ setView, activeProjectId = "aiforge-fooddel
   const [formTitle, setFormTitle] = useState("");
   const [formContent, setFormContent] = useState("");
   const [formScope, setFormScope] = useState("PERSONAL");
-  const [formProjectId, setFormProjectId] = useState(activeProjectId || "aiforge-fooddelivery-ai");
+  const [formProjectId, setFormProjectId] = useState(activeProjectId || "");
   const [formCategory, setFormCategory] = useState("Preferences");
   const [formImportance, setFormImportance] = useState("HIGH");
   const [formTags, setFormTags] = useState("");
@@ -78,7 +78,7 @@ export default function MemoryPage({ setView, activeProjectId = "aiforge-fooddel
     setFormTitle("");
     setFormContent("");
     setFormScope(scopeFilter === "PROJECT" ? "PROJECT" : "PERSONAL");
-    setFormProjectId(activeProjectId || "aiforge-fooddelivery-ai");
+    setFormProjectId(activeProjectId || "");
     setFormCategory("Preferences");
     setFormImportance("HIGH");
     setFormTags("");
@@ -92,7 +92,7 @@ export default function MemoryPage({ setView, activeProjectId = "aiforge-fooddel
     setFormTitle(item.title);
     setFormContent(item.content);
     setFormScope(item.scope);
-    setFormProjectId(item.project_id || activeProjectId || "aiforge-fooddelivery-ai");
+    setFormProjectId(item.project_id || activeProjectId || "");
     setFormCategory(item.category);
     setFormImportance(item.importance);
     setFormTags((item.tags || []).join(", "));
@@ -304,7 +304,7 @@ export default function MemoryPage({ setView, activeProjectId = "aiforge-fooddel
             className="bg-[#08090D] border border-[#242833] rounded-xl px-2.5 py-1.5 text-xs text-[#9AA1B2] outline-none cursor-pointer"
           >
             <option value="ALL">All Projects</option>
-            <option value="aiforge-fooddelivery-ai">FoodDelivery AI</option>
+            {activeProjectId && <option value={activeProjectId}>Current project</option>}
           </select>
 
           <select
@@ -525,7 +525,7 @@ export default function MemoryPage({ setView, activeProjectId = "aiforge-fooddel
                     type="text"
                     value={formProjectId}
                     onChange={(e) => setFormProjectId(e.target.value)}
-                    placeholder="e.g. aiforge-fooddelivery-ai"
+                    placeholder="project id"
                     required
                     className="w-full bg-[#08090D] border border-[#242833] focus:border-[#8D5CF6] rounded-xl px-3 py-2 text-white outline-none"
                   />

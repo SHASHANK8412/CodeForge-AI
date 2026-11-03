@@ -7,7 +7,7 @@ import {
   diagnoseBrowserFailure
 } from '../services/browser_testing';
 
-export default function BrowserTestingPage({ projectId = 'aiforge-demo' }) {
+export default function BrowserTestingPage({ projectId = null }) {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [runningSuite, setRunningSuite] = useState(false);

@@ -5,7 +5,7 @@ import {
 } from 'react-icons/fa';
 import { fetchFlightRecorder, fetchProjectAnalytics } from '../services/autopilot';
 
-export default function FlightRecorder({ projectId = 'aiforge-demo', setView }) {
+export default function FlightRecorder({ projectId = null, setView }) {
   const [data, setData] = useState({ events: [], analytics: {} });
   const [filter, setFilter] = useState('ALL');
   const [loading, setLoading] = useState(true);

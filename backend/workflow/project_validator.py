@@ -42,7 +42,7 @@ class FullProjectValidator:
 
         import hashlib
         for p in project_dir.rglob("*"):
-            if p.is_file() and not any(part.startswith(".") for part in p.parts):
+            if p.is_file() and not any(part.startswith(".") for part in p.relative_to(project_dir).parts):
                 try:
                     content = p.read_bytes()
                     h = hashlib.md5(content).hexdigest()

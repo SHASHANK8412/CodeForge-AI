@@ -52,38 +52,60 @@ def test_user_registration_login_flow():
     assert logout_res.status_code == 200
 
 
-def test_project_list_and_ownership():
-    """Verifies project retrieval endpoint lists projects."""
+@pytest.fixture
+def project(tmp_path, monkeypatch):
+    """A finished generation of the signed-in (local-dev) user, with its folder under a scratch generated_projects/."""
+    import backend.generators.project_generator as project_generator
+    import backend.routes.export as export
+    import backend.routes.project_manager as project_manager
+    from backend.auth.service import DEFAULT_USER_ID
+    from backend.generation.store import global_generation_store
+
+    root = (tmp_path / "generated_projects").resolve()
+    folder = root / "Notes_App"
+    (folder / "backend").mkdir(parents=True)
+    (folder / "backend" / "main.py").write_text("from fastapi import FastAPI\n\napp = FastAPI()\n", encoding="utf-8")
+    (folder / "requirements.txt").write_text("fastapi\n", encoding="utf-8")
+    monkeypatch.setattr(export, "GENERATED_ROOT", root)
+    monkeypatch.setattr(project_generator, "GENERATED_PROJECTS_DIR", root)
+    monkeypatch.setattr(project_manager, "GENERATED_PROJECTS_DIR", root)
+    gen_id = global_generation_store.create("Notes_App", DEFAULT_USER_ID, "a notes app")
+    global_generation_store.set_output(gen_id, str(folder), 2)
+    global_generation_store.update_status(gen_id, "completed")
+    return gen_id
+
+
+def test_project_list_and_ownership(project):
+    """The project list returns the user's own generations."""
     res = client.get("/api/projects")
     assert res.status_code == 200
     data = res.json()
-    assert "projects" in data
-    assert "stats" in data
-    assert len(data["projects"]) >= 1
+    assert "projects" in data and "stats" in data
+    assert [p["latest_generation_id"] for p in data["projects"]] == [project]
 
 
-def test_full_project_generation_and_export_pipeline():
-    """Verifies end-to-end project plan generation, quality report, and ZIP export."""
-    gen_id = "aiforge-fooddelivery-ai"
-
-    # 1. Inspect Project Quality Endpoint
-    q_res = client.get(f"/api/projects/{gen_id}/quality")
+def test_full_project_generation_and_export_pipeline(project):
+    """Quality report, deployment readiness and ZIP export of a finished project. Quality gates come only from
+    recorded checks: nothing has verified this project, so no gate is reported as passed and there is no score."""
+    q_res = client.get(f"/api/projects/{project}/quality")
     assert q_res.status_code == 200
     q_data = q_res.json()
-    assert q_data["project_id"] == gen_id
-    assert q_data["overall_score"] >= 80.0
-    assert len(q_data["quality_gates"]) == 15
+    assert q_data["project_id"] == project
+    assert q_data["quality_gates"], "the gates are listed"
+    assert q_data["overall_score"] is None
+    assert all(g["status"] == "NOT_EVALUATED" for g in q_data["quality_gates"] if "test" in g["name"].lower())
 
-
-    # 2. Inspect Deployment Readiness Endpoint
-    d_res = client.get(f"/api/projects/{gen_id}/deployment")
+    d_res = client.get(f"/api/projects/{project}/deployment")
     assert d_res.status_code == 200
     d_data = d_res.json()
-    assert d_data["project_id"] == gen_id
+    assert d_data["project_id"] == project
     # Never deployed in this test, so it must not be reported as live.
     assert d_data["status"] in ("READY", "DEPLOYMENT_BLOCKED")
     assert isinstance(d_data["readiness"]["is_ready"], bool)
 
-    # 3. Inspect ZIP Export Bundle
-    exp_res = client.get(f"/api/export/zip/{gen_id}")
-    assert exp_res.status_code in [200, 404]
+    exp_res = client.get(f"/api/export/zip/{project}")
+    assert exp_res.status_code == 200 and exp_res.content[:2] == b"PK"
+
+
+def test_an_unknown_project_is_not_found():
+    assert client.get("/api/projects/no-such-project/quality").status_code == 404

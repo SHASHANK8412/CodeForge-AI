@@ -480,7 +480,7 @@ def get_project_files_endpoint(generation_id: str):
     files_list = []
     if target_dir.exists():
         for fpath in target_dir.rglob("*"):
-            if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.parts):
+            if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.relative_to(target_dir).parts):
                 rel = str(fpath.relative_to(target_dir)).replace("\\", "/")
 
                 if fpath.name == ".env":
@@ -528,7 +528,7 @@ def get_project_integrity_endpoint(project_id: str):
     placeholder_count = 0
 
     for fpath in target_dir.rglob("*"):
-        if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.parts):
+        if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.relative_to(target_dir).parts):
             rel = str(fpath.relative_to(target_dir)).replace("\\", "/")
             content = fpath.read_text(encoding="utf-8", errors="ignore")
             rep = global_file_integrity_validator.validate_file_representation(rel, content)
@@ -644,7 +644,7 @@ def validate_project_route(request: ValidateRequest, user: dict = Depends(get_cu
         # Read files
         files = {}
         for fpath in target_dir.rglob("*"):
-            if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.parts):
+            if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.relative_to(target_dir).parts):
                 rel = str(fpath.relative_to(target_dir)).replace("\\", "/")
                 try:
                     files[rel] = fpath.read_text(encoding="utf-8", errors="ignore")
@@ -816,7 +816,7 @@ def save_project_file(project_id: str, request: SaveFileRequest):
     # Read project files and save snapshot
     files_map = {}
     for fpath in resolved_proj_dir.rglob("*"):
-        if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.parts):
+        if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.relative_to(resolved_proj_dir).parts):
             rel = str(fpath.relative_to(resolved_proj_dir)).replace("\\", "/")
             try:
                 files_map[rel] = fpath.read_text(encoding="utf-8", errors="ignore")
@@ -852,21 +852,6 @@ def save_project_file(project_id: str, request: SaveFileRequest):
         "status": "VALIDATION REQUIRED"
     }
 
-class ReviewSelectionRequest(BaseModel):
-    path: str
-    selected_code: str
-    action: str
-
-async def review_selection_route(project_id: str, request: ReviewSelectionRequest):
-    system_prompt = f"You are AIForge's Code assistant. Provide analysis/revision for the action: {request.action.upper()}."
-    user_prompt = f"File Path: {request.path}\nSelected Code Snippet:\n{request.selected_code}\n\nHelp the user with this request."
-    
-    from backend.services.llm import generate_text_async
-    try:
-        response = await generate_text_async(system_prompt, user_prompt, task="coding")
-    except Exception as e:
-        response = f"Assistant execution failed: {e}"
-    return {"response": response}
 
 class ProposeFixRequest(BaseModel):
     file: str
@@ -969,7 +954,7 @@ def apply_fix_route(project_id: str, request: ApplyFixRequest):
 
     files_map = {}
     for fpath in target_dir.rglob("*"):
-        if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.parts):
+        if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.relative_to(target_dir).parts):
             rel = str(fpath.relative_to(target_dir)).replace("\\", "/")
             try:
                 files_map[rel] = fpath.read_text(encoding="utf-8", errors="ignore")
@@ -1094,7 +1079,7 @@ async def autonomous_repair_route(project_id: str):
         # 2. Save a snapshot before fixing
         files_map = {}
         for fpath in target_dir.rglob("*"):
-            if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.parts):
+            if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.relative_to(target_dir).parts):
                 rel = str(fpath.relative_to(target_dir)).replace("\\", "/")
                 try:
                     files_map[rel] = fpath.read_text(encoding="utf-8", errors="ignore")
@@ -1172,7 +1157,7 @@ async def review_project_route_internal(project_id: str) -> Dict[str, Any]:
         
     files = {}
     for fpath in target_dir.rglob("*"):
-        if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.parts):
+        if fpath.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in fpath.relative_to(target_dir).parts):
             rel = str(fpath.relative_to(target_dir)).replace("\\", "/")
             try:
                 files[rel] = fpath.read_text(encoding="utf-8", errors="ignore")
@@ -1187,22 +1172,17 @@ async def review_project_route_internal(project_id: str) -> Dict[str, Any]:
 Analyze the provided project code files and generate a structured JSON review report.
 Review categories: Correctness, Security, Performance, Maintainability, Architecture, Code Quality, Error Handling, Testing, Documentation.
 
-Output MUST be a single valid JSON block:
+Output MUST be a single valid JSON block with exactly these keys (the values below describe the type; do not copy them):
 {
-  "status": "WARNING",
-  "score": 87,
+  "status": "<PASSED | WARNING | FAILED>",
+  "score": <your 0-100 score for THIS code>,
   "issues": [
-    {
-      "severity": "HIGH",
-      "file": "backend/auth.py",
-      "line": 42,
-      "category": "SECURITY",
-      "title": "Weak token validation",
-      "description": "Token signature is decoded but not verified.",
-      "suggested_fix": "Use jwt.decode(token, secret, algorithms=['HS256']) instead of decode without secret."
-    }
+    {"severity": "<CRITICAL | HIGH | MEDIUM | LOW>", "file": "<a path from the files above>", "line": <line number>,
+     "category": "<one of the review categories>", "title": "<short title>", "description": "<what is wrong>",
+     "suggested_fix": "<how to fix it>"}
   ]
-}"""
+}
+Report only problems you can see in the files above; an empty "issues" list is a valid answer."""
 
     user_prompt = f"Project ID: {project_id}\n\nCode Files:\n{code_summary}"
     
@@ -1216,8 +1196,18 @@ Output MUST be a single valid JSON block:
             review_data = json.loads(raw_res)
     except Exception as e:
         # The review didn't run; don't report a passing score for it.
-        review_data = {"status": "ERROR", "score": None, "issues": [], "error": f"Review failed: {e}"}
-    return review_data
+        return {"status": "ERROR", "score": None, "issues": [], "error": f"Review failed: {e}"}
+    if not isinstance(review_data, dict):
+        return {"status": "ERROR", "score": None, "issues": [], "error": "The review was not a JSON object."}
+    issues = [i for i in (review_data.get("issues") or []) if isinstance(i, dict)]
+    for issue in issues:
+        # A finding about a file the project does not have was not observed in this code.
+        issue["verified"] = issue.get("file") in files
+    score = review_data.get("score")
+    return {**review_data,
+            "status": str(review_data.get("status") or "UNKNOWN").upper(),
+            "score": score if isinstance(score, (int, float)) and 0 <= score <= 100 else None,
+            "issues": issues}
 
 @router.post("/api/project/{project_id}/review")
 async def review_project_route(project_id: str):

@@ -95,7 +95,11 @@ class TestAutonomousDevOpsDeployment:
                 self.wfile.write(b'{"status": "ok"}')
 
             def do_POST(self):          # no auth route in this app
+                # Read the request body and send a complete response: answering without either made Windows reset
+                # the connection now and then, which the smoke test reported as a failed endpoint.
+                self.rfile.read(int(self.headers.get("Content-Length") or 0))
                 self.send_response(404)
+                self.send_header("Content-Length", "0")
                 self.end_headers()
 
             def log_message(self, *args):

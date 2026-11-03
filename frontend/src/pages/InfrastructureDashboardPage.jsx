@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { BACKEND_URL } from '../config/backend';
 
-export default function InfrastructureDashboardPage({ projectId = 'aiforge-demo' }) {
+export default function InfrastructureDashboardPage({ projectId = null }) {
   const [provider, setProvider] = useState('AWS');
   const [environment, setEnvironment] = useState('production');
   const [loading, setLoading] = useState(false);

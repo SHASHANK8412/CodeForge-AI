@@ -4,7 +4,6 @@ import { FaCheckCircle, FaClock, FaArrowDown, FaPlus, FaTrash, FaMagic, FaRegCir
 export default function RoadmapCanvas({ 
   content = [], 
   onChange, 
-  onAiTransform, 
   isReadOnly = false 
 }) {
   const roadmapNodes = Array.isArray(content) ? content : [];
@@ -45,20 +44,6 @@ export default function RoadmapCanvas({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => onAiTransform("Condense roadmap schedule into 30 Days")}
-            className="px-2.5 py-1.5 bg-[#151821] hover:bg-[#1E2330] text-indigo-300 rounded-xl font-semibold transition border border-[#242833] cursor-pointer"
-          >
-            ⏱️ 30-Day Schedule
-          </button>
-
-          <button
-            onClick={() => onAiTransform("Expand milestone deliverables with practical capstone tasks")}
-            className="px-2.5 py-1.5 bg-[#151821] hover:bg-[#1E2330] text-violet-300 rounded-xl font-semibold transition border border-[#242833] cursor-pointer"
-          >
-            ✨ Add Deep Tasks
-          </button>
-
           <button
             onClick={handleAddNode}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6366F1] hover:bg-[#5053e1] text-white rounded-xl font-bold transition shadow cursor-pointer"

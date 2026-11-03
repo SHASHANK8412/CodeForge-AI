@@ -42,7 +42,7 @@ async function _apiFetch(path, opts = {}) {
 }
 
 export async function triggerIncidentDetection(
-  projectId = 'aiforge-demo',
+  projectId = null,
   simDb = false,
   simPerf = false,
   simVal = false,
@@ -60,23 +60,23 @@ export async function triggerIncidentDetection(
   });
 }
 
-export async function fetchIncidents(projectId = 'aiforge-demo') {
+export async function fetchIncidents(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/incidents`);
 }
 
-export async function fetchIncidentDetail(projectId = 'aiforge-demo', incidentId) {
+export async function fetchIncidentDetail(projectId = null, incidentId) {
   return _apiFetch(`/api/projects/${projectId}/incidents/${incidentId}`);
 }
 
-export async function approveRemediation(projectId = 'aiforge-demo', incidentId) {
+export async function approveRemediation(projectId = null, incidentId) {
   return _apiFetch(`/api/projects/${projectId}/incidents/${incidentId}/approve`, { method: 'POST' });
 }
 
-export async function fetchIncidentMetrics(projectId = 'aiforge-demo') {
+export async function fetchIncidentMetrics(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/incidents/metrics/summary`);
 }
 
-export async function askIncidentChat(projectId = 'aiforge-demo', question = 'Why did this incident happen?') {
+export async function askIncidentChat(projectId = null, question = 'Why did this incident happen?') {
   return _apiFetch(`/api/projects/${projectId}/incidents/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -84,6 +84,6 @@ export async function askIncidentChat(projectId = 'aiforge-demo', question = 'Wh
   });
 }
 
-export async function fetchPostIncidentReport(projectId = 'aiforge-demo', incidentId) {
+export async function fetchPostIncidentReport(projectId = null, incidentId) {
   return _apiFetch(`/api/projects/${projectId}/incidents/${incidentId}/report`);
 }

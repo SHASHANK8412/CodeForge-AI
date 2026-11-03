@@ -14,26 +14,16 @@ const LiveCanvasPage = lazy(() => import("./pages/LiveCanvasPage"));
 const ProjectGenerator = lazy(() => import("./pages/ProjectGenerator"));
 const ReflectionDashboard = lazy(() => import("./components/ReflectionDashboard"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
-const MissionControlPage = lazy(() => import("./pages/MissionControlPage"));
 const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
 const AgentsPage = lazy(() => import("./pages/AgentsPage"));
 const AIToolsPage = lazy(() => import("./pages/AIToolsPage"));
 const MemoryPage = lazy(() => import("./pages/MemoryPage"));
 const TasksPage = lazy(() => import("./pages/TasksPage"));
-const DeepResearchPage = lazy(() => import("./pages/DeepResearchPage"));
-const AutonomousWorkflowPage = lazy(() => import("./pages/AutonomousWorkflowPage"));
 const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
 const SavedOutputsPage = lazy(() => import("./pages/SavedOutputsPage"));
 const ActivityHistoryPage = lazy(() => import("./pages/ActivityHistoryPage"));
 const LearningDashboard = lazy(() => import("./pages/LearningDashboard"));
-const F1Website = lazy(() => import("./components/F1Website"));
-const SentinelPage = lazy(() => import("./pages/SentinelPage"));
-const CyberCopilotPage = lazy(() => import("./pages/CyberCopilotPage"));
 const VerifiableAiPage = lazy(() => import("./pages/VerifiableAiPage"));
-const AiOsControlCenterPage = lazy(() => import("./pages/AiOsControlCenterPage"));
-const ComputerAgentPage = lazy(() => import("./pages/ComputerAgentPage"));
-const IntelligencePlatformPage = lazy(() => import("./pages/IntelligencePlatformPage"));
-const KnowledgeGraphPage = lazy(() => import("./pages/KnowledgeGraphPage"));
 const SwarmPage = lazy(() => import("./pages/SwarmPage"));
 const RealitySimulatorPage = lazy(() => import("./pages/RealitySimulatorPage"));
 const ExecutionGuardianPage = lazy(() => import("./pages/ExecutionGuardianPage"));
@@ -90,6 +80,19 @@ function AppContent() {
     const [activeProjectName, setActiveProjectName] = useState("");
     // Starts on the most recently updated real project (see effect below), not a demo id.
     const [activeGenerationId, setActiveGenerationId] = useState("");
+
+    // Project pages need a real project. With none selected (a new account, or none created yet) they show how
+    // to get one instead of querying a placeholder project that does not exist.
+    const withProject = (page) => (activeGenerationId ? page : (
+        <div className="h-full flex flex-col items-center justify-center gap-3 p-8 text-center text-slate-300">
+            <h2 className="text-lg font-bold text-white">No project selected</h2>
+            <p className="text-sm text-slate-400 max-w-md">This page works on one of your projects. Create a project, or open one from Projects.</p>
+            <div className="flex gap-2">
+                <button onClick={() => setView("create")} className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold">New Project</button>
+                <button onClick={() => setView("projects")} className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold">Projects</button>
+            </div>
+        </div>
+    ));
     const [selectedFile, setSelectedFile] = useState(null);
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -99,7 +102,8 @@ function AppContent() {
         fetchProjects({ page: 1, pageSize: 1, sort: "recently_updated" }).then((res) => {
             const latest = res?.projects?.[0];
             if (!cancelled && latest) {
-                setActiveGenerationId((current) => current || latest.generation_id);
+                // The run's generation id when there is one: the folder name is not a generation id.
+                setActiveGenerationId((current) => current || latest.latest_generation_id || latest.generation_id);
                 setActiveProjectName((current) => current || latest.project_name);
             }
         });
@@ -178,11 +182,6 @@ function AppContent() {
                     )}
 
                     {/* Dedicated Navigation Views */}
-                    {view === "mission-control" && (
-                        <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <MissionControlPage setView={setView} activeProjectId={activeProjectName || activeGenerationId} />
-                        </ProtectedRoute>
-                    )}
                     {view === "chat" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
                             <ChatBox />
@@ -227,21 +226,6 @@ function AppContent() {
                             <TasksPage setView={setView} activeProjectId={activeProjectName || activeGenerationId} />
                         </ProtectedRoute>
                     )}
-                    {view === "knowledge-graph" && (
-                        <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <KnowledgeGraphPage setView={setView} activeProjectId={activeProjectName || activeGenerationId} />
-                        </ProtectedRoute>
-                    )}
-                    {view === "research" && (
-                        <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <DeepResearchPage setView={setView} activeProjectId={activeProjectName || activeGenerationId} />
-                        </ProtectedRoute>
-                    )}
-                    {view === "workflows" && (
-                        <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <AutonomousWorkflowPage setView={setView} activeProjectId={activeProjectName || activeGenerationId} />
-                        </ProtectedRoute>
-                    )}
                     {view === "analytics" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
                             <AnalyticsPage setView={setView} />
@@ -257,29 +241,9 @@ function AppContent() {
                             <ActivityHistoryPage setView={setView} />
                         </ProtectedRoute>
                     )}
-                    {view === "cyber-copilot" && (
-                        <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <CyberCopilotPage setView={setView} activeProjectId={activeProjectName || activeGenerationId} />
-                        </ProtectedRoute>
-                    )}
                     {view === "verifiable-ai" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
                             <VerifiableAiPage setView={setView} activeProjectId={activeProjectName || activeGenerationId} />
-                        </ProtectedRoute>
-                    )}
-                    {view === "ai-os" && (
-                        <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <AiOsControlCenterPage setView={setView} activeProjectId={activeProjectName || activeGenerationId} />
-                        </ProtectedRoute>
-                    )}
-                    {view === "computer-agent" && (
-                        <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <ComputerAgentPage setView={setView} activeProjectId={activeProjectName || activeGenerationId} />
-                        </ProtectedRoute>
-                    )}
-                    {view === "intelligence" && (
-                        <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <IntelligencePlatformPage setView={setView} activeProjectId={activeProjectName || activeGenerationId} />
                         </ProtectedRoute>
                     )}
 
@@ -296,20 +260,20 @@ function AppContent() {
                     )}
                     {view === "ci-pipeline" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <CIPipelineDashboard 
+                            {withProject(<CIPipelineDashboard 
                                 projectId={activeProjectName || activeGenerationId} 
                                 onBack={() => setView("dashboard")} 
-                            />
+                            />)}
                         </ProtectedRoute>
                     )}
                     {view === "code" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <CodeWorkspace generationId={activeGenerationId} setView={setView} />
+                            {withProject(<CodeWorkspace generationId={activeGenerationId} setView={setView} />)}
                         </ProtectedRoute>
                     )}
                     {view === "project-details" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <ProjectDetails generationId={activeGenerationId} setView={setView} />
+                            {withProject(<ProjectDetails generationId={activeGenerationId} setView={setView} />)}
                         </ProtectedRoute>
                     )}
                     {(view === "project-overview" || view === "project-memory") && (
@@ -319,17 +283,17 @@ function AppContent() {
                     )}
                     {view === "xray" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <ProjectXRayPage projectId={activeGenerationId || activeProjectName} setView={setView} />
+                            {withProject(<ProjectXRayPage projectId={activeGenerationId || activeProjectName} setView={setView} />)}
                         </ProtectedRoute>
                     )}
                     {view === "metrics" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <QualityCenter generationId={activeGenerationId} setView={setView} />
+                            {withProject(<QualityCenter generationId={activeGenerationId} setView={setView} />)}
                         </ProtectedRoute>
                     )}
                     {(view === "plugins" || view === "deploy") && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <DeploymentCenter generationId={activeGenerationId} setView={setView} />
+                            {withProject(<DeploymentCenter generationId={activeGenerationId} setView={setView} />)}
                         </ProtectedRoute>
                     )}
                     {view === "settings" && (
@@ -344,7 +308,7 @@ function AppContent() {
                     )}
                     {view === "observability" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <ObservabilityPage projectId={activeGenerationId} />
+                            {withProject(<ObservabilityPage projectId={activeGenerationId} />)}
                         </ProtectedRoute>
                     )}
                     {view === "evaluations" && (
@@ -409,42 +373,37 @@ function AppContent() {
                     )}
                     {view === "autopilot" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <AutopilotDashboard generationId={activeGenerationId} setView={setView} setActiveGenerationId={setActiveGenerationId} />
+                            {withProject(<AutopilotDashboard generationId={activeGenerationId} setView={setView} setActiveGenerationId={setActiveGenerationId} />)}
                         </ProtectedRoute>
                     )}
                     {view === "flight-recorder" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <FlightRecorder projectId={activeGenerationId} setView={setView} />
+                            {withProject(<FlightRecorder projectId={activeGenerationId} setView={setView} />)}
                         </ProtectedRoute>
                     )}
                     {view === "simulator" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <SimulatorPage projectId={activeGenerationId} />
+                            {withProject(<SimulatorPage projectId={activeGenerationId} />)}
                         </ProtectedRoute>
                     )}
                     {view === "dna" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <DnaGraphPage projectId={activeGenerationId} />
+                            {withProject(<DnaGraphPage projectId={activeGenerationId} />)}
                         </ProtectedRoute>
                     )}
                     {view === "bug-bounty" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <BugBountyPage projectId={activeGenerationId} />
+                            {withProject(<BugBountyPage projectId={activeGenerationId} />)}
                         </ProtectedRoute>
                     )}
                     {view === "debate" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <DebateArenaPage generationId={activeGenerationId} />
+                            {withProject(<DebateArenaPage projectId={activeGenerationId} />)}
                         </ProtectedRoute>
                     )}
                     {view === "talk" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <SoftwareAssistantPage projectId={activeGenerationId} />
-                        </ProtectedRoute>
-                    )}
-                    {(view === "security" || view === "sentinel") && (
-                        <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <SentinelPage setView={setView} activeProjectId={activeProjectName || activeGenerationId} />
+                            {withProject(<SoftwareAssistantPage projectId={activeGenerationId} />)}
                         </ProtectedRoute>
                     )}
                     {view === "project" && (
@@ -458,16 +417,15 @@ function AppContent() {
                     )}
                     {view === "reflection" && <ReflectionDashboard />}
                     {view === "learning" && <LearningDashboard />}
-                    {view === "monitoring" && <MonitoringPage />}
+                    {view === "monitoring" && <ProtectedRoute onRedirectLogin={() => setView("login")}>{withProject(<MonitoringPage projectId={activeGenerationId} />)}</ProtectedRoute>}
                     {view === "github" && (
                         <ProtectedRoute onRedirectLogin={() => setView("login")}>
-                            <GitHubDashboardPage />
+                            {withProject(<GitHubDashboardPage projectId={activeGenerationId} />)}
                         </ProtectedRoute>
                     )}
-                    {view === "kubernetes" && <KubernetesDashboardPage />}
-                    {view === "infrastructure" && <InfrastructureDashboardPage />}
-                    {view === "finops" && <FinOpsDashboardPage />}
-                    {view === "f1" && <F1Website />}
+                    {view === "kubernetes" && <ProtectedRoute onRedirectLogin={() => setView("login")}>{withProject(<KubernetesDashboardPage projectId={activeGenerationId} />)}</ProtectedRoute>}
+                    {view === "infrastructure" && <ProtectedRoute onRedirectLogin={() => setView("login")}>{withProject(<InfrastructureDashboardPage projectId={activeGenerationId} />)}</ProtectedRoute>}
+                    {view === "finops" && <ProtectedRoute onRedirectLogin={() => setView("login")}>{withProject(<FinOpsDashboardPage projectId={activeGenerationId} />)}</ProtectedRoute>}
                 </main>
             </div>
 

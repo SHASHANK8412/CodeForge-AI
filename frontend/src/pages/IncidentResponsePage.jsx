@@ -9,7 +9,7 @@ import {
   fetchPostIncidentReport
 } from '../services/incidents';
 
-export default function IncidentResponsePage({ projectId = 'aiforge-demo' }) {
+export default function IncidentResponsePage({ projectId = null }) {
   const [incidents, setIncidents] = useState([]);
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [metrics, setMetrics] = useState(null);

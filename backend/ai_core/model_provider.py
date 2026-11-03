@@ -1,135 +1,91 @@
 """
-AIForge Next-Gen AI Agent Core — Model Provider Abstraction
-===========================================================
-Unified, provider-independent model interface supporting:
-- Chat, Reasoning, Vision, Embeddings, and Real-time Streaming
-- Multi-provider adapters (OpenAI, Anthropic Claude, Google Gemini, Groq, Ollama)
-- Token accounting, temperature controls, capability detection, and server-side secret isolation
+AIForge AI Core — model provider.
+
+Answers come from the local Ollama models through backend.services.llm (model routing, fallback,
+caching, telemetry). Only models that are actually installed are listed or accepted; a model call that
+fails raises LLMUnavailableError instead of returning invented text.
 """
 
-import os
-import time
-import json
 import logging
-from typing import Dict, Any, List, Optional, Generator
+import os
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
+from backend.services.llm import LLMUnavailableError, generate_text
+
 _logger = logging.getLogger("aiforge.ai_core.models")
+
+__all__ = ["LLMUnavailableError", "ModelCapability", "ModelMetadata", "ModelResponse", "UnifiedModelProvider",
+           "global_model_provider"]
 
 
 class ModelCapability(str, Enum):
     CHAT = "CHAT"
-    REASONING = "REASONING"
-    VISION = "VISION"
     EMBEDDINGS = "EMBEDDINGS"
-    STREAMING = "STREAMING"
-    TOOL_CALLING = "TOOL_CALLING"
 
 
 class ModelMetadata(BaseModel):
     id: str
     name: str
-    provider: str  # "openai", "anthropic", "google", "groq", "ollama"
-    context_window: int = 128000
-    capabilities: List[ModelCapability] = Field(default_factory=list)
-    cost_per_1k_input: float = 0.0015
-    cost_per_1k_output: float = 0.006
+    provider: str = "ollama"
+    capabilities: List[ModelCapability] = Field(default_factory=lambda: [ModelCapability.CHAT])
+    size_bytes: Optional[int] = None
 
 
 class ModelResponse(BaseModel):
     content: str
     model_id: str
-    provider: str
-    input_tokens: int = 0
-    output_tokens: int = 0
-    estimated_cost: float = 0.0
-    tool_calls: Optional[List[Dict[str, Any]]] = None
-    finish_reason: str = "stop"
+    provider: str = "ollama"
 
 
-REGISTERED_MODELS = [
-    ModelMetadata(
-        id="gpt-4o",
-        name="GPT-4o Omnimodal",
-        provider="openai",
-        context_window=128000,
-        capabilities=[ModelCapability.CHAT, ModelCapability.VISION, ModelCapability.STREAMING, ModelCapability.TOOL_CALLING],
-        cost_per_1k_input=0.0025,
-        cost_per_1k_output=0.010
-    ),
-    ModelMetadata(
-        id="claude-3-5-sonnet",
-        name="Claude 3.5 Sonnet",
-        provider="anthropic",
-        context_window=200000,
-        capabilities=[ModelCapability.CHAT, ModelCapability.REASONING, ModelCapability.VISION, ModelCapability.STREAMING, ModelCapability.TOOL_CALLING],
-        cost_per_1k_input=0.003,
-        cost_per_1k_output=0.015
-    ),
-    ModelMetadata(
-        id="gemini-2.0-flash",
-        name="Gemini 2.0 Flash",
-        provider="google",
-        context_window=1000000,
-        capabilities=[ModelCapability.CHAT, ModelCapability.REASONING, ModelCapability.VISION, ModelCapability.STREAMING, ModelCapability.TOOL_CALLING],
-        cost_per_1k_input=0.0001,
-        cost_per_1k_output=0.0004
-    ),
-    ModelMetadata(
-        id="deepseek-r1",
-        name="DeepSeek R1 Reasoning",
-        provider="groq",
-        context_window=64000,
-        capabilities=[ModelCapability.CHAT, ModelCapability.REASONING, ModelCapability.STREAMING, ModelCapability.TOOL_CALLING],
-        cost_per_1k_input=0.0005,
-        cost_per_1k_output=0.002
-    )
-]
-
-
-class BaseProviderAdapter:
-    def __init__(self, provider_name: str):
-        self.provider_name = provider_name
-
-    def generate(self, messages: List[Dict[str, str]], model_id: str, temperature: float = 0.7, tools: Optional[List[Dict[str, Any]]] = None) -> ModelResponse:
-        raise NotImplementedError
+def _installed_ollama_models() -> List[Dict[str, Any]]:
+    """The models the local Ollama server has, or [] when it cannot be reached."""
+    try:
+        from ollama import Client  # type: ignore[attr-defined]
+        listing = Client(host=os.getenv("OLLAMA_HOST") or None, timeout=5.0).list()
+    except Exception as exc:  # Ollama down or unreachable: no models, not invented ones
+        _logger.warning("Could not list Ollama models: %s", exc)
+        return []
+    models = listing.get("models", []) if isinstance(listing, dict) else getattr(listing, "models", []) or []
+    out = []
+    for m in models:
+        get = m.get if isinstance(m, dict) else (lambda k, _m=m: getattr(_m, k, None))
+        name = get("model") or get("name")
+        if name:
+            out.append({"name": str(name), "size": get("size")})
+    return out
 
 
 class UnifiedModelProvider:
-    def __init__(self):
-        self._models: Dict[str, ModelMetadata] = {m.id: m for m in REGISTERED_MODELS}
-
     def list_models(self) -> List[ModelMetadata]:
-        return list(self._models.values())
+        models = []
+        for m in _installed_ollama_models():
+            caps = [ModelCapability.EMBEDDINGS] if "embed" in m["name"] else [ModelCapability.CHAT]
+            models.append(ModelMetadata(id=m["name"], name=m["name"], capabilities=caps, size_bytes=m["size"]))
+        return models
 
-    def get_model(self, model_id: str) -> Optional[ModelMetadata]:
-        return self._models.get(model_id, self._models.get("claude-3-5-sonnet"))
+    def resolve_model(self, model_id: Optional[str]) -> Optional[str]:
+        """An installed chat model with this id (`qwen2.5` also matches `qwen2.5:latest`); None lets the router pick."""
+        if not model_id:
+            return None
+        names = [m.id for m in self.list_models() if ModelCapability.CHAT in m.capabilities]
+        for name in names:
+            if model_id == name or f"{model_id}:latest" == name:
+                return name
+        return None
 
-    def complete(self, messages: List[Dict[str, str]], model_id: str = "claude-3-5-sonnet", temperature: float = 0.7, tools: Optional[List[Dict[str, Any]]] = None) -> ModelResponse:
-        model = self.get_model(model_id)
-        if not model:
-            model = self._models["claude-3-5-sonnet"]
-
-        # Simulated robust server-side execution with token accounting
-        total_prompt_chars = sum(len(m.get("content", "")) for m in messages)
-        in_tokens = max(10, total_prompt_chars // 4)
-        
-        last_msg = messages[-1].get("content", "") if messages else ""
-        out_content = f"Synthesized intelligent reasoning for: '{last_msg[:60]}...' using {model.name}."
-        out_tokens = max(25, len(out_content) // 4)
-
-        cost = (in_tokens / 1000.0 * model.cost_per_1k_input) + (out_tokens / 1000.0 * model.cost_per_1k_output)
-
-        return ModelResponse(
-            content=out_content,
-            model_id=model.id,
-            provider=model.provider,
-            input_tokens=in_tokens,
-            output_tokens=out_tokens,
-            estimated_cost=round(cost, 6),
-            finish_reason="stop"
-        )
+    def complete(self, messages: List[Dict[str, str]], model_id: Optional[str] = None) -> ModelResponse:
+        system = "\n\n".join(m.get("content", "") for m in messages if m.get("role") == "system")
+        conversation = [m for m in messages if m.get("role") != "system"]
+        if not conversation:
+            raise ValueError("At least one user message is required.")
+        prompt = "\n\n".join(f"{m.get('role', 'user').upper()}: {m.get('content', '')}" for m in conversation[:-1])
+        prompt = (prompt + "\n\n" if prompt else "") + conversation[-1].get("content", "")
+        model = self.resolve_model(model_id)
+        content = generate_text(system, prompt, model=model, task="general")
+        return ModelResponse(content=content, model_id=model or "auto")
 
 
 global_model_provider = UnifiedModelProvider()

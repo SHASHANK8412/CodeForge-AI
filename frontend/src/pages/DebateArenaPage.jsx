@@ -9,7 +9,7 @@ import {
   rejectDebateDecision
 } from '../services/debate';
 
-export default function DebateArenaPage({ projectId = 'aiforge-demo' }) {
+export default function DebateArenaPage({ projectId = null }) {
   const [session, setSession] = useState(null);
   const [requirementPrompt, setRequirementPrompt] = useState('Build a highly scalable social platform with authentication, user posts, cart, and payments.');
   const [loading, setLoading] = useState(true);

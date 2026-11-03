@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FaThumbsUp, FaThumbsDown, FaStar, FaPaperPlane, FaCheck } from 'react-icons/fa';
 import { submitFeedback } from '../../services/observability';
 
-export default function FeedbackRating({ projectId = 'aiforge-demo' }) {
+export default function FeedbackRating({ projectId = null }) {
   const [helpful, setHelpful] = useState(true);
   const [rating, setRating] = useState(5);
   const [selectedTags, setSelectedTags] = useState([]);

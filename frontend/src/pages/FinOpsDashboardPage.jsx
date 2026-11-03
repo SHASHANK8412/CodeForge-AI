@@ -340,7 +340,7 @@ function KubernetesPanel({ data }) {
   );
 }
 
-export default function FinOpsDashboardPage({ projectId = 'aiforge-demo' }) {
+export default function FinOpsDashboardPage({ projectId = null }) {
   const [provider, setProvider] = useState("AWS");
   const [environment, setEnvironment] = useState("production");
   const [policy, setPolicy] = useState("BALANCED");

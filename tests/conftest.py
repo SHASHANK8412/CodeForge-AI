@@ -27,6 +27,17 @@ def _local_dev_auth(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _no_groq(monkeypatch, tmp_path_factory):
+    """
+    A developer's GROQ_API_KEY (environment or .env) must not send test prompts to Groq or spend credits:
+    model calls stay on the local, usually mocked, path. tests/test_groq_provider.py turns Groq on itself.
+    """
+    import backend.services.groq_provider as groq_provider
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    monkeypatch.setattr(groq_provider, "_ENV_FILE", tmp_path_factory.mktemp("no_groq") / ".env")
+
+
+@pytest.fixture(autouse=True)
 def _local_test_sandbox(monkeypatch):
     """Generated-project tests run locally unless a test opts into the Docker sandbox."""
     monkeypatch.setenv("AIFORGE_TEST_SANDBOX", "local")

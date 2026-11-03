@@ -40,23 +40,23 @@ async function _apiFetch(path, opts = {}) {
   return res.json();
 }
 
-export async function fetchObservabilityMetrics(projectId = 'aiforge-demo') {
+export async function fetchObservabilityMetrics(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/observability/metrics`);
 }
 
-export async function fetchDistributedTraces(projectId = 'aiforge-demo') {
+export async function fetchDistributedTraces(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/observability/traces`);
 }
 
-export async function fetchTraceDetail(projectId = 'aiforge-demo', traceId) {
+export async function fetchTraceDetail(projectId = null, traceId) {
   return _apiFetch(`/api/projects/${projectId}/observability/traces/${traceId}`);
 }
 
-export async function fetchPerformanceRegression(projectId = 'aiforge-demo') {
+export async function fetchPerformanceRegression(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/observability/regression`);
 }
 
-export async function fetchObservabilityReadiness(projectId = 'aiforge-demo') {
+export async function fetchObservabilityReadiness(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/observability/readiness`);
 }
 

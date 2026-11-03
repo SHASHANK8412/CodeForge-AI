@@ -53,7 +53,7 @@ class ProjectEvaluator:
         target_dir = Path(project_path).resolve() if project_path else None
         if target_dir and target_dir.exists() and not files:
             for p in target_dir.rglob("*"):
-                if p.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in p.parts):
+                if p.is_file() and not any(part.startswith(".") or part in ["venv", "node_modules", "__pycache__"] for part in p.relative_to(target_dir).parts):
                     try:
                         rel = str(p.relative_to(target_dir)).replace("\\", "/")
                         files[rel] = p.read_text(encoding="utf-8", errors="ignore")

@@ -54,12 +54,21 @@ export async function fetchCurrentUser() {
     const res = await axios.get(`${API_BASE_URL}/api/auth/me`, { timeout: 8000 });
     return res.data;
   } catch (err) {
-    console.warn('Fetch current user failed:', err);
-    // Not signed in (401) or backend unreachable: no user, so protected pages ask for a sign-in.
-    if (err?.response?.status === 401) {
-      localStorage.removeItem('aiforge_jwt');
-      delete axios.defaults.headers.common['Authorization'];
+    // Backend unreachable (starting, restarting or stopped) while a token exists: that says nothing about the
+    // session, so the caller waits and retries instead of showing the sign-in page.
+    if (!err?.response && localStorage.getItem('aiforge_jwt')) {
+      throw err;
     }
+    if (err?.response?.status === 401) {
+      // The shared 401 handler (auth/authFetch.js) already cleared the token if this request carried it. A token
+      // that is still there was stored while the request was in flight (a sign-in): ask again with it.
+      if (localStorage.getItem('aiforge_jwt') && err.config?.headers?.Authorization !== `Bearer ${localStorage.getItem('aiforge_jwt')}`) {
+        return fetchCurrentUser();
+      }
+      delete axios.defaults.headers.common['Authorization'];
+      return null;   // not signed in: protected pages ask for a sign-in
+    }
+    console.warn('Fetch current user failed:', err);
     return null;
   }
 }

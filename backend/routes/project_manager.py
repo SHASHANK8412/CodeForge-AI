@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, Any, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from backend.project_manager.planner import global_project_planner
@@ -58,6 +58,7 @@ def get_project_progress(prompt: str = "Build Application"):
 from pathlib import Path
 from datetime import datetime
 from backend.generators.project_generator import GENERATED_PROJECTS_DIR
+from backend.auth.dependencies import get_current_user
 
 # In-memory store for project metadata overrides (renames, duplicates, archives)
 PROJECT_METADATA_STORE: dict[str, dict] = {}
@@ -151,18 +152,26 @@ def list_projects_endpoint(
     page_size: int = 12,
     search: str = "",
     status: str = "all",
-    sort: str = "recently_updated"
+    sort: str = "recently_updated",
+    user: dict = Depends(get_current_user),
 ):
     """
-    Lists the projects in generated_projects/ with the status, quality score and test counts
-    recorded for them. Values that were never measured are null, not estimated.
+    Lists the signed-in user's projects in generated_projects/ with the status, quality score and test counts
+    recorded for them. Values that were never measured are null, not estimated. A folder belongs to the user who
+    ran the generation that produced it; folders no tracked generation produced have no owner and are only listed
+    in single-user local development.
     """
+    from backend.auth.ownership import may_access
     from backend.generation.store import global_generation_store
     generations = global_generation_store.list_all()
 
     projects_list = []
     for pdir in _generated_dirs():
-        proj = _public(_project_summary(pdir, generations))
+        summary = _project_summary(pdir, generations)
+        latest_run = summary["_runs"][-1] if summary["_runs"] else {}
+        if not may_access(user, {"user_id": latest_run.get("user_id")}):
+            continue
+        proj = _public(summary)
         if proj["is_archived"] and status.lower() != "archived":
             continue
         if search:

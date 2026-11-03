@@ -31,6 +31,33 @@ All notable changes to the AIForge platform are documented in this file.
 - Removed invented values from dashboards and analytics (fallback scores, pre-loaded cluster nodes, learning
   accuracy, fixed metric constants) and deleted unused pages that displayed them.
 
+### Fixed — app and data
+- Every frontend API client sends the sign-in token (chat history, document grounding and other pages answered 401
+  after signing in), and the live build progress stream sends it in a header (the `?token=` URL parameter was refused).
+- AI Chat agent modes call the local Ollama models; the canned "Synthesized intelligent reasoning" reply, the invented
+  sample documents and the model list of hosted models that were never called are gone.
+- Chat conversations, canvases, tasks, agent runs, AI-core memories and uploaded documents belong to the user who
+  created them; other users get 404.
+- The command line runs the real pipeline (it crashed without a checkpoint thread id), asks at the approval
+  checkpoints and reports the real failure category.
+- The release report is never `ready` unless the generated tests passed and the Execution Guardian verified the
+  project.
+- Local generated-project test runs time out after 120 s (configurable with `AIFORGE_LOCAL_TEST_TIMEOUT`) instead of
+  15 s, which turned slow genuine failures into errors.
+- Canvas autosave saves once per pause in typing (it saved a version per keystroke), and changing a canvas's type is
+  stored.
+- The benchmark test no longer overwrites `benchmarks/REPORT.md` with mocked 100% results; benchmark output is no
+  longer committed.
+
+### Removed
+- Simulated features that only displayed built-in demo data (no model call, no real work): Mission Control, Deep
+  Research, Workflows and the autonomous workflow engine, Cyber Copilot, Sentinel, Browser Agent, the AI OS command
+  center, Knowledge Graph / Graph RAG and the Intelligence overview, with their pages and API routes.
+- Seeded demo content (food-delivery canvases, tasks, memories and RFC documents) and the fake "AI" buttons of
+  Canvas and Tasks.
+- About 200 backend modules that nothing in the app imports, and about 260 test files that only tested them or that
+  pytest never collected (`backend/tests/`, `tests/verify_*.py`).
+
 ### Corrected
 - The v1.0.0 entry below listed "Cyclomatic Complexity 18 → 7" and a "95.6% Overall AI Score". Those figures were
   hardcoded in the UI, not measured, and have been withdrawn.

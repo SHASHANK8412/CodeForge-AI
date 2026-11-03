@@ -14,7 +14,7 @@ import DeploymentAssistant from '../components/deployment/DeploymentAssistant';
 import { fetchDeploymentStatus, startDeployment, validateDeployment } from '../services/deployment';
 import { FaSpinner } from 'react-icons/fa';
 
-export default function DeploymentCenter({ generationId = 'aiforge-demo', setView }) {
+export default function DeploymentCenter({ generationId = null, setView }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedProvider, setSelectedProvider] = useState('vercel');

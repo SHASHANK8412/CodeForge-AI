@@ -39,7 +39,7 @@ async function _apiFetch(path, opts = {}) {
   return res.json();
 }
 
-export async function startMultiAgentDebate(projectId = 'aiforge-demo', requirement = 'Build a highly scalable social platform') {
+export async function startMultiAgentDebate(projectId = null, requirement = 'Build a highly scalable social platform') {
   return _apiFetch('/api/debate/start', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -47,15 +47,15 @@ export async function startMultiAgentDebate(projectId = 'aiforge-demo', requirem
   });
 }
 
-export async function fetchLatestDebate(projectId = 'aiforge-demo') {
+export async function fetchLatestDebate(projectId = null) {
   return _apiFetch(`/api/debate/${projectId}/latest`);
 }
 
-export async function fetchDebateHistory(projectId = 'aiforge-demo') {
+export async function fetchDebateHistory(projectId = null) {
   return _apiFetch(`/api/debate/${projectId}/history`);
 }
 
-export async function fetchADRs(projectId = 'aiforge-demo') {
+export async function fetchADRs(projectId = null) {
   return _apiFetch(`/api/debate/${projectId}/adrs`);
 }
 

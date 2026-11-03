@@ -6,7 +6,7 @@ import {
 import { fetchVerifiableRecords, fetchLedgerStatus, verifyRecord, anchorRecord } from "../services/verifiableAiApi";
 import toast from "react-hot-toast";
 
-export default function VerifiableAiPage({ setView, activeProjectId = "aiforge-fooddelivery-ai" }) {
+export default function VerifiableAiPage({ setView, activeProjectId = null }) {
   const [records, setRecords] = useState([]);
   const [ledgerStatus, setLedgerStatus] = useState(null);
   const [selectedRecord, setSelectedRecord] = useState(null);

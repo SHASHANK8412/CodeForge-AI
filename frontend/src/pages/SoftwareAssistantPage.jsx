@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FaCommentAlt, FaSpinner, FaFileCode, FaBookOpen } from 'react-icons/fa';
 import { chatSoftwareAssistant } from '../services/intelligence';
 
-export default function SoftwareAssistantPage({ projectId = 'aiforge-demo' }) {
+export default function SoftwareAssistantPage({ projectId = null }) {
   const [messages, setMessages] = useState([
     { sender: 'ai', text: "Hello! I am your AI Software Assistant. Ask me anything about your generated codebase structure, security, dependencies, or decisions.", files: [], citations: [] }
   ]);

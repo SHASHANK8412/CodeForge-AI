@@ -23,7 +23,7 @@ export default function CommandPalette({
   onClose, 
   setView, 
   onSelectPromptMode,
-  currentProjectId = "aiforge-fooddelivery-ai"
+  currentProjectId = null
 }) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -79,7 +79,6 @@ export default function CommandPalette({
   const catalogItems = useMemo(() => {
     const items = [
       // Quick AI Actions
-      { id: "act-mission", category: "Quick Action", title: "Mission: Give AIForge an Autonomous Computer Mission", icon: <FaRocket className="text-rose-400" />, action: () => setView("mission-control") },
       { id: "act-generate", category: "Quick Action", title: "Generate: Full-Stack Project from Spec", icon: <FaRocket className="text-violet-400" />, action: () => { if (onSelectPromptMode) onSelectPromptMode("Generate"); setView("create"); } },
       { id: "act-explain", category: "Quick Action", title: "Explain: Code Logic & Architecture", icon: <FaBook className="text-cyan-400" />, action: () => { if (onSelectPromptMode) onSelectPromptMode("Explain"); setView("talk"); } },
       { id: "act-summarize", category: "Quick Action", title: "Summarize: Project Specs & Commits", icon: <FaBrain className="text-emerald-400" />, action: () => { if (onSelectPromptMode) onSelectPromptMode("Summarize"); setView("dashboard"); } },
@@ -97,7 +96,6 @@ export default function CommandPalette({
       { id: "agent-data-item", category: "AI Agents", title: "Data Analyst Agent (Statistical & Chart Engine)", icon: <FaChartBar className="text-emerald-400" />, action: () => setView("agents") },
 
       // Recent Projects
-      { id: "proj-fooddelivery", category: "Projects", title: "FoodDelivery AI (FastAPI + React + PostgreSQL)", icon: <FaFolder className="text-cyan-400" />, action: () => setView("projects") },
       { id: "proj-saas", category: "Projects", title: "SaaS Subscription Engine (Stripe + RBAC)", icon: <FaFolder className="text-blue-400" />, action: () => setView("projects") },
 
       // Specialized Engineering Tools Suite
@@ -117,15 +115,10 @@ export default function CommandPalette({
       { id: "tool-bug-hunter", category: "AI Tools", title: "Bug Hunter (Automated SAST & Fuzzing)", icon: <FaShieldAlt className="text-rose-400" />, action: () => setView("bug-bounty") },
       { id: "tool-talk-code", category: "AI Tools", title: "Talk to Code (Natural Language Assistant)", icon: <FaComments className="text-blue-400" />, action: () => setView("talk") },
       { id: "tool-flight", category: "AI Tools", title: "Flight Recorder (Execution Time Machine)", icon: <FaHistory className="text-amber-400" />, action: () => setView("flight-recorder") },
-      { id: "tool-security", category: "AI Tools", title: "AIForge Sentinel (Defensive AI-SOC Cybersecurity)", icon: <FaShieldAlt className="text-emerald-400" />, action: () => setView("security") },
       { id: "tool-observability", category: "AI Tools", title: "Observability & Live APM Telemetry", icon: <FaChartBar className="text-cyan-400" />, action: () => setView("observability") },
 
       // Primary Navigation Views
       { id: "nav-dashboard", category: "Navigation", title: "Dashboard & AI Command Center", icon: <FaBolt className="text-violet-400" />, action: () => setView("dashboard") },
-      { id: "nav-ai-os", category: "Navigation", title: "AIForge Autonomous AI Operating System (AIForge OS)", icon: <FaTerminal className="text-violet-400" />, action: () => setView("ai-os") },
-      { id: "nav-computer-agent", category: "Navigation", title: "Computer-Using AI / Browser Agent", icon: <FaRobot className="text-emerald-400" />, action: () => setView("computer-agent") },
-      { id: "nav-intelligence", category: "Navigation", title: "AI Intelligence & Evaluation Platform", icon: <FaChartBar className="text-cyan-400" />, action: () => setView("intelligence") },
-      { id: "nav-mission-control", category: "Navigation", title: "Mission Control (Autonomous Computer Layer)", icon: <FaRocket className="text-rose-400" />, action: () => setView("mission-control") },
       { id: "nav-chat", category: "Navigation", title: "AI Chat Assistant", icon: <FaComments className="text-cyan-400" />, action: () => setView("chat") },
       { id: "nav-agents", category: "Navigation", title: "AI Agents Center", icon: <FaRobot className="text-indigo-400" />, action: () => setView("agents") },
       { id: "nav-multi-agent", category: "Navigation", title: "Swarm Intelligence (Multi-Agent Missions)", icon: <FaRobot className="text-pink-400" />, action: () => setView("swarm") },
@@ -134,12 +127,8 @@ export default function CommandPalette({
       { id: "nav-canvas", category: "Navigation", title: "Live AI Canvas (Interactive Split Workspace)", icon: <FaPaintBrush className="text-pink-400" />, action: () => setView("canvas") },
       { id: "nav-memory", category: "Navigation", title: "AI Memory & Intelligence Graph", icon: <FaBrain className="text-violet-400" />, action: () => setView("memory") },
       { id: "nav-tasks", category: "Navigation", title: "AI Task Management & Execution Hub", icon: <FaTasks className="text-emerald-400" />, action: () => setView("tasks") },
-      { id: "nav-research", category: "Navigation", title: "Deep Research & Evidence Engine", icon: <FaSearch className="text-cyan-400" />, action: () => setView("research") },
-      { id: "nav-knowledge-graph", category: "Navigation", title: "Knowledge Graph & Graph RAG Intelligence", icon: <FaProjectDiagram className="text-purple-400" />, action: () => setView("knowledge-graph") },
-      { id: "nav-workflows", category: "Navigation", title: "Visual AI Workflow Builder & Automations", icon: <FaProjectDiagram className="text-amber-400" />, action: () => setView("workflows") },
       { id: "nav-saved", category: "Navigation", title: "Saved AI Outputs & Snippets", icon: <FaBookmark className="text-amber-400" />, action: () => setView("saved") },
       { id: "nav-history", category: "Navigation", title: "Recent Activity & Audit Log", icon: <FaHistory className="text-emerald-400" />, action: () => setView("history") },
-      { id: "nav-cyber-copilot", category: "Navigation", title: "AI Cybersecurity Copilot (Zero-Trust SOC)", icon: <FaShieldAlt className="text-rose-400" />, action: () => setView("cyber-copilot") },
       { id: "nav-verifiable-ai", category: "Navigation", title: "Blockchain Trust Layer & Verifiable AI", icon: <FaLink className="text-amber-400" />, action: () => setView("verifiable-ai") },
       { id: "nav-analytics", category: "Navigation", title: "AI Usage & Platform Telemetry", icon: <FaChartBar className="text-cyan-400" />, action: () => setView("analytics") },
       { id: "nav-settings", category: "Navigation", title: "System & AI Settings", icon: <FaCog className="text-[#9AA1B2]" />, action: () => setView("settings") },

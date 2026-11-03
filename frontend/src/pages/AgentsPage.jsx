@@ -21,7 +21,7 @@ import {
 } from "../services/agentModeApi";
 import toast from "react-hot-toast";
 
-export default function AgentsPage({ setView, activeProjectId = "aiforge-fooddelivery-ai" }) {
+export default function AgentsPage({ setView, activeProjectId = null }) {
   const [agents, setAgents] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [activeTask, setActiveTask] = useState(null);
@@ -32,7 +32,7 @@ export default function AgentsPage({ setView, activeProjectId = "aiforge-fooddel
   const [showLaunchModal, setShowLaunchModal] = useState(false);
   const [selectedAgentId, setSelectedAgentId] = useState("agent-coding");
   const [taskGoal, setTaskGoal] = useState("");
-  const [taskProjectId, setTaskProjectId] = useState(activeProjectId || "aiforge-fooddelivery-ai");
+  const [taskProjectId, setTaskProjectId] = useState(activeProjectId || "");
   const [taskMemoryEnabled, setTaskMemoryEnabled] = useState(true);
 
   // Create Agent Modal State
@@ -734,7 +734,7 @@ export default function AgentsPage({ setView, activeProjectId = "aiforge-fooddel
                     onChange={(e) => setTaskProjectId(e.target.value)}
                     className="w-full bg-[#08090D] border border-[#242833] rounded-xl px-3 py-2 text-white outline-none cursor-pointer"
                   >
-                    <option value="aiforge-fooddelivery-ai">FoodDelivery AI</option>
+                    {activeProjectId && <option value={activeProjectId}>Current project</option>}
                     <option value="global-workspace">Global Workspace</option>
                   </select>
                 </div>

@@ -41,11 +41,11 @@ async function _apiFetch(path, opts = {}) {
   return res.json();
 }
 
-export async function fetchDNAGraph(projectId = 'aiforge-demo') {
+export async function fetchDNAGraph(projectId = null) {
   return _apiFetch(`/api/dna/${projectId}/graph`);
 }
 
-export async function runImpactAnalysis(projectId = 'aiforge-demo', nodeId = 'PaymentService', changeType = 'modify') {
+export async function runImpactAnalysis(projectId = null, nodeId = 'PaymentService', changeType = 'modify') {
   return _apiFetch(`/api/projects/${projectId}/impact-analysis`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -53,23 +53,23 @@ export async function runImpactAnalysis(projectId = 'aiforge-demo', nodeId = 'Pa
   });
 }
 
-export async function fetchRequirementTrace(projectId = 'aiforge-demo') {
+export async function fetchRequirementTrace(projectId = null) {
   return _apiFetch(`/api/dna/${projectId}/requirements-trace`);
 }
 
-export async function fetchDeadCode(projectId = 'aiforge-demo') {
+export async function fetchDeadCode(projectId = null) {
   return _apiFetch(`/api/dna/${projectId}/dead-code`);
 }
 
-export async function fetchCircularDependencies(projectId = 'aiforge-demo') {
+export async function fetchCircularDependencies(projectId = null) {
   return _apiFetch(`/api/dna/${projectId}/circular-dependencies`);
 }
 
-export async function fetchGraphDiff(projectId = 'aiforge-demo', v1 = 1, v2 = 2) {
+export async function fetchGraphDiff(projectId = null, v1 = 1, v2 = 2) {
   return _apiFetch(`/api/dna/${projectId}/diff?v1=${v1}&v2=${v2}`);
 }
 
-export async function explainGraphNode(projectId = 'aiforge-demo', nodeId = 'PaymentService') {
+export async function explainGraphNode(projectId = null, nodeId = 'PaymentService') {
   return _apiFetch(`/api/dna/${projectId}/explain-node`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

@@ -44,7 +44,7 @@ async function _apiFetch(path, opts = {}) {
 }
 
 export async function createMemory(
-  projectId = 'aiforge-demo',
+  projectId = null,
   title,
   content,
   type = 'ARCHITECTURE_DECISION',
@@ -57,27 +57,27 @@ export async function createMemory(
   });
 }
 
-export async function fetchMemories(projectId = 'aiforge-demo', activeOnly = true) {
+export async function fetchMemories(projectId = null, activeOnly = true) {
   return _apiFetch(`/api/projects/${projectId}/engineering-memory?active_only=${activeOnly}`);
 }
 
-export async function searchMemories(projectId = 'aiforge-demo', query = '') {
+export async function searchMemories(projectId = null, query = '') {
   return _apiFetch(`/api/projects/${projectId}/engineering-memory/search?q=${encodeURIComponent(query)}`);
 }
 
-export async function fetchKnowledgeGraph(projectId = 'aiforge-demo') {
+export async function fetchKnowledgeGraph(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/engineering-memory/graph`);
 }
 
-export async function fetchMemoryDashboard(projectId = 'aiforge-demo') {
+export async function fetchMemoryDashboard(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/engineering-memory/dashboard`);
 }
 
-export async function consolidateMemories(projectId = 'aiforge-demo') {
+export async function consolidateMemories(projectId = null) {
   return _apiFetch(`/api/projects/${projectId}/engineering-memory/consolidate`, { method: 'POST' });
 }
 
-export async function updateMemoryVersion(projectId = 'aiforge-demo', memoryId, newContent, reason = 'Migration') {
+export async function updateMemoryVersion(projectId = null, memoryId, newContent, reason = 'Migration') {
   return _apiFetch(`/api/projects/${projectId}/engineering-memory/${memoryId}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
@@ -86,7 +86,7 @@ export async function updateMemoryVersion(projectId = 'aiforge-demo', memoryId, 
 }
 
 // Backward Compatibility Helpers for Day 12 UI Components
-export async function fetchProjectMemory(projectId = 'aiforge-demo') {
+export async function fetchProjectMemory(projectId = null) {
   const res = await fetchMemories(projectId, false);
   return {
     memories: res.memories || [],
@@ -94,7 +94,7 @@ export async function fetchProjectMemory(projectId = 'aiforge-demo') {
   };
 }
 
-export async function searchProjectMemory(projectId = 'aiforge-demo', query = '') {
+export async function searchProjectMemory(projectId = null, query = '') {
   const res = await searchMemories(projectId, query);
   return {
     memories: res.memories || [],
@@ -102,7 +102,7 @@ export async function searchProjectMemory(projectId = 'aiforge-demo', query = ''
   };
 }
 
-export async function explainDecision(projectId = 'aiforge-demo', topic = '') {
+export async function explainDecision(projectId = null, topic = '') {
   const res = await searchMemories(projectId, topic);
   const top = res.memories?.[0];
   return {

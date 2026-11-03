@@ -10,7 +10,7 @@ import {
   rollbackDeployment
 } from '../services/devops';
 
-export default function DevOpsDeploymentPage({ projectId = 'aiforge-demo' }) {
+export default function DevOpsDeploymentPage({ projectId = null }) {
   const [plan, setPlan] = useState(null);
   const [status, setStatus] = useState(null);
   const [health, setHealth] = useState(null);

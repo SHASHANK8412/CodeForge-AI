@@ -4,9 +4,11 @@ import asyncio
 import json
 from time import perf_counter
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
+from backend.auth.dependencies import get_current_user, local_dev_auth_enabled
+from backend.auth.ownership import may_access, user_id_of
 from backend.memory.conversation_manager import ConversationManager
 from backend.memory.crud import generate_conversation_title
 from backend.schemas.chat import ChatMessageRequest, ConversationCreateRequest, ConversationRenameRequest
@@ -38,11 +40,23 @@ def _message_payload(message):
     }
 
 
+def _own_conversation(conversation_id: str, user: dict, title: str | None = None):
+    """The user's conversation with this id, created for them if it does not exist yet. Someone else's
+    conversation answers 404, so its existence is not revealed."""
+    conversation = conversation_manager.get_conversation(conversation_id)
+    if conversation is None:
+        return conversation_manager.create_conversation(conversation_id=conversation_id, title=title,
+                                                        owner_id=user_id_of(user))
+    if not may_access(user, {"user_id": conversation.owner_id}):
+        raise HTTPException(status_code=404, detail="Conversation not found.")
+    return conversation
+
+
 @router.post("/new")
-def create_conversation(request: ConversationCreateRequest | None = None):
+def create_conversation(request: ConversationCreateRequest | None = None, user: dict = Depends(get_current_user)):
     payload = request or ConversationCreateRequest()
     title = payload.title or (generate_conversation_title(payload.first_message) if payload.first_message else None)
-    conversation = conversation_manager.create_conversation(title=title)
+    conversation = conversation_manager.create_conversation(title=title, owner_id=user_id_of(user))
     return {
         "success": True,
         "conversation": _conversation_payload(conversation),
@@ -55,18 +69,13 @@ from backend.memory.ai_memory_service import global_ai_memory_service
 
 
 @router.post("/message")
-async def chat_message(request: ChatMessageRequest):
+async def chat_message(request: ChatMessageRequest, user: dict = Depends(get_current_user)):
     if request.conversation_id:
-        conversation = conversation_manager.get_conversation(request.conversation_id)
-        if conversation is None:
-            conversation = conversation_manager.create_conversation(
-                conversation_id=request.conversation_id,
-                title=generate_conversation_title(request.message)
-            )
-        conversation_id = conversation.conversation_id
+        conversation = _own_conversation(request.conversation_id, user, generate_conversation_title(request.message))
     else:
-        conversation = conversation_manager.create_conversation(title=generate_conversation_title(request.message))
-        conversation_id = conversation.conversation_id
+        conversation = conversation_manager.create_conversation(title=generate_conversation_title(request.message),
+                                                                owner_id=user_id_of(user))
+    conversation_id = conversation.conversation_id
 
     # 1. Smart Memory Recall (if memory_enabled)
     recalled_data = {"recalled_memories": [], "context_prompt": "", "total_recalled": 0, "memory_active": False}
@@ -157,8 +166,8 @@ async def chat_message(request: ChatMessageRequest):
 
 
 @router.post("")
-async def chat(request: ChatMessageRequest):
-    return await chat_message(request)
+async def chat(request: ChatMessageRequest, user: dict = Depends(get_current_user)):
+    return await chat_message(request, user)
 
 
 @router.get("/list")
@@ -166,8 +175,11 @@ def list_conversations(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     search: str | None = Query(default=None, max_length=120),
+    user: dict = Depends(get_current_user),
 ):
-    conversations = conversation_manager.list_conversations(limit=limit, offset=offset, search=search)
+    conversations = conversation_manager.list_conversations(limit=limit, offset=offset, search=search,
+                                                            owner_id=user_id_of(user),
+                                                            include_ownerless=local_dev_auth_enabled())
 
     return {
         "success": True,
@@ -176,10 +188,9 @@ def list_conversations(
 
 
 @router.get("/history/{conversation_id}")
-def get_conversation_history(conversation_id: str, limit: int = Query(default=100, ge=1, le=500)):
-    conversation = conversation_manager.get_conversation(conversation_id)
-    if conversation is None:
-        conversation = conversation_manager.create_conversation(conversation_id=conversation_id)
+def get_conversation_history(conversation_id: str, limit: int = Query(default=100, ge=1, le=500),
+                             user: dict = Depends(get_current_user)):
+    conversation = _own_conversation(conversation_id, user)
 
     messages = conversation_manager.get_messages(conversation_id, limit=limit)
     return {
@@ -190,11 +201,9 @@ def get_conversation_history(conversation_id: str, limit: int = Query(default=10
 
 
 @router.put("/title/{conversation_id}")
-def rename_conversation(conversation_id: str, request: ConversationRenameRequest):
-    conversation = conversation_manager.get_conversation(conversation_id)
-    if conversation is None:
-        conversation = conversation_manager.create_conversation(conversation_id=conversation_id, title=request.title)
-    else:
+def rename_conversation(conversation_id: str, request: ConversationRenameRequest, user: dict = Depends(get_current_user)):
+    conversation = _own_conversation(conversation_id, user, request.title)
+    if conversation.title != request.title:
         conversation = conversation_manager.rename_conversation(conversation_id, request.title)
 
     return {
@@ -204,9 +213,11 @@ def rename_conversation(conversation_id: str, request: ConversationRenameRequest
 
 
 @router.delete("/{conversation_id}")
-def delete_conversation(conversation_id: str):
+def delete_conversation(conversation_id: str, user: dict = Depends(get_current_user)):
     conversation = conversation_manager.get_conversation(conversation_id)
     if conversation is not None:
+        if not may_access(user, {"user_id": conversation.owner_id}):
+            raise HTTPException(status_code=404, detail="Conversation not found.")
         conversation_manager.delete_conversation(conversation_id)
 
     return {
@@ -216,14 +227,14 @@ def delete_conversation(conversation_id: str):
 
 
 @router.post("/stream")
-async def chat_stream(request: ChatMessageRequest):
+async def chat_stream(request: ChatMessageRequest, user: dict = Depends(get_current_user)):
     """
     Server-Sent Events version of /chat/message: one 'message' event with the same payload,
     then a timing event. (It used to run the full project-generation graph for every chat
     message.)
     """
     started_at = perf_counter()
-    payload = await chat_message(request)
+    payload = await chat_message(request, user)
 
     def event_stream():
         yield f"data: {json.dumps({'type': 'message', **payload}, ensure_ascii=False, default=str)}\n\n"

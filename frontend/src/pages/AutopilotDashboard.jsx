@@ -11,7 +11,7 @@ import {
 } from '../services/autopilot';
 import { subscribeToGenerationEvents } from '../services/generation';
 
-export default function AutopilotDashboard({ generationId = 'aiforge-demo', setView, setActiveGenerationId }) {
+export default function AutopilotDashboard({ generationId = null, setView, setActiveGenerationId }) {
   const [goal, setGoal] = useState('Build a production-ready e-commerce platform with authentication, products, cart, payments, admin dashboard and PostgreSQL database.');
   const [autonomyLevel, setAutonomyLevel] = useState('BALANCED');
   const [approvalSettings, setApprovalSettings] = useState({

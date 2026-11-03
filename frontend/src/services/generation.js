@@ -199,7 +199,7 @@ export function connectGenerationStream(generationId, callbacks = {}) {
     pollIntervalMs = 2000,
   } = callbacks;
 
-  let es = null;         // EventSource
+  let controller = null; // AbortController of the open event stream
   let pollTimer = null;  // setInterval handle for polling fallback
   let sseActive = false;
   let destroyed = false;
@@ -263,64 +263,62 @@ export function connectGenerationStream(generationId, callbacks = {}) {
   }
 
   // ----- SSE setup -----
-  function connectSSE() {
-    if (destroyed) return;
-
-    const token = localStorage.getItem('aiforge_jwt') || '';
-    const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
-    const url = `${API_BASE}/api/generations/${generationId}/stream${tokenParam}`;
-
-    try {
-      es = new EventSource(url, { withCredentials: true });
-    } catch (_) {
-      // Browser doesn't support EventSource → polling only
-      startPolling();
-      return;
-    }
-
-    es.onopen = () => {
-      sseActive = true;
-      stopPolling(); // SSE connected — stop polling
-    };
-
-    const eventTypes = [
-      'snapshot', 'agent_started', 'agent_progress', 'agent_log',
-      'agent_completed', 'agent_failed', 'agent_retrying',
-      'generation_started', 'generation_completed', 'generation_failed',
-      'generation_cancelled', 'repair_started', 'repair_completed',
-      'testing_started', 'testing_completed', 'stream_done', 'heartbeat',
-    ];
-
-    eventTypes.forEach((evtType) => {
-      es.addEventListener(evtType, (e) => {
-        if (evtType === 'heartbeat') return;
-        if (evtType === 'stream_done') {
-          sseActive = false;
-          es?.close();
-          es = null;
-          return;
-        }
-        try {
-          const data = JSON.parse(e.data || '{}');
-          dispatch({ type: evtType, ...data });
-        } catch (_) { /* malformed JSON */ }
-      });
+  // The stream is read with fetch() rather than EventSource: EventSource cannot send the
+  // Authorization header, and the backend accepts the token only in that header or its cookie.
+  function handleSseBlock(block) {
+    let evtType = 'message';
+    const dataLines = [];
+    block.split('\n').forEach((line) => {
+      if (line.startsWith('event:')) evtType = line.slice(6).trim();
+      else if (line.startsWith('data:')) dataLines.push(line.slice(5).replace(/^ /, ''));
     });
+    if (evtType === 'heartbeat') return false;
+    if (evtType === 'stream_done') return true;
+    try {
+      const data = JSON.parse(dataLines.join('\n') || '{}');
+      dispatch({ type: evtType, ...data });
+    } catch (_) { /* malformed JSON */ }
+    return false;
+  }
 
-    es.onerror = () => {
+  async function connectSSE() {
+    if (destroyed) return;
+    controller = new AbortController();
+    let done = false;
+    try {
+      const res = await fetch(`${API_BASE}/api/generations/${generationId}/stream`, {
+        headers: { Accept: 'text/event-stream', ..._getAuthHeader() },
+        signal: controller.signal,
+      });
+      if (res.status === 401 || res.status === 403 || res.status === 404) {
+        startPolling();      // no point reconnecting; polling reports the same error
+        return;
+      }
+      if (!res.ok || !res.body) throw new Error(`stream answered ${res.status}`);
+      sseActive = true;
+      stopPolling();
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (!done) {
+        const { value, done: streamEnded } = await reader.read();
+        if (streamEnded) break;
+        buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n');
+        let cut;
+        while (!done && (cut = buffer.indexOf('\n\n')) !== -1) {
+          done = handleSseBlock(buffer.slice(0, cut));
+          buffer = buffer.slice(cut + 2);
+        }
+      }
+    } catch (_) {
+      // network error or aborted: fall through to the reconnect logic
+    } finally {
       sseActive = false;
-      es?.close();
-      es = null;
-      if (destroyed) return;
-
-      // Polling fallback while SSE is down
-      startPolling();
-
-      // Attempt SSE reconnect after 5 s
-      setTimeout(() => {
-        if (!destroyed) connectSSE();
-      }, 5000);
-    };
+      controller = null;
+    }
+    if (destroyed || done) return;
+    startPolling();          // polling fallback while the stream is down
+    setTimeout(() => { if (!destroyed) connectSSE(); }, 5000);
   }
 
   // ----- Bootstrap -----
@@ -343,7 +341,7 @@ export function connectGenerationStream(generationId, callbacks = {}) {
     destroyed = true;
     sseActive = false;
     stopPolling();
-    if (es) { es.close(); es = null; }
+    if (controller) { controller.abort(); controller = null; }
   }
 
   return { disconnect };

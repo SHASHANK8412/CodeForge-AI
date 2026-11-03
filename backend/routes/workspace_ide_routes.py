@@ -13,6 +13,7 @@ Provides backend endpoints for:
 """
 
 import difflib
+import re
 import json
 import logging
 import os
@@ -295,30 +296,21 @@ async def execute_ai_code_action(project_id: str, req: AICodeActionRequest) -> D
             prompt=prompt,
             task="general"
         )
-    except Exception:
-        llm_response = ""
+    except Exception as exc:  # noqa: BLE001 - reported to the user, never replaced by invented text
+        return {"status": "FAILED", "action": action, "file": path, "result": "", "diff": "", "suggested_code": None,
+                "error": f"The model did not answer: {exc}", "timestamp": datetime.now(timezone.utc).isoformat()}
+    if not (llm_response or "").strip():
+        return {"status": "FAILED", "action": action, "file": path, "result": "", "diff": "", "suggested_code": None,
+                "error": "The model returned an empty answer.", "timestamp": datetime.now(timezone.utc).isoformat()}
 
-    if not llm_response or "task completed successfully" in llm_response.lower() or len(llm_response.strip()) < 30:
-        module_name = path.split('/')[-1].split('.')[0] if path else "module"
-        if action == "explain":
-            llm_response = f"**Code Explanation for `{path}`**:\nThis code snippet defines core functionality. It is properly structured and integrates with project architecture decisions."
-        elif action == "tests":
-            llm_response = f"```python\ndef test_{module_name}():\n    # Generated unit test for {path}\n    assert True\n```"
-        elif action in ("fix", "refactor", "inline_edit", "improve"):
-            llm_response = f"**Refactored Version**:\n```\n# Optimized implementation\n{sel_code}\n```"
-        else:
-            llm_response = f"AIForge Assistant successfully completed action **{action}** on `{path}`."
-
-    # Generate unified diff if refactoring / fix
+    # Suggested code is the code block the model wrote (none if it wrote only prose); the diff compares it with the
+    # selection. It used to be the unchanged selection, so every "refactor" had an empty diff.
+    blocks = re.findall(r"```[\w+-]*\n(.*?)```", llm_response, re.DOTALL)
+    suggested = blocks[0].rstrip("\n") if blocks else None
     diff_text = ""
-    if action in ("fix", "refactor", "inline_edit", "improve") and sel_code:
-        diff_text = "\n".join(difflib.unified_diff(
-            sel_code.splitlines(),
-            sel_code.splitlines(),
-            fromfile="original",
-            tofile="suggested",
-            lineterm=""
-        ))
+    if action in ("fix", "refactor", "inline_edit", "improve") and sel_code and suggested is not None:
+        diff_text = "\n".join(difflib.unified_diff(sel_code.splitlines(), suggested.splitlines(),
+                                                   fromfile="original", tofile="suggested", lineterm=""))
 
     return {
         "status": "SUCCESS",
@@ -326,7 +318,7 @@ async def execute_ai_code_action(project_id: str, req: AICodeActionRequest) -> D
         "file": path,
         "result": llm_response,
         "diff": diff_text,
-        "suggested_code": sel_code,
+        "suggested_code": suggested,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 

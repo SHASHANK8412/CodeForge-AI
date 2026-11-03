@@ -23,7 +23,7 @@ export default function AIContextDrawer({
   onClose = null,
   activeFile = null,
   selectedCode = '',
-  projectId = 'aiforge-demo',
+  projectId = null,
   onOpenFile = null,
   onOpenMemory = null,
   onOpenTimeline = null

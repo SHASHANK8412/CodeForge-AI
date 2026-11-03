@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   FaSave, FaHistory, FaDownload, FaExpand, FaCompress, FaUndo, 
   FaRedo, FaMagic, FaTimes, FaCheck, FaFileAlt, FaCode, 
@@ -10,7 +10,7 @@ import RoadmapCanvas from "./RoadmapCanvas";
 import TableCanvas from "./TableCanvas";
 import DiagramCanvas from "./DiagramCanvas";
 import VisualizationCanvas from "./VisualizationCanvas";
-import { updateCanvas, aiTransformCanvas, restoreCanvasVersion } from "../../services/canvasApi";
+import { updateCanvas, restoreCanvasVersion } from "../../services/canvasApi";
 import toast from "react-hot-toast";
 
 export default function LiveCanvasContainer({ 
@@ -24,10 +24,11 @@ export default function LiveCanvasContainer({
   const [currentFiles, setCurrentFiles] = useState(canvas?.files || {});
   const [currentTitle, setCurrentTitle] = useState(canvas?.title);
   const [canvasType, setCanvasType] = useState(canvas?.canvas_type || "DOCUMENT");
-  const [aiPrompt, setAiPrompt] = useState("");
-  const [isAiWorking, setIsAiWorking] = useState(false);
   const [showVersionModal, setShowVersionModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState("Saved");
+  const autosaveTimer = useRef(null);
+
+  useEffect(() => () => clearTimeout(autosaveTimer.current), []);
 
   useEffect(() => {
     if (!canvas) return;
@@ -39,49 +40,42 @@ export default function LiveCanvasContainer({
 
   if (!canvas) return null;
 
+  // Debounced autosave: one save (and one version) after typing pauses for a second, not one per keystroke.
   const handleContentChange = (newContent) => {
     setCurrentContent(newContent);
     setSaveStatus("Saving...");
-    // Debounced autosave
-    const timer = setTimeout(async () => {
-      await updateCanvas(canvas.id, {
-        content: newContent,
-        title: currentTitle,
-        files: currentFiles,
-        change_summary: "Autosave"
-      });
-      setSaveStatus("Saved");
+    clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(async () => {
+      try {
+        await updateCanvas(canvas.id, {
+          content: newContent,
+          title: currentTitle,
+          files: currentFiles,
+          change_summary: "Autosave"
+        });
+        setSaveStatus("Saved");
+      } catch {
+        setSaveStatus("Save failed");
+      }
     }, 1000);
-    return () => clearTimeout(timer);
   };
 
-  const handleAiTransform = async (instruction, selectionText = null) => {
-    if (!instruction.trim()) return;
-    setIsAiWorking(true);
-    toast("AI transforming canvas...", { icon: "✨" });
-
+  const saveQuietly = async (payload) => {
     try {
-      const updated = await aiTransformCanvas(canvas.id, {
-        instruction,
-        selectionText
-      });
-      if (updated) {
-        setCurrentContent(updated.content);
-        setCurrentFiles(updated.files || {});
-        setCanvasType(updated.canvas_type);
-        if (onUpdateCanvas) onUpdateCanvas(updated);
-        toast.success("Canvas updated by AI!", { icon: "🎨" });
-      }
+      return await updateCanvas(canvas.id, payload);
     } catch (err) {
-      toast.error("AI Transform failed");
-    } finally {
-      setIsAiWorking(false);
-      setAiPrompt("");
+      toast.error(err?.response?.data?.detail || "Could not save the canvas.");
+      return null;
     }
   };
 
   const handleRestoreVersion = async (versionId) => {
-    const updated = await restoreCanvasVersion(canvas.id, versionId);
+    let updated = null;
+    try {
+      updated = await restoreCanvasVersion(canvas.id, versionId);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Could not restore that version.");
+    }
     if (updated) {
       setCurrentContent(updated.content);
       setCurrentFiles(updated.files || {});
@@ -120,7 +114,7 @@ export default function LiveCanvasContainer({
             value={currentTitle}
             onChange={(e) => setCurrentTitle(e.target.value)}
             onBlur={async () => {
-              await updateCanvas(canvas.id, { title: currentTitle });
+              await saveQuietly({ title: currentTitle });
             }}
             className="bg-transparent font-bold text-white text-xs outline-none border-b border-transparent focus:border-indigo-500 truncate max-w-[200px]"
           />
@@ -130,8 +124,8 @@ export default function LiveCanvasContainer({
             onChange={async (e) => {
               const newType = e.target.value;
               setCanvasType(newType);
-              const updated = await updateCanvas(canvas.id, { canvas_type: newType });
-              if (onUpdateCanvas) onUpdateCanvas(updated);
+              const updated = await saveQuietly({ canvas_type: newType });
+              if (updated && onUpdateCanvas) onUpdateCanvas(updated);
             }}
             className="bg-[#151821] border border-[#242833] rounded-lg px-2 py-1 text-[11px] text-[#9AA1B2] outline-none cursor-pointer"
           >
@@ -178,38 +172,12 @@ export default function LiveCanvasContainer({
         </div>
       </div>
 
-      {/* AI Contextual Transform Bar */}
-      <div className="px-4 py-2 bg-[#12151F] border-b border-[#1C202B] flex items-center gap-2 text-xs">
-        <FaMagic className="text-indigo-400 shrink-0" size={11} />
-        <input
-          type="text"
-          value={aiPrompt}
-          onChange={(e) => setAiPrompt(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && aiPrompt.trim()) {
-              handleAiTransform(aiPrompt);
-            }
-          }}
-          placeholder="Ask AI to modify canvas... e.g. 'Make section 2 shorter', 'Turn into presentation', 'Add pricing column'"
-          disabled={isAiWorking}
-          className="flex-1 bg-transparent text-white placeholder-gray-500 outline-none text-[11px] font-medium"
-        />
-        <button
-          onClick={() => handleAiTransform(aiPrompt)}
-          disabled={!aiPrompt.trim() || isAiWorking}
-          className="px-3 py-1 bg-[#6366F1] hover:bg-[#5053e1] disabled:bg-gray-800 disabled:text-gray-600 text-white rounded-lg text-[11px] font-bold transition cursor-pointer"
-        >
-          {isAiWorking ? "Working..." : "Transform"}
-        </button>
-      </div>
-
       {/* Main Canvas Body */}
       <div className="flex-1 overflow-hidden relative">
         {canvasType === "DOCUMENT" && (
           <DocumentCanvas 
             content={currentContent} 
             onChange={handleContentChange} 
-            onAiTransform={handleAiTransform} 
           />
         )}
         {canvasType === "CODE" && (
@@ -219,37 +187,32 @@ export default function LiveCanvasContainer({
             onChange={handleContentChange}
             onFilesChange={(newFiles) => {
               setCurrentFiles(newFiles);
-              updateCanvas(canvas.id, { files: newFiles });
+              saveQuietly({ files: newFiles });
             }}
-            onAiTransform={handleAiTransform} 
           />
         )}
         {canvasType === "ROADMAP" && (
           <RoadmapCanvas 
             content={currentContent} 
             onChange={handleContentChange} 
-            onAiTransform={handleAiTransform} 
           />
         )}
         {canvasType === "TABLE" && (
           <TableCanvas 
             content={currentContent} 
             onChange={handleContentChange} 
-            onAiTransform={handleAiTransform} 
           />
         )}
         {canvasType === "DIAGRAM" && (
           <DiagramCanvas 
             content={currentContent} 
             onChange={handleContentChange} 
-            onAiTransform={handleAiTransform} 
           />
         )}
         {canvasType === "VISUALIZATION" && (
           <VisualizationCanvas 
             content={currentContent} 
             onChange={handleContentChange} 
-            onAiTransform={handleAiTransform} 
           />
         )}
       </div>

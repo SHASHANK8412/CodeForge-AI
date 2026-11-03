@@ -51,3 +51,8 @@ backend/data/reality/
 
 # Local verifiable-records signing key (generated on first use; never committed)
 backend/data/verifiable_ledger/signing.key
+
+# Benchmark output (written by benchmarks/run_benchmarks.py; not committed)
+benchmarks/REPORT.md
+benchmarks/results.json
+benchmarks/runs/

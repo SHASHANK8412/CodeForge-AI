@@ -10,7 +10,7 @@ import {
   explainGraphNode
 } from '../services/dna';
 
-export default function DnaGraphPage({ projectId = 'aiforge-demo' }) {
+export default function DnaGraphPage({ projectId = null }) {
   const [graph, setGraph] = useState(null);
   const [loading, setLoading] = useState(true);
 

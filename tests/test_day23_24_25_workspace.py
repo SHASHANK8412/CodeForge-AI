@@ -13,7 +13,20 @@ client = TestClient(app)
 
 @pytest.fixture
 def setup_dummy_project(monkeypatch):
-    """Creates a temporary generated project structure for testing workspace APIs."""
+    """Creates a temporary generated project structure for testing workspace APIs.
+
+    The review and fix routes call the model; these tests exercise the routes (parsing, diff, apply, snapshots),
+    so the model is replaced by a deterministic stand-in instead of depending on a live Ollama server."""
+    import backend.services.llm as llm
+
+    async def fake_model(system_prompt, prompt, model=None, task="general"):
+        if task == "reviewer":
+            return ('{"status": "WARNING", "score": 70, "issues": [{"severity": "LOW", "file": "backend/main.py", '
+                    '"line": 1, "category": "CODE_QUALITY", "title": "print", "description": "uses print", "suggested_fix": "log"},'
+                    ' {"severity": "HIGH", "file": "backend/auth.py", "line": 42, "category": "SECURITY", "title": "copied",'
+                    ' "description": "a file the project does not have", "suggested_fix": "-"}]}')
+        return "```python\nimport logging\nlogging.info('original python code')\n```"
+    monkeypatch.setattr(llm, "generate_text_async", fake_model)
     project_id = "test_workspace_gen_proj"
     proj_dir = GENERATED_PROJECTS_DIR / project_id
     proj_dir.mkdir(parents=True, exist_ok=True)
@@ -107,6 +120,8 @@ def test_project_structured_review(setup_dummy_project):
         assert "severity" in issue
         assert "file" in issue
         assert "category" in issue
+    # a finding about a file the project does not have is marked unverified
+    assert {i["file"]: i["verified"] for i in data["issues"]} == {"backend/main.py": True, "backend/auth.py": False}
 
 
 def test_fix_proposal_and_apply(setup_dummy_project):

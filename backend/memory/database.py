@@ -61,6 +61,11 @@ class ConversationDatabase:
                         ON messages(conversation_id, timestamp ASC);
                     """
                 )
+                # Conversations belong to the user who started them; databases created before this
+                # column existed get it added (their rows stay ownerless, see auth.ownership.may_access).
+                columns = {row["name"] for row in connection.execute("PRAGMA table_info(conversations)")}
+                if "owner_id" not in columns:
+                    connection.execute("ALTER TABLE conversations ADD COLUMN owner_id TEXT")
 
             self._initialized = True
 

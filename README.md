@@ -48,6 +48,9 @@ Requirement
 | Authentication & authorization | Sign-in required by default; project routes check ownership; path traversal, symlink and archive escapes are rejected. `AIFORGE_AUTH_MODE=local-dev` allows token-less requests from this machine for single-user development (refused in production) |
 | Quality Center / readiness gate | Computed only from recorded checks (Execution Guardian, Integration Engine, project files); anything not evaluated is labelled as such |
 | LangGraph pipeline with parallel branches and human-approval checkpoints | Working |
+| AI Chat (agent modes) | Working — answers come from your installed Ollama models (the model picker lists only those); your own saved memories and uploaded documents are used as context and cited. A model failure is shown as an error, never as an invented answer |
+| Canvas and Tasks | Working — your own canvases (documents, code, roadmaps, tables, diagrams) with version history, and your task list. No AI editing actions |
+| Command line (`run_aiforge.py`) | Working — runs the same pipeline, asks at the architecture and final checkpoints (`--approve-architecture`, `--approve-final`) and reports each stage as it runs |
 | Live agent status (SSE) and agent org chart in the UI | Working |
 | Self-healing (test → debug → patch → retest) | Working — deterministic repairs (missing imports, missing requirements, unambiguous literal mismatches) with an LLM rewrite of the failing file as fallback; `tests/test_self_healing_demo.py` repairs a broken FastAPI project and its tests then pass. Bounded by `MAX_REPAIR_ATTEMPTS`; repeated failures escalate to a human |
 | ZIP export of a completed generation | Working (tests: `tests/test_export_zip_route.py`) |
@@ -55,7 +58,7 @@ Requirement
 | Code-quality gate | Working — ruff (syntax errors, undefined names) and oxlint (JS/JSX parse and correctness errors) on the generated files; blocking issues fail the run like failing tests and go through the debug → patch loop |
 | Docker sandbox for generated tests | Working — dependencies install in one container; tests run in another with no network, as a non-root user, with CPU/memory/process limits and a timeout, then both are removed (without Docker, generated code is reported as not run; `AIFORGE_TEST_SANDBOX=local` opts into running it locally) |
 | Security gate | Every run is scanned and auto-remediated; findings that remain are shown in the final approval, which is marked "Security review required" |
-| Release report | Working — code-quality gate, Bandit and pip-audit results with a `ready` / `review_required` / `blocked` recommendation, shown in the final approval |
+| Release report | Working — code-quality gate, Bandit and pip-audit results with a `ready` / `review_required` / `blocked` recommendation, shown in the final approval. It is never `ready` unless the generated tests passed and the Execution Guardian verified the project (otherwise `not_verified`, with the reason) |
 | Token and cost tracking | Working — real token counts from Ollama per run and per agent, shown live on the build view and on the Usage page. Local models have no API cost; set `AIFORGE_COST_PER_1K_*` to price runs |
 | Docker / docker-compose for AIForge itself | Working — both images build, both containers report healthy, and the backend reaches the host's Ollama (verified 2026-10-06, Docker 29.6.2) |
 | Local deployment with smoke tests and rollback | Working — a failed deploy restores the last file checkpoint (`tests/deployment/`) |
@@ -131,6 +134,7 @@ most:
 |---|---|
 | `AIFORGE_GENERAL_MODEL`, `AIFORGE_CODING_MODEL` | Pin specific Ollama models instead of auto-selection |
 | `AIFORGE_LLM_TIMEOUT_SECONDS` | Ceiling for one LLM call (default 900; CPU-only inference is slow) |
+| `GROQ_API_KEY`, `AIFORGE_GROQ_MODEL`, `AIFORGE_GROQ_TASKS` | Send the coding agents (architect, frontend, backend, database, debug/patch) to a model hosted on Groq (default `openai/gpt-oss-120b`); the other agents stay local. If a Groq call fails the agent falls back to the local model. `/health` shows what is configured |
 | `MAX_REPAIR_ATTEMPTS` | Bound on the debug → patch → re-test loop |
 | `CORS_ORIGINS`, `VITE_API_URL` | Hosting the frontend and backend on different origins |
 | `GITHUB_TOKEN` | GitHub export |
@@ -188,9 +192,9 @@ gives each test a temporary store.
 - **Security gaps that remain:** registration is open and there are no roles, so any signed-in user
   can reach global (non-project) operations pages; logout does not revoke tokens; login has no rate
   limit.
-- **Some legacy modules still return sample data** where no real backend exists for them (for
-  example `backend/deployment/cicd_pipeline.py`). The Quality Center, readiness gate, analytics,
-  Kubernetes, Terraform and verifiable-records pages show recorded data or say what was not measured.
+- **The Agents page is still a simulation**: its agent tasks step through a fixed script instead of
+  calling a model. The Quality Center, readiness gate, analytics, Kubernetes, Terraform and
+  verifiable-records pages show recorded data or say what was not measured.
 - **Part of the test suite is stale** — tests written against APIs that have since changed.
   See [Testing](#testing) for current numbers.
 

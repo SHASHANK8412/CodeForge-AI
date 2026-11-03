@@ -26,12 +26,15 @@ _logger = logging.getLogger("aiforge.benchmarks")
 
 async def run_benchmark_suite(
     output_dir: Optional[str] = None,
-    max_iterations: int = 3
+    max_iterations: int = 3,
+    report_dir: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Executes all 5 benchmarks through the authoritative AIForge pipeline.
+    Executes all 5 benchmarks through the authoritative AIForge pipeline and writes results.json and
+    REPORT.md to report_dir (default: this benchmarks folder).
     """
-    bench_dir = Path(__file__).resolve().parent
+    bench_dir = Path(report_dir).resolve() if report_dir else Path(__file__).resolve().parent
+    bench_dir.mkdir(parents=True, exist_ok=True)
     out_dir = Path(output_dir).resolve() if output_dir else (bench_dir.parent / "generated_projects").resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -56,7 +59,9 @@ async def run_benchmark_suite(
                 project_name=spec.name,
                 max_iterations=max_iterations,
                 export_zip=True,
-                output_dir=str(out_dir)
+                output_dir=str(out_dir),
+                approve_architecture=True,
+                ask=lambda _question: False,   # benchmarks stop at the final checkpoint: no packaging/deployment
             )
             t_elapsed = round(time.time() - t0, 2)
 

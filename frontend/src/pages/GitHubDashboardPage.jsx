@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { BACKEND_URL } from '../config/backend';
 
-export default function GitHubDashboardPage({ projectId = 'aiforge-demo' }) {
+export default function GitHubDashboardPage({ projectId = null }) {
   const [loading, setLoading] = useState(false);
   const [copilotQuery, setCopilotQuery] = useState('');
   const [copilotResponse, setCopilotResponse] = useState(null);

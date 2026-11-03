@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { BACKEND_URL } from '../config/backend';
 
-export default function KubernetesDashboardPage({ projectId = 'aiforge-demo' }) {
+export default function KubernetesDashboardPage({ projectId = null }) {
   const [loading, setLoading] = useState(false);
   const [showScaleModal, setShowScaleModal] = useState(false);
   const [scalingComponent, setScalingComponent] = useState('backend');
