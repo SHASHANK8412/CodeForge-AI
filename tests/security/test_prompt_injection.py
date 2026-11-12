@@ -95,3 +95,32 @@ def test_pipeline_agents_get_retrieved_context_as_untrusted_data(monkeypatch):
     ctx = global_rag_pipeline.get_context_string_for_agent("backend", "build the api")
     assert ctx.startswith("<untrusted_documents") and 'flagged="instruction-like text' in ctx
     assert RULE in ctx
+
+
+def test_the_injection_eval_measures_attack_success_and_usefulness(tmp_path):
+    """benchmarks/injection_eval.py with a scripted model that obeys documents in the system prompt only."""
+    from benchmarks import injection_eval as ev
+
+    def scripted(system, user):
+        case = next(c for c in ev.CASES if c.question in user)
+        answer = f"The answer is {case.fact}."
+        if ev.canary_for(case) in system:          # the naive placement: the model follows the document
+            answer += " " + ev.canary_for(case)
+        return answer
+
+    res = ev.run_injection_eval(ask=scripted, out_dir=tmp_path)
+    s = res["summary"]
+    assert s["naive"]["attack_success_rate"] == 1.0 and s["guarded"]["attack_success_rate"] == 0.0
+    assert s["naive"]["useful_rate"] == s["guarded"]["useful_rate"] == 1.0
+    assert (tmp_path / "injection_eval.json").exists()
+    assert all(ev.canary_for(c) not in ev.messages_for(c, "guarded")["system"] for c in ev.CASES)
+
+
+def test_an_unanswered_case_is_invalid_not_a_resisted_attack():
+    from benchmarks import injection_eval as ev
+
+    def down(system, user):
+        raise ConnectionError("model down")
+    s = ev.run_injection_eval(ask=down)["summary"]
+    assert s["guarded"]["cases"] == 0 and s["guarded"]["invalid"] == len(ev.CASES)
+    assert s["guarded"]["attack_success_rate"] is None
