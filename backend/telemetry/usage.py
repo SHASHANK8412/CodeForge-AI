@@ -52,6 +52,10 @@ def token_counts(response: Any) -> tuple[int, int]:
 
 def record_llm_call(task: str, model: str, prompt_tokens: int, completion_tokens: int,
                     llm_seconds: float, cached: bool = False) -> None:
+    # Every model call also goes to the in-process trace the benchmark harness reads (benchmarks/harness.py).
+    from backend.observability.tracing import record_llm_call as trace_llm_call
+    trace_llm_call(agent=task, model=model, prompt="", output="", latency_ms=llm_seconds * 1000,
+                   prompt_tokens=prompt_tokens, completion_tokens=completion_tokens, cache_hit=cached)
     gen_id = current_generation_var.get()
     if not gen_id:
         return

@@ -86,6 +86,9 @@ class LLMUnavailableError(RuntimeError):
 
 def _unavailable(task: str, model: str, exc: Exception) -> LLMUnavailableError:
     _logger.error("LLM call failed for task '%s' (model '%s'): %s", task, model, exc)
+    from backend.observability.tracing import record_llm_call as trace_llm_call
+    trace_llm_call(agent=task, model=model, prompt="", output="", latency_ms=0.0, prompt_tokens=0,
+                   completion_tokens=0, error=f"{type(exc).__name__}: {exc}")
     return LLMUnavailableError(task, model, f"{type(exc).__name__}: {exc}")
 
 
@@ -141,7 +144,14 @@ def _cache_key(model: str, profile_name: str, system_prompt: str, user_prompt: s
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
+def _cache_disabled() -> bool:
+    """AIFORGE_DISABLE_LLM_CACHE=1 makes every call reach the model (the benchmark harness sets it)."""
+    return os.environ.get("AIFORGE_DISABLE_LLM_CACHE", "").lower() in ("1", "true", "yes")
+
+
 def _get_cached_response(key: str) -> str | None:
+    if _cache_disabled():
+        return None
     cached = llm_cache.get(key)
     if cached is not None:
         _logger.info("INFO Cache Hit")
@@ -151,6 +161,8 @@ def _get_cached_response(key: str) -> str | None:
 
 
 def _set_cached_response(key: str, value: str) -> None:
+    if _cache_disabled():
+        return
     llm_cache.set(key, value)
 
 
@@ -324,9 +336,16 @@ def _groq_answer(task: str, system_prompt: str, prompt: str, options: dict, cach
     try:
         result = groq_provider.chat(_generate_message_payload(system_prompt, prompt), options)
     except groq_provider.GroqError as exc:
-        _logger.warning("Groq call for task '%s' failed (%s); using the local model instead", task, exc)
+        _note_groq_fallback(task, exc)
         return None
     return _record_groq(task, prompt, result, cache_key, started_at, llm_started_at)
+
+
+def _note_groq_fallback(task: str, exc: Exception) -> None:
+    _logger.warning("Groq call for task '%s' failed (%s); using the local model instead", task, exc)
+    from backend.observability.tracing import record_llm_call as trace_llm_call
+    trace_llm_call(agent=task, model=f"groq:{groq_provider.model()}", prompt="", output="", latency_ms=0.0,
+                   prompt_tokens=0, completion_tokens=0, fallback=True, error=str(exc))
 
 
 async def _groq_answer_async(task: str, system_prompt: str, prompt: str, options: dict, cache_key: str,
@@ -335,7 +354,7 @@ async def _groq_answer_async(task: str, system_prompt: str, prompt: str, options
     try:
         result = await groq_provider.chat_async(_generate_message_payload(system_prompt, prompt), options)
     except groq_provider.GroqError as exc:
-        _logger.warning("Groq call for task '%s' failed (%s); using the local model instead", task, exc)
+        _note_groq_fallback(task, exc)
         return None
     return _record_groq(task, prompt, result, cache_key, started_at, llm_started_at)
 

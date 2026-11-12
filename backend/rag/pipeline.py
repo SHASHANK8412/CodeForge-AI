@@ -163,7 +163,13 @@ class RAGPipeline(RetrievalAwareAgentMixin):
         return self.validate_and_format_response(raw_answer, grounding_ctx)
 
     def get_context_string_for_agent(self, agent_name: str, query: str = "", project_id: str = "default_project") -> str:
-        """Retrieves and formats RAG context string for a specific agent step and project_id."""
+        """Retrieves and formats RAG context string for a specific agent step and project_id.
+
+        AIFORGE_RAG=off disables retrieval entirely (the benchmark harness uses it for RAG on/off comparisons):
+        no context string at all, so prompts are identical to a build without RAG."""
+        import os
+        if os.environ.get("AIFORGE_RAG", "on").lower() in {"off", "0", "false", "no"}:
+            return ""
         try:
             chunks = self.retrieve_context(query or f"Best practices for {agent_name}", top_k=3, project_id=project_id)
             if not chunks:

@@ -1295,6 +1295,9 @@ async def patch_node(state: ProjectState) -> dict:
     _fire_lifecycle("agent_completed", "patch")
     return {
         "files": files_map,
+        # The project as the code agents wrote it, before the first repair (kept once), so before/after-repair
+        # quality can be measured (benchmarks/harness.py).
+        "pre_repair_files": state.get("pre_repair_files") or original_files,
         "file_backups": file_backups,
         "files_modified": modified_files,
         "applied_fix": applied_fix_record,

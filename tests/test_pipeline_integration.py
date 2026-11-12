@@ -466,3 +466,32 @@ def test_generation_manager_records_an_outage_as_failed(pipeline, monkeypatch, t
     assert "language model produced no output for planner" in rec["error"]
     kinds = [e["type"] for e in rec["events"]]
     assert "generation_failed" in kinds and "generation_completed" not in kinds
+
+
+def test_the_benchmark_harness_grades_the_real_pipeline(pipeline, tmp_path, monkeypatch):
+    """benchmarks/harness.py through the real CLI and graph (agents replaced by the doubles above): the run stops at
+    the final checkpoint (nothing is packaged or deployed), and the grader re-grades the generated files itself."""
+    from benchmarks import harness
+    from backend.observability.tracing import record_llm_call
+    from run_aiforge import run_aiforge_pipeline
+    monkeypatch.setenv("AIFORGE_SANDBOX", "local")
+
+    async def run(prompt, project_name, max_iterations, export_zip, output_dir, approve_architecture=False, ask=None):
+        # The doubles replace the agents, not the model layer: one model call is recorded so the run has telemetry.
+        record_llm_call(agent="backend", model="stub", prompt=prompt, output="x", latency_ms=1,
+                        prompt_tokens=10, completion_tokens=5)
+        return await run_aiforge_pipeline(prompt, project_name=project_name, max_iterations=max_iterations,
+                                          export_zip=export_zip, output_dir=output_dir,
+                                          approve_architecture=approve_architecture, ask=ask, graph=pipeline.graph)
+
+    res = asyncio.run(harness.run_benchmark(task_ids=["notes-sqlite"], label="stub", runs_dir=tmp_path / "runs",
+                                            pipeline=run, groq="off"))
+    task = res["tasks"][0]
+    assert task["valid"], task.get("invalid_reason")
+    assert task["pipeline"]["status"] == "AWAITING_FINAL_APPROVAL", "the benchmark never approves the release"
+    final = task["final"]
+    assert final["build_success"] is True
+    # the stub backend has GET/POST /notes and GET /notes/{id} but no DELETE: coverage is measured, not assumed
+    assert final["routes_matched"] == 3 and final["routes_expected"] == 4
+    assert final["tests_passed"] == 3
+    assert res["config"]["groq"] == {"used": False, "model": None, "tasks": []}

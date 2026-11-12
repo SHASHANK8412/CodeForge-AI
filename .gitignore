@@ -56,3 +56,6 @@ backend/data/verifiable_ledger/signing.key
 benchmarks/REPORT.md
 benchmarks/results.json
 benchmarks/runs/
+
+# Benchmark run outputs (generated projects are large; results.json and REPORT.md are kept)
+benchmarks/runs/*/projects/
