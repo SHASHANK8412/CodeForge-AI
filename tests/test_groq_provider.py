@@ -93,6 +93,7 @@ def test_without_a_key_nothing_is_sent_to_groq(monkeypatch):
 
 
 def test_a_groq_failure_falls_back_to_the_local_model_and_never_logs_the_key(groq_on, monkeypatch, caplog):
+    monkeypatch.setenv("AIFORGE_GROQ_RATE_LIMIT_WAIT", "0")      # no waiting: fall back at once
     _route(monkeypatch, _reply(status=429))
     local = _local(monkeypatch)
     with caplog.at_level(logging.WARNING, logger="aiforge.performance"):
@@ -124,3 +125,43 @@ def test_model_and_tasks_are_configurable(groq_on, monkeypatch):
     assert status == {"enabled": True, "model": "qwen/qwen3-32b", "tasks": ["backend", "frontend"]}
     assert KEY not in json.dumps(status)
     assert "reasoning_effort" not in groq._payload([], {})
+
+
+def _limited_then_ok(limited_times, message="Rate limit reached ... Please try again in 1.5s. Need more tokens?"):
+    state = {"n": 0}
+
+    def handler(request):
+        state["n"] += 1
+        if state["n"] <= limited_times:
+            return httpx.Response(429, json={"error": {"message": message}})
+        return httpx.Response(200, json={"model": "openai/gpt-oss-120b", "choices": [{"message": {"content": "ok code"}}],
+                                         "usage": {"prompt_tokens": 1, "completion_tokens": 1}})
+    return handler, state
+
+
+def test_a_rate_limited_call_waits_as_asked_and_retries(groq_on, monkeypatch):
+    """Groq's per-minute token limit (8,000 on the on-demand tier) made calls fall back to the local model at once."""
+    handler, state = _limited_then_ok(2)
+    waits = []
+    res = groq.chat([{"role": "user", "content": "x"}], transport=httpx.MockTransport(handler), sleep=waits.append)
+    assert res.content == "ok code" and state["n"] == 3
+    assert waits == [1.75, 1.75], "the wait Groq asked for (1.5 s) plus a small margin"
+
+    async_waits = []
+
+    async def record(seconds):
+        async_waits.append(seconds)
+    monkeypatch.setenv("AIFORGE_GROQ_RATE_LIMIT_WAIT", "120")      # a 62.75 s wait fits a 120 s budget
+    handler, state = _limited_then_ok(1, "Please try again in 1m2.5s.")
+    res = asyncio.run(groq.chat_async([{"role": "user", "content": "x"}], transport=httpx.MockTransport(handler), sleep=record))
+    assert res.content == "ok code" and async_waits == [62.75]
+
+
+def test_the_rate_limit_wait_is_bounded(groq_on, monkeypatch):
+    monkeypatch.setenv("AIFORGE_GROQ_RATE_LIMIT_WAIT", "4")
+    handler, state = _limited_then_ok(99)
+    waits = []
+    with pytest.raises(groq.GroqRateLimited):
+        groq.chat([{"role": "user", "content": "x"}], transport=httpx.MockTransport(handler), sleep=waits.append)
+    # 1.75 + 1.75 = 3.5 s fits the 4 s budget; a third wait would not: give up and fall back
+    assert waits == [1.75, 1.75] and state["n"] == 3

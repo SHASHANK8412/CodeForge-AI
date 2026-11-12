@@ -16,12 +16,18 @@ Settings (environment variables):
   AIFORGE_GROQ_TASKS            comma-separated tasks to send to Groq (default: the coding agents)
   AIFORGE_GROQ_TIMEOUT_SECONDS  per-call timeout (default 120)
   AIFORGE_GROQ_REASONING_EFFORT low | medium | high, for reasoning models such as gpt-oss (default medium)
+  AIFORGE_GROQ_RATE_LIMIT_WAIT  seconds a call may wait in total when Groq says "rate limited, try again in N s"
+                                (default 60); after that the caller falls back to the local model
+
+Rate limits: Groq accounts have a tokens-per-minute limit (8,000 on some on-demand tiers, about four agent calls).
+A rate-limited call waits the time Groq asks for and retries, instead of falling back to the local model at once.
 """
 
 from __future__ import annotations
 
 import logging
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -40,6 +46,33 @@ _ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
 
 class GroqError(RuntimeError):
     """A Groq call that did not produce an answer (the caller falls back to the local model)."""
+
+
+class GroqRateLimited(GroqError):
+    def __init__(self, message: str, retry_after: Optional[float]):
+        super().__init__(message)
+        self.retry_after = retry_after
+
+
+def _retry_after(response: httpx.Response, detail: str) -> Optional[float]:
+    """Seconds Groq asks us to wait: the Retry-After header, or "try again in 1.5s" / "in 2m3.5s" in the message."""
+    header = response.headers.get("retry-after")
+    if header:
+        try:
+            return float(header)
+        except ValueError:
+            pass
+    m = re.search(r"try again in (?:(\d+)m)?(\d+(?:\.\d+)?)s", detail or "")
+    if m:
+        return float(m.group(1) or 0) * 60 + float(m.group(2))
+    return None
+
+
+def _rate_limit_budget() -> float:
+    try:
+        return float(os.environ.get("AIFORGE_GROQ_RATE_LIMIT_WAIT", "60"))
+    except ValueError:
+        return 60.0
 
 
 @dataclass
@@ -98,7 +131,10 @@ def _parse(response: httpx.Response) -> GroqResult:
             detail = (response.json().get("error") or {}).get("message", "")
         except ValueError:
             detail = response.text[:200]
-        raise GroqError(f"Groq answered HTTP {response.status_code}: {detail}".strip())
+        message = f"Groq answered HTTP {response.status_code}: {detail}".strip()
+        if response.status_code == 429:
+            raise GroqRateLimited(message, _retry_after(response, detail))
+        raise GroqError(message)
     data = response.json()
     choice = (data.get("choices") or [{}])[0]
     content = ((choice.get("message") or {}).get("content") or "").strip()
@@ -117,24 +153,52 @@ def _timeout() -> float:
         return 120.0
 
 
+def _wait_for(exc: GroqRateLimited, waited: float) -> Optional[float]:
+    """How long to wait before retrying a rate-limited call, or None when the wait budget is used up."""
+    wait = (exc.retry_after if exc.retry_after is not None else 5.0) + 0.25
+    return wait if waited + wait <= _rate_limit_budget() else None
+
+
 def chat(messages: list[dict[str, str]], options: Optional[dict] = None,
-         transport: Optional[httpx.BaseTransport] = None) -> GroqResult:
+         transport: Optional[httpx.BaseTransport] = None, sleep=None) -> GroqResult:
+    import time
+    sleep = sleep or time.sleep
     headers = {"Authorization": f"Bearer {_api_key()}", "Content-Type": "application/json"}
-    try:
-        with httpx.Client(timeout=_timeout(), transport=transport) as client:
-            return _parse(client.post(GROQ_CHAT_URL, json=_payload(messages, options), headers=headers))
-    except httpx.HTTPError as exc:
-        raise GroqError(f"Groq request failed: {type(exc).__name__}") from exc
+    waited = 0.0
+    while True:
+        try:
+            with httpx.Client(timeout=_timeout(), transport=transport) as client:
+                return _parse(client.post(GROQ_CHAT_URL, json=_payload(messages, options), headers=headers))
+        except GroqRateLimited as exc:
+            wait = _wait_for(exc, waited)
+            if wait is None:
+                raise
+            _logger.info("Groq rate limit: waiting %.1fs before retrying", wait)
+            sleep(wait)
+            waited += wait
+        except httpx.HTTPError as exc:
+            raise GroqError(f"Groq request failed: {type(exc).__name__}") from exc
 
 
 async def chat_async(messages: list[dict[str, str]], options: Optional[dict] = None,
-                     transport: Optional[httpx.AsyncBaseTransport] = None) -> GroqResult:
+                     transport: Optional[httpx.AsyncBaseTransport] = None, sleep=None) -> GroqResult:
+    import asyncio
+    sleep = sleep or asyncio.sleep
     headers = {"Authorization": f"Bearer {_api_key()}", "Content-Type": "application/json"}
-    try:
-        async with httpx.AsyncClient(timeout=_timeout(), transport=transport) as client:
-            return _parse(await client.post(GROQ_CHAT_URL, json=_payload(messages, options), headers=headers))
-    except httpx.HTTPError as exc:
-        raise GroqError(f"Groq request failed: {type(exc).__name__}") from exc
+    waited = 0.0
+    while True:
+        try:
+            async with httpx.AsyncClient(timeout=_timeout(), transport=transport) as client:
+                return _parse(await client.post(GROQ_CHAT_URL, json=_payload(messages, options), headers=headers))
+        except GroqRateLimited as exc:
+            wait = _wait_for(exc, waited)
+            if wait is None:
+                raise
+            _logger.info("Groq rate limit: waiting %.1fs before retrying", wait)
+            await sleep(wait)
+            waited += wait
+        except httpx.HTTPError as exc:
+            raise GroqError(f"Groq request failed: {type(exc).__name__}") from exc
 
 
 def status() -> dict:

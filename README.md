@@ -135,7 +135,7 @@ most:
 |---|---|
 | `AIFORGE_GENERAL_MODEL`, `AIFORGE_CODING_MODEL` | Pin specific Ollama models instead of auto-selection |
 | `AIFORGE_LLM_TIMEOUT_SECONDS` | Ceiling for one LLM call (default 900; CPU-only inference is slow) |
-| `GROQ_API_KEY`, `AIFORGE_GROQ_MODEL`, `AIFORGE_GROQ_TASKS` | Send the coding agents (architect, frontend, backend, database, debug/patch) to a model hosted on Groq (default `openai/gpt-oss-120b`); the other agents stay local. If a Groq call fails the agent falls back to the local model. `/health` shows what is configured |
+| `GROQ_API_KEY`, `AIFORGE_GROQ_MODEL`, `AIFORGE_GROQ_TASKS` | Send the coding agents (architect, frontend, backend, database, debug/patch) to a model hosted on Groq (default `openai/gpt-oss-120b`); the other agents stay local. A rate-limited call waits the time Groq asks for (up to `AIFORGE_GROQ_RATE_LIMIT_WAIT`, default 60 s) and retries; any other failure, or a longer wait, falls back to the local model. Note that some on-demand Groq tiers allow only 8,000 tokens per minute (about four agent calls). `/health` shows what is configured |
 | `MAX_REPAIR_ATTEMPTS` | Bound on the debug → patch → re-test loop |
 | `CORS_ORIGINS`, `VITE_API_URL` | Hosting the frontend and backend on different origins |
 | `GITHUB_TOKEN` | GitHub export |
