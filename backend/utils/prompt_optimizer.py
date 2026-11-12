@@ -4,7 +4,7 @@ import re
 def optimize_prompt(prompt: str) -> str:
     """
     Optimizes the prompt content before sending it to Ollama.
-    - Trims unnecessary whitespace and consecutive blank lines.
+    - Trims trailing whitespace and consecutive blank lines (leading whitespace is kept: it is code indentation).
     - Identifies and filters out empty sections.
     - Deduplicates identical sections.
     - Preserves system prompts as they are not passed to this function.
@@ -24,14 +24,15 @@ def optimize_prompt(prompt: str) -> str:
     
     # If no headers detected, clean up lines and return
     if len(parts) <= 1:
-        lines = [line.strip() for line in prompt.splitlines()]
+        # rstrip, not strip: leading whitespace is code indentation (stripping it broke every code prompt)
+        lines = [line.rstrip() for line in prompt.splitlines()]
         cleaned_lines = []
         for line in lines:
             if line:
                 cleaned_lines.append(line)
             elif cleaned_lines and cleaned_lines[-1] != "":
                 cleaned_lines.append("")
-        res = "\n".join(cleaned_lines).strip()
+        res = "\n".join(cleaned_lines).strip("\n")
         max_chars = 8000
         if len(res) > max_chars:
             suffix = "\n...[truncated long prompt]"
@@ -42,23 +43,23 @@ def optimize_prompt(prompt: str) -> str:
     seen_section_contents: set[str] = set()
 
     # The first part is text before any heading
-    initial_text = parts[0].strip()
+    initial_text = parts[0].strip("\n").rstrip()
     if initial_text:
         optimized_sections.append(("", initial_text))
 
     # Iterate through heading and body pairs
     for i in range(1, len(parts), 2):
         heading = parts[i].strip()
-        body = parts[i+1].strip() if i+1 < len(parts) else ""
+        body = parts[i+1].strip("\n").rstrip() if i+1 < len(parts) else ""
         
-        body_lines = [line.strip() for line in body.splitlines()]
+        body_lines = [line.rstrip() for line in body.splitlines()]   # keep indentation
         cleaned_body_lines = []
         for line in body_lines:
             if line:
                 cleaned_body_lines.append(line)
             elif cleaned_body_lines and cleaned_body_lines[-1] != "":
                 cleaned_body_lines.append("")
-        cleaned_body = "\n".join(cleaned_body_lines).strip()
+        cleaned_body = "\n".join(cleaned_body_lines).strip("\n")
 
         # Filter empty sections, or sections containing only placeholders
         is_empty_marker = cleaned_body.lower() in {

@@ -253,6 +253,9 @@ def score_case(case: ReviewCase, review: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def summarize(scored: List[Dict[str, Any]]) -> Dict[str, Any]:
+    # a case whose review the measured model did not produce (failed call, Groq fallback) is excluded, not a miss
+    invalid = [s for s in scored if s.get("error")]
+    scored = [s for s in scored if not s.get("error")]
     buggy = [s for s in scored if not s["clean"]]
     clean = [s for s in scored if s["clean"]]
     detected = sum(1 for s in buggy if s["detected"])
@@ -262,6 +265,7 @@ def summarize(scored: List[Dict[str, Any]]) -> Dict[str, Any]:
         "recall": round(detected / len(buggy), 4) if buggy else None,
         "clean_cases": len(clean), "false_alarms": alarms,
         "false_alarm_rate": round(alarms / len(clean), 4) if clean else None,
+        "invalid_cases": len(invalid),
     }
 
 
@@ -285,8 +289,14 @@ async def run_reviewer_eval(review_fn: Optional[ReviewFn] = None, out_dir: Optio
     global_trace.reset()
     rows = []
     for case in CASES:
+        events_before = len(global_trace.events())
         try:
             raw = await review_fn(case.code)
+            new_events = [e for e in global_trace.events()[events_before:] if e.get("kind") == "llm_call"]
+            problem = next((e for e in new_events if e.get("error") or e.get("fallback")), None)
+            if problem:
+                raise RuntimeError(("Groq fell back to the local model: " if problem.get("fallback") else
+                                    "model call failed: ") + str(problem.get("error")))
         except Exception as exc:  # noqa: BLE001 - the model did not answer: recorded, and the run is invalid
             rows.append({"id": case.id, "clean": case.bug is None, "detected": False, "false_alarm": False,
                          "issues": 0, "bug": case.bug, "review": None, "error": f"{type(exc).__name__}: {exc}"})
@@ -301,7 +311,7 @@ async def run_reviewer_eval(review_fn: Optional[ReviewFn] = None, out_dir: Optio
         "llm_fallbacks": tele["llm_fallbacks"],
         "failed_model_calls": failed_calls,
         # a review the model never produced is not a miss by the reviewer: such a run is invalid
-        "valid": tele["llm_fallbacks"] == 0 and failed_calls == 0,
+        "valid": all(not r.get("error") for r in rows),
         "cases": rows,
     }
     if out_dir:
@@ -327,7 +337,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     res_model = f"groq:{groq_provider.model()}" if args.groq else (args.model or "router default (local)")
     print(f"reviewer model: {res_model}")
     s = res["summary"]
-    print(f"recall {s['detected']}/{s['buggy_cases']} | false alarms {s['false_alarms']}/{s['clean_cases']}"
+    print(f"recall {s['detected']}/{s['buggy_cases']} | false alarms {s['false_alarms']}/{s['clean_cases']} | "
+          f"invalid cases {s['invalid_cases']}"
           f"{'' if res['valid'] else '  (INVALID: a model call failed or Groq fell back to the local model)'}")
     return 0
 

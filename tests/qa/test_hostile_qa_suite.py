@@ -258,3 +258,11 @@ class TestHostileQAWorkflowResilience:
         assert state["repair_attempts"] >= state["max_repair_attempts"]
         assert not state["is_complete"]
         assert len(state["errors"]) > 0
+
+
+def test_prompt_optimization_keeps_code_indentation():
+    """Every line used to be stripped, so code sent for review or repair arrived without indentation (found by the
+    reviewer evaluation: the model reported a correct function as an IndentationError)."""
+    code = "def list_items(page: int):\n    start = (page - 1) * 10\n    if start:\n        return ITEMS[start:]\n"
+    for prompt in (code, "### Backend Code\n" + code, "Review this:\n\n\n" + code):
+        assert "    start = (page - 1) * 10\n    if start:\n        return ITEMS[start:]" in optimize_prompt(prompt)
