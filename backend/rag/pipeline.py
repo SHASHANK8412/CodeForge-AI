@@ -174,8 +174,10 @@ class RAGPipeline(RetrievalAwareAgentMixin):
             chunks = self.retrieve_context(query or f"Best practices for {agent_name}", top_k=3, project_id=project_id)
             if not chunks:
                 return f"[RAG Context for {agent_name}]: No domain documentation indexed."
-            snippets = [f"- {c['source']}: {c['text'][:250]}" for c in chunks]
-            return f"[RAG Context for {agent_name}]:\n" + "\n".join(snippets)
+            # Retrieved text is data, never instructions: delimited, escaped and flagged (backend.security).
+            from backend.security.untrusted_content import Passage, wrap_untrusted
+            return wrap_untrusted([Passage(text=c["text"][:250], source=str(c["source"])) for c in chunks],
+                                  purpose=f"reference material for the {agent_name} step")
         except Exception as e:
             logger.warning(f"get_context_string_for_agent failed safely: {e}")
             return f"[RAG Context for {agent_name}]: N/A"

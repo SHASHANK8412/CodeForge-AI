@@ -61,6 +61,7 @@ class AgentRunRecord(BaseModel):
     model_id: str = "auto"
     response_text: str = ""
     error: Optional[str] = None
+    warnings: List[str] = Field(default_factory=list)      # e.g. a retrieved document that tried to give instructions
     steps: List[ExecutionStep] = Field(default_factory=list)
     citations: List[Dict[str, Any]] = Field(default_factory=list)
     tools_used: List[str] = Field(default_factory=list)
@@ -136,16 +137,23 @@ class AgentRuntime:
         system = ["You are AIForge, an AI software engineering assistant.", MODE_INSTRUCTIONS[mode]]
         if memories:
             system.append("Things the user asked you to remember:\n" + "\n".join(f"- {m.key}: {m.content}" for m in memories))
-        if chunks:
-            system.append("Passages from the user's documents (cite them by their reference when you use them):\n"
-                          + "\n".join(f"[{c.citation_ref}] {c.text}" for c in chunks))
+        # Document passages are untrusted data: they go in the user turn inside a delimited block, never in the system
+        # prompt, and passages with instruction-like text are flagged to the model and reported to the user.
+        from backend.security.untrusted_content import RULE, Passage, flagged_sources, warning_for, wrap_untrusted
+        passages = [Passage(text=c.text, source=c.filename, label=c.citation_ref) for c in chunks]
+        user_turn = prompt
+        if passages:
+            system.append(RULE + " Cite the documents you use by their id.")
+            user_turn = wrap_untrusted(passages, purpose="the user's own documents") + "\n\nUser request:\n" + prompt
+        warning = warning_for(flagged_sources(passages))
 
         run = AgentRunRecord(user_id=user_id, project_id=project_id, mode=mode, prompt=prompt,
+                             warnings=[warning] if warning else [],
                              citations=citations, tools_used=["document_search"] if chunks else [])
         t = time.time()
         try:
             resp = global_model_provider.complete(
-                [{"role": "system", "content": "\n\n".join(system)}, {"role": "user", "content": prompt}],
+                [{"role": "system", "content": "\n\n".join(system)}, {"role": "user", "content": user_turn}],
                 model_id=model_id,
             )
             run.response_text = resp.content

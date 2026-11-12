@@ -122,15 +122,10 @@ class ContextSelector:
         if not context.chunks:
             return ""
 
-        lines = [
-            "### RETRIEVED GROUNDING EVIDENCE",
-            "Use the following retrieved evidence to answer source-specific claims.",
-            "Cite sources using source labels [S1], [S2] where appropriate.",
-            "If the evidence does NOT support an answer, state: 'I couldn't find evidence in the available sources.'\n"
-        ]
+        from backend.security.untrusted_content import Passage, wrap_untrusted
 
+        passages = []
         for idx, chunk in enumerate(context.chunks, 1):
-            label = f"[S{idx}]"
             src_desc = chunk.path or chunk.metadata.get("source") or chunk.source_id
             loc_desc = ""
             if chunk.line_start and chunk.line_end:
@@ -139,11 +134,17 @@ class ContextSelector:
                 loc_desc = f" (Page {chunk.page})"
             elif chunk.heading:
                 loc_desc = f" (Section: {chunk.heading})"
+            passages.append(Passage(text=chunk.text, source=f"{src_desc}{loc_desc}", label=f"S{idx}"))
 
-            lines.append(f"**{label} Source: {src_desc}{loc_desc}**")
-            lines.append(f"```\n{chunk.text}\n```\n")
-
-        return "\n".join(lines)
+        # Retrieved text is data, never instructions: delimited, escaped and flagged (backend.security).
+        return "\n".join([
+            "### RETRIEVED GROUNDING EVIDENCE",
+            "Use the retrieved evidence below to answer source-specific claims.",
+            "Cite sources by their document id, e.g. [S1], [S2].",
+            "If the evidence does NOT support an answer, state: 'I couldn't find evidence in the available sources.'",
+            "",
+            wrap_untrusted(passages, purpose="evidence for the user's question"),
+        ])
 
 
 # Global Context Selector Singleton

@@ -282,7 +282,8 @@ function ChatBox() {
                     ...current,
                     {
                         sender: "ai",
-                        text: agentRun.response_text || "",
+                        // a retrieved document that looked like instructions to the AI is reported above the answer
+                        text: (agentRun.warnings || []).map((w) => `> ⚠️ ${w}\n\n`).join("") + (agentRun.response_text || ""),
                         agentRun: agentRun
                     }
                 ]);
