@@ -59,3 +59,27 @@ def test_the_workflow_scores_verified_findings(monkeypatch):
     monkeypatch.setattr(wf.reviewer_agent, "run_async", garbage)
     out = asyncio.run(wf.reviewer_node({"files": FILES, "duplicate_report": {}}))
     assert out["review"]["status"] == "NOT_REVIEWED" and out["review"]["score"] is None
+
+
+def test_a_review_cut_off_by_the_output_limit_keeps_its_complete_findings():
+    """Long reviews ran past the output limit and the whole review was discarded (found by the reviewer eval)."""
+    full = {"overall_score": 40, "gates": {}, "findings": [
+        {"id": "1", "severity": "CRITICAL", "file": "app.py", "message": "JWT decoded without verifying the signature"},
+        {"id": "2", "severity": "HIGH", "file": "app.py", "message": "no authorization check on delete"},
+        {"id": "3", "severity": "LOW", "file": "app.py", "message": "the third finding is cut off here and lost"},
+    ]}
+    text = "```json\n" + json.dumps(full, indent=2)
+    cut = text[: text.index("the third finding") + 10]           # ends mid-string: the JSON never closes
+    parsed = ReviewerAgent().parse_review_json(cut)
+    assert parsed["truncated"] is True and parsed["overall_status"] == "TRUNCATED"
+    assert [f["message"] for f in parsed["findings"]] == [full["findings"][0]["message"], full["findings"][1]["message"]]
+    assert parsed["overall_score"] == 40 and "cut off" in parsed["error"]
+
+
+def test_output_with_no_complete_finding_is_still_not_reviewed():
+    parsed = ReviewerAgent().parse_review_json('```json\n{"overall_score": 90, "findings": [{"id": "1", "sever')
+    assert parsed["overall_status"] == "NOT_REVIEWED" and parsed["findings"] == []
+
+
+def test_the_prompt_bounds_the_number_of_findings():
+    assert "at most 8 findings" in ReviewerAgent().system_prompt

@@ -1,7 +1,7 @@
 import json
 import re
 import logging
-from typing import Dict, Any, List
+from typing import Optional, Dict, Any, List
 from backend.agents.base_agent import BaseAgent
 from backend.quality.gates import (
     Finding,
@@ -40,6 +40,8 @@ Output ONLY valid JSON with this schema (the angle-bracket parts describe what t
   ]
 }
 Report only problems you can point to in the code you were given. An empty findings list is fine.
+Report at most 8 findings, the most severe first, one per distinct problem. Do not list generic advice (missing
+tests, documentation, logging) as findings, and do not report a problem the code already handles.
 """,
             task_name="reviewer",
         )
@@ -100,6 +102,36 @@ Report only problems you can point to in the code you were given. An empty findi
         _logger.info(f"ReviewerAgent analyzed {len(files_map)} file(s): overall_score={report.overall_score}, findings={len(findings)}")
         return report
 
+    @staticmethod
+    def _salvage_truncated(raw_output: str) -> Optional[Dict[str, Any]]:
+        """A review cut off by the output limit (the JSON never closes): the findings written out in full are kept,
+        the rest is lost, and the review says it was truncated. None when no complete finding is there."""
+        start = raw_output.find('"findings"')
+        if start < 0:
+            return None
+        bracket = raw_output.find("[", start)
+        if bracket < 0:
+            return None
+        decoder = json.JSONDecoder()
+        findings, pos = [], bracket + 1
+        while True:
+            nxt = raw_output.find("{", pos)
+            if nxt < 0:
+                break
+            try:
+                obj, end = decoder.raw_decode(raw_output, nxt)
+            except json.JSONDecodeError:
+                break                                   # the cut-off finding: everything after it is lost
+            if isinstance(obj, dict):
+                findings.append(obj)
+            pos = end
+        if not findings:
+            return None
+        score = re.search(r'"overall_score"\s*:\s*(\d+)', raw_output[:start])
+        return {"overall_score": int(score.group(1)) if score else None, "overall_status": "TRUNCATED", "gates": {},
+                "findings": findings, "truncated": True,
+                "error": "the review was cut off by the output limit; only the complete findings were kept"}
+
     def parse_review_json(self, raw_output: str) -> Dict[str, Any]:
         """
         Parses LLM review output into structured dictionary matching the findings and gates schema.
@@ -132,7 +164,9 @@ Report only problems you can point to in the code you were given. An empty findi
                         "findings": findings
                     }
         except Exception:
-            pass
+            salvaged = self._salvage_truncated(raw_output or "")
+            if salvaged:
+                return salvaged
 
         # No review could be read: nothing was reviewed, and nothing is reported as passing.
         return {"overall_score": None, "overall_status": "NOT_REVIEWED", "gates": {}, "findings": [],

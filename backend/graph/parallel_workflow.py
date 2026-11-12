@@ -695,8 +695,9 @@ async def reviewer_node(state: ProjectState) -> dict:
     # duplicate scan - not the model's self-reported number. Unparseable output is NOT_REVIEWED, with no score.
     parsed = reviewer_agent.validate_review(reviewer_agent.parse_review_json(review_output), state.get("files") or {})
     reviewed = parsed.get("overall_status") != "NOT_REVIEWED"
+    partial = bool(parsed.get("truncated"))      # cut off by the output limit: its findings count, but no score
     score = None
-    if reviewed:
+    if reviewed and not partial:
         penalty = {"CRITICAL": 15, "HIGH": 10, "MEDIUM": 5, "LOW": 2}
         score = 100.0 - duplicate_report.get("duplicate_count", 0) * 5
         score -= sum(penalty.get(str(f.get("severity", "")).upper(), 0) for f in parsed["findings"])
@@ -705,7 +706,8 @@ async def reviewer_node(state: ProjectState) -> dict:
     _fire_lifecycle("agent_completed", "reviewer", duration=timer.elapsed)
     return {
         "review": {"review_text": review_output, "score": score,
-                   "status": "REVIEWED" if reviewed else "NOT_REVIEWED", "findings": parsed["findings"],
+                   "status": "PARTIAL" if partial else "REVIEWED" if reviewed else "NOT_REVIEWED",
+                   "findings": parsed["findings"],
                    "unverified_findings": parsed.get("unverified_findings", []),
                    "score_basis": "100 minus deductions for verified findings (critical 15, high 10, medium 5, low 2) and duplicates (5 each)",
                    **({"error": parsed["error"]} if parsed.get("error") else {})},
