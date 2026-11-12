@@ -11,6 +11,9 @@ contain text aimed at the model ("ignore your instructions and ..."). Everything
 * **Delimiter escaping.** A passage cannot close the block early: the block's tags are neutralised inside passages.
 * **Flagging.** Passages that contain instruction-like text are marked ``flagged`` in the block, and ``scan`` returns
   what matched so the caller can tell the user that a document tried to give instructions.
+* **Removal.** The flagged sentences themselves are replaced by a ``[removed: ...]`` marker before the model sees them
+  (``redact``): a model told to ignore an instruction still follows it some of the time, so the instruction is not
+  shown at all. The rest of the passage, the information the user asked about, is kept.
 
 This reduces the risk; it does not remove it - a model can still be persuaded by data it reads. Nothing here gives
 retrieved text a way to call tools or change settings: the AI Chat runtime does not execute tools from model output.
@@ -56,6 +59,42 @@ def scan(text: str) -> List[str]:
     return [name for name, rx in _COMPILED if rx.search(text or "")]
 
 
+# Sentence-ish segments: a line, or a sentence within a line; fake role tags are removed with their content.
+_TAG_BLOCK = re.compile(r"<\s*(system|assistant|developer|instructions?)\s*>.*?<\s*/\s*\1\s*>|<!--.*?-->",
+                        re.IGNORECASE | re.DOTALL)
+REMOVED = "[removed: instruction-like text]"
+_PARAGRAPH = re.compile(r"(\n\s*\n)")
+# where a sentence starts: after . ! ? followed by whitespace, or after a line break (not inside URLs like a.example/b)
+_SENTENCE_END = re.compile(r"[.!?](?=\s)|\n")
+
+
+def _first_match(text: str) -> int:
+    hits = [m.start() for _, rx in _COMPILED for m in [rx.search(text)] if m]
+    return min(hits) if hits else -1
+
+
+def redact(text: str) -> str:
+    """The passage with instruction-like text removed: fake role tags and HTML comments that contain such text are
+    dropped whole; in any other paragraph, everything from the start of the first instruction-like sentence to the end
+    of the paragraph is replaced by a marker (the instruction usually continues past its trigger phrase), and the
+    sentences before it - the information - are kept."""
+    def drop_block(m: "re.Match[str]") -> str:
+        return REMOVED if scan(m.group(0)) else m.group(0)
+    text = _TAG_BLOCK.sub(drop_block, text or "")
+    parts = _PARAGRAPH.split(text)
+    for i in range(0, len(parts), 2):                 # even indexes are paragraphs, odd ones the blank-line separators
+        para = parts[i]
+        pos = _first_match(para.replace(REMOVED, " " * len(REMOVED)))
+        if pos < 0:
+            continue
+        cut = 0
+        for m in _SENTENCE_END.finditer(para, 0, pos):
+            cut = m.end()
+        kept = para[:cut].rstrip()
+        parts[i] = (kept + " " if kept else "") + REMOVED
+    return "".join(parts)
+
+
 def _neutralise(text: str) -> str:
     return _WRAPPER_TAG.sub(lambda m: f"<{m.group(1)}{m.group(2)}_quoted", text or "")
 
@@ -64,8 +103,9 @@ def _attr(value: str) -> str:
     return re.sub(r'["<>\n\r]', " ", str(value or ""))[:200]
 
 
-def wrap_untrusted(passages: Sequence[Passage], purpose: str = "") -> str:
-    """The delimited block for retrieved passages (empty string when there are none)."""
+def wrap_untrusted(passages: Sequence[Passage], purpose: str = "", remove_flagged: bool = True) -> str:
+    """The delimited block for retrieved passages (empty string when there are none). With ``remove_flagged`` (the
+    default) instruction-like sentences are replaced by a marker; ``False`` only delimits and flags them."""
     if not passages:
         return ""
     purpose_attr = ' purpose="%s"' % _attr(purpose) if purpose else ""
@@ -74,7 +114,7 @@ def wrap_untrusted(passages: Sequence[Passage], purpose: str = "") -> str:
         found = scan(p.text)
         flag = f' flagged="instruction-like text: {", ".join(found)}"' if found else ""
         lines.append(f'<document id="{_attr(p.label or f"S{i}")}" source="{_attr(p.source)}"{flag}>')
-        lines.append(_neutralise(p.text))
+        lines.append(_neutralise(redact(p.text) if (found and remove_flagged) else p.text))
         lines.append("</document>")
     lines.append("</untrusted_documents>")
     return "\n".join(lines)

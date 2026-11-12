@@ -312,16 +312,23 @@ async def run_reviewer_eval(review_fn: Optional[ReviewFn] = None, out_dir: Optio
 
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m benchmarks.reviewer_eval")
-    ap.add_argument("--model", help="model for the reviewer, e.g. qwen2.5-coder:7b")
+    ap.add_argument("--model", help="local model for the reviewer, e.g. qwen2.5-coder:7b")
+    ap.add_argument("--groq", action="store_true", help="review with the Groq model (needs GROQ_API_KEY)")
     ap.add_argument("--out", default=str(REPO_ROOT / "benchmarks" / "runs" / "reviewer"))
     args = ap.parse_args(argv)
     if args.model:
         os.environ["AIFORGE_CODING_MODEL"] = os.environ["AIFORGE_GENERAL_MODEL"] = args.model
+    from backend.services import groq_provider
+    os.environ["AIFORGE_GROQ_TASKS"] = "reviewer" if args.groq else ""
+    if args.groq and not groq_provider.status()["enabled"]:
+        raise SystemExit("--groq needs GROQ_API_KEY")
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    res = asyncio.run(run_reviewer_eval(out_dir=Path(args.out) / stamp))
+    res = asyncio.run(run_reviewer_eval(out_dir=Path(args.out) / (stamp + ("_groq" if args.groq else "_local"))))
+    res_model = f"groq:{groq_provider.model()}" if args.groq else (args.model or "router default (local)")
+    print(f"reviewer model: {res_model}")
     s = res["summary"]
     print(f"recall {s['detected']}/{s['buggy_cases']} | false alarms {s['false_alarms']}/{s['clean_cases']}"
-          f"{'' if res['valid'] else '  (INVALID: LLM fallbacks occurred)'}")
+          f"{'' if res['valid'] else '  (INVALID: a model call failed or Groq fell back to the local model)'}")
     return 0
 
 
