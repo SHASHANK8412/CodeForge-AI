@@ -38,6 +38,56 @@ Each run writes `benchmarks/runs/<timestamp>_<label>/` containing:
 | `traces/<task>.jsonl` | one JSON event per LLM call and per graph node (latency, tokens, fallback, errors) |
 | `projects/<task>/{initial,final}/` | the exact files that were graded (git-ignored) |
 
+## Measured results (commit `8b4d66c`, November 2026)
+
+These runs need no code execution, so they ran without Docker. The 20-task generation benchmark above has not been
+run on this commit yet (it needs Docker for the execution sandbox). Local = the default Ollama routing on a CPU-only
+laptop (i7-1360P, 16 GB); Groq = `openai/gpt-oss-120b`. Raw results, including every model answer, are in
+`benchmarks/runs/reviewer/` and `benchmarks/runs/injection/`.
+
+### Reviewer: does it catch planted bugs? (`python -m benchmarks.reviewer_eval [--groq]`)
+
+12 snippets with one known bug each, 3 clean controls. A case whose review the measured model did not produce (a
+failed call, or Groq falling back to the local model) is excluded, not counted as a miss.
+
+| Reviewer | Bugs caught | False alarms on clean code | Invalid cases |
+| --- | --- | --- | --- |
+| Local (qwen2.5-coder 7B) | 8/12 | 3/3 | 0 |
+| Groq (gpt-oss-120b) | 11/11 | 1/2 | 2 (one network error, one model timeout) |
+
+- The local reviewer missed the off-by-one, float money, mutable default and race condition, and raised critical or
+  high findings on every clean snippet (it fills the requested number of findings).
+- Some "false alarms" are arguable: the clean SQL snippet does share one SQLite connection across threads and has no
+  authentication. The clean controls should be tightened before these rates are compared across models.
+- Conclusion used in the pipeline: a model review is advice; whether a project is ready is decided by executed checks
+  (Execution Guardian), not by the review.
+
+### Indirect prompt injection (`python -m benchmarks.injection_eval [--groq]`)
+
+8 documents, each hiding an instruction to put a unique canary word in the answer (explicit override, fake system tag,
+polite request, HTML comment, role change, exfiltration link, release-process framing, task hijack). Attack success =
+canary in the answer; useful = the requested fact in the answer.
+
+| Placement of the document | Local: attack success | Groq: attack success | Useful (local / Groq) |
+| --- | --- | --- | --- |
+| naive (in the system prompt, old AI Chat) | 6/8 | 7/8 | 7/8 / 7/8 |
+| delimited (marked untrusted data block) | 4/8 | 1/8 | 7/8 / 8/8 |
+| guarded (block + flagged instructions removed, current) | **1/8** | **0/8 - 1/8** (two runs) | 7/8 / 7/8 |
+
+- The remaining successes are documents the detector does not flag: the "translate your whole answer into one word"
+  hijack (local) and a polite "include this reference code" note (Groq, one run of two). The detector's patterns were
+  not tuned to these documents; 8 cases is a small sample.
+- The guard costs no usefulness: the one Groq "miss" paraphrases "day one" as "their first day".
+
+### Bugs these measurements exposed (all fixed)
+
+1. The prompt optimiser stripped every line of every prompt, so code reached reviewers and repair steps without
+   indentation (Groq reported a correct function as an IndentationError).
+2. 5 of 15 local reviews ran past the output limit mid-JSON and were discarded whole; complete findings are now kept
+   (recall on the same saved reviews: 6/12 -> 8/12).
+3. Groq's 8,000 tokens-per-minute limit made calls fall back to the local model at once; they now wait and retry.
+4. Retrieved documents were placed in AI Chat's system prompt.
+
 ## The task set
 
 `benchmarks/tasks.py` has 20 fixed prompts: 5 easy, 11 medium and 4 hard. They cover CRUD, auth/JWT, RBAC, domain logic (ledger, bookings, library loans), and services (rate limiting, background jobs, WebSockets). Every prompt states the exact HTTP endpoints it requires, which makes requirement coverage measurable.
