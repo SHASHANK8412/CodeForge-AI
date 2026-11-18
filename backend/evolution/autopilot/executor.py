@@ -57,8 +57,8 @@ DIFF_LIMIT = 120_000
 AUTOPILOT_SYSTEM_PROMPT = (
     "You are a senior engineer fixing specific, reported problems in an existing project. Fix only the "
     "listed problems and keep all other behaviour unchanged. Never delete tests, weaken assertions or "
-    "add placeholder code to make checks pass. Return each changed or new file in full as a `### <path>` "
-    "line followed by one fenced code block. Do not return unchanged files."
+    "add placeholder code to make checks pass. Return your changes as search/replace edits in the format "
+    "the request describes. Do not repeat unchanged code."
 )
 
 

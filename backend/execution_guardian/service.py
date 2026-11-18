@@ -224,7 +224,7 @@ class ExecutionGuardian:
             ra = RepairAttempt(attempt=attempt, failure_ids=[f.id for f in group], agent=agent, strategy="", before=before)
             try:
                 strategy, changes, note = rep.propose(group, agent, ws, stack, project_id, self.generate,
-                                                      v.settings.get("requirements", ""))
+                                                      v.settings.get("requirements", ""), memory_user=v.user_id)
             except Exception as e:  # noqa: BLE001 - a failed proposal is a recorded, unproductive attempt
                 strategy, changes, note = f"model:{agent}", {}, redact(f"{type(e).__name__}: {e}", 300)
             ra.strategy = strategy or "none"
@@ -269,6 +269,15 @@ class ExecutionGuardian:
             else:
                 ra.outcome = ("resolved" if not (group_sigs & after_sigs) and not ra.new_failures
                               else "improved" if ra.resolved else "no_change")
+                if ra.outcome == "resolved":
+                    # verified by the re-run checks: remembered for this user's future repairs
+                    try:
+                        from backend.repair.fix_memory import global_fix_memory
+                        global_fix_memory.record(v.user_id, project_id,
+                                                 "\n".join(f.log_excerpt or f.summary for f in group), ra.strategy,
+                                                 backup, accepted, source="execution_guardian")
+                    except Exception as e:  # noqa: BLE001 - memory is an aid; it never fails a verification
+                        _logger.warning("Could not remember the verified fix: %s", e)
                 exhausted |= group_sigs & after_sigs      # a failure that survived its repair is not attempted again
                 self._save(project_id, vid, checks=checks, failures=failures)
             ra.finished_at = now_iso()

@@ -1124,6 +1124,35 @@ from backend.quality.gates import evaluate_quality_gates, GateStatus
 MAX_REPAIR_ATTEMPTS = int(os.getenv("MAX_REPAIR_ATTEMPTS", 3))
 
 
+def _owner_of(state: dict) -> Optional[str]:
+    """The user who owns this generation (fix memory is per user); None when unknown."""
+    gen_id = state.get("generation_id")
+    if not gen_id:
+        return None
+    try:
+        from backend.generation.store import global_generation_store
+        return (global_generation_store.get(gen_id) or {}).get("user_id")
+    except Exception:  # noqa: BLE001 - no owner: nothing is remembered
+        return None
+
+
+def _record_verified_fix(state: dict) -> Optional[str]:
+    """After a debug-loop patch, the project's tests passed: remember the fix (backend/repair/fix_memory.py)."""
+    applied = state.get("applied_fix") or {}
+    fixes = state.get("fixes") or []
+    backups = state.get("file_backups") or {}
+    files = state.get("files") or {}
+    if not applied.get("files_modified") or not fixes:
+        return None
+    from backend.repair.fix_memory import global_fix_memory
+    changed = {p: files.get(p) for p in applied["files_modified"]}
+    return global_fix_memory.record(
+        _owner_of(state), str(state.get("project_id") or state.get("project_name") or ""),
+        str(fixes[-1].get("error_text") or fixes[-1].get("root_cause") or ""),
+        str(fixes[-1].get("strategy") or applied.get("category") or "repair"),
+        {p: backups.get(p) for p in changed}, changed, source="debug_loop")
+
+
 async def debug_node(state: ProjectState) -> dict:
     _logger.info("✔ [12/14] Diagnostic Agent analyzing failure evidence & root causes...")
     _fire_lifecycle("agent_started", "debug")
@@ -1164,7 +1193,10 @@ async def debug_node(state: ProjectState) -> dict:
     )
 
     # May call the coding model (LLM rewrite fallback): keep it off the event loop.
-    debug_res = await asyncio.to_thread(global_debug_agent.diagnose_and_repair, {**dict(state), "execution_results": exec_res})
+    owner = _owner_of(state)
+    error_text = "\n".join(x for x in (exec_res.get("stderr"), exec_res.get("stdout")) if x)[-3000:]
+    debug_res = await asyncio.to_thread(global_debug_agent.diagnose_and_repair,
+                                        {**dict(state), "execution_results": exec_res, "fix_memory_user": owner})
     routed_agent = None
     if guardian_failures:
         from backend.execution_guardian import repair as guardian_repair
@@ -1181,7 +1213,7 @@ async def debug_node(state: ProjectState) -> dict:
             strategy, changes, note = await asyncio.to_thread(
                 guardian_repair.propose, group, routed_agent, Path(proj), verification.get("stack") or {},
                 str(state.get("project_id") or state.get("project_name") or "default_project"),
-                global_execution_guardian.generate, str(state.get("prompt", ""))[:1500])
+                global_execution_guardian.generate, str(state.get("prompt", ""))[:1500], memory_user=owner)
             accepted, rejected = guardian_repair.validate(changes, routed_agent, verification.get("stack") or {}, Path(proj),
                                                           sorted({x for f in group for x in f.files}))
             if accepted:
@@ -1219,7 +1251,10 @@ async def debug_node(state: ProjectState) -> dict:
         "diagnostic_result": diag_dict,
         "debug_analysis": debug_res.explanation,
         "proposed_fix": debug_res.model_dump(),
-        "fixes": fixes + [debug_res.model_dump()],
+        # error_text: the failure this fix addresses, kept so a verified fix can be remembered under its signature
+        "fixes": fixes + [{**debug_res.model_dump(), "error_text": error_text,
+                           "strategy": (debug_res.root_cause.split("Repair strategy: ")[-1].rstrip(".")
+                                        if "Repair strategy: " in debug_res.root_cause else debug_res.error_type)}],
         "errors": existing_errors + [debug_res.root_cause],
         "root_causes": existing_causes + [debug_res.root_cause],
         "repair_status": f"DIAGNOSED_CYCLE_{cycle}",
@@ -1432,8 +1467,19 @@ async def execution_guardian_node(state: ProjectState) -> dict:
     for c in summary["checks"]:
         counts[c["status"]] = counts.get(c["status"], 0) + 1
     _record_metrics(state, verification_status=summary["status"])
+    # A debug-loop patch followed by passing project tests (and no Guardian failure) is a verified fix: remembered once.
+    remembered = {}
+    cycle = (state.get("applied_fix") or {}).get("cycle")
+    if (cycle and state.get("fix_recorded_cycle") != cycle and summary["status"] != "FAILED"
+            and (state.get("test_results") or {}).get("success") is True):
+        try:
+            if _record_verified_fix(state):
+                remembered = {"fix_recorded_cycle": cycle}
+        except Exception as e:  # noqa: BLE001 - memory is an aid; it never fails a run
+            _logger.warning("Could not remember the verified fix: %s", e)
     _fire_lifecycle("agent_completed", "execution_guardian", duration=timer.elapsed)
     return {
+        **remembered,
         "verification": summary,
         "verification_history": history,
         "current_step": "execution_guardian",

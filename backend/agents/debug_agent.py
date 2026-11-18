@@ -276,7 +276,8 @@ class DebugAgent(BaseAgent):
             str(f.get("error") or f.get("message") or "") if isinstance(f, dict) else str(f)
             for f in list(failures) + list(failed_tests)
         )
-        strategy, raw_changes = propose_repairs(files, f"{combined_output}\n{failure_text}", gate_errors)
+        strategy, raw_changes = propose_repairs(files, f"{combined_output}\n{failure_text}", gate_errors,
+                                                memory_user=state.get("fix_memory_user"))
         for rel, content in raw_changes.items():
             clean_rel = rel.replace("\\", "/").lstrip("/")
             if ".." in clean_rel:
@@ -306,7 +307,7 @@ class DebugAgent(BaseAgent):
             error_type=error_type,
             files_to_modify=safe_files_to_modify,
             changes=proposed_changes,
-            confidence=(0.95 if strategy != "llm_rewrite_file" else 0.6) if proposed_changes else 0.0,
+            confidence=(0.6 if strategy.startswith("llm_") else 0.95) if proposed_changes else 0.0,
             explanation=six_point_explanation
         )
 

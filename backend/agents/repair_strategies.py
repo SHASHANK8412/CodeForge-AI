@@ -213,43 +213,85 @@ def _implicated_file(files: Dict[str, str], output: str, errors: List[Dict[str, 
     return None
 
 
-def llm_rewrite_file(files: Dict[str, str], output: str, errors: List[Dict[str, Any]]) -> Dict[str, str]:
-    """Ask the coding model for a corrected version of the single most implicated file."""
-    if os.environ.get("AIFORGE_LLM_REPAIR", "1").strip().lower() in ("0", "false", "no"):
-        return {}
-    rel = _implicated_file(files, output, errors)
-    if not rel:
-        return {}
-    original = files[rel]
-    error_text = "\n".join(f"{e.get('file')}:{e.get('line')}: {e.get('message')}" for e in (errors or [])[:20])
-    prompt = (
-        f"The file `{rel}` in a generated project fails. Errors:\n{error_text}\n\n"
-        f"Test/runtime output (tail):\n{output[-3000:]}\n\n"
-        f"Current contents of `{rel}`:\n```\n{original}\n```\n\n"
-        "Return the complete corrected file in a single fenced code block and nothing else. "
-        "Fix only what the errors require; keep everything else unchanged."
-    )
-    try:
-        from backend.services.llm import generate_text
-        reply = generate_text("You are a precise senior engineer fixing a bug in one file.", prompt, task="debugging")
-    except Exception as e:  # noqa: BLE001 - model unavailable: no fix rather than a broken one
-        _logger.warning("LLM repair unavailable for %s: %s", rel, e)
-        return {}
-    m = re.search(r"```[a-zA-Z0-9]*\n(.*?)```", reply, re.S)
-    fixed = (m.group(1) if m else "").rstrip() + "\n"
-    if not fixed.strip() or fixed.strip() == original.strip():
-        return {}
+def _acceptable(rel: str, original: str, fixed: str) -> bool:
+    """A model's version of one file is used only if it parses and adds no blocking lint issue."""
+    if not fixed.strip() or fixed.strip() == (original or "").strip():
+        return False
     if rel.endswith(".py"):
         try:
             ast.parse(fixed)
         except SyntaxError:
             _logger.warning("LLM repair for %s did not parse; discarded", rel)
-            return {}
-        before, after = _blocking_issue_count(original), _blocking_issue_count(fixed)
+            return False
+        before, after = _blocking_issue_count(original or ""), _blocking_issue_count(fixed)
         if after is not None and before is not None and after > before:
             _logger.warning("LLM repair for %s added blocking issues (%s -> %s); discarded", rel, before, after)
-            return {}
-    return {rel: fixed}
+            return False
+    return True
+
+
+def _is_test_path(rel: str) -> bool:
+    name = rel.rsplit("/", 1)[-1]
+    return name.startswith("test_") or name.endswith("_test.py") or rel.startswith("tests/")
+
+
+def llm_repair(files: Dict[str, str], output: str, errors: List[Dict[str, Any]],
+               memory_user: Optional[str] = None) -> Tuple[str, Dict[str, str]]:
+    """
+    Ask the coding model to repair the failure with search/replace edits (backend/repair/edits.py), showing it the
+    files the failure involves (backend/repair/context.py) and this user's verified fixes for similar errors
+    (backend/repair/fix_memory.py). Edits that do not apply get one retry with the reason; a reply that is a whole
+    file for the implicated path is still accepted (strategy ``llm_rewrite_file``). Test files are never changed.
+    Returns (strategy, {path: new content}); empty when there is no acceptable change.
+    """
+    if os.environ.get("AIFORGE_LLM_REPAIR", "1").strip().lower() in ("0", "false", "no"):
+        return "none", {}
+    rel = _implicated_file(files, output, errors)
+    if not rel:
+        return "none", {}
+    from backend.repair.context import build_repair_context
+    from backend.repair.edits import INSTRUCTIONS, apply_edits, feedback, parse_edits
+    from backend.repair.fix_memory import global_fix_memory, hint_text
+    error_text = "\n".join(f"{e.get('file')}:{e.get('line')}: {e.get('message')}" for e in (errors or [])[:20])
+    ctx = build_repair_context(files, output, errors, extra=[rel])
+    hints = global_fix_memory.lookup(memory_user, f"{output}\n{error_text}")
+    global_fix_memory.mark_suggested([h["id"] for h in hints])
+    prompt = (
+        f"A generated project fails. Errors:\n{error_text or '(none from the linter)'}\n\n"
+        f"Test/runtime output (tail):\n{output[-3000:]}\n\n"
+        f"The file most implicated is `{rel}`. Files involved in the failure:\n\n{ctx.text}\n\n"
+        + (hint_text(hints) + "\n\n" if hints else "")
+        + INSTRUCTIONS + "\nFix only what the errors require. Test files are the specification: never change them."
+    )
+    system = "You are a precise senior engineer fixing a bug in a project."
+    try:
+        from backend.services.llm import generate_text
+        reply = generate_text(system, prompt, task="debugging")
+        edits = [e for e in parse_edits(reply) if not _is_test_path(e.path)]
+        if edits:
+            result = apply_edits(files, edits)
+            if result.errors:
+                retry = generate_text(system, f"{prompt}\n\nYour previous reply:\n{reply}\n\n{feedback(result)}",
+                                      task="debugging")
+                again = [e for e in parse_edits(retry) if not _is_test_path(e.path)]
+                if again:
+                    result = apply_edits(files, again)
+            changed = {p: c for p, c in result.changed.items() if _acceptable(p, files.get(p, ""), c)}
+            if changed and len(changed) == len(result.changed):
+                return "llm_search_replace", changed
+            return "none", {}
+    except Exception as e:  # noqa: BLE001 - model unavailable: no fix rather than a broken one
+        _logger.warning("LLM repair unavailable for %s: %s", rel, e)
+        return "none", {}
+    # No edit blocks: the reply may still be the corrected file in one fenced block (the older format).
+    m = re.search(r"```[a-zA-Z0-9]*\n(.*?)```", reply, re.S)
+    fixed = (m.group(1) if m else "").rstrip() + "\n"
+    return ("llm_rewrite_file", {rel: fixed}) if _acceptable(rel, files[rel], fixed) else ("none", {})
+
+
+def llm_rewrite_file(files: Dict[str, str], output: str, errors: List[Dict[str, Any]]) -> Dict[str, str]:
+    """The model's repair as {path: content} (kept for callers of the older name)."""
+    return llm_repair(files, output, errors)[1]
 
 
 def _blocking_issue_count(source: str) -> Optional[int]:
@@ -270,17 +312,20 @@ def _blocking_issue_count(source: str) -> Optional[int]:
             return None
 
 
-def propose_repairs(files: Dict[str, str], output: str, errors: List[Dict[str, Any]]) -> Tuple[str, Dict[str, Optional[str]]]:
-    """(strategy name, {file: new content, or None to delete}); empty when nothing applicable was found."""
+def propose_repairs(files: Dict[str, str], output: str, errors: List[Dict[str, Any]],
+                    memory_user: Optional[str] = None) -> Tuple[str, Dict[str, Optional[str]]]:
+    """(strategy name, {file: new content, or None to delete}); empty when nothing applicable was found.
+    Deterministic strategies first; then the model (search/replace edits, see llm_repair)."""
     for name, strategy in (
         ("add_missing_imports", lambda: fix_undefined_names(files, errors, output)),
         ("merge_shadowed_module", lambda: fix_shadowed_module(files, errors)),
         ("fix_misplaced_imports", lambda: fix_misplaced_imports(files, errors)),
         ("add_missing_requirements", lambda: fix_missing_modules(files, output)),
         ("fix_literal_assertion", lambda: fix_literal_assertion(files, output)),
-        ("llm_rewrite_file", lambda: llm_rewrite_file(files, output, errors)),
     ):
         changes = {k: v for k, v in strategy().items() if v != files.get(k)}
         if changes:
             return name, changes
-    return "none", {}
+    name, changes = llm_repair(files, output, errors, memory_user)
+    changes = {k: v for k, v in changes.items() if v != files.get(k)}
+    return (name, changes) if changes else ("none", {})

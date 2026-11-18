@@ -38,6 +38,13 @@ def _no_groq(monkeypatch, tmp_path_factory):
 
 
 @pytest.fixture(autouse=True)
+def _isolated_fix_memory(tmp_path_factory, monkeypatch):
+    """Verified fixes recorded by tests go to a temp file, never backend/data/fix_memory.json."""
+    from backend.repair.fix_memory import global_fix_memory
+    monkeypatch.setattr(global_fix_memory, "path", tmp_path_factory.mktemp("fix_memory") / "fix_memory.json")
+
+
+@pytest.fixture(autouse=True)
 def _local_test_sandbox(monkeypatch):
     """Generated-project tests run locally unless a test opts into the Docker sandbox."""
     monkeypatch.setenv("AIFORGE_TEST_SANDBOX", "local")

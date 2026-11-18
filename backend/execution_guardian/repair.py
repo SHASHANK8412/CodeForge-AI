@@ -118,8 +118,11 @@ def _unpin(files: Dict[str, str], output: str) -> Dict[str, Optional[str]]:
 
 
 def propose(failures: List[Failure], agent: str, workspace: Path, stack: Dict[str, Any], project_id: str,
-            generate: Optional[Callable[[str, str], str]], requirements: str = "") -> Tuple[str, Dict[str, Optional[str]], str]:
-    """(strategy, changes, note) for one group of failures routed to `agent`."""
+            generate: Optional[Callable[[str, str], str]], requirements: str = "",
+            memory_user: Optional[str] = None) -> Tuple[str, Dict[str, Optional[str]], str]:
+    """(strategy, changes, note) for one group of failures routed to `agent`. The model is shown the files the
+    failure involves (backend/repair/context.py) and the user's verified fixes for similar errors
+    (backend/repair/fix_memory.py)."""
     from backend.routes.export import _read_project_dir
     files = _read_project_dir(workspace)
     output = "\n".join(f.log_excerpt or f.summary for f in failures)
@@ -150,13 +153,20 @@ def propose(failures: List[Failure], agent: str, workspace: Path, stack: Dict[st
     if not allowed:
         return "", {}, f"no file in the {agent} agent's scope to repair"
     tests = [f for f in failure_files if is_test(f) and f in files]
+    from backend.repair.context import build_repair_context
+    from backend.repair.fix_memory import global_fix_memory, hint_text
+    related = [p for p in build_repair_context(files, output, errors, extra=allowed).paths
+               if p not in allowed and p not in tests][:4]
+    hints = global_fix_memory.lookup(memory_user, output)
+    global_fix_memory.mark_suggested([h["id"] for h in hints])
     request = ("Repair the verification failure(s) below by changing the implementation (tests are the "
                "specification and must not change).\n" + "\n".join(
                    f"- [{f.category}] {f.summary}\n  next action: {f.next_action}\n  failing tests: {', '.join(f.failing_tests) or '-'}\n"
                    f"  log excerpt:\n{(f.log_excerpt or '')[-1200:]}" for f in failures)
-               + (f"\n\nProject requirements:\n{requirements[:1500]}" if requirements else ""))
+               + (f"\n\nProject requirements:\n{requirements[:1500]}" if requirements else "")
+               + (f"\n\n{hint_text(hints)}" if hints else ""))
     try:
-        changes = model_changes(workspace, project_id, allowed, tests, request, generate, topic=failures[0].summary,
+        changes = model_changes(workspace, project_id, allowed, tests + related, request, generate, topic=failures[0].summary,
                                 system_prompt=agent_prompt(agent))
     except HiddenLineChanged as e:
         return f"model:{agent}", {}, f"rejected: the model altered a hidden secret line ({e})"

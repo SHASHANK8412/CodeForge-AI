@@ -10,6 +10,14 @@ All notable changes to the AIForge platform are documented in this file.
 - **Integration & Compatibility Engine**: versioned shared contracts derived from the architecture, deterministic
   frontend/backend/database compatibility analysis, contract tests generated and executed in isolation, contract
   drift detection, bounded repairs routed to the responsible agent.
+- **Precise repairs**: model repairs (debug loop, Execution Guardian, project editor, Autopilot) ask for search/replace
+  edits; an edit must match exactly one place in the file (tolerating trailing whitespace and a uniform indentation
+  offset) or it is refused with the reason and retried once. Replies with whole files are still accepted.
+- **Repo-aware repair context**: a repair is shown the files the failure involves - traceback files, the files defining
+  the symbols named in the error, files the failing module imports, and the failing tests - full or summarised to
+  signatures within a budget, instead of only the failing file.
+- **Memory of verified fixes**: a repair is remembered only after the re-run checks or the project's tests pass, per
+  user (`backend/data/fix_memory.json`); later repairs of a similar error are shown up to three of that user's fixes.
 - **CI**: GitHub Actions workflow (backend lint + deterministic test suites, frontend lint + build).
 
 ### Security

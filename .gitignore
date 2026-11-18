@@ -48,6 +48,8 @@ backend/data/evolution_engine/
 backend/data/time_machine/
 backend/data/swarm/
 backend/data/reality/
+# Verified fixes remembered per user (contain diffs of users' code)
+backend/data/fix_memory.json
 
 # Local verifiable-records signing key (generated on first use; never committed)
 backend/data/verifiable_ledger/signing.key

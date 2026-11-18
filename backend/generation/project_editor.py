@@ -25,8 +25,8 @@ MAX_CONTEXT_CHARS = 12_000
 
 SYSTEM_PROMPT = (
     "You are a senior engineer making a focused change to an existing project. Change only what "
-    "the request needs and keep everything else as it is. Return each changed or new file in "
-    "full as a `### <path>` line followed by one fenced code block. Do not return unchanged files. "
+    "the request needs and keep everything else as it is. Return your changes as search/replace "
+    "edits in the format the request describes. Do not repeat unchanged code. "
     "Only import modules that exist in the project or that you add."
 )
 
@@ -145,9 +145,22 @@ def propose_changes(project: Path, request: str, files: Dict[str, str], context:
 
         def generate(system, user):
             return generate_text(system, user, task="coding")
+    # Search/replace edits (backend/repair/edits.py): edits that do not apply get one retry with the reason; a reply
+    # without edit blocks is read as whole files (the older format).
+    from backend.repair.edits import INSTRUCTIONS, apply_edits, feedback, parse_edits
+    prompt = f"{prompt}\n\n{INSTRUCTIONS}"
     reply = generate(system_prompt, prompt)
-
-    changes = {p.replace("\\", "/").lstrip("/"): c for p, c in extract_files_from_agent_output(reply).items()}
+    edits = parse_edits(reply)
+    if edits:
+        result = apply_edits(files, edits)
+        if result.errors:
+            retry = parse_edits(generate(system_prompt, f"{prompt}\n\nYour previous reply:\n{reply}\n\n{feedback(result)}"))
+            if retry:
+                result = apply_edits(files, retry)
+        changes = dict(result.changed)
+    else:
+        changes = extract_files_from_agent_output(reply)
+    changes = {p.replace("\\", "/").lstrip("/"): c for p, c in changes.items()}
     changes = {p: c for p, c in changes.items() if files.get(p) != c}
     rejected = _validate_paths(project, changes)
     return {p: c for p, c in changes.items() if p not in rejected}, rejected
