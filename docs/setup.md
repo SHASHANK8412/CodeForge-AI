@@ -3,9 +3,9 @@
 ## Requirements
 
 - Python 3.13, Node.js 20.19+ (or 22.12+)
-- [Ollama](https://ollama.com) with at least one chat model. The default is Qwen 3.5 9B, used for every task
-  when installed: `ollama pull qwen3.5:9b` (6.6 GB; runs on a 16 GB CPU-only laptop). Hosted Qwen 3.8 27B on Groq
-  (`GROQ_API_KEY`) answers first when a key is set, with the local model as the fallback.
+- [Ollama](https://ollama.com) with at least one chat model. On a 16 GB CPU-only laptop: `ollama pull qwen3.5:9b`
+  (6.6 GB; planning, review, debugging, chat) and `ollama pull qwen2.5-coder` (4.7 GB; architecture, code, tests).
+  Everything runs locally by default; a hosted model on Groq is optional (`GROQ_API_KEY` + `AIFORGE_GROQ_TASKS`).
 - Optional: Docker Desktop, for the test sandbox and the Docker stack.
 
 ## Local

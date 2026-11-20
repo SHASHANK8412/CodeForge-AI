@@ -30,9 +30,11 @@ def _reply(content="def add(a, b):\n    return a + b\n", status=200, model="open
 
 @pytest.fixture
 def groq_on(monkeypatch, tmp_path):
+    """A key and every task opted in (Groq is off by default: see test_groq_is_opt_in)."""
     monkeypatch.setenv("GROQ_API_KEY", KEY)
-    for var in ("AIFORGE_GROQ_MODEL", "AIFORGE_GROQ_TASKS", "AIFORGE_GROQ_REASONING_EFFORT"):
+    for var in ("AIFORGE_GROQ_MODEL", "AIFORGE_GROQ_REASONING_EFFORT"):
         monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("AIFORGE_GROQ_TASKS", "all")
     monkeypatch.setattr(llm, "_get_cached_response", lambda key: None)
     monkeypatch.setattr(llm, "_set_cached_response", lambda key, value: None)
 
@@ -77,7 +79,15 @@ def test_coding_agents_are_answered_by_groq(groq_on, monkeypatch):
     assert sent["reasoning_format"] == "hidden" and sent["reasoning_effort"] == "default"
 
 
-def test_every_feature_uses_groq_by_default(groq_on, monkeypatch):
+def test_groq_is_opt_in(monkeypatch):
+    """A key alone sends nothing to Groq: local models are the default."""
+    monkeypatch.setenv("GROQ_API_KEY", KEY)
+    monkeypatch.delenv("AIFORGE_GROQ_TASKS", raising=False)
+    assert not groq.handles("backend") and not groq.handles("planner")
+    assert groq.status()["tasks"] == []
+
+
+def test_every_feature_uses_groq_when_opted_in_with_all(groq_on, monkeypatch):
     handler = _reply(content="ok")
     _route(monkeypatch, handler)
     local = _local(monkeypatch)

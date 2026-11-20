@@ -10,9 +10,13 @@ All notable changes to the AIForge platform are documented in this file.
 - **Integration & Compatibility Engine**: versioned shared contracts derived from the architecture, deterministic
   frontend/backend/database compatibility analysis, contract tests generated and executed in isolation, contract
   drift detection, bounded repairs routed to the responsible agent.
-- **Qwen 3.5 9B is the default local model** (`AIFORGE_LOCAL_MODEL`, `ollama pull qwen3.5:9b`): when installed it
-  answers every task, with the older installed models as fallbacks; with a Groq key, Qwen 3.8 27B on Groq answers
-  first. Qwen 3.x thinking is off locally (it multiplies CPU time per answer) and any inline thinking is removed
+- **Local models by default, Groq opt-in**: everything runs on local models unless `AIFORGE_GROQ_TASKS` names tasks.
+  Qwen 3.5 9B (`AIFORGE_LOCAL_MODEL`) answers short-output work (planning, review, debugging, chat); long outputs
+  (architecture, code, tests, docs) stay on the faster Qwen 2.5 models (`AIFORGE_LOCAL_MODEL_SCOPE=all` changes that).
+- **Fixed: code agents were routed as general chat**: the frontend, backend and database agents fell through to the
+  GENERAL profile - the general model and a 1,500-token cap for whole source files - instead of CODING (coder model,
+  2,500 tokens). Documentation and review were misrouted the same way.
+- **Fixed: Ollama connections gave up at 480 s** whatever `AIFORGE_LLM_TIMEOUT_SECONDS` said (default 900 s). Qwen 3.x thinking is off locally (it multiplies CPU time per answer) and any inline thinking is removed
   before an answer reaches the agents.
 - **Local Hugging Face models** (`backend/ml/local_models.py`, CPU, loaded on first use from the local cache):
   - a prompt-injection classifier (`protectai/deberta-v3-base-prompt-injection-v2`) alongside the patterns: in the

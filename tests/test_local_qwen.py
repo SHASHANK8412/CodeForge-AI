@@ -19,13 +19,31 @@ def installed(monkeypatch):
     return use
 
 
-@pytest.mark.parametrize("task,agent", [("CODING", "coding"), ("general", "general"), ("DEBUGGING", "debug"),
-                                        ("PROJECT_GENERATION", "planner"), ("PROJECT_GENERATION", "reviewer"),
-                                        ("RAG", "rag")])
-def test_qwen_3_5_answers_every_task_when_installed(installed, task, agent):
+@pytest.mark.parametrize("task,agent", [("general", "general"), ("DEBUGGING", "debug"), ("planner", "planner"),
+                                        ("reviewer", "reviewer"), ("RAG", "rag"), ("explanation", "explanation")])
+def test_qwen_3_5_answers_short_output_work(installed, task, agent):
     sel = model_router.ModelRouter().select(task, agent_name=agent)
     assert sel.selected_model == "qwen3.5:9b" and "AIFORGE_LOCAL_MODEL" in sel.reason
     assert "qwen2.5-coder:latest" in sel.fallback_models, "the older models stay as fallbacks"
+
+
+@pytest.mark.parametrize("agent,profile,model", [("frontend", "CODING", "qwen2.5-coder:latest"),
+                                                 ("backend", "CODING", "qwen2.5-coder:latest"),
+                                                 ("database", "CODING", "qwen2.5-coder:latest"),
+                                                 ("architect", "ARCHITECTURE", "qwen2.5-coder:latest"),
+                                                 ("testing", "TESTING", "qwen2.5-coder:latest"),
+                                                 ("documentation", "DOCUMENTATION", "qwen2.5:latest")])
+def test_long_outputs_stay_on_the_faster_models(installed, agent, profile, model):
+    """The code agents used to fall through to the GENERAL profile (general model, 1,500-token cap)."""
+    sel = model_router.ModelRouter().select(agent, agent_name=agent)
+    assert (sel.profile.name, sel.selected_model) == (profile, model)
+    assert "qwen3.5:9b" not in sel.fallback_models
+
+
+def test_scope_all_puts_qwen_3_5_on_every_task(installed, monkeypatch):
+    monkeypatch.setenv("AIFORGE_LOCAL_MODEL_SCOPE", "all")
+    for agent in ("backend", "architect", "testing", "planner"):
+        assert model_router.ModelRouter().select(agent, agent_name=agent).selected_model == "qwen3.5:9b"
 
 
 def test_without_qwen_3_5_the_per_task_choice_is_unchanged(installed):

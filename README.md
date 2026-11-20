@@ -79,8 +79,8 @@ More detail: [setup](docs/setup.md) · [architecture](docs/ARCHITECTURE.md) · [
 ## Quick start (local)
 
 **Prerequisites:** Python 3.13, Node.js 20.19+ (or 22.12+), [Ollama](https://ollama.com) with at
-least one chat model pulled. The default local model is Qwen 3.5 9B (`ollama pull qwen3.5:9b`, 6.6 GB), used
-for every task when installed; any other chat model works too (e.g. `ollama pull qwen2.5-coder`).
+least one chat model pulled. Recommended on a 16 GB CPU-only laptop: `ollama pull qwen3.5:9b` (6.6 GB, short-output
+work) and `ollama pull qwen2.5-coder` (4.7 GB, code); any other chat model works too. No API key is needed.
 
 ```bash
 git clone https://github.com/SHASHANK8412/CodeForge-AI.git
@@ -133,10 +133,10 @@ most:
 
 | Variable | Purpose |
 |---|---|
-| `AIFORGE_LOCAL_MODEL` | The local model for every task when installed (default `qwen3.5:9b`; `auto` picks per task among the installed models). Qwen 3.x thinking is off on the local model (`AIFORGE_LOCAL_THINKING=on` keeps it); the other installed models are the fallbacks |
+| `AIFORGE_LOCAL_MODEL`, `AIFORGE_LOCAL_MODEL_SCOPE` | The preferred local model (default `qwen3.5:9b`) answers short-output work - planning, review, debugging, chat - when installed; long outputs (architecture, code, tests, docs) stay on the faster `qwen2.5-coder` / `qwen2.5` (on a CPU Qwen 3.5 9B needs ~13 min for an architecture plan). `AIFORGE_LOCAL_MODEL_SCOPE=all` uses it everywhere; `AIFORGE_LOCAL_MODEL=auto` picks per task among the installed models. Qwen 3.x thinking is off on the local model (`AIFORGE_LOCAL_THINKING=on` keeps it); the other installed models are the fallbacks |
 | `AIFORGE_GENERAL_MODEL`, `AIFORGE_CODING_MODEL` | Pin specific Ollama models instead of auto-selection |
 | `AIFORGE_LLM_TIMEOUT_SECONDS` | Ceiling for one LLM call (default 900; CPU-only inference is slow) |
-| `GROQ_API_KEY`, `AIFORGE_GROQ_MODEL`, `AIFORGE_GROQ_TASKS` | Send the agents to a model hosted on Groq: by default every task (code generation, planning, review, testing, debugging, docs, chat) goes to Qwen 3.8 27B (`qwen/qwen3.8-27b`); set `AIFORGE_GROQ_TASKS` to a list to keep some tasks local. A rate-limited call waits the time Groq asks for (up to `AIFORGE_GROQ_RATE_LIMIT_WAIT`, default 60 s) and retries; any other failure, or a longer wait, falls back to the local model. Note that some on-demand Groq tiers allow only 8,000 tokens per minute (about four agent calls). `/health` shows what is configured |
+| `GROQ_API_KEY`, `AIFORGE_GROQ_MODEL`, `AIFORGE_GROQ_TASKS` | Optional hosted model (off by default: everything runs on the local models). With a key, `AIFORGE_GROQ_TASKS=all` (or a list of tasks) sends those tasks to Qwen 3.8 27B on Groq (`qwen/qwen3.8-27b`). A rate-limited call waits the time Groq asks for (up to `AIFORGE_GROQ_RATE_LIMIT_WAIT`, default 60 s) and retries; any other failure, or a longer wait, falls back to the local model. Note that some on-demand Groq tiers allow only 8,000 tokens per minute (about four agent calls). `/health` shows what is configured |
 | `AIFORGE_HF_MODELS`, `AIFORGE_INJECTION_MODEL`, `AIFORGE_RERANKER_MODEL`, `EMBEDDING_MODEL`, `AIFORGE_WHISPER_MODEL` | Local Hugging Face models (`backend/ml/local_models.py`; CPU, loaded on first use, never downloaded at run time): a prompt-injection classifier, a cross-encoder reranker for document search, sentence embeddings (`BAAI/bge-small-en-v1.5`) and speech-to-text for voice prompts. Fetch them with `python -m backend.ml.local_models download`; `off` turns one (or, for `AIFORGE_HF_MODELS`, all) off and the rule-based path is used. `/health` shows which are active |
 | `MAX_REPAIR_ATTEMPTS` | Bound on the debug → patch → re-test loop |
 | `CORS_ORIGINS`, `VITE_API_URL` | Hosting the frontend and backend on different origins |

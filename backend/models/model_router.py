@@ -174,6 +174,13 @@ def discover_installed_models(force_refresh: bool = False) -> List[str]:
 
 
 DEFAULT_LOCAL_MODEL = "qwen3.5:9b"
+# Profiles whose answers are long (whole files, plans, test suites, READMEs): the slower preferred model is skipped there.
+LONG_OUTPUT_PROFILES = {"CODING", "ARCHITECTURE", "TESTING", "DOCUMENTATION"}
+
+
+def local_model_scope() -> str:
+    """AIFORGE_LOCAL_MODEL_SCOPE: "short" (default) or "all" - where the preferred local model is used."""
+    return "all" if os.environ.get("AIFORGE_LOCAL_MODEL_SCOPE", "short").strip().lower() == "all" else "short"
 
 
 def preferred_local_model() -> Optional[str]:
@@ -270,11 +277,16 @@ class ModelRouter:
             else:
                 profile_key = "ARCHITECTURE"
         else:
-            # Fallback by agent_name / task string
+            # Fallback by agent_name / task string. The code agents' task names (frontend/backend/database) used to fall
+            # through to GENERAL: the general model and a 1,500-token cap for whole source files.
             if "explanation" in a_lower or "explanation" in t_lower.lower():
                 profile_key = "EXPLANATION"
-            elif "coding" in a_lower or "coding" in t_lower.lower():
+            elif a_lower in ("frontend", "backend", "database") or "coding" in a_lower or "coding" in t_lower.lower():
                 profile_key = "CODING"
+            elif a_lower in ("documentation", "docs") or a_lower.startswith("doc"):
+                profile_key = "DOCUMENTATION"
+            elif a_lower in ("review", "reviewer"):
+                profile_key = "REVIEW"
             elif "debug" in a_lower or "debug" in t_lower.lower():
                 profile_key = "DEBUGGING"
             elif "resume" in a_lower or "resume" in t_lower.lower():
@@ -316,8 +328,10 @@ class ModelRouter:
                     reason = f"Explicit override to '{selected_model}'"
                     break
 
-        # 2. The preferred local model (AIFORGE_LOCAL_MODEL, default Qwen 3.5 9B) answers every task when installed
-        if not selected_model:
+        # 2. The preferred local model (AIFORGE_LOCAL_MODEL, default Qwen 3.5 9B) answers short-output work when
+        #    installed; long outputs (architecture, code, tests, docs) stay on the faster per-task choice unless
+        #    AIFORGE_LOCAL_MODEL_SCOPE=all (on a CPU Qwen 3.5 9B needs ~13 min for an architecture plan).
+        if not selected_model and (profile_key not in LONG_OUTPUT_PROFILES or local_model_scope() == "all"):
             preferred_local = preferred_local_model()
             if preferred_local:
                 for inst in installed:
@@ -326,7 +340,11 @@ class ModelRouter:
                         reason = f"Preferred local model '{selected_model}' (AIFORGE_LOCAL_MODEL)"
                         break
 
-        # 2. Preferred Capability Match from Installed Models
+        # 2. Preferred Capability Match from Installed Models (for long outputs, not the slower preferred local model)
+        skip = (preferred_local_model() or "").lower() if (profile_key in LONG_OUTPUT_PROFILES
+                                                           and local_model_scope() != "all") else ""
+        if skip and any(i.lower() != skip and not i.lower().startswith(skip + ":") for i in installed):
+            installed = [i for i in installed if i.lower() != skip and not i.lower().startswith(skip + ":")]
         if not selected_model:
             preferred = profile.preferred_capability
             # Exact capability match

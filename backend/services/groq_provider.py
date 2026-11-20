@@ -1,10 +1,10 @@
 """
 Groq as the model provider for AIForge's agents.
 
-When GROQ_API_KEY is set, the tasks in AIFORGE_GROQ_TASKS (by default all of them: code generation, planning, review,
-testing, debugging, documentation and chat) are answered by a model hosted on Groq (AIFORGE_GROQ_MODEL, default
-qwen/qwen3.8-27b, Qwen 3.8 27B) through Groq's OpenAI-compatible chat API. Tasks not listed stay on the local Ollama
-models, and embeddings are always local. Without a key nothing changes and no prompt leaves the machine.
+Opt-in. AIForge runs on local models by default (Ollama; backend/models/model_router.py). Groq is used only when
+GROQ_API_KEY is set AND AIFORGE_GROQ_TASKS names tasks (e.g. "all", or "backend,frontend"): those tasks are answered
+by a model hosted on Groq (AIFORGE_GROQ_MODEL, default qwen/qwen3.8-27b) through Groq's OpenAI-compatible chat API.
+Everything else stays local, and embeddings are always local. Without a key nothing changes and no prompt leaves the machine.
 
 Qwen 3.8 is a reasoning model: its thinking is requested hidden (reasoning_format=hidden), so only the final answer -
 the code - reaches the agents; any <think> block that still arrives is removed.
@@ -16,7 +16,7 @@ repository's .env file, and is never logged.
 Settings (environment variables):
   GROQ_API_KEY                  required to enable Groq
   AIFORGE_GROQ_MODEL            Groq model id (default qwen/qwen3.8-27b; e.g. openai/gpt-oss-120b)
-  AIFORGE_GROQ_TASKS            comma-separated tasks to send to Groq, or "all" (default all)
+  AIFORGE_GROQ_TASKS            comma-separated tasks to send to Groq, or "all" (default: none - local only)
   AIFORGE_GROQ_TIMEOUT_SECONDS  per-call timeout (default 120)
   AIFORGE_GROQ_REASONING_EFFORT reasoning depth: for gpt-oss low | medium | high (default medium); for Qwen
                                 none | default | low | medium | high (default "default": thinking on)
@@ -42,7 +42,7 @@ _logger = logging.getLogger("aiforge.performance")
 
 GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions"
 DEFAULT_MODEL = "qwen/qwen3.8-27b"
-DEFAULT_TASKS = ("all",)
+DEFAULT_TASKS: tuple = ()          # local models by default; Groq only for tasks named in AIFORGE_GROQ_TASKS
 _THINK_RE = re.compile(r"<think>.*?</think>\s*", re.DOTALL | re.IGNORECASE)
 # Reasoning models spend part of the completion budget thinking; this keeps room for the actual answer.
 MIN_COMPLETION_TOKENS = 8192
