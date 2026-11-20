@@ -10,6 +10,10 @@ All notable changes to the AIForge platform are documented in this file.
 - **Integration & Compatibility Engine**: versioned shared contracts derived from the architecture, deterministic
   frontend/backend/database compatibility analysis, contract tests generated and executed in isolation, contract
   drift detection, bounded repairs routed to the responsible agent.
+- **Qwen 3.5 9B is the default local model** (`AIFORGE_LOCAL_MODEL`, `ollama pull qwen3.5:9b`): when installed it
+  answers every task, with the older installed models as fallbacks; with a Groq key, Qwen 3.8 27B on Groq answers
+  first. Qwen 3.x thinking is off locally (it multiplies CPU time per answer) and any inline thinking is removed
+  before an answer reaches the agents.
 - **Local Hugging Face models** (`backend/ml/local_models.py`, CPU, loaded on first use from the local cache):
   - a prompt-injection classifier (`protectai/deberta-v3-base-prompt-injection-v2`) alongside the patterns: in the
     8-document eval (local model) attack success with the guard went from 1/8 to 0/8 and useful answers from 7/8 to

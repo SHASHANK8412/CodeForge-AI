@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 import logging
 import asyncio
 import contextvars
@@ -188,13 +189,30 @@ def _generation_options(task: str, model_selection: Optional[ModelSelection] = N
     }
 
 
+def _thinking_kwargs(model: str) -> dict:
+    """Qwen 3.x models think before answering by default; on a CPU that multiplies the time per answer, so thinking is
+    switched off (AIFORGE_LOCAL_THINKING=on keeps it). Other models are sent no thinking setting."""
+    if (model or "").lower().startswith("qwen3"):
+        return {"think": os.environ.get("AIFORGE_LOCAL_THINKING", "off").strip().lower() in ("on", "1", "true")}
+    return {}
+
+
+_THINK_BLOCK = re.compile(r"<think>.*?</think>\s*", re.DOTALL | re.IGNORECASE)
+
+
+def _strip_thinking(content: str) -> str:
+    """Any thinking text that still arrives inline never reaches the agents (or generated code)."""
+    return _THINK_BLOCK.sub("", content or "")
+
+
 def _chat_completion(model: str, messages: list[dict[str, str]], stream: bool = False, options: dict | None = None):
     return _ollama_client.chat(
         model=model,
         messages=messages,
         stream=stream,
         options=options or OLLAMA_BASE_OPTIONS,
-        keep_alive="10m"
+        keep_alive="10m",
+        **_thinking_kwargs(model),
     )
 
 
@@ -204,7 +222,8 @@ async def _chat_completion_async(model: str, messages: list[dict[str, str]], str
         messages=messages,
         stream=stream,
         options=options or OLLAMA_BASE_OPTIONS,
-        keep_alive="10m"
+        keep_alive="10m",
+        **_thinking_kwargs(model),
     )
 
 
@@ -417,7 +436,7 @@ def generate_text(
             model=selected_model,
             options=options,
         )
-        content = response["message"]["content"]
+        content = _strip_thinking(response["message"]["content"])
         record_llm_call(task, selected_model, *token_counts(response), perf_counter() - llm_started_at)
     except Exception as exc:
         raise _unavailable(task, selected_model, exc) from exc
@@ -525,7 +544,7 @@ async def generate_text_async(
                 stream=False,
                 options=options,
             )
-            content = response["message"]["content"]
+            content = _strip_thinking(response["message"]["content"])
             record_llm_call(task, selected_model, *token_counts(response), perf_counter() - llm_started_at)
         except Exception as exc:
             raise _unavailable(task, selected_model, exc) from exc

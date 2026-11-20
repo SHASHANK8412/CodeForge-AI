@@ -173,6 +173,18 @@ def discover_installed_models(force_refresh: bool = False) -> List[str]:
     return installed
 
 
+DEFAULT_LOCAL_MODEL = "qwen3.5:9b"
+
+
+def preferred_local_model() -> Optional[str]:
+    """The local model used for every task when it is installed (AIFORGE_LOCAL_MODEL; "auto" = per-task choice
+    among the installed models). Hosted Groq calls are separate (backend/services/groq_provider.py)."""
+    value = os.environ.get("AIFORGE_LOCAL_MODEL", "").strip()
+    if value.lower() in ("auto", "off", "none"):
+        return None
+    return value or DEFAULT_LOCAL_MODEL
+
+
 # Model Capability Registry (Step 5)
 def get_model_capabilities(model_name: str) -> Set[str]:
     """
@@ -180,6 +192,11 @@ def get_model_capabilities(model_name: str) -> Set[str]:
     """
     name_lower = model_name.lower()
     capabilities = set()
+
+    # Qwen 3.x (qwen3, qwen3.5, qwen3.6, ...): one model for general work and code
+    if name_lower.startswith("qwen3"):
+        capabilities.update(["coding", "debugging", "review", "testing", "architecture",
+                             "general", "explanation", "reasoning", "resume", "rag", "planning", "documentation"])
 
     # Coder capability
     if any(kw in name_lower for kw in ["coder", "code", "deepseek-coder", "starcoder", "wizardcoder"]):
@@ -298,6 +315,16 @@ class ModelRouter:
                     selected_model = inst
                     reason = f"Explicit override to '{selected_model}'"
                     break
+
+        # 2. The preferred local model (AIFORGE_LOCAL_MODEL, default Qwen 3.5 9B) answers every task when installed
+        if not selected_model:
+            preferred_local = preferred_local_model()
+            if preferred_local:
+                for inst in installed:
+                    if inst.lower() == preferred_local.lower() or inst.lower() == f"{preferred_local.lower()}:latest":
+                        selected_model = inst
+                        reason = f"Preferred local model '{selected_model}' (AIFORGE_LOCAL_MODEL)"
+                        break
 
         # 2. Preferred Capability Match from Installed Models
         if not selected_model:

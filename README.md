@@ -79,8 +79,8 @@ More detail: [setup](docs/setup.md) · [architecture](docs/ARCHITECTURE.md) · [
 ## Quick start (local)
 
 **Prerequisites:** Python 3.13, Node.js 20.19+ (or 22.12+), [Ollama](https://ollama.com) with at
-least one chat model pulled (e.g. `ollama pull qwen2.5-coder` or, on CPU-only machines,
-`ollama pull llama3.2:3b`).
+least one chat model pulled. The default local model is Qwen 3.5 9B (`ollama pull qwen3.5:9b`, 6.6 GB), used
+for every task when installed; any other chat model works too (e.g. `ollama pull qwen2.5-coder`).
 
 ```bash
 git clone https://github.com/SHASHANK8412/CodeForge-AI.git
@@ -133,6 +133,7 @@ most:
 
 | Variable | Purpose |
 |---|---|
+| `AIFORGE_LOCAL_MODEL` | The local model for every task when installed (default `qwen3.5:9b`; `auto` picks per task among the installed models). Qwen 3.x thinking is off on the local model (`AIFORGE_LOCAL_THINKING=on` keeps it); the other installed models are the fallbacks |
 | `AIFORGE_GENERAL_MODEL`, `AIFORGE_CODING_MODEL` | Pin specific Ollama models instead of auto-selection |
 | `AIFORGE_LLM_TIMEOUT_SECONDS` | Ceiling for one LLM call (default 900; CPU-only inference is slow) |
 | `GROQ_API_KEY`, `AIFORGE_GROQ_MODEL`, `AIFORGE_GROQ_TASKS` | Send the agents to a model hosted on Groq: by default every task (code generation, planning, review, testing, debugging, docs, chat) goes to Qwen 3.8 27B (`qwen/qwen3.8-27b`); set `AIFORGE_GROQ_TASKS` to a list to keep some tasks local. A rate-limited call waits the time Groq asks for (up to `AIFORGE_GROQ_RATE_LIMIT_WAIT`, default 60 s) and retries; any other failure, or a longer wait, falls back to the local model. Note that some on-demand Groq tiers allow only 8,000 tokens per minute (about four agent calls). `/health` shows what is configured |
