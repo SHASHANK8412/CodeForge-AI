@@ -1,10 +1,13 @@
 """
-Groq as the model provider for AIForge's coding agents.
+Groq as the model provider for AIForge's agents.
 
-When GROQ_API_KEY is set, the tasks in AIFORGE_GROQ_TASKS (by default the code-writing agents: architect,
-frontend, backend, database and the debug/patch steps) are answered by a model hosted on Groq
-(AIFORGE_GROQ_MODEL, default openai/gpt-oss-120b) through Groq's OpenAI-compatible chat API. Every other task
-stays on the local Ollama models. Without a key nothing changes and no prompt leaves the machine.
+When GROQ_API_KEY is set, the tasks in AIFORGE_GROQ_TASKS (by default all of them: code generation, planning, review,
+testing, debugging, documentation and chat) are answered by a model hosted on Groq (AIFORGE_GROQ_MODEL, default
+qwen/qwen3.8-27b, Qwen 3.8 27B) through Groq's OpenAI-compatible chat API. Tasks not listed stay on the local Ollama
+models, and embeddings are always local. Without a key nothing changes and no prompt leaves the machine.
+
+Qwen 3.8 is a reasoning model: its thinking is requested hidden (reasoning_format=hidden), so only the final answer -
+the code - reaches the agents; any <think> block that still arrives is removed.
 
 If a Groq call fails (network, rate limit, bad key), the caller falls back to the local model, so a run still
 gets a real answer; the failure is logged. The key is read from the environment, or from GROQ_API_KEY in the
@@ -12,10 +15,11 @@ repository's .env file, and is never logged.
 
 Settings (environment variables):
   GROQ_API_KEY                  required to enable Groq
-  AIFORGE_GROQ_MODEL            Groq model id (default openai/gpt-oss-120b)
-  AIFORGE_GROQ_TASKS            comma-separated tasks to send to Groq (default: the coding agents)
+  AIFORGE_GROQ_MODEL            Groq model id (default qwen/qwen3.8-27b; e.g. openai/gpt-oss-120b)
+  AIFORGE_GROQ_TASKS            comma-separated tasks to send to Groq, or "all" (default all)
   AIFORGE_GROQ_TIMEOUT_SECONDS  per-call timeout (default 120)
-  AIFORGE_GROQ_REASONING_EFFORT low | medium | high, for reasoning models such as gpt-oss (default medium)
+  AIFORGE_GROQ_REASONING_EFFORT reasoning depth: for gpt-oss low | medium | high (default medium); for Qwen
+                                none | default | low | medium | high (default "default": thinking on)
   AIFORGE_GROQ_RATE_LIMIT_WAIT  seconds a call may wait in total when Groq says "rate limited, try again in N s"
                                 (default 60); after that the caller falls back to the local model
 
@@ -37,8 +41,9 @@ import httpx
 _logger = logging.getLogger("aiforge.performance")
 
 GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions"
-DEFAULT_MODEL = "openai/gpt-oss-120b"
-DEFAULT_TASKS = ("architect", "frontend", "backend", "database", "coding", "debug", "debugging", "testing")
+DEFAULT_MODEL = "qwen/qwen3.8-27b"
+DEFAULT_TASKS = ("all",)
+_THINK_RE = re.compile(r"<think>.*?</think>\s*", re.DOTALL | re.IGNORECASE)
 # Reasoning models spend part of the completion budget thinking; this keeps room for the actual answer.
 MIN_COMPLETION_TOKENS = 8192
 _ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
@@ -107,7 +112,8 @@ def groq_tasks() -> tuple[str, ...]:
 
 def handles(task: str) -> bool:
     """True when this task should be answered by Groq: a key is configured and the task is a Groq task."""
-    return bool(_api_key()) and (task or "").lower() in groq_tasks()
+    tasks = groq_tasks()
+    return bool(_api_key()) and ("all" in tasks or "*" in tasks or (task or "").lower() in tasks)
 
 
 def _payload(messages: list[dict[str, str]], options: Optional[dict]) -> dict:
@@ -119,8 +125,12 @@ def _payload(messages: list[dict[str, str]], options: Optional[dict]) -> dict:
         "top_p": options.get("top_p", 0.9),
         "max_completion_tokens": max(int(options.get("num_predict") or 0), MIN_COMPLETION_TOKENS),
     }
+    effort = os.environ.get("AIFORGE_GROQ_REASONING_EFFORT", "").strip().lower()
     if "gpt-oss" in body["model"]:
-        body["reasoning_effort"] = os.environ.get("AIFORGE_GROQ_REASONING_EFFORT", "medium")
+        body["reasoning_effort"] = effort or "medium"
+    elif "qwen" in body["model"].lower():
+        body["reasoning_effort"] = effort or "default"
+        body["reasoning_format"] = "hidden"             # only the answer comes back, not the thinking
     return body
 
 
@@ -137,7 +147,7 @@ def _parse(response: httpx.Response) -> GroqResult:
         raise GroqError(message)
     data = response.json()
     choice = (data.get("choices") or [{}])[0]
-    content = ((choice.get("message") or {}).get("content") or "").strip()
+    content = _THINK_RE.sub("", (choice.get("message") or {}).get("content") or "").strip()
     if not content:
         raise GroqError(f"Groq returned an empty answer (finish_reason={choice.get('finish_reason')})")
     usage = data.get("usage") or {}

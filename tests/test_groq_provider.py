@@ -72,11 +72,35 @@ def test_coding_agents_are_answered_by_groq(groq_on, monkeypatch):
     sent = json.loads(handler.requests[0].content)
     assert handler.requests[0].url == groq.GROQ_CHAT_URL
     assert handler.requests[0].headers["Authorization"] == f"Bearer {KEY}"
-    assert sent["model"] == "openai/gpt-oss-120b" and sent["messages"][0]["role"] == "system"
-    assert sent["max_completion_tokens"] >= groq.MIN_COMPLETION_TOKENS and sent["reasoning_effort"] == "medium"
+    assert sent["model"] == "qwen/qwen3.8-27b" and sent["messages"][0]["role"] == "system"
+    assert sent["max_completion_tokens"] >= groq.MIN_COMPLETION_TOKENS
+    assert sent["reasoning_format"] == "hidden" and sent["reasoning_effort"] == "default"
 
 
-def test_other_tasks_stay_on_the_local_model(groq_on, monkeypatch):
+def test_every_feature_uses_groq_by_default(groq_on, monkeypatch):
+    handler = _reply(content="ok")
+    _route(monkeypatch, handler)
+    local = _local(monkeypatch)
+    for task in ("planner", "documentation", "reviewer", "general", "explanation"):
+        assert llm.generate_text("", "do it", task=task) == "ok", task
+    assert local == [] and len(handler.requests) == 5
+    assert groq.status()["tasks"] == ["all"]
+
+
+def test_qwen_thinking_never_reaches_the_code(groq_on, monkeypatch):
+    _route(monkeypatch, _reply(content="<think>first I consider...</think>\ndef add(a, b):\n    return a + b\n"))
+    _local(monkeypatch)
+    assert llm.generate_text("", "add", task="backend") == "def add(a, b):\n    return a + b"
+
+
+def test_gpt_oss_keeps_its_own_reasoning_setting(groq_on, monkeypatch):
+    monkeypatch.setenv("AIFORGE_GROQ_MODEL", "openai/gpt-oss-120b")
+    body = groq._payload([], {})
+    assert body["reasoning_effort"] == "medium" and "reasoning_format" not in body
+
+
+def test_tasks_not_listed_stay_on_the_local_model(groq_on, monkeypatch):
+    monkeypatch.setenv("AIFORGE_GROQ_TASKS", "backend,frontend")
     handler = _reply()
     _route(monkeypatch, handler)
     local = _local(monkeypatch)
@@ -118,13 +142,13 @@ def test_network_errors_become_groq_errors(groq_on):
 
 
 def test_model_and_tasks_are_configurable(groq_on, monkeypatch):
-    monkeypatch.setenv("AIFORGE_GROQ_MODEL", "qwen/qwen3-32b")
+    monkeypatch.setenv("AIFORGE_GROQ_MODEL", "llama-3.3-70b-versatile")
     monkeypatch.setenv("AIFORGE_GROQ_TASKS", "backend, frontend")
     assert groq.handles("frontend") and not groq.handles("architect")
     status = groq.status()
-    assert status == {"enabled": True, "model": "qwen/qwen3-32b", "tasks": ["backend", "frontend"]}
+    assert status == {"enabled": True, "model": "llama-3.3-70b-versatile", "tasks": ["backend", "frontend"]}
     assert KEY not in json.dumps(status)
-    assert "reasoning_effort" not in groq._payload([], {})
+    assert "reasoning_effort" not in groq._payload([], {})        # not a reasoning model: no reasoning settings
 
 
 def _limited_then_ok(limited_times, message="Rate limit reached ... Please try again in 1.5s. Need more tokens?"):

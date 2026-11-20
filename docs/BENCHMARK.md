@@ -16,8 +16,9 @@ AIFORGE_SANDBOX=docker python -m benchmarks.harness run --model qwen2.5-coder:7b
 AIFORGE_SANDBOX=docker python -m benchmarks.harness run --model llama3.1:8b        --label llama3.1-8b
 AIFORGE_SANDBOX=docker python -m benchmarks.harness run --model deepseek-coder:6.7b --label deepseek-6.7b
 
-# local vs hosted: the coding agents on Groq (needs GROQ_API_KEY) against every agent on the local models
-AIFORGE_SANDBOX=docker python -m benchmarks.harness run --groq on  --label groq-coding
+# local vs hosted: every agent on Groq (Qwen 3.8 27B by default; needs GROQ_API_KEY) against every agent on the local models
+AIFORGE_SANDBOX=docker python -m benchmarks.harness run --groq on  --label groq-qwen3.8
+AIFORGE_SANDBOX=docker AIFORGE_GROQ_MODEL=openai/gpt-oss-120b python -m benchmarks.harness run --groq on --label groq-gpt-oss
 AIFORGE_SANDBOX=docker python -m benchmarks.harness run --groq off --label all-local
 AIFORGE_SANDBOX=docker python -m benchmarks.harness run --rag off        --label baseline-norag
 AIFORGE_SANDBOX=docker python -m benchmarks.harness run --llm-repair off --label baseline-rules-only
@@ -42,7 +43,7 @@ Each run writes `benchmarks/runs/<timestamp>_<label>/` containing:
 
 These runs need no code execution, so they ran without Docker. The 20-task generation benchmark above has not been
 run on this commit yet (it needs Docker for the execution sandbox). Local = the default Ollama routing on a CPU-only
-laptop (i7-1360P, 16 GB); Groq = `openai/gpt-oss-120b`. Raw results, including every model answer, are in
+laptop (i7-1360P, 16 GB); Groq = `openai/gpt-oss-120b` (the Groq default before Qwen 3.8 27B; Qwen 3.8 has not been measured yet). Raw results, including every model answer, are in
 `benchmarks/runs/reviewer/` and `benchmarks/runs/injection/`.
 
 ### Reviewer: does it catch planted bugs? (`python -m benchmarks.reviewer_eval [--groq]`)
