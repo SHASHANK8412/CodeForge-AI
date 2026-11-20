@@ -7,7 +7,6 @@ from backend.deployment.scripts import DeploymentScriptGenerator, global_deploym
 from backend.deployment.validator import DeploymentValidator, global_deployment_validator
 from backend.deployment.exporter import DeploymentExporter, global_deployment_exporter
 
-from backend.deployment.pipeline import CIPipelineEngine, global_ci_pipeline_engine
 from backend.deployment.build_manager import BuildManager, global_build_manager
 from backend.deployment.version_manager import VersionManager, global_version_manager
 from backend.deployment.deployment_manager import DeploymentManager, global_deployment_manager
@@ -24,7 +23,6 @@ __all__ = [
     "DeploymentScriptGenerator", "global_deployment_script_generator",
     "DeploymentValidator", "global_deployment_validator",
     "DeploymentExporter", "global_deployment_exporter",
-    "CIPipelineEngine", "global_ci_pipeline_engine",
     "BuildManager", "global_build_manager",
     "VersionManager", "global_version_manager",
     "DeploymentManager", "global_deployment_manager",
