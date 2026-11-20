@@ -109,9 +109,10 @@ def test_recovery_engine(tmp_path):
     engine = RecoveryEngine(knowledge_base=kb)
     
     recommendation = {"recommended_action": "Restart Database", "confidence": 0.95}
-    strat, dur = engine.execute_recovery("db_connection_failure", recommendation)
-    assert strat == "Restart Database"
-    assert dur > 0.0
+    assert engine.recommend("db_connection_failure", recommendation) == "Restart Database"
+    # No executor is connected, so executing must fail loudly instead of reporting a recovery that never ran.
+    with pytest.raises(NotImplementedError, match="not implemented"):
+        engine.execute_recovery("db_connection_failure", recommendation)
 
 @pytest.mark.anyio
 async def test_recovery_validator():

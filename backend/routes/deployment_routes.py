@@ -1,14 +1,13 @@
 """
 FastAPI Routes for Day 33 Autonomous CI/CD Pipeline & Production Release Management
 =====================================================================================
-Exposes REST APIs for CI/CD pipeline triggers, build tracking, Docker packaging metadata, multi-strategy deployments, health monitoring, automated rollbacks, semantic versioning, release notes, and deployment dashboards.
+Exposes REST APIs for build tracking, Docker packaging metadata, multi-strategy deployments, health monitoring, automated rollbacks, semantic versioning, release notes, and deployment dashboards.
 """
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from typing import Dict, Any, Optional, List
 
-from backend.deployment.pipeline import global_ci_pipeline_engine
 from backend.deployment.build_manager import global_build_manager
 from backend.deployment.version_manager import global_version_manager
 from backend.deployment.deployment_manager import global_deployment_manager, DeploymentStrategy
@@ -17,11 +16,6 @@ from backend.deployment.rollback_manager import global_rollback_manager
 from backend.deployment.release_notes import global_release_notes_generator
 
 router = APIRouter(tags=["Autonomous CI/CD & Production Release"])
-
-
-class PipelineStartInput(BaseModel):
-    branch: Optional[str] = "main"
-    commit_hash: Optional[str] = "a1b2c3d"
 
 
 class DeployInput(BaseModel):
@@ -46,34 +40,6 @@ class GenerateReleaseNotesInput(BaseModel):
     fixes: Optional[List[str]] = None
     performance: Optional[List[str]] = None
     security: Optional[List[str]] = None
-
-
-@router.post("/pipeline/start")
-@router.post("/api/v1/pipeline/start")
-async def start_ci_pipeline(req: PipelineStartInput) -> Dict[str, Any]:
-    """Triggers the 10-stage autonomous CI/CD pipeline."""
-    try:
-        pipe = global_ci_pipeline_engine.start_pipeline(branch=req.branch or "main", commit_hash=req.commit_hash or "a1b2c3d")
-        
-        # Record build entry
-        global_build_manager.record_build(
-            branch=req.branch or "main",
-            status=pipe["status"],
-            duration=pipe["duration"],
-            commit_hash=req.commit_hash or "a1b2c3d"
-        )
-
-        return {"status": "success", "pipeline": pipe}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/pipeline/status")
-@router.get("/api/v1/pipeline/status")
-async def get_ci_pipeline_status() -> Dict[str, Any]:
-    """Retrieves live CI/CD pipeline stage execution status and logs."""
-    pipe = global_ci_pipeline_engine.get_pipeline_status()
-    return {"status": "success", "pipeline_status": pipe}
 
 
 @router.get("/builds")
@@ -162,9 +128,8 @@ async def increment_version(req: VersionBumpInput) -> Dict[str, Any]:
 @router.get("/deployment/dashboard")
 @router.get("/api/v1/deployment/dashboard")
 async def get_deployment_dashboard() -> Dict[str, Any]:
-    """Retrieves Monitoring Dashboard data: Current Version, Pipeline Status, Deployment Progress, Health Status, Rollback History, Release Notes, Build History, Active Environment."""
+    """Retrieves Monitoring Dashboard data: Current Version, Deployment Progress, Health Status, Rollback History, Release Notes, Build History, Active Environment."""
     curr_v = global_version_manager.get_current_version()
-    pipe_status = global_ci_pipeline_engine.get_pipeline_status()
     builds = global_build_manager.get_all_builds()[:5]
     deployments = global_deployment_manager.get_all_deployments()[:5]
     health = global_health_checker.perform_health_check()
@@ -175,7 +140,6 @@ async def get_deployment_dashboard() -> Dict[str, Any]:
         "status": "success",
         "deployment_dashboard": {
             "current_version": curr_v,
-            "pipeline_status": pipe_status,
             "health_status": health,
             "active_environment": "Production",
             "recent_deployments": deployments,

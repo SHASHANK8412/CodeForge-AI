@@ -1,7 +1,7 @@
 """
 FastAPI Routes for Production-Grade & Research-Level AIForge V2 Platform Architecture
 ========================================================================================
-Exposes REST APIs for MCP Server, LiteLLM + vLLM, Durable Temporal Workflows, Neo4j Knowledge Graph, Qdrant Vector Search, Tree-sitter + CodeBERT, OPA Security, OpenTelemetry, DeepEval, Debate Agent, and Research Agent.
+Exposes REST APIs for MCP Server, Durable Temporal Workflows, Neo4j Knowledge Graph, Tree-sitter + CodeBERT, OPA Security, OpenTelemetry, DeepEval, Debate Agent, and Research Agent.
 """
 
 from fastapi import APIRouter, HTTPException, Query
@@ -9,11 +9,8 @@ from pydantic import BaseModel
 from typing import Dict, Any, Optional, List
 
 from backend.tools.mcp_server import global_mcp_server
-from backend.llm.litellm_gateway import global_litellm_gateway
-from backend.llm.vllm_engine import global_vllm_engine
 from backend.workflow.durable_workflow import global_durable_workflow
 from backend.knowledge.graph_knowledge import global_neo4j_graph
-from backend.rag.qdrant_store import global_qdrant_store
 from backend.quality.semantic_code_search import global_semantic_code_search
 from backend.security.opa_engine import global_opa_policy_engine
 from backend.monitoring.telemetry import global_telemetry_engine
@@ -29,15 +26,6 @@ class MCPCallInput(BaseModel):
     params: Optional[Dict[str, Any]] = None
 
 
-class LiteLLMInput(BaseModel):
-    model: Optional[str] = "ollama/qwen2.5-coder"
-    prompt: str
-
-
-class VLLMBatchInput(BaseModel):
-    prompts: List[str]
-
-
 class DurableWorkflowInput(BaseModel):
     workflow_id: str
     prompt: str
@@ -45,11 +33,6 @@ class DurableWorkflowInput(BaseModel):
 
 class GraphReasonInput(BaseModel):
     entity_id: str
-
-
-class QdrantSearchInput(BaseModel):
-    query: str
-    limit: Optional[int] = 5
 
 
 class SemanticSearchInput(BaseModel):
@@ -94,27 +77,7 @@ async def call_mcp_tool(req: MCPCallInput):
     return res
 
 
-# 2. LiteLLM Unified Gateway & vLLM Batch Engine
-@router.post("/api/v1/litellm/completion")
-@router.post("/litellm/completion")
-async def litellm_completion(req: LiteLLMInput):
-    """Unified LLM completion across OpenAI, Anthropic, Gemini, Ollama, Groq, DeepSeek."""
-    res = global_litellm_gateway.completion(
-        model=req.model or "ollama/qwen2.5-coder",
-        messages=[{"role": "user", "content": req.prompt}]
-    )
-    return {"status": "success", "response": res}
-
-
-@router.post("/api/v1/vllm/batch")
-@router.post("/vllm/batch")
-async def vllm_batch_generation(req: VLLMBatchInput):
-    """High-throughput local vLLM / Ollama PagedAttention batch generation."""
-    res = global_vllm_engine.generate_batch(req.prompts)
-    return {"status": "success", "batch_results": res}
-
-
-# 3. Durable Temporal Workflows
+# 2. Durable Temporal Workflows
 @router.post("/api/v1/workflow/durable")
 @router.post("/workflow/durable")
 async def execute_durable_workflow(req: DurableWorkflowInput):
@@ -123,7 +86,7 @@ async def execute_durable_workflow(req: DurableWorkflowInput):
     return {"status": "success", "workflow_state": res}
 
 
-# 4. Neo4j Graph & Qdrant Vector Stores
+# 3. Neo4j Graph
 @router.get("/api/v1/graph/topology")
 @router.get("/graph/topology")
 async def get_graph_topology():
@@ -139,15 +102,7 @@ async def reason_graph(req: GraphReasonInput):
     return {"status": "success", "reasoning": res}
 
 
-@router.post("/api/v1/rag/qdrant-search")
-@router.post("/rag/qdrant-search")
-async def search_qdrant(req: QdrantSearchInput):
-    """Executes HNSW vector search in Qdrant vector database."""
-    res = global_qdrant_store.search_vectors(req.query, limit=req.limit or 5)
-    return {"status": "success", "vector_hits": res}
-
-
-# 5. Semantic Code Search (Tree-sitter + CodeBERT)
+# 4. Semantic Code Search (Tree-sitter + CodeBERT)
 @router.post("/api/v1/quality/semantic-search")
 @router.post("/quality/semantic-search")
 async def semantic_code_search(req: SemanticSearchInput):
@@ -156,7 +111,7 @@ async def semantic_code_search(req: SemanticSearchInput):
     return {"status": "success", "search_results": res}
 
 
-# 6. OPA Security Policy Engine
+# 5. OPA Security Policy Engine
 @router.post("/api/v1/security/opa-policy")
 @router.post("/security/opa-policy")
 async def evaluate_opa_policy(req: OPAPolicyInput):
@@ -167,7 +122,7 @@ async def evaluate_opa_policy(req: OPAPolicyInput):
     return {"status": "success", "opa_evaluation": res}
 
 
-# 7. OpenTelemetry & Prometheus Metrics
+# 6. OpenTelemetry & Prometheus Metrics
 @router.get("/api/v1/monitoring/telemetry")
 @router.get("/monitoring/telemetry")
 async def get_telemetry_spans():
@@ -183,7 +138,7 @@ async def export_prometheus_metrics():
     return {"status": "success", "prometheus_format": metrics_text}
 
 
-# 8. DeepEval Evaluation & MLflow Tracker
+# 7. DeepEval Evaluation & MLflow Tracker
 @router.post("/api/v1/evaluation/deepeval")
 @router.post("/evaluation/deepeval")
 async def evaluate_deepeval(req: DeepEvalInput):
@@ -197,7 +152,7 @@ async def evaluate_deepeval(req: DeepEvalInput):
     return {"status": "success", "evaluation": eval_res, "mlflow": mlflow_res}
 
 
-# 9. Debate Agent & Research Agent
+# 8. Debate Agent & Research Agent
 @router.post("/api/v1/agents/debate")
 @router.post("/agents/debate")
 async def run_agent_debate(req: DebateInput):
