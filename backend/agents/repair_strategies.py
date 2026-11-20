@@ -236,7 +236,7 @@ def _is_test_path(rel: str) -> bool:
 
 
 def llm_repair(files: Dict[str, str], output: str, errors: List[Dict[str, Any]],
-               memory_user: Optional[str] = None) -> Tuple[str, Dict[str, str]]:
+               memory_user: Optional[str] = None, history: str = "") -> Tuple[str, Dict[str, str]]:
     """
     Ask the coding model to repair the failure with search/replace edits (backend/repair/edits.py), showing it the
     files the failure involves (backend/repair/context.py) and this user's verified fixes for similar errors
@@ -261,6 +261,8 @@ def llm_repair(files: Dict[str, str], output: str, errors: List[Dict[str, Any]],
         f"Test/runtime output (tail):\n{output[-3000:]}\n\n"
         f"The file most implicated is `{rel}`. Files involved in the failure:\n\n{ctx.text}\n\n"
         + (hint_text(hints) + "\n\n" if hints else "")
+        + ("Earlier repair attempts in this run (rolled-back ones made things worse or changed nothing; do not "
+           f"repeat them):\n{history}\n\n" if history else "")
         + INSTRUCTIONS + "\nFix only what the errors require. Test files are the specification: never change them."
     )
     system = "You are a precise senior engineer fixing a bug in a project."
@@ -313,9 +315,13 @@ def _blocking_issue_count(source: str) -> Optional[int]:
 
 
 def propose_repairs(files: Dict[str, str], output: str, errors: List[Dict[str, Any]],
-                    memory_user: Optional[str] = None) -> Tuple[str, Dict[str, Optional[str]]]:
+                    memory_user: Optional[str] = None, rejected: Optional[set] = None,
+                    history: str = "") -> Tuple[str, Dict[str, Optional[str]]]:
     """(strategy name, {file: new content, or None to delete}); empty when nothing applicable was found.
-    Deterministic strategies first; then the model (search/replace edits, see llm_repair)."""
+    Deterministic strategies first; then the model (search/replace edits, see llm_repair). A patch whose hash is in
+    `rejected` (rolled back earlier in this run) is skipped, so the next strategy gets its turn."""
+    from backend.execution.repair_policy import patch_hash
+    rejected = rejected or set()
     for name, strategy in (
         ("add_missing_imports", lambda: fix_undefined_names(files, errors, output)),
         ("merge_shadowed_module", lambda: fix_shadowed_module(files, errors)),
@@ -324,8 +330,8 @@ def propose_repairs(files: Dict[str, str], output: str, errors: List[Dict[str, A
         ("fix_literal_assertion", lambda: fix_literal_assertion(files, output)),
     ):
         changes = {k: v for k, v in strategy().items() if v != files.get(k)}
-        if changes:
+        if changes and patch_hash(changes) not in rejected:
             return name, changes
-    name, changes = llm_repair(files, output, errors, memory_user)
+    name, changes = llm_repair(files, output, errors, memory_user, history)
     changes = {k: v for k, v in changes.items() if v != files.get(k)}
-    return (name, changes) if changes else ("none", {})
+    return (name, changes) if changes and patch_hash(changes) not in rejected else ("none", {})

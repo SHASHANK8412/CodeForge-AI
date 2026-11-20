@@ -84,6 +84,9 @@ class ProjectState(TypedDict, total=False):
     # File System & Code Representations
     files: Dict[str, str]
     pre_repair_files: Dict[str, str]   # the files before the first repair (benchmark before/after)
+    # One entry per repair attempt: files, patch hash, before/after test evidence, verdict, rolled_back
+    # (backend/execution/repair_policy.py)
+    repair_history: List[Dict[str, Any]]
     fix_recorded_cycle: int            # the repair cycle whose verified fix was remembered (fix memory)
     frontend: Any
     backend: Any

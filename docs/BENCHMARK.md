@@ -146,18 +146,18 @@ If `AIFORGE_SANDBOX=docker` is set but the image is missing, the runner **refuse
 ## The generate → run → fix loop
 
 ```
-assembly ─► execution_validation ─► testing ─┬─► packaging   (build + tests green)
-                 ▲                            ├─► END          (max_iterations reached)
-                 └──── patch ◄──── debug ◄────┘
+execution_validation ─► testing ─► execution_guardian ─┬─► final_approval  (verified, or the loop stopped)
+          ▲                                             │
+          └──────────── patch ◄──────── debug ◄─────────┘  (a failure to repair)
 ```
 
 1. **testing** generates a pytest suite *once*, writes it into the project, and re-runs the build. The suite is never regenerated during repair, so the debugger has to make the same tests pass.
 2. **execution_validation** runs `compileall` (every module must parse, not just the imported ones) and then `pytest`, in the sandbox.
-3. **debug** first applies deterministic rules. If they produce no concrete patch, it sends the real failure output plus the suspect source files to the LLM and asks for complete corrected files. Guard rails:
-   - only existing, non-test `.py` files can be changed (the model can't "fix" a failure by weakening the tests);
-   - every patched file must parse;
-   - a patch identical to the current file is dropped.
-4. **patch** writes the change to disk (absolute paths and path traversal are rejected) and records the attempt with its *before* evidence: per-test outcomes from `pytest -rA` and a failure fingerprint.
+3. **debug** first applies deterministic rules. If they produce no concrete patch, it asks the LLM for search/replace edits, showing it the real failure output, the files the failure involves (`backend/repair/context.py`), the user's verified fixes for similar errors (`backend/repair/fix_memory.py`) and the earlier attempts in this run. Guard rails:
+   - test files are never changed (the model can't "fix" a failure by weakening the tests);
+   - every patched file must parse, and blocking lint issues must not increase;
+   - a patch identical to the current file, or to a rolled-back attempt, is dropped.
+4. **patch** writes the change to disk (path traversal is rejected) and records the attempt with its *before* evidence: per-test outcomes from `pytest -rA` and a failure fingerprint.
 5. After the re-run, **testing** judges the attempt (`backend/execution/repair_policy.py`):
    - `fixed`: build exits 0 and all tests pass;
    - `improved`: fewer failures and nothing newly broken;

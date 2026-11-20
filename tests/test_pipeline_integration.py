@@ -208,6 +208,14 @@ def pipeline(tmp_path, monkeypatch):
         raise RuntimeError("no model in tests")
     # The repair loop's diagnosis uses its deterministic fallback, not a live Ollama call.
     monkeypatch.setattr(wf.global_diagnostic_agent, "generate", no_model)
+    # Nor does the Execution Guardian's routed repair: with Ollama running it called the real coding model, so whether
+    # a repair succeeded depended on the machine (an unavailable model is a recorded, unproductive attempt).
+    from backend.execution_guardian.service import global_execution_guardian
+    from backend.services.llm import LLMUnavailableError
+
+    def model_unavailable(*_a, **_k):
+        raise LLMUnavailableError("coding", "none", "no model in tests")
+    monkeypatch.setattr(global_execution_guardian, "generate", model_unavailable)
     # Dependencies: the generated tests use fastapi/httpx, already in AIForge's interpreter, so the
     # per-project venv install (network) is skipped; pip-audit (network) likewise.
     monkeypatch.setattr("backend.execution.project_env.ensure_project_env", lambda *_a, **_k: {"ok": True})

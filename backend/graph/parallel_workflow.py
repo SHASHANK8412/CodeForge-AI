@@ -36,6 +36,7 @@ from backend.agents.project_packaging_agent import ProjectPackagingAgent
 from backend.generators.project_generator import GENERATED_PROJECTS_DIR, ProjectGenerator
 from backend.review.self_heal import SelfHealOrchestrator
 from backend.utils.timer import Timer
+from backend.execution import repair_policy
 from backend.graph.profiler import workflow_profiler
 
 from backend.services.cache_service import global_cache_service
@@ -746,22 +747,29 @@ async def testing_node(state: ProjectState) -> dict:
         template=state.get("template"),
     )
 
-    try:
+    # During repair the suite written on the first run is the specification: it is re-run, not regenerated, so a
+    # patch is judged against the same tests that failed (and no model call is spent writing new ones).
+    if state.get("tests") and state.get("applied_fix"):
         with Timer() as timer:
-            raw_tests = await testing_agent.run_async(testing_prompt)
-    except LLMUnavailableError as e:
-        return _agent_failed("testing", e)               # no tests written, none run, nothing passed
+            raw_tests = state["tests"]
+        extracted_tests = {}
+    else:
+        try:
+            with Timer() as timer:
+                raw_tests = await testing_agent.run_async(testing_prompt)
+        except LLMUnavailableError as e:
+            return _agent_failed("testing", e)               # no tests written, none run, nothing passed
 
-    agent_timers["testing"] = timer.elapsed
-    workflow_profiler.record_agent_time("testing", timer.elapsed)
+        agent_timers["testing"] = timer.elapsed
+        workflow_profiler.record_agent_time("testing", timer.elapsed)
 
-    # Extract test files and write to files map and disk
-    from backend.validation.code_extractor import extract_files_from_agent_output
-    extracted_tests = extract_files_from_agent_output(raw_tests, agent_name="testing")
-    
-    # If no test files were extracted, default to tests/test_main.py
-    if not extracted_tests:
-        extracted_tests["tests/test_main.py"] = raw_tests
+        # Extract test files and write to files map and disk
+        from backend.validation.code_extractor import extract_files_from_agent_output
+        extracted_tests = extract_files_from_agent_output(raw_tests, agent_name="testing")
+
+        # If no test files were extracted, default to tests/test_main.py
+        if not extracted_tests:
+            extracted_tests["tests/test_main.py"] = raw_tests
 
     files_map = dict(state.get("files", {}) or {})
     proj_path_str = state.get("project_path", "")
@@ -780,6 +788,27 @@ async def testing_node(state: ProjectState) -> dict:
         # Nothing was written to disk, so there is nothing to test; report that rather than
         # inferring a pass from earlier stages.
         test_run_res = global_project_tester.run_tests("")
+
+    # The latest repair attempt is judged on this run (backend/execution/repair_policy.py). One that broke a passing
+    # test or changed nothing is rolled back on disk, and the tests are re-run on the restored files.
+    judge_update: Dict[str, Any] = {}
+    judge_events: List[str] = []
+    history = [dict(h) for h in (state.get("repair_history") or [])]
+    if history and not history[-1].get("verdict") and "before" in history[-1]:
+        attempt = history[-1]
+        after = repair_policy.snapshot(_test_evidence(test_run_res))
+        attempt.update(repair_policy.judge_attempt(attempt["before"], after))
+        attempt["before"] = {k: v for k, v in attempt["before"].items() if k != "outcomes"}
+        attempt["after"] = {k: after[k] for k in ("exit_code", "failing", "passing", "fingerprint", "error_line")}
+        judge_events.append(f"🔎 Repair attempt {attempt['attempt']} ({attempt['source']}): {attempt['verdict']}")
+        if attempt["verdict"] not in repair_policy.KEEP_VERDICTS and state.get("file_backups"):
+            files_map = restore_file_backups({**dict(state), "files": files_map})["files"]
+            attempt["rolled_back"] = True
+            judge_update.update({"file_backups": {},
+                                 "applied_fix": {**(state.get("applied_fix") or {}), "rolled_back": True}})
+            judge_events.append(f"↩️ Rolled back attempt {attempt['attempt']} ({', '.join(attempt['files'])})")
+            test_run_res = global_project_tester.run_tests(proj_path_str) if proj_path_str else test_run_res
+        judge_update["repair_history"] = history
 
     # Code-quality gate on the current files (patches change them between cycles)
     from backend.validation.quality_gate import format_issues, run_quality_gate
@@ -874,6 +903,7 @@ async def testing_node(state: ProjectState) -> dict:
 
     _fire_lifecycle("agent_completed", "testing", duration=timer.elapsed)
     return {
+        **judge_update,
         "tests": raw_tests,
         "files": files_map,
         "test_results": mapped_test_results,
@@ -893,7 +923,7 @@ async def testing_node(state: ProjectState) -> dict:
         "testing_report": report_md,
         "current_step": "testing",
         "current_agent": "testing",
-        "stream_events": [f"✔ Executed test suite: {mapped_test_results['passed']}/{mapped_test_results['total']} passed (Verification: {mapped_test_results['overall_status']})"]
+        "stream_events": judge_events + [f"✔ Executed test suite: {mapped_test_results['passed']}/{mapped_test_results['total']} passed (Verification: {mapped_test_results['overall_status']})"]
     }
 
 
@@ -1196,7 +1226,10 @@ async def debug_node(state: ProjectState) -> dict:
     owner = _owner_of(state)
     error_text = "\n".join(x for x in (exec_res.get("stderr"), exec_res.get("stdout")) if x)[-3000:]
     debug_res = await asyncio.to_thread(global_debug_agent.diagnose_and_repair,
-                                        {**dict(state), "execution_results": exec_res, "fix_memory_user": owner})
+                                        {**dict(state), "execution_results": exec_res, "fix_memory_user": owner,
+                                         "repair_rejected": _rejected_patches(state),
+                                         "repair_history_prompt": repair_policy.history_for_prompt(
+                                             state.get("repair_history") or [])})
     routed_agent = None
     if guardian_failures:
         from backend.execution_guardian import repair as guardian_repair
@@ -1300,6 +1333,14 @@ async def patch_node(state: ProjectState) -> dict:
             continue
         safe[clean_rel] = new_content
 
+    # A patch identical to one that was rolled back is not applied again.
+    history = list(state.get("repair_history") or [])
+    patch_id = repair_policy.patch_hash(safe) if safe else None
+    repeated = bool(patch_id and patch_id in _rejected_patches(state))
+    if repeated:
+        _logger.info(f"[Fixer] Cycle {cycle}: the proposed patch was already tried and rolled back; not applied")
+        safe = {}
+
     # All-or-nothing on disk: an unsafe path or failed write rolls the whole repair back.
     applied = True
     if target_dir and safe:
@@ -1326,6 +1367,18 @@ async def patch_node(state: ProjectState) -> dict:
     }
     fix_history = list(state.get("fix_history", []) or []) + [applied_fix_record]
 
+    # The attempt, with the evidence it is judged against when the tests re-run (testing_node).
+    entry: Dict[str, Any] = {"attempt": len(history) + 1, "cycle": cycle, "files": modified_files,
+                             "source": str(latest_fix.get("strategy") or latest_fix.get("error_type") or "repair"),
+                             "patch_hash": patch_id}
+    if modified_files:
+        entry["before"] = repair_policy.snapshot(_test_evidence(state.get("test_results") or {}))
+    else:
+        entry["verdict"] = "no_patch"                    # nothing tried: counts toward the stall limit
+        if repeated:
+            entry["note"] = "same patch as a rolled-back attempt"
+    history.append(entry)
+
     if modified_files:
         _record_metrics(state, increment={"auto_fixes": 1})
     _logger.info(f"[Fixer] Applied patch in Cycle {cycle} to {len(modified_files)} file(s): {modified_files}")
@@ -1339,6 +1392,7 @@ async def patch_node(state: ProjectState) -> dict:
         "files_modified": modified_files,
         "applied_fix": applied_fix_record,
         "fix_history": fix_history,
+        "repair_history": history,
         "repair_attempt": cycle,
         "iteration": cycle,
         "repair_status": f"PATCHED_CYCLE_{cycle}",
@@ -1346,6 +1400,25 @@ async def patch_node(state: ProjectState) -> dict:
         "current_agent": "patch",
         "stream_events": [f"✔ Applied targeted patch (Cycle {cycle}) to {len(modified_files)} file(s): {modified_files}"]
     }
+
+
+def _test_evidence(results: Dict[str, Any]) -> Dict[str, Any]:
+    """The part of a test run a repair attempt is judged on (pytest -rA prints one line per test)."""
+    return {"exit_code": results.get("exit_code"), "status": results.get("overall_status", results.get("status", "")),
+            "stdout": results.get("stdout") or "", "stderr": results.get("stderr") or ""}
+
+
+def _rejected_patches(state: dict) -> set:
+    """Hashes of patches that were rolled back: they are never proposed or applied again."""
+    return {h.get("patch_hash") for h in (state.get("repair_history") or [])
+            if h.get("rolled_back") and h.get("patch_hash")}
+
+
+def _stall_limit() -> int:
+    try:
+        return max(1, int(os.environ.get("AIFORGE_REPAIR_STALL_LIMIT", "2")))
+    except ValueError:
+        return 2
 
 
 def restore_file_backups(state: ProjectState) -> dict:
@@ -1413,6 +1486,9 @@ def repair_escalation(state: ProjectState) -> Optional[str]:
         return None
     if global_version_manager.detect_repeated_failure(state.get("root_causes", [])):
         return "STOPPED_REPEATED_FAILURE"
+    # consecutive attempts that were rolled back or had nothing to apply: more of the same will not help
+    if repair_policy.stalled(state.get("repair_history") or [], _stall_limit()):
+        return "STOPPED_NO_PROGRESS"
     attempt = state.get("retry_count", state.get("repair_attempt", state.get("iteration", 0)))
     max_attempts = state.get("max_retries", state.get("max_repair_attempts", state.get("max_iterations", MAX_REPAIR_ATTEMPTS)))
     if attempt >= max_attempts:
@@ -1471,6 +1547,7 @@ async def execution_guardian_node(state: ProjectState) -> dict:
     remembered = {}
     cycle = (state.get("applied_fix") or {}).get("cycle")
     if (cycle and state.get("fix_recorded_cycle") != cycle and summary["status"] != "FAILED"
+            and not (state.get("applied_fix") or {}).get("rolled_back")
             and (state.get("test_results") or {}).get("success") is True):
         try:
             if _record_verified_fix(state):

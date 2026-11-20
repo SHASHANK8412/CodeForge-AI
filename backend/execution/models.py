@@ -89,6 +89,8 @@ class ExecutionResult(BaseModel):
     language: str = Field(default="python", description="Language executed")
     execution_type: str = Field(default="RUN", description="Execution type string")
     execution_id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8], description="Unique execution run ID")
+    command: Optional[str] = Field(default=None, description="Command that produced this result")
+    sandbox: Optional[str] = Field(default=None, description="'docker' (isolated) or 'local' (subprocess)")
 
 
 class TestPlan(BaseModel):

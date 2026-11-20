@@ -277,7 +277,9 @@ class DebugAgent(BaseAgent):
             for f in list(failures) + list(failed_tests)
         )
         strategy, raw_changes = propose_repairs(files, f"{combined_output}\n{failure_text}", gate_errors,
-                                                memory_user=state.get("fix_memory_user"))
+                                                memory_user=state.get("fix_memory_user"),
+                                                rejected=state.get("repair_rejected") or set(),
+                                                history=state.get("repair_history_prompt") or "")
         for rel, content in raw_changes.items():
             clean_rel = rel.replace("\\", "/").lstrip("/")
             if ".." in clean_rel:

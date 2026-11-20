@@ -131,7 +131,8 @@ class ProjectRunner:
                     and any(folder.glob("*.py")) and not (folder / "__init__.py").exists()):
                 (folder / "__init__.py").write_text("", encoding="utf-8")
 
-        cmd = [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", "--rootdir", str(project_path)]
+        # -rA prints one PASSED/FAILED line per test: the repair loop judges a patch on per-test outcomes
+        cmd = [sys.executable, "-m", "pytest", "-rA", "-p", "no:cacheprovider", "--rootdir", str(project_path)]
         if not any((project_path / name).exists() for name in ("pytest.ini", "pyproject.toml", "setup.cfg", "tox.ini")):
             # The empty config lives in a directory of its own, and conftest discovery stops at the project:
             # pytest's collection tree starts at the config file's directory, and a config directly in the

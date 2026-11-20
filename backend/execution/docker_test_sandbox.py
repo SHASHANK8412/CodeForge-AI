@@ -131,7 +131,7 @@ def run_pytest_in_docker(project_path: Path, timeout_seconds: float = 900.0) -> 
             "-e", "HOME=/tmp",
             IMAGE, "sh", "-c",
             "printf '[pytest]\n' > /tmp/aiforge_pytest.ini; "
-            "python -m pytest -p no:cacheprovider --rootdir /app -c /tmp/aiforge_pytest.ini",
+            "python -m pytest -rA -p no:cacheprovider --rootdir /app -c /tmp/aiforge_pytest.ini",
             timeout=remaining,
         )
     except subprocess.TimeoutExpired:

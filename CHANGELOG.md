@@ -10,6 +10,11 @@ All notable changes to the AIForge platform are documented in this file.
 - **Integration & Compatibility Engine**: versioned shared contracts derived from the architecture, deterministic
   frontend/backend/database compatibility analysis, contract tests generated and executed in isolation, contract
   drift detection, bounded repairs routed to the responsible agent.
+- **Self-healing that knows when a fix didn't work** (merged from the evaluation branch): each debug-loop patch is
+  judged on per-test evidence before and after the re-run (fixed / improved / regressed / no effect); regressions
+  and no-ops are rolled back on disk, never re-applied, and described to the model on the next attempt; the loop
+  stops after `AIFORGE_REPAIR_STALL_LIMIT` (default 2) non-improving attempts. The generated test suite is now
+  written once and re-run during repair instead of being regenerated every cycle.
 - **Precise repairs**: model repairs (debug loop, Execution Guardian, project editor, Autopilot) ask for search/replace
   edits; an edit must match exactly one place in the file (tolerating trailing whitespace and a uniform indentation
   offset) or it is refused with the reason and retried once. Replies with whole files are still accepted.
