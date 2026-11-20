@@ -105,6 +105,14 @@ def snapshot(exec_results: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _error_resolved(before: Dict[str, Any], after: Dict[str, Any]) -> bool:
+    """The error the patch targeted is gone and a different one is now reported: progress through a chain of bugs
+    (e.g. a missing import fixed, the next error now shown). Without this, a correct fix whose tests still error on
+    the next bug was judged no_effect and rolled back."""
+    b, a = (before.get("error_line") or "").strip(), (after.get("error_line") or "").strip()
+    return bool(b) and bool(a) and a != b
+
+
 def judge_attempt(before: Dict[str, Any], after: Dict[str, Any]) -> Dict[str, Any]:
     """Compares two snapshots; returns the verdict and the test-level diff."""
     before_pass, after_pass = set(before.get("passing", [])), set(after.get("passing", []))
@@ -119,7 +127,7 @@ def judge_attempt(before: Dict[str, Any], after: Dict[str, Any]) -> Dict[str, An
         verdict = VERDICT_REGRESSED
     elif newly_passing or len(after_fail) < len(before_fail) or (
             # e.g. a SyntaxError (no tests collected) became runnable tests
-            not before.get("outcomes") and after.get("outcomes")):
+            not before.get("outcomes") and after.get("outcomes")) or _error_resolved(before, after):
         verdict = VERDICT_IMPROVED
     else:
         verdict = VERDICT_NO_EFFECT

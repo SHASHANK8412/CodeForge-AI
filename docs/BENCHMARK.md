@@ -45,6 +45,29 @@ laptop (i7-1360P, 16 GB); Groq = `openai/gpt-oss-120b`, a hosted model AIForge s
 (Groq support has since been removed; every model now runs locally, so the Groq columns are historical). Raw results, including every model answer, are in
 `benchmarks/runs/reviewer/` and `benchmarks/runs/injection/`.
 
+### First generation run: 5 easy tasks, local models, Docker sandbox (November 2026)
+
+`benchmarks/runs/20261120T082850Z_easy5-local/` - Qwen 3.5 9B (short work) + Qwen 2.5 Coder 7B (code) on the CPU-only
+laptop, 1 h per task, run while the laptop was also used interactively.
+
+| | Result |
+| --- | --- |
+| Tasks valid | 2 of 5 (2 hit the 1 h limit, 1 had a model call time out) |
+| Build success (valid tasks) | **0/2** |
+| Route coverage / generated tests passing | 0% / 0 of 6 |
+| Files that parse | 100% |
+| Median time per task | 44 min |
+
+Why the two valid builds failed, from the grader's boot errors:
+- `todo-basic`: `backend/main.py` used `Depends` without importing it. The import repair added it, but the tests still
+  errored on the next bug, the attempt was judged `no_effect` and **rolled back** - a correct fix undone. Fixed after
+  this run: a patch that resolves the error it targeted counts as progress (`repair_policy._error_resolved`).
+- `notes-sqlite`: the backend imported `get_db` from `backend/database.py`, which the database agent (generated in
+  parallel) never defined - a cross-agent interface mismatch.
+
+These are not headline numbers: n = 2 valid tasks, CPU contention during the run, and the rollback bug above. Re-run
+after the fix, with the machine otherwise idle, before quoting a build-success rate.
+
 ### Reviewer: does it catch planted bugs? (`python -m benchmarks.reviewer_eval`)
 
 12 snippets with one known bug each, 3 clean controls. A case whose review the measured model did not produce (a

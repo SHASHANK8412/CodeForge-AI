@@ -193,3 +193,16 @@ def test_the_proposer_skips_rolled_back_patches_and_tells_the_model_what_was_tri
     assert propose_repairs(files, "", errors, rejected={rp.patch_hash(changes)}, history=history) == ("none", {})
     assert len(prompts) == 1, "the deterministic patch was skipped and the model got its turn"
     assert "ROLLED BACK" in prompts[0] and "test_health" in prompts[0]
+
+
+
+def test_fixing_one_error_of_a_chain_is_progress_not_no_effect():
+    """Seen in the benchmark: the import repair added the missing `Depends`; the tests still errored, now on the next
+    bug, and the correct fix was rolled back as no_effect."""
+    before = {**_snap(1, [], ["t::a", "t::b"]), "error_line": "E   NameError: name 'Depends' is not defined"}
+    after = {**_snap(1, [], ["t::a", "t::b"]), "error_line": "E   ImportError: cannot import name 'get_db'"}
+    assert rp.judge_attempt(before, after)["verdict"] == "improved"
+    same = {**_snap(1, [], ["t::a", "t::b"]), "error_line": "E   NameError: name 'Depends' is not defined"}
+    assert rp.judge_attempt(before, same)["verdict"] == "no_effect", "the same error is still no progress"
+    broke = {**_snap(1, [], ["t::a", "t::b"]), "error_line": ""}
+    assert rp.judge_attempt(before, broke)["verdict"] == "no_effect", "no error line to compare: not counted"

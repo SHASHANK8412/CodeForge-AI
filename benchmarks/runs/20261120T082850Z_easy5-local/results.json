@@ -1,0 +1,782 @@
+{
+  "config": {
+    "label": "easy5-local",
+    "model": null,
+    "rag": "on",
+    "llm_repair": "on",
+    "max_iterations": 3,
+    "taskset_version": "v1",
+    "task_ids": [
+      "todo-basic",
+      "notes-sqlite",
+      "url-shortener",
+      "calculator-api",
+      "contact-book"
+    ],
+    "sandbox": "docker",
+    "groq": {
+      "used": false,
+      "model": null,
+      "tasks": []
+    },
+    "git_commit": "5a01bbd",
+    "python": "3.13.2",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "partial": false,
+  "finished_at": "2026-11-20T13:34:35.891440+00:00",
+  "summary": {
+    "tasks_total": 5,
+    "tasks_valid": 2,
+    "tasks_invalid": 3,
+    "build_success_rate": 0.0,
+    "first_attempt_build_success_rate": 0.0,
+    "syntax_ok_rate": 1.0,
+    "mean_route_coverage": 0.0,
+    "tasks_with_generated_tests": 2,
+    "generated_test_pass_rate": 0.0,
+    "tasks_all_tests_green": 0,
+    "tests_passed": 0,
+    "tests_ran": 6,
+    "repair": {
+      "tasks_with_repair_attempts": 2,
+      "build_fixed_by_repair": 0,
+      "repair_fix_rate": 0.0,
+      "improved_by_repair": 0,
+      "repair_improvement_rate": 0.0,
+      "mean_iterations": 1.0,
+      "attempts": 2,
+      "attempts_kept": 0,
+      "attempts_rolled_back": 2,
+      "attempt_verdicts": {
+        "no_effect": 2
+      }
+    },
+    "pipeline_self_reported_success": 0,
+    "pipeline_claim_mismatches": 0,
+    "tokens_per_task_median": 21494.0,
+    "tokens_total": 42988,
+    "tokens_estimated": false,
+    "wall_time_per_task_median_s": 2649.57,
+    "wall_time_total_s": 18324.0,
+    "by_difficulty": {
+      "easy": {
+        "tasks": 2,
+        "build_success_rate": 0.0,
+        "mean_route_coverage": 0.0
+      }
+    }
+  },
+  "tasks": [
+    {
+      "task_id": "todo-basic",
+      "title": "Todo list API",
+      "category": "crud",
+      "difficulty": "easy",
+      "started_at": "2026-11-20T08:28:50.388326+00:00",
+      "wall_time_s": 2717.47,
+      "telemetry": {
+        "llm_calls": 11,
+        "prompt_tokens": 13747,
+        "completion_tokens": 8923,
+        "tokens_estimated": false,
+        "llm_latency_ms": 2970303.7,
+        "llm_fallbacks": 0,
+        "llm_cache_hits": 0,
+        "models": [
+          "qwen2.5-coder:latest",
+          "qwen2.5:latest",
+          "qwen3.5:9b"
+        ],
+        "node_runs": 0,
+        "node_failures": 0,
+        "per_agent": {
+          "planner": {
+            "calls": 1,
+            "prompt_tokens": 783,
+            "completion_tokens": 1719,
+            "latency_ms": 346438.6,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "architect": {
+            "calls": 1,
+            "prompt_tokens": 2145,
+            "completion_tokens": 1928,
+            "latency_ms": 448439.1,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "frontend": {
+            "calls": 1,
+            "prompt_tokens": 1432,
+            "completion_tokens": 1303,
+            "latency_ms": 255634.7,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "backend": {
+            "calls": 1,
+            "prompt_tokens": 1887,
+            "completion_tokens": 1078,
+            "latency_ms": 502344.3,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "database": {
+            "calls": 1,
+            "prompt_tokens": 982,
+            "completion_tokens": 48,
+            "latency_ms": 540737.4,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "coding": {
+            "calls": 2,
+            "prompt_tokens": 2559,
+            "completion_tokens": 98,
+            "latency_ms": 57974.7,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "reviewer": {
+            "calls": 1,
+            "prompt_tokens": 1322,
+            "completion_tokens": 1176,
+            "latency_ms": 312748.0,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "documentation": {
+            "calls": 1,
+            "prompt_tokens": 73,
+            "completion_tokens": 343,
+            "latency_ms": 115185.6,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "testing": {
+            "calls": 1,
+            "prompt_tokens": 1784,
+            "completion_tokens": 930,
+            "latency_ms": 257257.9,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "diagnostic": {
+            "calls": 1,
+            "prompt_tokens": 780,
+            "completion_tokens": 300,
+            "latency_ms": 133543.4,
+            "fallbacks": 0,
+            "cache_hits": 0
+          }
+        },
+        "per_node_ms": {},
+        "llm_errors": 0
+      },
+      "pipeline": {
+        "error": null,
+        "status": "AWAITING_FINAL_APPROVAL",
+        "errors": [
+          "Test assertion mismatch in 'E   RuntimeError: The starlette.testclient module requires the httpx2 package to be installed.' Repair strategy: add_missing_imports."
+        ],
+        "self_reported_success": false,
+        "iterations_used": 1,
+        "repair_attempts": 1,
+        "verification_status": "FAILED",
+        "repair_history": [
+          {
+            "attempt": 1,
+            "source": "add_missing_imports",
+            "verdict": "no_effect",
+            "rolled_back": true,
+            "newly_passing": [],
+            "newly_failing": []
+          }
+        ],
+        "review": {
+          "score": 33.0,
+          "issues": 0,
+          "critical": 0,
+          "major": 0,
+          "minor": 0
+        }
+      },
+      "valid": true,
+      "final": {
+        "sandbox": "docker",
+        "files_total": 20,
+        "python_files": 9,
+        "syntax_ok": true,
+        "syntax_errors": [],
+        "app_found": false,
+        "app_module": null,
+        "app_boots": false,
+        "boot_error": "backend/main.py: NameError: name 'Depends' is not defined\nTraceback (most recent call last):\n  File \"/work/_aiforge_probe.py\", line 17, in <module>\n    module = importlib.import_module(mod_name)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/importlib/__init__.py\", line 126, in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap>\", line 1204, in _gcd_import\nNameError: name 'Depends' is not defined\n",
+        "build_success": false,
+        "routes_found": [],
+        "routes_expected": 6,
+        "routes_matched": 0,
+        "routes_missing": [
+          "GET /health",
+          "GET /todos",
+          "POST /todos",
+          "GET /todos/{id}",
+          "PUT /todos/{id}",
+          "DELETE /todos/{id}"
+        ],
+        "route_coverage": 0.0,
+        "test_files": 4,
+        "tests_collected": 3,
+        "tests_passed": 0,
+        "tests_failed": 0,
+        "tests_errored": 3,
+        "tests_skipped": 0,
+        "test_pass_rate": 0.0,
+        "pytest_exit_code": 2,
+        "pytest_output_tail": " ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.10/migration/\n    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)\n\n../usr/local/lib/python3.11/site-packages/pydantic/_internal/_config.py:345\n  /usr/local/lib/python3.11/site-packages/pydantic/_internal/_config.py:345: UserWarning: Valid config keys have changed in V2:\n  * 'orm_mode' has been renamed to 'from_attributes'\n    warnings.warn(message, UserWarning)\n\nbackend/main.py:27\nbackend/main.py:27\nbackend/main.py:27\n  /work/backend/main.py:27: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)\n    Base = declarative_base()\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n----------------- generated xml file: /work/.aiforge_junit.xml -----------------\n=========================== short test summary info ============================\nERROR tests/test_api.py - NameError: name 'Depends' is not defined\nERROR tests/test_e2e.py - NameError: name 'Depends' is not defined\nERROR tests/test_integration.py - NameError: name 'Depends' is not defined\n!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!!\n8 warnings, 3 errors in 3.90s\n\n/usr/local/lib/python3.11/site-packages/pytest_asyncio/plugin.py:207: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n",
+        "grade_duration_ms": 13337.0
+      },
+      "initial": {
+        "sandbox": "docker",
+        "files_total": 20,
+        "python_files": 9,
+        "syntax_ok": true,
+        "syntax_errors": [],
+        "app_found": false,
+        "app_module": null,
+        "app_boots": false,
+        "boot_error": "backend/main.py: NameError: name 'Depends' is not defined\nTraceback (most recent call last):\n  File \"/work/_aiforge_probe.py\", line 17, in <module>\n    module = importlib.import_module(mod_name)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/importlib/__init__.py\", line 126, in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap>\", line 1204, in _gcd_import\nNameError: name 'Depends' is not defined\n",
+        "build_success": false,
+        "routes_found": [],
+        "routes_expected": 6,
+        "routes_matched": 0,
+        "routes_missing": [
+          "GET /health",
+          "GET /todos",
+          "POST /todos",
+          "GET /todos/{id}",
+          "PUT /todos/{id}",
+          "DELETE /todos/{id}"
+        ],
+        "route_coverage": 0.0,
+        "test_files": 4,
+        "tests_collected": 3,
+        "tests_passed": 0,
+        "tests_failed": 0,
+        "tests_errored": 3,
+        "tests_skipped": 0,
+        "test_pass_rate": 0.0,
+        "pytest_exit_code": 2,
+        "pytest_output_tail": " ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.10/migration/\n    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)\n\n../usr/local/lib/python3.11/site-packages/pydantic/_internal/_config.py:345\n  /usr/local/lib/python3.11/site-packages/pydantic/_internal/_config.py:345: UserWarning: Valid config keys have changed in V2:\n  * 'orm_mode' has been renamed to 'from_attributes'\n    warnings.warn(message, UserWarning)\n\nbackend/main.py:27\nbackend/main.py:27\nbackend/main.py:27\n  /work/backend/main.py:27: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)\n    Base = declarative_base()\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n----------------- generated xml file: /work/.aiforge_junit.xml -----------------\n=========================== short test summary info ============================\nERROR tests/test_api.py - NameError: name 'Depends' is not defined\nERROR tests/test_e2e.py - NameError: name 'Depends' is not defined\nERROR tests/test_integration.py - NameError: name 'Depends' is not defined\n!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!!\n8 warnings, 3 errors in 3.90s\n\n/usr/local/lib/python3.11/site-packages/pytest_asyncio/plugin.py:207: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n",
+        "grade_duration_ms": 13337.0
+      },
+      "has_generated_tests": true
+    },
+    {
+      "task_id": "notes-sqlite",
+      "title": "Notes API with SQLite",
+      "category": "crud",
+      "difficulty": "easy",
+      "started_at": "2026-11-20T09:14:21.343582+00:00",
+      "wall_time_s": 2581.67,
+      "telemetry": {
+        "llm_calls": 10,
+        "prompt_tokens": 11906,
+        "completion_tokens": 8412,
+        "tokens_estimated": false,
+        "llm_latency_ms": 2539513.1,
+        "llm_fallbacks": 0,
+        "llm_cache_hits": 0,
+        "models": [
+          "qwen2.5-coder:latest",
+          "qwen2.5:latest",
+          "qwen3.5:9b"
+        ],
+        "node_runs": 0,
+        "node_failures": 0,
+        "per_agent": {
+          "planner": {
+            "calls": 1,
+            "prompt_tokens": 783,
+            "completion_tokens": 1690,
+            "latency_ms": 408654.2,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "architect": {
+            "calls": 1,
+            "prompt_tokens": 2112,
+            "completion_tokens": 1731,
+            "latency_ms": 485169.9,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "database": {
+            "calls": 1,
+            "prompt_tokens": 1005,
+            "completion_tokens": 53,
+            "latency_ms": 49836.4,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "frontend": {
+            "calls": 1,
+            "prompt_tokens": 1284,
+            "completion_tokens": 1156,
+            "latency_ms": 305444.4,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "backend": {
+            "calls": 1,
+            "prompt_tokens": 1683,
+            "completion_tokens": 774,
+            "latency_ms": 501522.9,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "coding": {
+            "calls": 1,
+            "prompt_tokens": 1309,
+            "completion_tokens": 78,
+            "latency_ms": 49943.3,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "reviewer": {
+            "calls": 1,
+            "prompt_tokens": 1347,
+            "completion_tokens": 1302,
+            "latency_ms": 306382.9,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "documentation": {
+            "calls": 1,
+            "prompt_tokens": 71,
+            "completion_tokens": 620,
+            "latency_ms": 136500.8,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "testing": {
+            "calls": 1,
+            "prompt_tokens": 1534,
+            "completion_tokens": 713,
+            "latency_ms": 190429.6,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "diagnostic": {
+            "calls": 1,
+            "prompt_tokens": 778,
+            "completion_tokens": 295,
+            "latency_ms": 105628.7,
+            "fallbacks": 0,
+            "cache_hits": 0
+          }
+        },
+        "per_node_ms": {},
+        "llm_errors": 0
+      },
+      "pipeline": {
+        "error": null,
+        "status": "AWAITING_FINAL_APPROVAL",
+        "errors": [
+          "Missing module or unresolvable import 'get_db'. Repair strategy: add_missing_imports."
+        ],
+        "self_reported_success": false,
+        "iterations_used": 1,
+        "repair_attempts": 1,
+        "verification_status": "FAILED",
+        "repair_history": [
+          {
+            "attempt": 1,
+            "source": "add_missing_imports",
+            "verdict": "no_effect",
+            "rolled_back": true,
+            "newly_passing": [],
+            "newly_failing": []
+          }
+        ],
+        "review": {
+          "score": 36.0,
+          "issues": 0,
+          "critical": 0,
+          "major": 0,
+          "minor": 0
+        }
+      },
+      "valid": true,
+      "final": {
+        "sandbox": "docker",
+        "files_total": 21,
+        "python_files": 9,
+        "syntax_ok": true,
+        "syntax_errors": [],
+        "app_found": false,
+        "app_module": null,
+        "app_boots": false,
+        "boot_error": "backend/main.py: ImportError: cannot import name 'get_db' from 'backend.database' (/work/backend/database.py)\nocal/lib/python3.11/importlib/__init__.py\", line 126, in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap>\", line 1204, in _gcd_import\nImportError: cannot import name 'get_db' from 'backend.database' (/work/backend/database.py)\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/work/_aiforge_probe.py\", line 21, in <module>\n    spec.loader.exec_module(module)\n  File \"<frozen importlib._bootstrap_external>\", line 940, in exec_module\n  File \"<frozen importlib._bootstrap>\", line 241, in _call_with_frames_removed\nImportError: cannot import name 'get_db' from 'backend.database' (/work/backend/database.py)\n",
+        "build_success": false,
+        "routes_found": [],
+        "routes_expected": 4,
+        "routes_matched": 0,
+        "routes_missing": [
+          "GET /notes",
+          "POST /notes",
+          "GET /notes/{id}",
+          "DELETE /notes/{id}"
+        ],
+        "route_coverage": 0.0,
+        "test_files": 4,
+        "tests_collected": 3,
+        "tests_passed": 0,
+        "tests_failed": 0,
+        "tests_errored": 3,
+        "tests_skipped": 0,
+        "test_pass_rate": 0.0,
+        "pytest_exit_code": 2,
+        "pytest_output_tail": "ings summary ===============================\n../usr/local/lib/python3.11/site-packages/starlette/testclient.py:40\n  /usr/local/lib/python3.11/site-packages/starlette/testclient.py:40: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = typing.Callable[[], typing.ContextManager[anyio.abc.BlockingPortal]]\n\nbackend/database.py:9\n  /work/backend/database.py:9: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)\n    Base = declarative_base()\n\nbackend/models.py:5\n  /work/backend/models.py:5: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)\n    Base = declarative_base()\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n----------------- generated xml file: /work/.aiforge_junit.xml -----------------\n=========================== short test summary info ============================\nERROR tests/test_api.py\nERROR tests/test_e2e.py\nERROR tests/test_integration.py\n!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!!\n3 warnings, 3 errors in 1.68s\n\n/usr/local/lib/python3.11/site-packages/pytest_asyncio/plugin.py:207: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n",
+        "grade_duration_ms": 7852.5
+      },
+      "initial": {
+        "sandbox": "docker",
+        "files_total": 21,
+        "python_files": 9,
+        "syntax_ok": true,
+        "syntax_errors": [],
+        "app_found": false,
+        "app_module": null,
+        "app_boots": false,
+        "boot_error": "backend/main.py: ImportError: cannot import name 'get_db' from 'backend.database' (/work/backend/database.py)\nocal/lib/python3.11/importlib/__init__.py\", line 126, in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap>\", line 1204, in _gcd_import\nImportError: cannot import name 'get_db' from 'backend.database' (/work/backend/database.py)\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/work/_aiforge_probe.py\", line 21, in <module>\n    spec.loader.exec_module(module)\n  File \"<frozen importlib._bootstrap_external>\", line 940, in exec_module\n  File \"<frozen importlib._bootstrap>\", line 241, in _call_with_frames_removed\nImportError: cannot import name 'get_db' from 'backend.database' (/work/backend/database.py)\n",
+        "build_success": false,
+        "routes_found": [],
+        "routes_expected": 4,
+        "routes_matched": 0,
+        "routes_missing": [
+          "GET /notes",
+          "POST /notes",
+          "GET /notes/{id}",
+          "DELETE /notes/{id}"
+        ],
+        "route_coverage": 0.0,
+        "test_files": 4,
+        "tests_collected": 3,
+        "tests_passed": 0,
+        "tests_failed": 0,
+        "tests_errored": 3,
+        "tests_skipped": 0,
+        "test_pass_rate": 0.0,
+        "pytest_exit_code": 2,
+        "pytest_output_tail": "ings summary ===============================\n../usr/local/lib/python3.11/site-packages/starlette/testclient.py:40\n  /usr/local/lib/python3.11/site-packages/starlette/testclient.py:40: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = typing.Callable[[], typing.ContextManager[anyio.abc.BlockingPortal]]\n\nbackend/database.py:9\n  /work/backend/database.py:9: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)\n    Base = declarative_base()\n\nbackend/models.py:5\n  /work/backend/models.py:5: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)\n    Base = declarative_base()\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n----------------- generated xml file: /work/.aiforge_junit.xml -----------------\n=========================== short test summary info ============================\nERROR tests/test_api.py\nERROR tests/test_e2e.py\nERROR tests/test_integration.py\n!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!!\n3 warnings, 3 errors in 1.68s\n\n/usr/local/lib/python3.11/site-packages/pytest_asyncio/plugin.py:207: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n",
+        "grade_duration_ms": 7852.5
+      },
+      "has_generated_tests": true
+    },
+    {
+      "task_id": "url-shortener",
+      "title": "URL shortener",
+      "category": "service",
+      "difficulty": "easy",
+      "started_at": "2026-11-20T09:57:30.963327+00:00",
+      "wall_time_s": 5991.83,
+      "telemetry": {
+        "llm_calls": 9,
+        "prompt_tokens": 11272,
+        "completion_tokens": 9032,
+        "tokens_estimated": false,
+        "llm_latency_ms": 2402894.7,
+        "llm_fallbacks": 0,
+        "llm_cache_hits": 0,
+        "models": [
+          "qwen2.5-coder:latest",
+          "qwen2.5:latest",
+          "qwen3.5:9b"
+        ],
+        "node_runs": 0,
+        "node_failures": 0,
+        "per_agent": {
+          "planner": {
+            "calls": 1,
+            "prompt_tokens": 784,
+            "completion_tokens": 1747,
+            "latency_ms": 364606.4,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "architect": {
+            "calls": 1,
+            "prompt_tokens": 2116,
+            "completion_tokens": 1961,
+            "latency_ms": 448996.1,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "database": {
+            "calls": 1,
+            "prompt_tokens": 1013,
+            "completion_tokens": 128,
+            "latency_ms": 51475.9,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "frontend": {
+            "calls": 1,
+            "prompt_tokens": 1177,
+            "completion_tokens": 1099,
+            "latency_ms": 256803.3,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "backend": {
+            "calls": 1,
+            "prompt_tokens": 1587,
+            "completion_tokens": 1048,
+            "latency_ms": 473845.2,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "coding": {
+            "calls": 1,
+            "prompt_tokens": 1292,
+            "completion_tokens": 34,
+            "latency_ms": 43941.2,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "reviewer": {
+            "calls": 1,
+            "prompt_tokens": 1441,
+            "completion_tokens": 1566,
+            "latency_ms": 375219.3,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "documentation": {
+            "calls": 1,
+            "prompt_tokens": 72,
+            "completion_tokens": 444,
+            "latency_ms": 122692.4,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "testing": {
+            "calls": 1,
+            "prompt_tokens": 1790,
+            "completion_tokens": 1005,
+            "latency_ms": 265314.9,
+            "fallbacks": 0,
+            "cache_hits": 0
+          }
+        },
+        "per_node_ms": {},
+        "llm_errors": 0
+      },
+      "pipeline": {
+        "error": "pipeline timed out after 3600.0s",
+        "status": null,
+        "errors": [],
+        "self_reported_success": false,
+        "iterations_used": 0,
+        "repair_attempts": 0,
+        "verification_status": null,
+        "repair_history": [],
+        "review": {
+          "score": null,
+          "issues": 0,
+          "critical": 0,
+          "major": 0,
+          "minor": 0
+        }
+      },
+      "valid": false,
+      "invalid_reason": "pipeline timed out after 3600.0s",
+      "final": null,
+      "initial": null,
+      "has_generated_tests": false
+    },
+    {
+      "task_id": "calculator-api",
+      "title": "Calculator API",
+      "category": "service",
+      "difficulty": "easy",
+      "started_at": "2026-11-20T11:37:22.808495+00:00",
+      "wall_time_s": 3430.31,
+      "telemetry": {
+        "llm_calls": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "tokens_estimated": false,
+        "llm_latency_ms": 0.0,
+        "llm_fallbacks": 0,
+        "llm_cache_hits": 0,
+        "models": [
+          "qwen3.5:9b"
+        ],
+        "node_runs": 0,
+        "node_failures": 0,
+        "per_agent": {
+          "planner": {
+            "calls": 1,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "latency_ms": 0.0,
+            "fallbacks": 0,
+            "cache_hits": 0
+          }
+        },
+        "per_node_ms": {},
+        "llm_errors": 1
+      },
+      "pipeline": {
+        "error": null,
+        "status": "FAILED",
+        "errors": [
+          "Generation failed: the language model produced no output for planner (model 'qwen3.5:9b' produced no output for task 'planner': LLMDeadlineExceeded: Model 'qwen3.5:9b' did not finish within 900s (raise AIFORGE_LLM_TIMEOUT_SECONDS or use a smaller model on CPU-only machines))"
+        ],
+        "self_reported_success": false,
+        "iterations_used": 0,
+        "repair_attempts": 0,
+        "verification_status": null,
+        "repair_history": [],
+        "review": {
+          "score": null,
+          "issues": 0,
+          "critical": 0,
+          "major": 0,
+          "minor": 0
+        }
+      },
+      "valid": false,
+      "invalid_reason": "1 model call(s) failed",
+      "final": null,
+      "initial": null,
+      "has_generated_tests": false
+    },
+    {
+      "task_id": "contact-book",
+      "title": "Contact book",
+      "category": "crud",
+      "difficulty": "easy",
+      "started_at": "2026-11-20T12:34:33.156239+00:00",
+      "wall_time_s": 3602.72,
+      "telemetry": {
+        "llm_calls": 9,
+        "prompt_tokens": 11632,
+        "completion_tokens": 9700,
+        "tokens_estimated": false,
+        "llm_latency_ms": 3952416.1,
+        "llm_fallbacks": 0,
+        "llm_cache_hits": 0,
+        "models": [
+          "qwen2.5-coder:latest",
+          "qwen2.5:latest",
+          "qwen3.5:9b"
+        ],
+        "node_runs": 0,
+        "node_failures": 0,
+        "per_agent": {
+          "planner": {
+            "calls": 1,
+            "prompt_tokens": 787,
+            "completion_tokens": 1856,
+            "latency_ms": 415331.9,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "architect": {
+            "calls": 1,
+            "prompt_tokens": 2171,
+            "completion_tokens": 1537,
+            "latency_ms": 374684.7,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "database": {
+            "calls": 1,
+            "prompt_tokens": 972,
+            "completion_tokens": 58,
+            "latency_ms": 45415.6,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "frontend": {
+            "calls": 1,
+            "prompt_tokens": 1341,
+            "completion_tokens": 1151,
+            "latency_ms": 404779.2,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "backend": {
+            "calls": 1,
+            "prompt_tokens": 1767,
+            "completion_tokens": 1186,
+            "latency_ms": 889442.1,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "coding": {
+            "calls": 1,
+            "prompt_tokens": 1266,
+            "completion_tokens": 74,
+            "latency_ms": 511689.9,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "reviewer": {
+            "calls": 1,
+            "prompt_tokens": 1330,
+            "completion_tokens": 1665,
+            "latency_ms": 751747.5,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "documentation": {
+            "calls": 1,
+            "prompt_tokens": 70,
+            "completion_tokens": 673,
+            "latency_ms": 196924.9,
+            "fallbacks": 0,
+            "cache_hits": 0
+          },
+          "testing": {
+            "calls": 1,
+            "prompt_tokens": 1928,
+            "completion_tokens": 1500,
+            "latency_ms": 362400.3,
+            "fallbacks": 0,
+            "cache_hits": 0
+          }
+        },
+        "per_node_ms": {},
+        "llm_errors": 0
+      },
+      "pipeline": {
+        "error": "pipeline timed out after 3600.0s",
+        "status": null,
+        "errors": [],
+        "self_reported_success": false,
+        "iterations_used": 0,
+        "repair_attempts": 0,
+        "verification_status": null,
+        "repair_history": [],
+        "review": {
+          "score": null,
+          "issues": 0,
+          "critical": 0,
+          "major": 0,
+          "minor": 0
+        }
+      },
+      "valid": false,
+      "invalid_reason": "pipeline timed out after 3600.0s",
+      "final": null,
+      "initial": null,
+      "has_generated_tests": false
+    }
+  ]
+}
