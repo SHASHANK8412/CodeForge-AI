@@ -61,3 +61,14 @@ benchmarks/runs/
 
 # Benchmark run outputs (generated projects are large; results.json and REPORT.md are kept)
 benchmarks/runs/*/projects/
+
+# Runtime data the app writes while running (user accounts, generations, chats, memories, agent runs, reports,
+# databases). Never committed: it holds users' data. Seed documents in backend/data/docs/ stay tracked.
+backend/data/**/*.json
+backend/data/**/*.pkl
+backend/database/*.db
+backend/database/*.json
+backend/logs/*.json
+backend/reports/*.json
+backend/reports/*.md
+logs/*.json
