@@ -21,14 +21,13 @@ writes ``results.json`` + ``REPORT.md`` for the run.
 
 Validity rules (a run that breaks one is reported, not hidden):
 * LLM caches are disabled, so every task really calls the model.
-* A task where a model call failed (model unreachable, timed out, empty answer) or where a Groq call fell back
-  to the local model (a different configuration from the one measured) is marked ``valid=False`` and excluded
-  from headline rates; the summary counts them.
+* A task where a model call failed (model unreachable, timed out, empty answer) or was answered by a fallback
+  model (a different configuration from the one measured) is marked ``valid=False`` and excluded from headline
+  rates; the summary counts them.
 * The pipeline approves its architecture checkpoint and always stops at the final checkpoint: a benchmark never
   packages, publishes to GitHub or deploys anything.
 
-Hosted model comparison: with GROQ_API_KEY set, ``--groq on`` (the default when a key exists) sends the coding
-agents to Groq; ``--groq off`` keeps every agent on the local Ollama models.
+Every agent runs on the local models (Ollama); no API key is used.
 """
 
 from __future__ import annotations
@@ -62,8 +61,7 @@ PipelineFn = Callable[..., Any]
 # --------------------------------------------------------------------------- #
 
 @contextmanager
-def configured_env(model: Optional[str], rag: str, llm_repair: str, trace_file: Optional[Path],
-                   groq: str = "on") -> Iterator[None]:
+def configured_env(model: Optional[str], rag: str, llm_repair: str, trace_file: Optional[Path]) -> Iterator[None]:
     """Applies one benchmark configuration through env vars, then restores them."""
     updates = {
         "AIFORGE_DISABLE_LLM_CACHE": "1",
@@ -71,8 +69,6 @@ def configured_env(model: Optional[str], rag: str, llm_repair: str, trace_file: 
         "AIFORGE_LLM_REPAIR": llm_repair,
         "AIFORGE_TRACE_FILE": str(trace_file) if trace_file else None,
     }
-    if groq == "off":
-        updates["AIFORGE_GROQ_TASKS"] = ""          # no task goes to Groq: every agent stays local
     if model:
         updates.update({"AIFORGE_CODING_MODEL": model, "AIFORGE_GENERAL_MODEL": model,
                         "AIFORGE_DEBUG_MODEL": model, "OLLAMA_MODEL": model})
@@ -192,7 +188,7 @@ async def run_task(task: BenchmarkTask, run_dir: Path, pipeline: PipelineFn, max
         if llm_errors:
             reasons.append(f"{llm_errors} model call(s) failed")
         if trace["llm_fallbacks"]:
-            reasons.append(f"{trace['llm_fallbacks']} Groq call(s) fell back to the local model")
+            reasons.append(f"{trace['llm_fallbacks']} model call(s) were answered by a fallback model")
         if trace["llm_calls"] == 0:
             reasons.append("no LLM calls recorded")
         if record["pipeline"]["errors"] and record["pipeline"]["status"] == "SECURITY_ERROR":
@@ -330,8 +326,7 @@ def render_report(results: Dict[str, Any]) -> str:
         f"- Model override: `{cfg['model'] or 'router default'}` | RAG: `{cfg['rag']}` | "
         f"LLM repair: `{cfg['llm_repair']}` | max iterations: `{cfg['max_iterations']}`",
         f"- Sandbox: `{cfg['sandbox']}` | commit `{cfg['git_commit']}` | {results['finished_at']}",
-        f"- Coding agents on Groq: "
-        f"{('yes (`' + str((cfg.get('groq') or {}).get('model')) + '`)') if (cfg.get('groq') or {}).get('used') else 'no (all agents local)'}",
+        "- Models: local (Ollama), no API key",
         "",
     ]
     if s["tasks_invalid"]:
@@ -389,34 +384,28 @@ def render_report(results: Dict[str, Any]) -> str:
 async def run_benchmark(task_ids: Optional[List[str]] = None, model: Optional[str] = None, rag: str = "on",
                         llm_repair: str = "on", max_iterations: int = 3, label: Optional[str] = None,
                         runs_dir: Path = DEFAULT_RUNS_DIR, task_timeout: float = 1800.0,
-                        pipeline: Optional[PipelineFn] = None, groq: Optional[str] = None) -> Dict[str, Any]:
+                        pipeline: Optional[PipelineFn] = None) -> Dict[str, Any]:
     if pipeline is None:
         from run_aiforge import run_aiforge_pipeline as pipeline  # heavy import, only when needed
     from backend.execution.docker_sandbox import sandbox_backend
-    from backend.services import groq_provider
-
-    groq = groq or ("on" if groq_provider.status()["enabled"] else "off")
-    if groq == "on" and not groq_provider.status()["enabled"]:
-        raise SystemExit("--groq on needs GROQ_API_KEY")
 
     tasks = get_tasks(task_ids)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    label = label or f"{(model or 'default').replace(':', '-').replace('/', '-')}-rag{rag}-groq{groq}"
+    label = label or f"{(model or 'default').replace(':', '-').replace('/', '-')}-rag{rag}"
     run_dir = Path(runs_dir) / f"{stamp}_{label}"
     (run_dir / "traces").mkdir(parents=True, exist_ok=True)
 
     config = {
         "label": label, "model": model, "rag": rag, "llm_repair": llm_repair, "max_iterations": max_iterations,
         "taskset_version": TASKSET_VERSION, "task_ids": [t.id for t in tasks], "sandbox": sandbox_backend(),
-        "groq": {"used": groq == "on", "model": groq_provider.model() if groq == "on" else None,
-                 "tasks": list(groq_provider.groq_tasks()) if groq == "on" else []},
+        "local_model": os.environ.get("AIFORGE_LOCAL_MODEL") or "qwen3.5:9b (default)",
         "git_commit": _git_commit(), "python": platform.python_version(), "platform": platform.platform(),
     }
     print(f"AIForge benchmark '{label}': {len(tasks)} task(s) -> {run_dir}")
 
     records: List[Dict[str, Any]] = []
     for i, task in enumerate(tasks, 1):
-        with configured_env(model, rag, llm_repair, run_dir / "traces" / f"{task.id}.jsonl", groq=groq):
+        with configured_env(model, rag, llm_repair, run_dir / "traces" / f"{task.id}.jsonl"):
             rec = await run_task(task, run_dir, pipeline, max_iterations, task_timeout)
         records.append(rec)
         fin = rec.get("final") or {}
@@ -452,8 +441,6 @@ def main(argv: Optional[List[str]] = None) -> int:
     run_p.add_argument("--label")
     run_p.add_argument("--runs-dir", default=str(DEFAULT_RUNS_DIR))
     run_p.add_argument("--task-timeout", type=float, default=1800.0)
-    run_p.add_argument("--groq", choices=["on", "off"], default=None,
-                       help="coding agents on Groq (default: on when GROQ_API_KEY is set) or every agent local")
 
     grade_p = sub.add_parser("grade", help="grade an existing project directory")
     grade_p.add_argument("project_dir")
@@ -469,7 +456,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         res = asyncio.run(run_benchmark(
             task_ids=args.tasks.split(",") if args.tasks else None, model=args.model, rag=args.rag,
             llm_repair=args.llm_repair, max_iterations=args.max_iterations, label=args.label,
-            runs_dir=Path(args.runs_dir), task_timeout=args.task_timeout, groq=args.groq,
+            runs_dir=Path(args.runs_dir), task_timeout=args.task_timeout,
         ))
         s = res["summary"]
         print(f"\nbuild success {_pct(s['build_success_rate'])} | route coverage {_pct(s['mean_route_coverage'])} | "

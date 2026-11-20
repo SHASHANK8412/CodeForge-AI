@@ -493,7 +493,7 @@ def test_the_benchmark_harness_grades_the_real_pipeline(pipeline, tmp_path, monk
                                           approve_architecture=approve_architecture, ask=ask, graph=pipeline.graph)
 
     res = asyncio.run(harness.run_benchmark(task_ids=["notes-sqlite"], label="stub", runs_dir=tmp_path / "runs",
-                                            pipeline=run, groq="off"))
+                                            pipeline=run))
     task = res["tasks"][0]
     assert task["valid"], task.get("invalid_reason")
     assert task["pipeline"]["status"] == "AWAITING_FINAL_APPROVAL", "the benchmark never approves the release"
@@ -502,4 +502,4 @@ def test_the_benchmark_harness_grades_the_real_pipeline(pipeline, tmp_path, monk
     # the stub backend has GET/POST /notes and GET /notes/{id} but no DELETE: coverage is measured, not assumed
     assert final["routes_matched"] == 3 and final["routes_expected"] == 4
     assert final["tests_passed"] == 3
-    assert res["config"]["groq"] == {"used": False, "model": None, "tasks": []}
+    assert "groq" not in res["config"], "no hosted model: every agent is local"

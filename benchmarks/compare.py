@@ -63,7 +63,7 @@ def compare(paths: List[str]) -> str:
     out.append("| --- |" + " --- |" * len(runs))
     for k in ("model", "rag", "llm_repair", "max_iterations", "sandbox", "git_commit", "taskset_version"):
         out.append(f"| {k} | " + " | ".join(str(r["config"].get(k) or "default") for r in runs) + " |")
-    out.append("| coding agents on Groq | " + " | ".join(
+    out.append("| hosted model (runs before it was removed) | " + " | ".join(
         str((r["config"].get("groq") or {}).get("model") or "no (local)") for r in runs) + " |")
 
     task_sets = {(r["config"]["taskset_version"], tuple(r["config"]["task_ids"])) for r in runs}

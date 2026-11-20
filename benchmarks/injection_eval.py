@@ -15,7 +15,6 @@ A case where the model did not answer is invalid, not a resisted attack.
 
     python -m benchmarks.injection_eval                       # default model routing (local)
     python -m benchmarks.injection_eval --model llama3.2:3b   # one local model for every call
-    python -m benchmarks.injection_eval --groq                # the Groq model (needs GROQ_API_KEY)
 """
 
 from __future__ import annotations
@@ -138,11 +137,11 @@ def summarize(rows: List[dict]) -> Dict[str, dict]:
 
 
 def _call_problem() -> Optional[str]:
-    """A failed model call, or a Groq call answered by the local model instead, recorded in the trace."""
+    """A failed model call, or one answered by a fallback model instead, recorded in the trace."""
     from backend.observability.tracing import global_trace
     for e in global_trace.events():
         if e.get("kind") == "llm_call" and (e.get("error") or e.get("fallback")):
-            return ("Groq fell back to the local model: " if e.get("fallback") else "model call failed: ") + str(e.get("error"))
+            return ("answered by a fallback model: " if e.get("fallback") else "model call failed: ") + str(e.get("error"))
     return None
 
 
@@ -166,10 +165,8 @@ def run_injection_eval(ask: Optional[AskFn] = None, out_dir: Optional[Path] = No
                 rows.append({"id": case.id, "style": case.style, "condition": condition,
                              "error": f"{type(exc).__name__}: {exc}", "attack_succeeded": False, "useful": False,
                              "answer": None})
-    from backend.services import groq_provider
-    groq_used = "general" in groq_provider.groq_tasks() and groq_provider.status()["enabled"]
     result = {"finished_at": datetime.now(timezone.utc).isoformat(),
-              "model": f"groq:{groq_provider.model()}" if groq_used else (os.environ.get("AIFORGE_GENERAL_MODEL") or "router default (local)"),
+              "model": os.environ.get("AIFORGE_GENERAL_MODEL") or "router default (local)",
               "summary": summarize(rows), "cases": rows}
     if out_dir:
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -180,18 +177,12 @@ def run_injection_eval(ask: Optional[AskFn] = None, out_dir: Optional[Path] = No
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m benchmarks.injection_eval")
     ap.add_argument("--model", help="local model for every call, e.g. qwen2.5:latest")
-    ap.add_argument("--groq", action="store_true", help="answer with the Groq model (needs GROQ_API_KEY)")
     ap.add_argument("--out", default=str(REPO_ROOT / "benchmarks" / "runs" / "injection"))
     args = ap.parse_args(argv)
     if args.model:
         os.environ["AIFORGE_GENERAL_MODEL"] = os.environ["AIFORGE_CODING_MODEL"] = args.model
-    os.environ["AIFORGE_GROQ_TASKS"] = "general" if args.groq else ""
-    if args.groq:
-        from backend.services import groq_provider
-        if not groq_provider.status()["enabled"]:
-            raise SystemExit("--groq needs GROQ_API_KEY")
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    res = run_injection_eval(out_dir=Path(args.out) / (stamp + ("_groq" if args.groq else "_local")))
+    res = run_injection_eval(out_dir=Path(args.out) / (stamp + "_local"))
     print(f"model: {res['model']}")
     for condition, s in res["summary"].items():
         print(f"{condition:10} attack success {s['attack_success']}/{s['cases']} | useful answers "

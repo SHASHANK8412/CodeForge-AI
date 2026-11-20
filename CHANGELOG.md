@@ -10,7 +10,9 @@ All notable changes to the AIForge platform are documented in this file.
 - **Integration & Compatibility Engine**: versioned shared contracts derived from the architecture, deterministic
   frontend/backend/database compatibility analysis, contract tests generated and executed in isolation, contract
   drift detection, bounded repairs routed to the responsible agent.
-- **Local models by default, Groq opt-in**: everything runs on local models unless `AIFORGE_GROQ_TASKS` names tasks.
+- **Removed: Groq (hosted model) support.** Every model runs locally from Hugging Face weights through Ollama; no API
+  key is used or read. (Reviewer and injection results measured on Groq earlier stay in docs/BENCHMARK.md as history.)
+- **Local models**:
   Qwen 3.5 9B (`AIFORGE_LOCAL_MODEL`) answers short-output work (planning, review, debugging, chat); long outputs
   (architecture, code, tests, docs) stay on the faster Qwen 2.5 models (`AIFORGE_LOCAL_MODEL_SCOPE=all` changes that).
 - **Fixed: code agents were routed as general chat**: the frontend, backend and database agents fell through to the
@@ -28,10 +30,6 @@ All notable changes to the AIForge platform are documented in this file.
     with the model that made them and never compared across models;
   - voice prompts: a mic button on the project forms, transcribed on this machine by faster-whisper
     (`POST /api/speech/transcribe`, signed-in users, audio deleted after transcription).
-- **Qwen 3.8 27B on Groq** (`qwen/qwen3.8-27b`) is the default hosted model, and by default every task uses it
-  (code generation, planning, review, testing, debugging, docs, chat); its thinking is requested hidden so only
-  the answer reaches the agents. The local Ollama models remain the fallback. `AIFORGE_GROQ_MODEL` and
-  `AIFORGE_GROQ_TASKS` still choose another model or a subset of tasks.
 - **Self-healing that knows when a fix didn't work** (merged from the evaluation branch): each debug-loop patch is
   judged on per-test evidence before and after the re-run (fixed / improved / regressed / no effect); regressions
   and no-ops are rolled back on disk, never re-applied, and described to the model on the next attempt; the loop

@@ -53,7 +53,7 @@ jobs:
           tests/test_day13_collaboration.py tests/kubernetes tests/infrastructure
           tests/test_extraordinary_features.py tests/test_main.py
           tests/test_quality_evidence.py tests/test_reviewer_validation.py
-          tests/test_user_data_and_ai_core.py tests/test_cli_and_benchmarks.py tests/test_groq_provider.py
+          tests/test_user_data_and_ai_core.py tests/test_cli_and_benchmarks.py
 
   frontend:
     name: Frontend (lint + build)

@@ -12,7 +12,6 @@ from threading import Lock
 from typing import Iterable, Optional
 
 from backend.telemetry.usage import record_llm_call, token_counts
-from backend.services import groq_provider
 
 from ollama import Client, AsyncClient  # type: ignore[attr-defined]
 
@@ -352,47 +351,6 @@ def _generate_message_payload(system_prompt: str, user_prompt: str) -> list[dict
     return messages
 
 
-def _groq_answer(task: str, system_prompt: str, prompt: str, options: dict, cache_key: str, started_at: float) -> str | None:
-    """The coding agents' answer from Groq when it is configured (see groq_provider); None means use the local model."""
-    llm_started_at = perf_counter()
-    try:
-        result = groq_provider.chat(_generate_message_payload(system_prompt, prompt), options)
-    except groq_provider.GroqError as exc:
-        _note_groq_fallback(task, exc)
-        return None
-    return _record_groq(task, prompt, result, cache_key, started_at, llm_started_at)
-
-
-def _note_groq_fallback(task: str, exc: Exception) -> None:
-    _logger.warning("Groq call for task '%s' failed (%s); using the local model instead", task, exc)
-    from backend.observability.tracing import record_llm_call as trace_llm_call
-    trace_llm_call(agent=task, model=f"groq:{groq_provider.model()}", prompt="", output="", latency_ms=0.0,
-                   prompt_tokens=0, completion_tokens=0, fallback=True, error=str(exc))
-
-
-async def _groq_answer_async(task: str, system_prompt: str, prompt: str, options: dict, cache_key: str,
-                             started_at: float) -> str | None:
-    llm_started_at = perf_counter()
-    try:
-        result = await groq_provider.chat_async(_generate_message_payload(system_prompt, prompt), options)
-    except groq_provider.GroqError as exc:
-        _note_groq_fallback(task, exc)
-        return None
-    return _record_groq(task, prompt, result, cache_key, started_at, llm_started_at)
-
-
-def _record_groq(task, prompt, result, cache_key, started_at, llm_started_at) -> str:
-    llm_seconds = perf_counter() - llm_started_at
-    label = f"groq:{result.model}"
-    record_llm_call(task, label, result.prompt_tokens, result.completion_tokens, llm_seconds)
-    _set_cached_response(cache_key, result.content)
-    _logger.info("[AIForge Performance] Provider: Groq | Model: %s | Generation: %.2fs", result.model, llm_seconds)
-    _log_agent_performance(task=task, model=label, prompt_chars=len(prompt), output_chars=len(result.content),
-                           execution_time_ms=(perf_counter() - started_at) * 1000, llm_time_ms=llm_seconds * 1000,
-                           cache_status="MISS")
-    return result.content
-
-
 def generate_text(
     system_prompt: str,
     prompt: str,
@@ -426,11 +384,6 @@ def generate_text(
         )
         record_llm_call(task, selected_model, 0, 0, 0.0, cached=True)
         return cached
-
-    if groq_provider.handles(task):
-        groq_content = _groq_answer(task, system_prompt, compact_prompt, options, key, started_at)
-        if groq_content is not None:
-            return groq_content
 
     llm_started_at = perf_counter()
     try:
@@ -504,14 +457,6 @@ async def generate_text_async(
         if queue is not None:
             await queue.put(("chunk", task, cached))
         return cached
-
-    if groq_provider.handles(task):
-        groq_content = await _groq_answer_async(task, system_prompt, compact_prompt, options, key, started_at)
-        if groq_content is not None:
-            queue = stream_queue_var.get()
-            if queue is not None:
-                await queue.put(("chunk", task, groq_content))
-            return groq_content
 
     llm_started_at = perf_counter()
     queue = stream_queue_var.get()

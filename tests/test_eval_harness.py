@@ -330,7 +330,7 @@ def test_harness_marks_fallback_runs_invalid(tmp_path, monkeypatch):
     monkeypatch.setenv("AIFORGE_SANDBOX", "local")
     res = asyncio.run(harness.run_benchmark(task_ids=["todo-basic"], runs_dir=tmp_path, pipeline=_fallback_pipeline))
     task = res["tasks"][0]
-    assert task["valid"] is False and "fell back" in task["invalid_reason"]
+    assert task["valid"] is False and "answered by a fallback model" in task["invalid_reason"]
     assert res["summary"]["tasks_valid"] == 0 and res["summary"]["build_success_rate"] is None
 
 

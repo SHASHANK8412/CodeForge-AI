@@ -185,7 +185,7 @@ def local_model_scope() -> str:
 
 def preferred_local_model() -> Optional[str]:
     """The local model used for every task when it is installed (AIFORGE_LOCAL_MODEL; "auto" = per-task choice
-    among the installed models). Hosted Groq calls are separate (backend/services/groq_provider.py)."""
+    among the installed models). Every model call is local; no API key is used."""
     value = os.environ.get("AIFORGE_LOCAL_MODEL", "").strip()
     if value.lower() in ("auto", "off", "none"):
         return None

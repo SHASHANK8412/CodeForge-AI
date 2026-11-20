@@ -484,7 +484,6 @@ def health():
     except httpx.HTTPError:
         ollama = "down"
     from backend.execution.docker_test_sandbox import docker_available
-    from backend.services import groq_provider
     from backend.ml import local_models
     try:
         import sqlite3
@@ -499,8 +498,6 @@ def health():
         "ai_mode": ai_mode,
         "services": {"api": "up", "database": database, "ollama": ollama,
                      "docker_sandbox": "up" if docker_available() else "down"},
-        # Which agents a hosted Groq model answers (configured, not called: no request is made here)
-        "groq": groq_provider.status(),
         # Local Hugging Face models: configured, loaded on first use (nothing is loaded by this check)
         "local_models": local_models.status(),
     }
