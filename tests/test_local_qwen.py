@@ -64,3 +64,9 @@ def test_the_thinking_setting_is_sent_to_ollama(monkeypatch):
     monkeypatch.setattr(llm, "_ollama_client", Client())
     llm._chat_completion("qwen3.5:9b", [{"role": "user", "content": "hi"}])
     assert sent["think"] is False and sent["model"] == "qwen3.5:9b"
+
+
+def test_the_ollama_connection_waits_as_long_as_the_documented_call_limit():
+    """A long answer on a CPU (e.g. an architecture plan) used to fail at a hard-coded 480 s."""
+    assert llm._OLLAMA_HTTP_TIMEOUT == llm.LLM_TIMEOUT_SECONDS
+    assert llm._ollama_client._client.timeout.read == llm.LLM_TIMEOUT_SECONDS

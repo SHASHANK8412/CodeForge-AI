@@ -33,7 +33,10 @@ from backend.utils.cache import llm_cache
 from backend.utils.retry import LLMDeadlineExceeded, async_retry
 from backend.utils.prompt_optimizer import optimize_prompt
 
-_ollama_client = Client(timeout=480.0)
+# The HTTP read timeout follows the documented per-call ceiling (it was a fixed 480 s, so on a CPU any answer longer
+# than 8 minutes failed whatever AIFORGE_LLM_TIMEOUT_SECONDS said).
+_OLLAMA_HTTP_TIMEOUT = float(os.getenv("AIFORGE_LLM_TIMEOUT_SECONDS", "900"))
+_ollama_client = Client(timeout=_OLLAMA_HTTP_TIMEOUT)
 _async_clients: dict[int, AsyncClient] = {}
 
 
@@ -45,7 +48,7 @@ def _ollama_async_client() -> AsyncClient:
     if client is None:
         for key in [k for k, c in _async_clients.items() if getattr(c, "_loop", None) is not None and c._loop.is_closed()]:
             _async_clients.pop(key, None)
-        client = AsyncClient(timeout=480.0)
+        client = AsyncClient(timeout=_OLLAMA_HTTP_TIMEOUT)
         client._loop = loop
         _async_clients[id(loop)] = client
     return client
