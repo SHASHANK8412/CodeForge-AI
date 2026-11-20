@@ -347,6 +347,7 @@ def _model_down(monkeypatch, timeout=False):
     monkeypatch.setattr(llm, "_chat_completion_async", down)
     monkeypatch.setattr(llm, "_chat_completion", down_sync)
     monkeypatch.setattr(llm, "LLM_TIMEOUT_SECONDS", 0.05)
+    monkeypatch.setattr(llm, "LLM_LONG_TIMEOUT_SECONDS", 0.05)     # code agents get the long ceiling
     llm.llm_cache.clear()
     return calls
 

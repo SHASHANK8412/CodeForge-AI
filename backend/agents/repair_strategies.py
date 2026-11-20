@@ -199,6 +199,123 @@ def fix_literal_assertion(files: Dict[str, str], output: str) -> Dict[str, str]:
     return {rel: files[rel].replace(f"{q}{got}{q}", f"{q}{expected}{q}")}
 
 
+_MISSING_NAME = re.compile(r"`([^`]+)` is not defined in local module `([^`]+)` \(([^)]+)\)")
+
+
+def _top_level_node(tree: ast.Module, name: str):
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name == name:
+            return node
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == name for t in node.targets):
+            return node
+    return None
+
+
+def _imports_needed(node, source_tree: ast.Module, target_tree: ast.Module) -> List[str]:
+    """Import lines (from the source module) for the names a moved definition uses that the target lacks."""
+    import builtins
+    defined = {n.name for n in target_tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))}
+    defined |= {t.id for n in target_tree.body if isinstance(n, ast.Assign) for t in n.targets if isinstance(t, ast.Name)}
+    defined |= {(a.asname or a.name).split(".")[0] for n in target_tree.body if isinstance(n, (ast.Import, ast.ImportFrom))
+                for a in n.names}
+    used = {n.id for n in ast.walk(node) if isinstance(n, ast.Name)} - defined - set(dir(builtins))
+    out = []
+    for imp in source_tree.body:
+        if isinstance(imp, ast.ImportFrom) and imp.module and not imp.level:
+            for a in imp.names:
+                if (a.asname or a.name) in used:
+                    out.append(f"from {imp.module} import {a.name}" + (f" as {a.asname}" if a.asname else ""))
+        elif isinstance(imp, ast.Import):
+            for a in imp.names:
+                if (a.asname or a.name.split(".")[0]) in used:
+                    out.append(f"import {a.name}" + (f" as {a.asname}" if a.asname else ""))
+    return out
+
+
+def _drop_from_import(source: str, module: str, name: str) -> Optional[str]:
+    """`source` with `name` removed from its `from <module> import ...` statement (the statement removed when empty)."""
+    tree = ast.parse(source)
+    lines = source.splitlines(keepends=True)
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom) and node.module == module and not node.level \
+                and any(a.name == name for a in node.names):
+            keep = [a for a in node.names if a.name != name]
+            indent = lines[node.lineno - 1][: len(lines[node.lineno - 1]) - len(lines[node.lineno - 1].lstrip())]
+            new = (f"{indent}from {module} import " + ", ".join(
+                a.name + (f" as {a.asname}" if a.asname else "") for a in keep) + "\n") if keep else ""
+            return "".join(lines[: node.lineno - 1]) + new + "".join(lines[node.end_lineno:])
+    return None
+
+
+def fix_missing_local_names(files: Dict[str, str], errors: List[Dict[str, Any]]) -> Dict[str, str]:
+    """
+    A project module imports a name another project module does not define (the import check's AIF-missing-name; seen
+    when agents generated in parallel disagree on an interface). Deterministic repairs, never touching tests:
+
+    * the tests import the name from that module (they are the specification): if a non-test module defines it, the
+      definition moves into the module the tests import it from;
+    * otherwise, if the importing module defines the name itself, the import of it is dropped;
+    * otherwise, if exactly one other non-test module defines it, the import points there (unless that would make the
+      two modules import each other).
+    Every changed file must parse and gain no blocking lint issue; anything else is left to the model repair.
+    """
+    issues = []
+    for e in errors or []:
+        m = _MISSING_NAME.search(str(e.get("message", "")))
+        if m and e.get("file") in files:
+            issues.append((e["file"], m.group(1), m.group(2), m.group(3).replace("\\", "/")))
+    if not issues:
+        return {}
+    needed_by_tests = {(name, module) for f, name, module, _ in issues if _is_test_path(f)}
+    changes: Dict[str, str] = {}
+
+    def current(rel: str) -> str:
+        return changes.get(rel, files.get(rel, ""))
+
+    def defines(rel: str, name: str) -> bool:
+        try:
+            return _top_level_node(ast.parse(current(rel)), name) is not None
+        except SyntaxError:
+            return False
+
+    def module_of(rel: str) -> str:
+        return rel[:-3].replace("/", ".").removesuffix(".__init__")
+
+    for importer, name, module, target in sorted(set(issues)):
+        if _is_test_path(importer) or target not in files or defines(target, name):
+            continue
+        definers = [r for r in files if r.endswith(".py") and not _is_test_path(r) and r != target and defines(r, name)]
+        proposal: Dict[str, str] = {}
+        if (name, module) in needed_by_tests and len(definers) == 1:
+            src_rel = definers[0]
+            source = current(src_rel)
+            node = _top_level_node(ast.parse(source), name)
+            segment = ast.get_source_segment(source, node, padded=False)
+            if node is not None and segment:
+                lines = source.splitlines(keepends=True)
+                start = min([node.lineno] + [d.lineno for d in getattr(node, "decorator_list", [])])
+                moved_from = "".join(lines[: start - 1]) + "".join(lines[node.end_lineno:])
+                deco = "".join(lines[start - 1: node.lineno - 1])
+                moved_to = current(target).rstrip() + "\n\n\n" + deco + segment + "\n"
+                for line in _imports_needed(node, ast.parse(source), ast.parse(current(target))):
+                    moved_to = _insert_import(moved_to, line)
+                proposal = {target: moved_to, src_rel: moved_from}
+        elif (name, module) not in needed_by_tests and defines(importer, name):
+            fixed = _drop_from_import(current(importer), module, name)
+            if fixed is not None:
+                proposal = {importer: fixed}
+        elif (name, module) not in needed_by_tests and len(definers) == 1 and definers[0] != importer:
+            other = module_of(definers[0])
+            if f"import {module_of(importer)}" not in current(definers[0]) and \
+                    f"from {module_of(importer)} import" not in current(definers[0]):
+                fixed = _drop_from_import(current(importer), module, name)
+                if fixed is not None:
+                    proposal = {importer: _insert_import(fixed, f"from {other} import {name}")}
+        if proposal and all(_acceptable(rel, current(rel), text) for rel, text in proposal.items()):
+            changes.update(proposal)
+    return {rel: text for rel, text in changes.items() if text != files.get(rel)}
+
+
 def _implicated_file(files: Dict[str, str], output: str, errors: List[Dict[str, Any]]) -> Optional[str]:
     """The project source file named first in the traceback or the quality-gate errors."""
     for e in errors or []:
@@ -253,11 +370,21 @@ def llm_repair(files: Dict[str, str], output: str, errors: List[Dict[str, Any]],
     from backend.repair.edits import INSTRUCTIONS, apply_edits, feedback, parse_edits
     from backend.repair.fix_memory import global_fix_memory, hint_text
     error_text = "\n".join(f"{e.get('file')}:{e.get('line')}: {e.get('message')}" for e in (errors or [])[:20])
-    ctx = build_repair_context(files, output, errors, extra=[rel])
+    # Interface mismatches between modules: the module a missing name must be added to is shown, and when the tests
+    # import it from there, the model is told the tests fix the interface.
+    missing = [(e.get("file"), m.group(1), m.group(2), m.group(3)) for e in errors or []
+               for m in [_MISSING_NAME.search(str(e.get("message", "")))] if m]
+    interface = "".join(
+        f"- `{name}` is imported from `{module}` but `{path}` does not define it"
+        + (" - the tests import it from there, so define it in that file.\n" if _is_test_path(f or "") else ".\n")
+        for f, name, module, path in missing)
+    ctx = build_repair_context(files, output, errors, extra=[rel] + sorted({p for *_, p in missing if p in files}))
     hints = global_fix_memory.lookup(memory_user, f"{output}\n{error_text}")
     global_fix_memory.mark_suggested([h["id"] for h in hints])
     prompt = (
         f"A generated project fails. Errors:\n{error_text or '(none from the linter)'}\n\n"
+        + (f"Interface mismatches between project modules:\n{interface}\n" if interface else "")
+        + f""
         f"Test/runtime output (tail):\n{output[-3000:]}\n\n"
         f"The file most implicated is `{rel}`. Files involved in the failure:\n\n{ctx.text}\n\n"
         + (hint_text(hints) + "\n\n" if hints else "")
@@ -326,6 +453,7 @@ def propose_repairs(files: Dict[str, str], output: str, errors: List[Dict[str, A
         ("add_missing_imports", lambda: fix_undefined_names(files, errors, output)),
         ("merge_shadowed_module", lambda: fix_shadowed_module(files, errors)),
         ("fix_misplaced_imports", lambda: fix_misplaced_imports(files, errors)),
+        ("fix_missing_local_names", lambda: fix_missing_local_names(files, errors)),
         ("add_missing_requirements", lambda: fix_missing_modules(files, output)),
         ("fix_literal_assertion", lambda: fix_literal_assertion(files, output)),
     ):

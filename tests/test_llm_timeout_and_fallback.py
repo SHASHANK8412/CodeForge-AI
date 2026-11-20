@@ -96,6 +96,7 @@ def test_timeout_raises_unavailable(monkeypatch):
 
     monkeypatch.setattr(llm, "_chat_completion_async", slow)
     monkeypatch.setattr(llm, "LLM_TIMEOUT_SECONDS", 0.05)
+    monkeypatch.setattr(llm, "LLM_LONG_TIMEOUT_SECONDS", 0.05)     # "backend" is a long-output (code) task
     llm.llm_cache.clear()
 
     with pytest.raises(llm.LLMUnavailableError) as err:

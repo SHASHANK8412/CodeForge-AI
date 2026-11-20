@@ -789,6 +789,11 @@ async def testing_node(state: ProjectState) -> dict:
         # inferring a pass from earlier stages.
         test_run_res = global_project_tester.run_tests("")
 
+    # Code-quality gate on the current files (patches change them between cycles); its blocking-issue count is part
+    # of the evidence a repair attempt is judged on.
+    from backend.validation.quality_gate import format_issues, run_quality_gate
+    gate = run_quality_gate(proj_path_str) if proj_path_str else None
+
     # The latest repair attempt is judged on this run (backend/execution/repair_policy.py). One that broke a passing
     # test or changed nothing is rolled back on disk, and the tests are re-run on the restored files.
     judge_update: Dict[str, Any] = {}
@@ -796,10 +801,11 @@ async def testing_node(state: ProjectState) -> dict:
     history = [dict(h) for h in (state.get("repair_history") or [])]
     if history and not history[-1].get("verdict") and "before" in history[-1]:
         attempt = history[-1]
-        after = repair_policy.snapshot(_test_evidence(test_run_res))
+        after = repair_policy.snapshot(_test_evidence(test_run_res, gate))
         attempt.update(repair_policy.judge_attempt(attempt["before"], after))
         attempt["before"] = {k: v for k, v in attempt["before"].items() if k != "outcomes"}
-        attempt["after"] = {k: after[k] for k in ("exit_code", "failing", "passing", "fingerprint", "error_line")}
+        attempt["after"] = {k: after[k] for k in ("exit_code", "failing", "passing", "fingerprint", "error_line",
+                                                  "blocking")}
         judge_events.append(f"🔎 Repair attempt {attempt['attempt']} ({attempt['source']}): {attempt['verdict']}")
         if attempt["verdict"] not in repair_policy.KEEP_VERDICTS and state.get("file_backups"):
             files_map = restore_file_backups({**dict(state), "files": files_map})["files"]
@@ -807,12 +813,11 @@ async def testing_node(state: ProjectState) -> dict:
             judge_update.update({"file_backups": {},
                                  "applied_fix": {**(state.get("applied_fix") or {}), "rolled_back": True}})
             judge_events.append(f"↩️ Rolled back attempt {attempt['attempt']} ({', '.join(attempt['files'])})")
-            test_run_res = global_project_tester.run_tests(proj_path_str) if proj_path_str else test_run_res
+            if proj_path_str:
+                test_run_res = global_project_tester.run_tests(proj_path_str)
+                gate = run_quality_gate(proj_path_str)
         judge_update["repair_history"] = history
 
-    # Code-quality gate on the current files (patches change them between cycles)
-    from backend.validation.quality_gate import format_issues, run_quality_gate
-    gate = run_quality_gate(proj_path_str) if proj_path_str else None
     if gate and not gate["passed"]:
         lint_lines = format_issues(gate["errors"])
         had_test_failure = test_run_res.get("overall_status") == "FAIL" and test_run_res.get("failure_category") not in (None, "NONE")
@@ -1372,7 +1377,8 @@ async def patch_node(state: ProjectState) -> dict:
                              "source": str(latest_fix.get("strategy") or latest_fix.get("error_type") or "repair"),
                              "patch_hash": patch_id}
     if modified_files:
-        entry["before"] = repair_policy.snapshot(_test_evidence(state.get("test_results") or {}))
+        entry["before"] = repair_policy.snapshot(_test_evidence(state.get("test_results") or {},
+                                                                state.get("quality_gate")))
     else:
         entry["verdict"] = "no_patch"                    # nothing tried: counts toward the stall limit
         if repeated:
@@ -1402,10 +1408,12 @@ async def patch_node(state: ProjectState) -> dict:
     }
 
 
-def _test_evidence(results: Dict[str, Any]) -> Dict[str, Any]:
-    """The part of a test run a repair attempt is judged on (pytest -rA prints one line per test)."""
+def _test_evidence(results: Dict[str, Any], gate: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """The part of a test run a repair attempt is judged on (pytest -rA prints one line per test), plus the code-quality
+    gate's blocking-issue count (None when the gate did not run)."""
     return {"exit_code": results.get("exit_code"), "status": results.get("overall_status", results.get("status", "")),
-            "stdout": results.get("stdout") or "", "stderr": results.get("stderr") or ""}
+            "stdout": results.get("stdout") or "", "stderr": results.get("stderr") or "",
+            "blocking_issues": (gate or {}).get("error_count") if gate else None}
 
 
 def _rejected_patches(state: dict) -> set:

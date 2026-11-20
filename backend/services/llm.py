@@ -5,7 +5,9 @@ import os
 import re
 import logging
 import asyncio
+import contextlib
 import contextvars
+import threading
 import time
 from time import perf_counter
 from threading import Lock
@@ -34,8 +36,42 @@ from backend.utils.prompt_optimizer import optimize_prompt
 
 # The HTTP read timeout follows the documented per-call ceiling (it was a fixed 480 s, so on a CPU any answer longer
 # than 8 minutes failed whatever AIFORGE_LLM_TIMEOUT_SECONDS said).
-_OLLAMA_HTTP_TIMEOUT = float(os.getenv("AIFORGE_LLM_TIMEOUT_SECONDS", "900"))
+LLM_TIMEOUT_SECONDS = float(os.getenv("AIFORGE_LLM_TIMEOUT_SECONDS", "900"))
+# Answers that are whole source files, plans or test suites (a generation profile of this many tokens or more) get the
+# longer ceiling: on a CPU one such answer takes 10+ minutes.
+LLM_LONG_TIMEOUT_SECONDS = float(os.getenv("AIFORGE_LLM_LONG_TIMEOUT_SECONDS", "1800"))
+LONG_OUTPUT_TOKENS = 2400
+_OLLAMA_HTTP_TIMEOUT = max(LLM_TIMEOUT_SECONDS, LLM_LONG_TIMEOUT_SECONDS)
 _ollama_client = Client(timeout=_OLLAMA_HTTP_TIMEOUT)
+
+# Local model calls run one at a time by default (AIFORGE_LOCAL_LLM_CONCURRENCY). On one CPU, parallel requests only
+# split it - the frontend, backend and database agents each got a third of the speed and timed out together. A call
+# waiting for its slot is not yet on the clock: its deadline starts when it runs.
+_LOCAL_SLOTS = threading.BoundedSemaphore(max(1, int(os.getenv("AIFORGE_LOCAL_LLM_CONCURRENCY", "1") or 1)))
+
+
+def call_timeout(options: dict | None) -> float:
+    """The deadline for one call: the long ceiling for long-output profiles, the normal one otherwise."""
+    return LLM_LONG_TIMEOUT_SECONDS if int((options or {}).get("num_predict") or 0) >= LONG_OUTPUT_TOKENS \
+        else LLM_TIMEOUT_SECONDS
+
+
+@contextlib.contextmanager
+def _local_slot():
+    _LOCAL_SLOTS.acquire()
+    try:
+        yield
+    finally:
+        _LOCAL_SLOTS.release()
+
+
+@contextlib.asynccontextmanager
+async def _local_slot_async():
+    await asyncio.to_thread(_LOCAL_SLOTS.acquire)      # waits without blocking the event loop
+    try:
+        yield
+    finally:
+        _LOCAL_SLOTS.release()
 _async_clients: dict[int, AsyncClient] = {}
 
 
@@ -229,8 +265,8 @@ async def _chat_completion_async(model: str, messages: list[dict[str, str]], str
     )
 
 
-# Ceiling, not an expected duration: CPU-only Ollama can need many minutes for a long response.
-LLM_TIMEOUT_SECONDS = float(os.getenv("AIFORGE_LLM_TIMEOUT_SECONDS", "900"))
+# LLM_TIMEOUT_SECONDS (defined with the client above) is a ceiling, not an expected duration: CPU-only Ollama can need
+# many minutes for a long response.
 
 
 def _is_missing_model_error(exc: Exception) -> bool:
@@ -313,7 +349,7 @@ async def _chat_completion_with_fallback_async(
 ):
     last_error: Exception | None = None
 
-    timeout = LLM_TIMEOUT_SECONDS
+    timeout = call_timeout(options)
 
     for candidate in _fallback_models(model):
         try:
@@ -324,7 +360,8 @@ async def _chat_completion_with_fallback_async(
         except asyncio.TimeoutError as exc:
             raise LLMDeadlineExceeded(
                 f"Model '{candidate}' did not finish within {timeout:.0f}s "
-                "(raise AIFORGE_LLM_TIMEOUT_SECONDS or use a smaller model on CPU-only machines)"
+                "(raise AIFORGE_LLM_TIMEOUT_SECONDS / AIFORGE_LLM_LONG_TIMEOUT_SECONDS, or use a smaller model on "
+                "CPU-only machines)"
             ) from exc
         except Exception as exc:  # noqa: BLE001 - Ollama raises ResponseError for missing models.
             if _is_missing_model_error(exc):
@@ -385,13 +422,14 @@ def generate_text(
         record_llm_call(task, selected_model, 0, 0, 0.0, cached=True)
         return cached
 
-    llm_started_at = perf_counter()
     try:
-        response = _chat_completion_with_fallback(
-            messages=_generate_message_payload(system_prompt, compact_prompt),
-            model=selected_model,
-            options=options,
-        )
+        with _local_slot():
+            llm_started_at = perf_counter()
+            response = _chat_completion_with_fallback(
+                messages=_generate_message_payload(system_prompt, compact_prompt),
+                model=selected_model,
+                options=options,
+            )
         content = _strip_thinking(response["message"]["content"])
         record_llm_call(task, selected_model, *token_counts(response), perf_counter() - llm_started_at)
     except Exception as exc:
@@ -458,44 +496,45 @@ async def generate_text_async(
             await queue.put(("chunk", task, cached))
         return cached
 
-    llm_started_at = perf_counter()
     queue = stream_queue_var.get()
-    if queue is not None:
-        _logger.info("Agent Start (stream_async) task=%s model=%s profile=%s", task, selected_model, profile_name)
-        chunks: list[str] = []
-        try:
-            stream_response = await _chat_completion_with_fallback_async(
-                messages=_generate_message_payload(system_prompt, compact_prompt),
-                model=selected_model,
-                stream=True,
-                options=options,
-            )
-            last_chunk = None
-            async for chunk in stream_response:
-                last_chunk = chunk
-                content = chunk.get("message", {}).get("content")
-                if content:
-                    chunks.append(content)
-                    await queue.put(("chunk", task, content))
-            if last_chunk is not None:
-                record_llm_call(task, selected_model, *token_counts(last_chunk), perf_counter() - llm_started_at)
-        except Exception as exc:
-            raise _unavailable(task, selected_model, exc) from exc
+    async with _local_slot_async():                  # one local model call at a time; the clock starts inside
+        llm_started_at = perf_counter()
+        if queue is not None:
+            _logger.info("Agent Start (stream_async) task=%s model=%s profile=%s", task, selected_model, profile_name)
+            chunks: list[str] = []
+            try:
+                stream_response = await _chat_completion_with_fallback_async(
+                    messages=_generate_message_payload(system_prompt, compact_prompt),
+                    model=selected_model,
+                    stream=True,
+                    options=options,
+                )
+                last_chunk = None
+                async for chunk in stream_response:
+                    last_chunk = chunk
+                    content = chunk.get("message", {}).get("content")
+                    if content:
+                        chunks.append(content)
+                        await queue.put(("chunk", task, content))
+                if last_chunk is not None:
+                    record_llm_call(task, selected_model, *token_counts(last_chunk), perf_counter() - llm_started_at)
+            except Exception as exc:
+                raise _unavailable(task, selected_model, exc) from exc
 
-        content = "".join(chunks)
-    else:
-        _logger.info("Agent Start task=%s model=%s profile=%s", task, selected_model, profile_name)
-        try:
-            response = await _chat_completion_with_fallback_async(
-                messages=_generate_message_payload(system_prompt, compact_prompt),
-                model=selected_model,
-                stream=False,
-                options=options,
-            )
-            content = _strip_thinking(response["message"]["content"])
-            record_llm_call(task, selected_model, *token_counts(response), perf_counter() - llm_started_at)
-        except Exception as exc:
-            raise _unavailable(task, selected_model, exc) from exc
+            content = "".join(chunks)
+        else:
+            _logger.info("Agent Start task=%s model=%s profile=%s", task, selected_model, profile_name)
+            try:
+                response = await _chat_completion_with_fallback_async(
+                    messages=_generate_message_payload(system_prompt, compact_prompt),
+                    model=selected_model,
+                    stream=False,
+                    options=options,
+                )
+                content = _strip_thinking(response["message"]["content"])
+                record_llm_call(task, selected_model, *token_counts(response), perf_counter() - llm_started_at)
+            except Exception as exc:
+                raise _unavailable(task, selected_model, exc) from exc
     if not (content or "").strip():
         raise LLMUnavailableError(task, selected_model, "the model returned an empty response")
 
@@ -536,16 +575,17 @@ def stream_response(prompt: str, model: str | None = None, task: str = "general"
 
     started_at = perf_counter()
     chunks: list[str] = []
-    for chunk in _chat_completion_with_fallback(
-        messages=_generate_message_payload("", compact_prompt),
-        model=selected_model,
-        stream=True,
-        options=_generation_options(task),
-    ):
-        content = chunk.get("message", {}).get("content")
-        if content:
-            chunks.append(content)
-            yield content
+    with _local_slot():                              # one local model call at a time
+        for chunk in _chat_completion_with_fallback(
+            messages=_generate_message_payload("", compact_prompt),
+            model=selected_model,
+            stream=True,
+            options=_generation_options(task),
+        ):
+            content = chunk.get("message", {}).get("content")
+            if content:
+                chunks.append(content)
+                yield content
 
     full_text = "".join(chunks)
     if full_text:
@@ -618,16 +658,17 @@ Return only the code unless the user explicitly asks for an explanation.
     started_at = perf_counter()
     chunks: list[str] = []
 
-    for chunk in _chat_completion_with_fallback(
-        messages=_generate_message_payload(effective_system_prompt, compact_prompt),
-        model=selected_model,
-        stream=True,
-        options=_generation_options(task),
-    ):
-        content = chunk.get("message", {}).get("content")
-        if content:
-            chunks.append(content)
-            yield content
+    with _local_slot():                              # one local model call at a time
+        for chunk in _chat_completion_with_fallback(
+            messages=_generate_message_payload(effective_system_prompt, compact_prompt),
+            model=selected_model,
+            stream=True,
+            options=_generation_options(task),
+        ):
+            content = chunk.get("message", {}).get("content")
+            if content:
+                chunks.append(content)
+                yield content
 
     full_text = "".join(chunks)
     if full_text:

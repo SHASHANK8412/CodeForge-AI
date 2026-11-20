@@ -10,6 +10,15 @@ All notable changes to the AIForge platform are documented in this file.
 - **Integration & Compatibility Engine**: versioned shared contracts derived from the architecture, deterministic
   frontend/backend/database compatibility analysis, contract tests generated and executed in isolation, contract
   drift detection, bounded repairs routed to the responsible agent.
+- **Builds that finish on a CPU-only laptop**: local model calls take turns (`AIFORGE_LOCAL_LLM_CONCURRENCY`, default 1)
+  instead of splitting the CPU between the parallel code agents - which made all of them time out together - and a
+  call's deadline starts when it runs; long answers (whole files, plans) get 30 minutes (`AIFORGE_LLM_LONG_TIMEOUT_SECONDS`).
+- **Interface mismatches between agents are repaired**: when one generated module imports a name another does not
+  define (e.g. `get_db` from `backend/database.py`), a deterministic repair moves the definition to where the tests
+  expect it (with the imports it needs), drops a redundant import, or points the import at the module that defines it;
+  otherwise the model repair is told exactly where the name belongs.
+- **A repair that removes code-quality errors counts as progress**: attempts are judged on the gate's blocking-issue
+  count as well as the tests (a correct fix was rolled back when a second bug kept the same first error).
 - **Removed: Groq (hosted model) support.** Every model runs locally from Hugging Face weights through Ollama; no API
   key is used or read. (Reviewer and injection results measured on Groq earlier stay in docs/BENCHMARK.md as history.)
 - **Local models**:

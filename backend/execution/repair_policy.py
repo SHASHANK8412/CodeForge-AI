@@ -102,6 +102,7 @@ def snapshot(exec_results: Dict[str, Any]) -> Dict[str, Any]:
         "passing": passing(outcomes),
         "fingerprint": failure_fingerprint(exec_results),
         "error_line": _last_error_line(out),
+        "blocking": exec_results.get("blocking_issues"),      # code-quality gate errors; None when not measured
     }
 
 
@@ -127,7 +128,10 @@ def judge_attempt(before: Dict[str, Any], after: Dict[str, Any]) -> Dict[str, An
         verdict = VERDICT_REGRESSED
     elif newly_passing or len(after_fail) < len(before_fail) or (
             # e.g. a SyntaxError (no tests collected) became runnable tests
-            not before.get("outcomes") and after.get("outcomes")) or _error_resolved(before, after):
+            not before.get("outcomes") and after.get("outcomes")) or _error_resolved(before, after) or (
+            # fewer blocking code-quality errors (e.g. one of two missing imports fixed; the first error shown is the same)
+            before.get("blocking") is not None and after.get("blocking") is not None
+            and after["blocking"] < before["blocking"]):
         verdict = VERDICT_IMPROVED
     else:
         verdict = VERDICT_NO_EFFECT
