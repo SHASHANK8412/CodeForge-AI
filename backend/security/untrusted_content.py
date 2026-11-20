@@ -10,7 +10,9 @@ contain text aimed at the model ("ignore your instructions and ..."). Everything
   never in the system prompt, so retrieved text never carries the authority of AIForge's own instructions.
 * **Delimiter escaping.** A passage cannot close the block early: the block's tags are neutralised inside passages.
 * **Flagging.** Passages that contain instruction-like text are marked ``flagged`` in the block, and ``scan`` returns
-  what matched so the caller can tell the user that a document tried to give instructions.
+  what matched so the caller can tell the user that a document tried to give instructions. Two detectors run: fixed
+  patterns, and a trained prompt-injection classifier (backend/ml/local_models.py, "classifier") that catches
+  reworded instructions the patterns miss. Without the classifier model the patterns run alone.
 * **Removal.** The flagged sentences themselves are replaced by a ``[removed: ...]`` marker before the model sees them
   (``redact``): a model told to ignore an instruction still follows it some of the time, so the instruction is not
   shown at all. The rest of the passage, the information the user asked about, is kept.
@@ -54,9 +56,34 @@ class Passage:
     label: str = ""          # e.g. "S1" or a citation reference
 
 
+_PARAGRAPH_GAP = re.compile(r"\n\s*\n")
+
+
+def _segments(text: str, size: int = 1500) -> List[str]:
+    """Paragraphs, long ones split, so each fits the classifier's input."""
+    out = []
+    for para in _PARAGRAPH_GAP.split(text or ""):
+        para = para.strip()
+        out += [para[i:i + size] for i in range(0, len(para), size)] if para else []
+    return out
+
+
+def _classifier_flags(texts: Sequence[str]) -> Optional[List[bool]]:
+    """Per text: does the trained classifier call it an injection? None when the classifier is unavailable."""
+    from backend.ml.local_models import injection_scores, injection_threshold
+    scores = injection_scores(list(texts)) if texts else []
+    if scores is None:
+        return None
+    return [s >= injection_threshold() for s in scores]
+
+
 def scan(text: str) -> List[str]:
-    """Names of the instruction-like patterns found in a retrieved passage (empty when none matched)."""
-    return [name for name, rx in _COMPILED if rx.search(text or "")]
+    """Names of the detectors that found instruction-like text in a retrieved passage (empty when none did)."""
+    found = [name for name, rx in _COMPILED if rx.search(text or "")]
+    flags = _classifier_flags([seg for seg in _segments(text) if seg != REMOVED])
+    if flags and any(flags):
+        found.append("classifier")
+    return found
 
 
 # Sentence-ish segments: a line, or a sentence within a line; fake role tags are removed with their content.
@@ -86,6 +113,8 @@ def redact(text: str) -> str:
         para = parts[i]
         pos = _first_match(para.replace(REMOVED, " " * len(REMOVED)))
         if pos < 0:
+            pos = _classifier_position(para)
+        if pos < 0:
             continue
         cut = 0
         for m in _SENTENCE_END.finditer(para, 0, pos):
@@ -93,6 +122,24 @@ def redact(text: str) -> str:
         kept = para[:cut].rstrip()
         parts[i] = (kept + " " if kept else "") + REMOVED
     return "".join(parts)
+
+
+def _classifier_position(para: str) -> int:
+    """Where the first sentence the classifier flags starts in a paragraph the patterns did not flag; 0 (the whole
+    paragraph) when only the paragraph as a whole reads as an injection; -1 when it does not or there is no classifier."""
+    body = para.replace(REMOVED, " " * len(REMOVED))
+    if not body.strip():
+        return -1
+    whole = _classifier_flags([body.strip()])
+    if not whole or not whole[0]:
+        return -1
+    starts = [0] + [m.end() for m in _SENTENCE_END.finditer(body)]
+    spans = [(a, b) for a, b in zip(starts, starts[1:] + [len(body)]) if body[a:b].strip()]
+    flags = _classifier_flags([body[a:b].strip() for a, b in spans]) or []
+    for (a, _), flagged in zip(spans, flags):
+        if flagged:
+            return a + (len(body[a:]) - len(body[a:].lstrip()))
+    return 0
 
 
 def _neutralise(text: str) -> str:

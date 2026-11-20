@@ -21,7 +21,7 @@ class SemanticRetriever:
         if not query or not query.strip():
             return []
 
-        query_vector = self.embedding_generator.generate_embedding(query)
+        query_vector = self.embedding_generator.generate_query_embedding(query)
         results = self.vector_store.search(query_vector, top_k=top_k)
         logger.info(f"Retrieved {len(results)} chunk(s) for query: '{query[:30]}...'")
         return results

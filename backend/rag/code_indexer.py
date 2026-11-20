@@ -52,6 +52,7 @@ class GeneratedCodeIndexer:
                     "project_id": project_id,
                     "domain": RetrievalDomain.REPOSITORY.value,
                     "document_type": DocumentType.CODE.value,
+                    "embedding_model": global_embedding_service.model_tag,
                     "text": text,
                     "chunk_index": idx,
                     "path": rel_path,

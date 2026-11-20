@@ -79,7 +79,8 @@ class RAGPipeline(RetrievalAwareAgentMixin):
                 "text": c_text,
                 "source": path.name,
                 "heading": c_dict.get("heading", "") if isinstance(c_dict, dict) else "",
-                "document_type": meta.get("document_type", "DOCUMENTATION")
+                "document_type": meta.get("document_type", "DOCUMENTATION"),
+                "embedding_model": global_embedding_service.model_tag,
             })
             embeddings.append(global_embedding_service.embed_document(c_text))
 

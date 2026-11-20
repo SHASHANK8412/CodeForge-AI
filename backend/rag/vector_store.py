@@ -97,6 +97,8 @@ class VectorStore:
 
         results = []
         doc_type_set = set(document_types) if document_types else None
+        from backend.rag.embedding_service import global_embedding_service
+        tag = global_embedding_service.model_tag
 
         for item_id, item in self._items.items():
             # Strict Project Isolation Filter
@@ -105,6 +107,8 @@ class VectorStore:
 
             if doc_type_set and item.get("document_type") not in doc_type_set:
                 continue
+            if (item.get("metadata") or {}).get("embedding_model", tag) != tag:
+                continue                                     # a vector from another embedding model
 
             score = cosine_similarity(query_embedding, item["embedding"])
             results.append({

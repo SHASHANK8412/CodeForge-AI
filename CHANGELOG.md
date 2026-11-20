@@ -10,6 +10,16 @@ All notable changes to the AIForge platform are documented in this file.
 - **Integration & Compatibility Engine**: versioned shared contracts derived from the architecture, deterministic
   frontend/backend/database compatibility analysis, contract tests generated and executed in isolation, contract
   drift detection, bounded repairs routed to the responsible agent.
+- **Local Hugging Face models** (`backend/ml/local_models.py`, CPU, loaded on first use from the local cache):
+  - a prompt-injection classifier (`protectai/deberta-v3-base-prompt-injection-v2`) alongside the patterns: in the
+    8-document eval (local model) attack success with the guard went from 1/8 to 0/8 and useful answers from 7/8 to
+    8/8;
+  - a cross-encoder reranker (`cross-encoder/ms-marco-MiniLM-L6-v2`) for document search;
+  - sentence embeddings (`BAAI/bge-small-en-v1.5`). Until now no embedding model was ever loaded: both embedding
+    classes returned hashed-word vectors, so "semantic" search matched words, not meaning. Vectors are now tagged
+    with the model that made them and never compared across models;
+  - voice prompts: a mic button on the project forms, transcribed on this machine by faster-whisper
+    (`POST /api/speech/transcribe`, signed-in users, audio deleted after transcription).
 - **Qwen 3.8 27B on Groq** (`qwen/qwen3.8-27b`) is the default hosted model, and by default every task uses it
   (code generation, planning, review, testing, debugging, docs, chat); its thinking is requested hidden so only
   the answer reaches the agents. The local Ollama models remain the fallback. `AIFORGE_GROQ_MODEL` and

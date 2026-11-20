@@ -127,8 +127,10 @@ class DocumentIngestionPipeline:
         # 3. Generate Batch Embeddings
         texts = [c.text for c in chunk_records]
         vectors = self.embedding_service.get_batch_embeddings(texts)
+        tag = self.embedding_service.model_tag
         for c_rec, vec in zip(chunk_records, vectors):
             c_rec.metadata["embedding"] = vec
+            c_rec.metadata["embedding_model"] = tag          # vectors from another model are never compared
 
         logger.info(f"Ingested '{filepath_or_name}' into {len(chunk_records)} chunk(s).")
         return source_record, chunk_records
@@ -200,8 +202,10 @@ class DocumentIngestionPipeline:
 
         texts = [c.text for c in chunk_records]
         vectors = self.embedding_service.get_batch_embeddings(texts)
+        tag = self.embedding_service.model_tag
         for c_rec, vec in zip(chunk_records, vectors):
             c_rec.metadata["embedding"] = vec
+            c_rec.metadata["embedding_model"] = tag          # vectors from another model are never compared
 
         return source_record, chunk_records
 

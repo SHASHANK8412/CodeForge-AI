@@ -186,12 +186,13 @@ class HybridRetriever:
 
     # --- Channel Search Methods ---
     def _vector_search(self, query: str, chunks: List[ChunkRecord], top_k: int) -> List[RetrievalCandidate]:
-        q_vector = self.embedding_service.get_embedding(query)
+        q_vector = self.embedding_service.embed_query(query)
+        tag = self.embedding_service.model_tag
         scored: List[Tuple[ChunkRecord, float]] = []
 
         for c in chunks:
             c_vec = c.metadata.get("embedding")
-            if c_vec:
+            if c_vec and c.metadata.get("embedding_model", tag) == tag:
                 sim = cosine_similarity(q_vector, c_vec)
                 scored.append((c, sim))
 

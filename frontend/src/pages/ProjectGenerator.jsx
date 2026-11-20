@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 
 import { generateProjectStream, fetchProjectFileContent } from "../services/projectApi";
+import VoiceInputButton from "../components/VoiceInputButton";
 import FileExplorer from "../components/FileExplorer";
 
 const TABS = [
@@ -236,6 +237,7 @@ function ProjectGenerator() {
                     />
 
                     <div className="flex items-center justify-between">
+                        {!loading && <VoiceInputButton onTranscript={(t) => setPrompt((p) => (p.trim() ? `${p.trimEnd()} ${t}` : t))} />}
                         <button
                             onClick={handleGenerate}
                             disabled={loading || !prompt.trim()}

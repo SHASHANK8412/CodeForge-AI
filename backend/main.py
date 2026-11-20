@@ -445,6 +445,9 @@ def register_routers() -> None:
     app.include_router(ci_pipeline_router)
     app.include_router(ci_direct_router)
 
+    from backend.routes.speech_routes import router as speech_router
+    app.include_router(speech_router)
+
 
 register_routers()
 
@@ -482,6 +485,7 @@ def health():
         ollama = "down"
     from backend.execution.docker_test_sandbox import docker_available
     from backend.services import groq_provider
+    from backend.ml import local_models
     try:
         import sqlite3
         from backend.memory.database import ConversationDatabase
@@ -497,6 +501,8 @@ def health():
                      "docker_sandbox": "up" if docker_available() else "down"},
         # Which agents a hosted Groq model answers (configured, not called: no request is made here)
         "groq": groq_provider.status(),
+        # Local Hugging Face models: configured, loaded on first use (nothing is loaded by this check)
+        "local_models": local_models.status(),
     }
 
 

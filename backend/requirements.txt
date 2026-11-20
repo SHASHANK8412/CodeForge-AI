@@ -90,3 +90,5 @@ yarl==1.24.2
 zstandard==0.25.0
 langchain-chroma
 langchain-ollama
+av==19.0.2
+faster-whisper==1.2.1

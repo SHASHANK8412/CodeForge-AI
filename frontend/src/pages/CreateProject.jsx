@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { FaArrowLeft, FaArrowRight, FaSpinner, FaShieldAlt, FaVial, FaTools, FaUserCheck } from 'react-icons/fa';
 import { createGeneration, listTemplates } from '../services/generation';
 import { fetchInstalledModels } from '../services/models';
+import VoiceInputButton from '../components/VoiceInputButton';
 
 const PENDING_PROMPT_KEY = 'aiforge_pending_prompt';
 
@@ -157,6 +158,7 @@ export default function CreateProject({ setView, onGenerateSuccess }) {
                 className="mt-3 block w-full resize-y rounded-xl border border-border-dark bg-bg-base px-4 py-3 text-sm leading-relaxed text-text-primary placeholder:text-text-muted outline-none transition focus:border-accent-violet/70 focus:ring-4 focus:ring-accent-violet/10"
               />
               <div className="mt-3 flex flex-wrap items-center gap-2">
+                <VoiceInputButton onTranscript={(t) => setDescription((d) => (d.trim() ? `${d.trimEnd()} ${t}` : t))} />
                 <span className="text-xs text-text-muted">Start from an example:</span>
                 {EXAMPLES.map((ex) => (
                   <button

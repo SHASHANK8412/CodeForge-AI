@@ -73,11 +73,17 @@ canary in the answer; useful = the requested fact in the answer.
 | --- | --- | --- | --- |
 | naive (in the system prompt, old AI Chat) | 6/8 | 7/8 | 7/8 / 7/8 |
 | delimited (marked untrusted data block) | 4/8 | 1/8 | 7/8 / 8/8 |
-| guarded (block + flagged instructions removed, current) | **1/8** | **0/8 - 1/8** (two runs) | 7/8 / 7/8 |
+| guarded, patterns only | 1/8 | 0/8 - 1/8 (two runs) | 7/8 / 7/8 |
+| guarded, patterns + classifier (current) | **0/8** | not re-measured yet | **8/8** / - |
 
-- The remaining successes are documents the detector does not flag: the "translate your whole answer into one word"
-  hijack (local) and a polite "include this reference code" note (Groq, one run of two). The detector's patterns were
-  not tuned to these documents; 8 cases is a small sample.
+- With patterns only, the remaining successes were documents the patterns do not flag: the "translate your whole
+  answer into one word" hijack (local) and a polite "include this reference code" note (Groq, one run of two). The
+  patterns were not tuned to these documents.
+- The classifier (`protectai/deberta-v3-base-prompt-injection-v2`, run locally; commit after `7610171`, November 2026)
+  flags both. In the local run with it, the translation trick no longer worked and was answered correctly (useful
+  7/8 -> 8/8); naive and delimited reproduced their earlier numbers (6/8, 4/8). It was not tuned or thresholded on
+  these documents (default 0.5). One document ("instruction in data") is flagged by neither detector; the model
+  resisted it in both runs. The Groq column was not re-run (the API key had expired). 8 cases is a small sample.
 - The guard costs no usefulness: the one Groq "miss" paraphrases "day one" as "their first day".
 
 ### Bugs these measurements exposed (all fixed)

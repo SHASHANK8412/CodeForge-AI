@@ -87,7 +87,8 @@ class EngineeringMemoryService:
                         "source": "engineering_memory",
                         "document_type": "ENGINEERING_MEMORY",
                         "title": title,
-                        "type": mem_type.value
+                        "type": mem_type.value,
+                        "embedding_model": global_embedding_service.model_tag,
                     }],
                     embeddings=embeddings,
                     project_id=project_id
@@ -136,7 +137,10 @@ class EngineeringMemoryService:
             from backend.database.service import global_database_service
 
             q_emb = global_embedding_service.embed_query(query)
-            vec_res = global_database_service.vector_store.search(q_emb, project_id=project_id, top_k=5)
+            tag = global_embedding_service.model_tag
+            vec_res = global_database_service.vector_store.search(q_emb, project_id=project_id, top_k=20)
+            # stored before the embedding model was used (no tag: hashed-word vectors) or by another model: not comparable
+            vec_res = [r for r in vec_res if (r.get("metadata") or {}).get("embedding_model") == tag][:5]
             doc_ids = set(r["id"] for r in vec_res)
             return [m for m in all_m if m.id in doc_ids]
         except Exception:

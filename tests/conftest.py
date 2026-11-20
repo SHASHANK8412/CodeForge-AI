@@ -45,6 +45,18 @@ def _isolated_fix_memory(tmp_path_factory, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _no_local_models(monkeypatch):
+    """The local Hugging Face models (backend/ml/local_models.py) stay off: suites keep the deterministic rule-based
+    paths and never load hundreds of MB per test. tests/test_local_models.py turns them on with stand-ins or the real
+    downloaded models."""
+    from backend.ml import local_models
+    monkeypatch.setenv("AIFORGE_HF_MODELS", "off")
+    local_models.reset()
+    yield
+    local_models.reset()
+
+
+@pytest.fixture(autouse=True)
 def _local_test_sandbox(monkeypatch):
     """Generated-project tests run locally unless a test opts into the Docker sandbox."""
     monkeypatch.setenv("AIFORGE_TEST_SANDBOX", "local")

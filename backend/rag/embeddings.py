@@ -1,5 +1,3 @@
-import math
-import hashlib
 import logging
 from typing import List
 
@@ -8,49 +6,29 @@ logger = logging.getLogger("aiforge.rag.embeddings")
 
 class EmbeddingGenerator:
     """
-    EmbeddingGenerator converts text strings into dense vector representations.
-    Supports SentenceTransformers if available, or a fast, normalized 384-dimensional
-    dense vector generator fallback.
+    Text to dense vectors for the knowledge base and the legacy retriever. Delegates to the shared EmbeddingService
+    (backend/rag/embedding_service.py): the local embedding model, or its labelled hash fallback. (This class used to
+    set its model to None and always return hashed-word vectors.)
     """
 
     DIMENSION = 384
 
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        self.model_name = model_name
-        self._st_model = None
+    def __init__(self, model_name: str = ""):
+        from backend.rag.embedding_service import global_embedding_service
+        self._service = global_embedding_service
+        self.model_name = model_name or global_embedding_service.model_name
 
-        # Fast, deterministic 384-dimensional dense vector generator for ultra-fast local RAG
-        self._st_model = None
+    @property
+    def model_tag(self) -> str:
+        return self._service.model_tag
 
     def generate_embedding(self, text: str) -> List[float]:
-        """Generates a normalized 384-dimensional vector embedding for the input text."""
-        if not text or not text.strip():
-            return [0.0] * self.DIMENSION
+        """A normalised 384-dimensional vector for the input text."""
+        return self._service.get_embedding(text)
 
-        if self._st_model is not None:
-            try:
-                vector = self._st_model.encode(text).tolist()
-                return vector
-            except Exception as e:
-                logger.warning(f"Error during SentenceTransformer encoding: {e}")
-
-        # Fallback dense normalized vector generator
-        vector = [0.0] * self.DIMENSION
-        words = text.lower().split()
-        for idx, word in enumerate(words):
-            # Compute hash digest
-            h = hashlib.sha256(word.encode("utf-8")).digest()
-            for b_idx, byte_val in enumerate(h[:32]):
-                target_idx = (b_idx * 12 + idx) % self.DIMENSION
-                vector[target_idx] += (byte_val - 128) / 128.0
-
-        # L2 Normalize
-        norm = math.sqrt(sum(v * v for v in vector))
-        if norm > 1e-6:
-            vector = [v / norm for v in vector]
-
-        return vector
+    def generate_query_embedding(self, query: str) -> List[float]:
+        return self._service.embed_query(query)
 
     def generate_batch(self, texts: List[str]) -> List[List[float]]:
-        """Generates embeddings for a batch of text strings."""
-        return [self.generate_embedding(t) for t in texts]
+        """Embeddings for a batch of text strings."""
+        return self._service.embed_batch(texts)
